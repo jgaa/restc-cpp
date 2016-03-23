@@ -6,8 +6,6 @@
 
 #include "restc-cpp/restc-cpp.h"
 
-using namespace std;
-
 namespace restc_cpp {
 
 class SocketImpl : public Socket {
@@ -40,12 +38,6 @@ public:
                     boost::asio::yield_context& yield) override {
         boost::asio::async_write(socket_, buffers, yield);
     }
-
-    void AsyncWrite(const write_buffers_t& buffers,
-                    boost::asio::yield_context& yield) override {
-        boost::asio::async_write(socket_, buffers, yield);
-    }
-
 
     void AsyncConnect(const boost::asio::ip::tcp::endpoint& ep,
                       boost::asio::yield_context& yield) override {

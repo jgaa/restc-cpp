@@ -90,6 +90,7 @@ public:
             owner_.LogDebug(msg);
         }
 
+        // TODO: Add args
         std::string args;
 
         // Build the request-path
@@ -119,8 +120,8 @@ public:
         auto reply = Reply::Create(ctx, *this, owner_);
         const int max_retries = 3;
 
-        /* Loop three times (on IO error with no data received) over each IP resolved fro the hostname
-         * Third time, ask for a new connection
+        /* Loop three times (on IO error with no data received) over each IP
+         * resolved from the hostname. Third time, ask for a new connection.
          */
 
         for(int attempts = 1; attempts <= max_retries; ++attempts) {
@@ -140,6 +141,7 @@ public:
 
                 // Connect if the connection is new.
                 if (!connection->GetSocket().GetSocket().is_open()) {
+                    // TODO: Set connect timeout
                     connection->GetSocket().AsyncConnect(endpoint, ctx.GetYield());
                 }
 

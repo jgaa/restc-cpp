@@ -110,8 +110,6 @@ public:
 class Socket
 {
 public:
-    using write_buffers_t = std::vector<boost::asio::const_buffer>;
-
     virtual ~Socket() = default;
 
     virtual boost::asio::ip::tcp::socket& GetSocket() = 0;
@@ -125,12 +123,6 @@ public:
                                   boost::asio::yield_context& yield) = 0;
 
     virtual void AsyncWrite(const boost::asio::const_buffers_1& buffers,
-                            boost::asio::yield_context& yield) = 0;
-
-    virtual void AsyncWrite(const std::ostringstream& stream,
-                            boost::asio::yield_context& yield) = 0;
-
-    virtual void AsyncWrite(const write_buffers_t& buffers,
                             boost::asio::yield_context& yield) = 0;
 
     virtual void AsyncConnect(const boost::asio::ip::tcp::endpoint& ep,

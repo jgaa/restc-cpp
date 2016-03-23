@@ -7,7 +7,6 @@
 #include "restc-cpp/restc-cpp.h"
 
 using namespace std;
-
 namespace restc_cpp {
 
     class ConnectionImpl : public Connection {
