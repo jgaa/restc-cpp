@@ -16,10 +16,10 @@
  * we use C++ in the first place, right?). Since it uses boost::asio,
  * it's a perfect match for client libraries and applications,
  * but also modern, powerful C++ servers, since these more and more
- * defauilts to boost:asio for network IO.
+ * defaults to boost:asio for network IO.
  *
  * Usually I use some version of GPL or LGPL for my projects. This
- * library however is so tine and general that I have released it
+ * library however is so tiny and general that I have released it
  * under the more permissive MIT license.
  *
  * Supported development platforms:
@@ -125,6 +125,9 @@ public:
                                   boost::asio::yield_context& yield) = 0;
 
     virtual void AsyncWrite(const boost::asio::const_buffers_1& buffers,
+                            boost::asio::yield_context& yield) = 0;
+
+    virtual void AsyncWrite(const std::ostringstream& stream,
                             boost::asio::yield_context& yield) = 0;
 
     virtual void AsyncWrite(const write_buffers_t& buffers,
