@@ -46,8 +46,6 @@ public:
 
         ParseHeaders();
 
-        // Check if we have content-length, get content
-
         // Check for errors
         if (GetResponseCode() >= 400) {
             throw runtime_error("The request failed");

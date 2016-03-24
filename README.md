@@ -81,6 +81,7 @@ simple REST requests.
 - [ ] Implement connection pool
 - [ ] Implement Chunked Reponse handling
 - [ ] Implement Chunked Requests
+- [ ] Handle redirects
 - [ ] Implement simple File Upload (as body)
 - [ ] Implement simple File Download (from body)
 - [ ] Verify that it compiles with Debian Stable
