@@ -23,7 +23,7 @@ under the more permissive MIT license.
 
 ## Example
 
-The following code is all that is needed to run REST requests Asynchronously,
+The following code is all that is needed to run REST requests asynchronously,
 using the co-routine support in boost::asio behind the scenes.
 
 ```C++
@@ -49,7 +49,7 @@ main(int argc, char *argv[]) {
     auto rest_client = RestClient::Create();
     rest_client->Process(DoSomethingInteresting);
 
-    // Hold the mail thread...
+    // Hold the main thread...
     cin.get();
 }
 ```
