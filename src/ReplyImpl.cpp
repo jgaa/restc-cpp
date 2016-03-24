@@ -149,7 +149,7 @@ private:
                 throw runtime_error(
                     "Invalid header - malformed response line - no CRLF");
             }
-            status_line_ = boost::string_ref(remaining.data(), pos);
+            status_line_ = {remaining.data(), pos};
 
             pos = status_line_.find(' ');
             if (pos == status_line_.npos) {
@@ -161,7 +161,7 @@ private:
 
             if (strncasecmp(protocol.data(),
                 expected_protocol.c_str(),
-                            expected_protocol.size())) {
+                expected_protocol.size())) {
 
                 throw runtime_error("Invalid header - Unexpected protocol");
             }
@@ -175,9 +175,9 @@ private:
 
             if (status_line_.size() > (pos + 5)) {
                 status_code_ = stoi(code.to_string());
-                status_message_ = boost::string_ref(
+                status_message_ = {
                     status_line_.data() + pos + 5,
-                    status_line_.size() - pos - 5);
+                    status_line_.size() - pos - 5};
             }
         }
 
@@ -188,8 +188,8 @@ private:
                 throw runtime_error("Invalid header - missing CRLF");
             }
             start_of_line += 2;
-            remaining = boost::string_ref(remaining.data() + start_of_line,
-                                          remaining.size() - start_of_line);
+            remaining = {remaining.data() + start_of_line,
+                remaining.size() - start_of_line};
             auto end_of_line = remaining.find(crlf);
             if (end_of_line == remaining.npos) {
                 // We are done.
@@ -210,7 +210,8 @@ private:
                 if (*ch == ' ' || *ch == ':') {
                     switch(state) {
                         case State::PARSE_NAME:
-                            name = boost::string_ref(line.data(), ch - line.begin());
+                            name = {line.data(),
+                                static_cast<size_t>(ch - line.begin())};
                             state = State::PARSE_DELIM;
                             break;
                         case State::PARSE_DELIM:
@@ -224,7 +225,8 @@ private:
                             break; // Consume
                         case State::PARSE_DELIM:
                             state = State::PARSE_VALUE;
-                            value.assign(ch, line.cend() - ch);
+                            value.assign(ch,
+                                         static_cast<size_t>(line.cend() - ch));
                             break;
                         case State::PARSE_VALUE:
                             break;
@@ -238,8 +240,7 @@ private:
                 assert(remaining.at(1) == '\n');
 
                 // Wrapped line.
-                remaining = boost::string_ref(remaining.data() + 2,
-                                                remaining.size() - 2);
+                remaining = {remaining.data() + 2, remaining.size() - 2};
                 end_of_line = remaining.find(crlf);
                 if (end_of_line == remaining.npos) {
                     throw runtime_error("Invalid header - missing CRLF");
@@ -247,8 +248,8 @@ private:
 
                 value.append(remaining.data() + 1, end_of_line - 1);
 
-                remaining = boost::string_ref(remaining.data() + end_of_line,
-                                                remaining.size() - end_of_line);
+                remaining = {remaining.data() + end_of_line,
+                    remaining.size() - end_of_line};
             } // while remaining.size() > 2
 
             if (!name.empty()) {
@@ -276,12 +277,11 @@ private:
 
             bytes_used += received;
 
-            buffer_ = boost::string_ref(read_buffer_->data(), bytes_used);
+            buffer_ = {read_buffer_->data(), bytes_used};
             auto pos = buffer_.find(end_of_header);
             if (pos != buffer_.npos) {
-                header_ = buffer_ = boost::string_ref(read_buffer_->data(), pos);
-                body_ = boost::string_ref(header_.end() + 4,
-                                          bytes_used - 4 - header_.size());
+                header_ = buffer_ = {read_buffer_->data(), pos};
+                body_ = {header_.end() + 4, bytes_used - 4 - header_.size()};
                 return bytes_used;
             }
         }
