@@ -66,9 +66,9 @@ public:
         CheckIfWeAreDone();
     }
 
-    int GetResponseCode() const { return status_code_; }
+    int GetResponseCode() const override { return status_code_; }
 
-    boost::asio::const_buffers_1 GetSomeData() {
+    boost::asio::const_buffers_1 GetSomeData() override {
         if (!body_.empty()) {
 
             auto rval = boost::asio::const_buffers_1{body_.data(), body_.size()};
@@ -107,7 +107,7 @@ public:
         return {read_buffer_->data(), received};
     }
 
-    string GetBodyAsString() {
+    string GetBodyAsString() override {
         std::string buffer;
 
         while(MoreDataToRead()) {
