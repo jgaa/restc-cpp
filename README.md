@@ -12,10 +12,7 @@ C++ software developer since 1996. (Before that, I used C).
 ## Design Goal
 The design goal of this project is to make external REST API's
 simple to use in C++ projects, but still very fast (which is why
-we use C++ in the first place, right?). Since it uses boost::asio,
-it's a perfect match for client libraries and applications,
-but also modern, powerful C++ servers, since these more and more
-defaults to boost:asio for network IO.
+we use C++ in the first place, right?). 
 
 Usually I use some version of GPL or LGPL for my projects. This
 library however is so tiny and general that I have released it
@@ -25,7 +22,7 @@ under the more permissive MIT license.
 
 The following code is all that is needed to run REST requests asynchronously,
 using the co-routine support in boost::asio behind the scenes. (To see how
-this works, please see
+this works, please see my
 [modern async cpp example](https://github.com/jgaa/modern_async_cpp_example))
 
 
