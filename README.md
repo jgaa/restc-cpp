@@ -24,7 +24,10 @@ under the more permissive MIT license.
 ## Example
 
 The following code is all that is needed to run REST requests asynchronously,
-using the co-routine support in boost::asio behind the scenes.
+using the co-routine support in boost::asio behind the scenes. (To see how
+this works, please see
+[modern async cpp example](https://github.com/jgaa/modern_async_cpp_example))
+
 
 ```C++
 #include <iostream>
