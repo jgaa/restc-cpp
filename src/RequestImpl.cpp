@@ -5,6 +5,10 @@
 #include <boost/utility/string_ref.hpp>
 
 #include "restc-cpp/restc-cpp.h"
+#include "restc-cpp/Url.h"
+
+// TODO: If we have a ready body in a buffer, send the header and body as two buffers
+// TODO: Implement HTTPS transport
 
 using namespace std;
 
@@ -18,10 +22,12 @@ public:
                 RestClient& owner,
                 const args_t *args,
                 const headers_t *headers)
-    : url_{url}, type_{requestType}, owner_{owner}
+    : url_{url}, parsed_url_{url.c_str()}
+    , request_type_{requestType}, owner_{owner}
     {
         if (args || headers) {
-            properties_ = make_shared<Properties>(*owner_.GetConnectionProperties());
+            properties_ = make_shared<Properties>(
+                *owner_.GetConnectionProperties());
             merge_map(args, properties_->args);
             merge_map(headers, properties_->headers);
         } else {
@@ -44,62 +50,38 @@ public:
         return names[static_cast<int>(requestType)];
     }
 
-    unique_ptr<Reply> Execute(Context& ctx) override {
+    void BuildOutgoingRequest(std::ostream& request_buffer) {
         static const std::string crlf{"\r\n"};
         static const std::string column{": "};
 
-        std::ostringstream request_buffer;
-        Connection::Type protocol_type = Connection::Type::HTTP;
-
-        // Extract and resolve the protocol, hostname and port
-        boost::string_ref protocol(url_);
-        if (protocol.find("https://") == 0) {
-            protocol = boost::string_ref(url_.c_str(), 8);
-            protocol_type = Connection::Type::HTTPS;
-        } else if (protocol.find("http://") == 0) {
-            protocol = boost::string_ref(url_.c_str(), 7);
-        } else {
-            throw invalid_argument("Invalid protocol in url. Must be 'http[s]://'");
-        }
-
-        boost::string_ref host(protocol.end());
-        boost::string_ref port("80");
-        boost::string_ref path("/");
-        if (auto pos = host.find(':') != host.npos) {
-            // TODO: Add a regex to verify the URL and extract data.
-            if (host.length() <= static_cast<decltype(host.length())>(pos + 2)) {
-                throw invalid_argument("Invalid host (no port after column)");
-            }
-            port = boost::string_ref(&host[pos+1]);
-            host = boost::string_ref(host.data(), pos);
-            if (auto path_start = port.find('/') != port.npos) {
-                path = &port[path_start];
-                port = boost::string_ref(port.data(), path_start);
-            }
-        } else {
-            if (auto path_start = host.find('/') != host.npos) {
-                path = &host[path_start];
-                host = boost::string_ref(host.data(), path_start);
-            }
-        }
-
-        // Log
-        {
-            std::ostringstream msg;
-            msg << "Host: '" << host << "', port: '" << port << "'.";
-            owner_.LogDebug(msg);
-        }
-
-        // TODO: Add args
-        std::string args;
-
         // Build the request-path
-        request_buffer << Verb(type_) << ' ' << path << args << "HTTP/1.1" << crlf;
+        request_buffer << Verb(request_type_) << ' '
+            << parsed_url_.GetPath().to_string();
+
+        // Add arguments to the path as ?name=value&name=value...
+        bool first_arg = true;
+        for(const auto& it : properties_->args) {
+            // TODO: Add escaping of strings
+            if (first_arg) {
+                first_arg = false;
+                if (!parsed_url_.GetPath().ends_with('/')) {
+                    request_buffer << '/';
+                }
+                request_buffer << '?';
+            } else {
+                request_buffer << '&';
+            }
+
+            request_buffer << it.first << '=' << it.second;
+        }
+
+        request_buffer << " HTTP/1.1" << crlf;
 
         // Build the header buffers
         const headers_t& headers = properties_->headers;
         if (headers.find("Host") == headers.end()) {
-            request_buffer << "Host: " << host << crlf;
+            request_buffer << "Host: " << parsed_url_.GetHost().to_string()
+                << crlf;
         }
 
         if (headers.find("Content-Lenght") == headers.end()) {
@@ -112,25 +94,45 @@ public:
 
         // Prepare the body
         request_buffer << crlf << body_;
+    }
+
+    unique_ptr<Reply> Execute(Context& ctx) override {
+        const Connection::Type protocol_type =
+            (parsed_url_.GetProtocol() == Url::Protocol::HTTPS)
+            ? Connection::Type::HTTPS
+            : Connection::Type::HTTP;
+
+        std::ostringstream request_buffer;
+        BuildOutgoingRequest(request_buffer);
 
         // TODO: Remove logging here. Too expensive. We can log from async write.
         owner_.LogDebug(request_buffer.str().c_str());
 
+
         // Prepare a reply object
-        auto reply = Reply::Create(ctx, *this, owner_);
         const int max_retries = 3;
 
-        /* Loop three times (on IO error with no data received) over each IP
+        /* Loop three times (on connect or write error) over each IP
          * resolved from the hostname. Third time, ask for a new connection.
          */
 
+        boost::asio::ip::tcp::resolver resolver(owner_.GetIoService());
         for(int attempts = 1; attempts <= max_retries; ++attempts) {
             // Resolve the hostname
-            boost::asio::ip::tcp::resolver resolver(owner_.GetIoService());
-            auto address_it = resolver.async_resolve({host.data(), port.data()},
-                                                     ctx.GetYield());
+            const boost::asio::ip::tcp::resolver::query query{
+                parsed_url_.GetHost().to_string(),
+                parsed_url_.GetPort().to_string()};
 
+            {
+                std::ostringstream msg;
+                msg << "Resolving " << query.host_name() << ":"
+                    << query.service_name() << endl;
+                owner_.LogDebug(msg);
+            }
+
+            auto address_it = resolver.async_resolve(query,ctx.GetYield());
             decltype(address_it) addr_end;
+
             for(; address_it != addr_end; ++address_it) {
 
                 const auto endpoint = address_it->endpoint();
@@ -142,16 +144,45 @@ public:
                 // Connect if the connection is new.
                 if (!connection->GetSocket().GetSocket().is_open()) {
                     // TODO: Set connect timeout
-                    connection->GetSocket().AsyncConnect(endpoint, ctx.GetYield());
+                    std::ostringstream msg;
+                    msg << "Connecting to " << endpoint << endl;
+                    owner_.LogDebug(msg);
+
+                    try {
+                        connection->GetSocket().AsyncConnect(
+                            endpoint, ctx.GetYield());
+                    } catch(const exception& ex) {
+                        std::ostringstream msg;
+                        msg << "Connect failed with exception type: "
+                            << typeid(ex).name()
+                            << ", message: " << ex.what();
+                        owner_.LogDebug(msg);
+                        continue;
+                    }
                 }
 
                 // Send the request.
-                connection->GetSocket().AsyncWrite(ToBuffer(request_buffer), ctx.GetYield());
+                try {
+                    connection->GetSocket().AsyncWrite(
+                        ToBuffer(request_buffer), ctx.GetYield());
+                } catch(const exception& ex) {
+                    std::ostringstream msg;
+                    msg << "Write failed with exception type: "
+                        << typeid(ex).name()
+                        << ", message: " << ex.what();
+                    owner_.LogDebug(msg);
+                    continue;
+                }
 
                 // Pass IO resposibility to the Reply
+                auto reply = Reply::Create(connection, ctx, owner_);
 
-                /* Return the reply. At this time the reply headers and body is returned,
-                 * and the connection can be returned to the connection-pool.
+                // TODO: Handle redirects
+                reply->StartReceiveFromServer();
+
+                /* Return the reply. At this time the reply headers and body
+                 * is returned, and the connection can be returned to the
+                 * connection-pool.
                  */
 
                 return reply;
@@ -163,7 +194,8 @@ public:
 
 private:
     const std::string url_;
-    const Type type_;
+    const Url parsed_url_;
+    const Type request_type_;
     std::string body_;
     Properties::ptr_t properties_;
     RestClient &owner_;

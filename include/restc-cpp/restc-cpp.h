@@ -41,6 +41,7 @@
 
 #include <boost/asio.hpp>
 #include <boost/asio/spawn.hpp>
+#include <boost/optional.hpp>
 
 #include "restc-cpp/helper.h"
 
@@ -50,6 +51,9 @@ class RestClient;
 class Reply;
 class Request;
 class Connection;
+class Socket;
+class Request;
+class Reply;
 
 class Context {
 public:
@@ -58,6 +62,31 @@ public:
 
     virtual std::unique_ptr<Reply> Get(std::string url) = 0;
     virtual std::unique_ptr<Reply> Request(Request& req) = 0;
+};
+
+class Connection {
+public:
+    using ptr_t = std::shared_ptr<Connection>;
+    using release_callback_t = std::function<void (Connection&)>;
+
+    enum class Type {
+        HTTP,
+        HTTPS
+    };
+
+    virtual ~Connection() = default;
+
+    virtual Socket& GetSocket() = 0;
+};
+
+class ConnectionPool {
+public:
+    virtual Connection::ptr_t GetConnection(
+        const boost::asio::ip::tcp::endpoint ep,
+        const Connection::Type connectionType,
+        bool new_connection_please = false) = 0;
+
+        static std::unique_ptr<ConnectionPool> Create(RestClient& owner);
 };
 
 
@@ -101,9 +130,47 @@ public:
 class Reply {
 public:
 
-    static std::unique_ptr<Reply> Create(Context& ctx,
-                                         const Request& req,
+    static std::unique_ptr<Reply> Create(Connection::ptr_t& connection,
+                                         Context& ctx,
                                          RestClient& owner);
+
+    /*! Called after a request is sent to receive data from the server
+     *
+     * TODO: Hide this method - it's internal
+     */
+    virtual void StartReceiveFromServer() = 0;
+
+
+    virtual int GetResponseCode() const = 0;
+
+    /*! Get the complete data from the server and return it as a string.
+     *
+     * This is a convenience method when working with relatively
+     * small results.
+     */
+    virtual std::string GetBodyAsString() = 0;
+
+    /*! Get some data from the server.
+     *
+     * This is the lowest level to fetch data. Buffers will be
+     * returned as they was returned from the web server.
+     *
+     * The method will return an empty buffer when there is
+     * no more data to read (the request is complete).
+     *
+     * The data may be returned from a pending buffer, or it may
+     * be fetched from the server.
+     */
+    virtual boost::asio::const_buffers_1 GetSomeData() = 0;
+
+    /*! Returns true as ling as you have not yet pulled all
+     * the data from the response.
+     */
+    virtual bool MoreDataToRead() = 0;
+
+    /*! Get the value of a header */
+
+    virtual boost::optional<std::string> GetHeader(const std::string& name) = 0;
 };
 
 
@@ -130,32 +197,6 @@ public:
 
     virtual void AsyncShutdown(boost::asio::yield_context& yield) = 0;
 
-};
-
-
-class Connection {
-public:
-    using ptr_t = std::unique_ptr<Connection>;
-    using release_callback_t = std::function<void (Connection&)>;
-
-    enum class Type {
-        HTTP,
-        HTTPS
-    };
-
-    virtual ~Connection() = default;
-
-    virtual Socket& GetSocket() = 0;
-};
-
-class ConnectionPool {
-public:
-    virtual Connection::ptr_t GetConnection(
-        const boost::asio::ip::tcp::endpoint ep,
-        const Connection::Type connectionType,
-        bool new_connection_please = false) = 0;
-
-    static std::unique_ptr<ConnectionPool> Create(RestClient& owner);
 };
 
 /*! Factory and resource management

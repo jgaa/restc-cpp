@@ -21,6 +21,40 @@ Usually I use some version of GPL or LGPL for my projects. This
 library however is so tiny and general that I have released it
 under the more permissive MIT license.
 
+## Example
+
+The following code is all that is needed to run REST requests Asynchronously,
+using the co-routine support in boost::asio behind the scenes.
+
+```C++
+#include <iostream>
+#include "restc-cpp/restc-cpp.h"
+
+using namespace std;
+using namespace restc_cpp;
+
+void DoSomethingInteresting(Context& ctx) {
+
+    // Asynchronously connect to a server and fetch some data.
+    auto reply = ctx.Get("http://jsonplaceholder.typicode.com/posts");
+
+    // Asynchronously fetch the entire data-set and return it as a string.
+    auto json = reply->GetBodyAsString();
+
+    // Just dump the data.
+    clog << "Received data: " << json << endl;
+}
+
+main(int argc, char *argv[]) {
+    auto rest_client = RestClient::Create();
+    rest_client->Process(DoSomethingInteresting);
+
+    // Hold the mail thread...
+    cin.get();
+}
+```
+
+
 ## Current Status
 The project is justs starting up. The code is incomplete.
 
@@ -34,3 +68,14 @@ The project is justs starting up. The code is incomplete.
 - Android (via NDK)
 - Windows Vista and later
 - Windows mobile
+
+
+## Short Term Tasks
+- [ ] Implement HTTPS
+- [ ] Implement Chunked Reponse handling
+- [ ] Implement Chunked Requests
+- [ ] Implement simple File Upload (as body)
+- [ ] Implement simple File Download (from body)
+- [ ] Implement Mime multipart Requests
+- [ ] Implement Mime multipart Responses
+- [ ] Implement Form Data encoding (with File Upload)

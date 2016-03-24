@@ -5,6 +5,7 @@
 
 #include <string>
 #include <cstring>
+#include <boost/utility/string_ref.hpp>
 
 namespace restc_cpp {
 
@@ -16,7 +17,6 @@ struct ciLessLibC : public std::binary_function<std::string, std::string, bool> 
         return strcasecmp(lhs.c_str(), rhs.c_str()) < 0 ;
     }
 };
-
 
 /*! Merge map dst into map src if dst != nullptr */
 template <typename T>
