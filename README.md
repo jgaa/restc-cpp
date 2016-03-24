@@ -75,8 +75,8 @@ simple REST requests.
 
 
 ## Short Term Tasks
-- [x] Implement GET, POST, PUT, DELETE
-- [x] Implement HTTPS
+- [x] ~~Implement GET, POST, PUT, DELETE~~~
+- [x] ~~Implement HTTPS~~
 - [ ] Implement connection pool
 - [ ] Implement Chunked Reponse handling
 - [ ] Implement Chunked Requests
