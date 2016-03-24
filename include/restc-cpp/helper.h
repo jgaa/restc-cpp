@@ -20,8 +20,8 @@ struct ciLessLibC : public std::binary_function<std::string, std::string, bool> 
 
 /*! Merge map dst into map src if dst != nullptr */
 template <typename T>
-void merge_map(const T *src, T& dst) {
-    if (src != nullptr) {
+void merge_map(const boost::optional<T> src, T& dst) {
+    if (src) {
         for(const auto& it : *src) {
             dst.insert(it);
         }

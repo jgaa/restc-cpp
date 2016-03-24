@@ -20,18 +20,25 @@ public:
     RequestImpl(const std::string& url,
                 const Type requestType,
                 RestClient& owner,
-                const args_t *args,
-                const headers_t *headers)
-    : url_{url}, parsed_url_{url.c_str()}
-    , request_type_{requestType}, owner_{owner}
+                boost::optional<Body> body,
+                const boost::optional<args_t>& args,
+                const boost::optional<headers_t>& headers)
+    : url_{url}, parsed_url_{url.c_str()} , request_type_{requestType}
+    , owner_{owner}
     {
         if (args || headers) {
-            properties_ = make_shared<Properties>(
-                *owner_.GetConnectionProperties());
+            properties_ = make_shared<Properties>(*owner_.GetConnectionProperties());
             merge_map(args, properties_->args);
             merge_map(headers, properties_->headers);
         } else {
             properties_ = owner_.GetConnectionProperties();
+        }
+
+        if (body) {
+            if (body->type_ == Body::Type::STRING) {
+                assert(body->body_str_);
+                body_ = move(*body->body_str_);
+            }
         }
     }
 
@@ -204,12 +211,13 @@ private:
 
 std::unique_ptr<Request>
 Request::Create(const std::string& url,
-       const Type requestType,
-       RestClient& owner,
-       const args_t *args,
-       const headers_t *headers) {
+                const Type requestType,
+                RestClient& owner,
+                boost::optional<Body> body,
+                const boost::optional<args_t>& args,
+                const boost::optional<headers_t>& headers) {
 
-    return make_unique<RequestImpl>(url, requestType, owner, args, headers);
+    return make_unique<RequestImpl>(url, requestType, owner, body, args, headers);
 }
 
 } // restc_cpp

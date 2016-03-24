@@ -39,7 +39,15 @@ void DoSomethingInteresting(Context& ctx) {
         auto json = repl->GetBodyAsString();
 
         // Just dump the data.
-        clog << "Received data: " << json << endl;
+        clog << "Received GET data: " << json << endl;
+
+        // Asynchronously connect to server and POST data.
+        repl = ctx.Post(http_url, "{ 'test' : 'teste' }");
+
+        // Asynchronously fetch the entire data-set and return it as a string.
+        json = repl->GetBodyAsString();
+        clog << "Received POST data: " << json << endl;
+
 
     } catch (const exception& ex) {
         std::clog << "Process: Caught exception: " << ex.what() << endl;

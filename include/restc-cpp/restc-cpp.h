@@ -54,15 +54,7 @@ class Connection;
 class Socket;
 class Request;
 class Reply;
-
-class Context {
-public:
-    virtual boost::asio::yield_context& GetYield() = 0;
-    virtual RestClient& GetClient() = 0;
-
-    virtual std::unique_ptr<Reply> Get(std::string url) = 0;
-    virtual std::unique_ptr<Reply> Request(Request& req) = 0;
-};
+class Context;
 
 class Connection {
 public:
@@ -114,6 +106,19 @@ public:
         args_t args;
     };
 
+    struct Body {
+        enum class Type {
+            NONE,
+            STRING
+        };
+
+        Body() = default;
+        Body(const std::string& body) : body_str_(body), type_{Type::STRING} {}
+        Body(std::string&& body) : body_str_(move(body)), type_{Type::STRING} {}
+
+        boost::optional<std::string> body_str_;
+        const Type type_ = Type::NONE;
+    };
 
     virtual const Properties& GetProperties() const = 0;
     virtual void SetProperties(Properties::ptr_t propreties) = 0;
@@ -123,8 +128,9 @@ public:
     Create(const std::string& url,
            const Type requestType,
            RestClient& owner,
-           const args_t *args = nullptr,
-           const headers_t *headers = nullptr);
+           boost::optional<Body> body = {},
+           const boost::optional<args_t>& args = {},
+           const boost::optional<headers_t>& headers = {});
 };
 
 class Reply {
@@ -174,6 +180,19 @@ public:
 };
 
 
+class Context {
+public:
+    virtual boost::asio::yield_context& GetYield() = 0;
+    virtual RestClient& GetClient() = 0;
+
+    virtual std::unique_ptr<Reply> Get(std::string url) = 0;
+    virtual std::unique_ptr<Reply> Post(std::string url, std::string body) = 0;
+    virtual std::unique_ptr<Reply> Put(std::string url, std::string body) = 0;
+    virtual std::unique_ptr<Reply> Delete(std::string url) = 0;
+    virtual std::unique_ptr<Reply> Request(Request& req) = 0;
+};
+
+
 class Socket
 {
 public:
@@ -217,7 +236,7 @@ public:
 
     /*! Factory */
     static std::unique_ptr<RestClient>
-        Create(Request::Properties *properties = nullptr);
+        Create(boost::optional<Request::Properties> properties = {});
 
     virtual void LogError(const char *message) = 0;
     virtual void LogWarning(const char *message) = 0;

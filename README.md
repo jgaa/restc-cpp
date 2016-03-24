@@ -56,7 +56,11 @@ main(int argc, char *argv[]) {
 
 
 ## Current Status
-The project is justs starting up. The code is incomplete.
+The project is justs starting up.
+
+The code is immature and not properly tested, but capable of executing
+simple REST requests.
+
 
 ## Supported development platforms:
 - Linux (Debian stable and testing)
@@ -71,7 +75,7 @@ The project is justs starting up. The code is incomplete.
 
 
 ## Short Term Tasks
-- [ ] Implement POST, PUT, DELETE
+- [x] Implement GET, POST, PUT, DELETE
 - [ ] Implement HTTPS
 - [ ] Implement connection pool
 - [ ] Implement Chunked Reponse handling

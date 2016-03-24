@@ -30,6 +30,23 @@ public:
             return Request(*req);
         }
 
+        unique_ptr< Reply > Post(string url, string body) override {
+            auto req = Request::Create(url, restc_cpp::Request::Type::POST, rc_,
+                                       {Request::Body{move(body)}});
+            return Request(*req);
+        }
+
+        unique_ptr< Reply > Put(string url, string body) override {
+            auto req = Request::Create(url, restc_cpp::Request::Type::PUT, rc_,
+                                       {Request::Body{move(body)}});
+            return Request(*req);
+        }
+
+        unique_ptr< Reply > Delete(string url) override {
+            auto req = Request::Create(url, restc_cpp::Request::Type::DELETE, rc_);
+            return Request(*req);
+        }
+
         std::unique_ptr<Reply> Request(restc_cpp::Request& req) override {
             return req.Execute(*this);
         }
@@ -38,11 +55,20 @@ public:
         RestClientImpl& rc_;
     };
 
-    RestClientImpl(Request::Properties *properties)
+    RestClientImpl(boost::optional<Request::Properties> properties)
     : default_connection_properties_{make_shared<Request::Properties>()}
     {
+        static const string content_type{"Content-Type"};
+        static const string json_type{"application/json; charset=utf-8"};
+
         if (properties)
             *default_connection_properties_ = *properties;
+
+        if (default_connection_properties_->headers.find(content_type)
+            == default_connection_properties_->headers.end()) {
+            default_connection_properties_->headers[content_type] = json_type;
+        }
+
 
         std::thread([this]() {
             pool_ = ConnectionPool::Create(*this);
@@ -110,7 +136,7 @@ private:
 
 };
 
-unique_ptr<RestClient> RestClient::Create(Request::Properties *properties) {
+unique_ptr<RestClient> RestClient::Create(boost::optional<Request::Properties> properties) {
     return make_unique<RestClientImpl>(properties);
 }
 
