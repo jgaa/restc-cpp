@@ -16,7 +16,8 @@ we use C++ in the first place, right?).
 
 Usually I use some version of GPL or LGPL for my projects. This
 library however is so tiny and general that I have released it
-under the more permissive MIT license.
+under the more permissive MIT license. It is Free. Free as in Free Beer.
+Free as in Free Air.
 
 ## Example
 
