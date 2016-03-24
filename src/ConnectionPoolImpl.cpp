@@ -7,6 +7,8 @@
 #include "restc-cpp/restc-cpp.h"
 #include "ConnectionImpl.h"
 #include "SocketImpl.h"
+#include "TlsSocketImpl.h"
+
 
 using namespace std;
 
@@ -50,9 +52,16 @@ GetConnection(const boost::asio::ip::tcp::endpoint ep,
               bool new_connection_please) override {
 
     // TODO: Implement the pool
+                  
+    unique_ptr<Socket> socket;
+    if (connectionType == Connection::Type::HTTP) {
+        socket = make_unique<SocketImpl>(owner_.GetIoService());
+    } else {
+        socket = make_unique<TlsSocketImpl>(owner_.GetIoService());
+    }
+
     auto connection = make_unique<ConnectionWrapper>(
-        make_shared<ConnectionImpl>(
-            make_unique<SocketImpl>(owner_.GetIoService())));
+        make_shared<ConnectionImpl>(move(socket)));
 
     return move(connection);
 }

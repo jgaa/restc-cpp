@@ -10,6 +10,7 @@
 #include <boost/asio/spawn.hpp>
 #include <boost/optional.hpp>
 
+#include "restc-cpp/config.h"
 #include "restc-cpp/helper.h"
 
 namespace restc_cpp {

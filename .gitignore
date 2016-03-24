@@ -1,3 +1,14 @@
+.kdev4
+build
+?build
+doc
+*/*.rej
+include/restc-cpp/config.h
+lib
+*.kdev4
+
+
+
 # Compiled Object files
 *.slo
 *.lo

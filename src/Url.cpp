@@ -43,6 +43,14 @@ Url::Url(const char *url)
             host_ = boost::string_ref(host_.data(), path_start);
         }
     }
+
+    if (port_.empty()) {
+        if (protocol_ == Protocol::HTTPS) {
+            port_ = {"443"};
+        } else {
+            port_ = {"80"};
+        }
+    }
 }
 
 

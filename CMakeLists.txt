@@ -14,6 +14,11 @@ if (NOT DEFINED RESTC_CPP_WITH_UNIT_TESTS)
 	option(RESTC_CPP_WITH_UNIT_TESTS "Enable Unit Testing" ON)
 endif()
 
+if (NOT DEFINED RESTC_CPP_WITH_TLS)
+        option(RESTC_CPP_WITH_TLS "Enable TLS (Trough OpenSSL)" ON)
+endif()
+
+
 
 # We create a configuration file so that other code that
 # include our header files gets the correct configuration.

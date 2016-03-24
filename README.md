@@ -76,7 +76,7 @@ simple REST requests.
 
 ## Short Term Tasks
 - [x] Implement GET, POST, PUT, DELETE
-- [ ] Implement HTTPS
+- [x] Implement HTTPS
 - [ ] Implement connection pool
 - [ ] Implement Chunked Reponse handling
 - [ ] Implement Chunked Requests
@@ -90,3 +90,4 @@ simple REST requests.
 - [ ] Implement Form Data encoding (with File Upload)
 - [ ] Implement asynchronous iterators for received data and integrate with json parser.
 - [ ] Implement asynchronous iterators for requests data and integrate with json generator.
+- [ ] Add options to secure TLS connections (avoid weak encryption and verify server certs).

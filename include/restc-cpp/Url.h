@@ -27,7 +27,7 @@ namespace restc_cpp {
  private:
      boost::string_ref protocol_name_;
      boost::string_ref host_;
-     boost::string_ref port_ = "80";
+     boost::string_ref port_;
      boost::string_ref path_ = "/";
      Protocol protocol_ = Protocol::UNKNOWN;
  };

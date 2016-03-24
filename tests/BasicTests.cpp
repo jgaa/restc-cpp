@@ -27,6 +27,7 @@ void SleepUntilDoomdsay()
 
 
 const string http_url = "http://jsonplaceholder.typicode.com/posts";
+const string https_url = "https://jsonplaceholder.typicode.com/posts";
 
 void DoSomethingInteresting(Context& ctx) {
 
@@ -48,6 +49,10 @@ void DoSomethingInteresting(Context& ctx) {
         json = repl->GetBodyAsString();
         clog << "Received POST data: " << json << endl;
 
+        // Try with https
+        repl = ctx.Get(https_url);
+        json = repl->GetBodyAsString();
+        clog << "Received https GET data: " << json << endl;
 
     } catch (const exception& ex) {
         std::clog << "Process: Caught exception: " << ex.what() << endl;
