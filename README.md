@@ -76,6 +76,11 @@ The project is justs starting up. The code is incomplete.
 - [ ] Implement Chunked Requests
 - [ ] Implement simple File Upload (as body)
 - [ ] Implement simple File Download (from body)
+- [ ] Verify that it compiles with Debian Stable
+- [ ] Verify that it compiles with Windows 10 / Visual Studio
+- [ ] Verify that it compiles with OS/X
 - [ ] Implement Mime multipart Requests
 - [ ] Implement Mime multipart Responses
 - [ ] Implement Form Data encoding (with File Upload)
+- [ ] Implement asynchronous iterators for received data and integrate with json parser.
+- [ ] Implement asynchronous iterators for requests data and integrate with json generator.
