@@ -154,7 +154,7 @@ public:
                  * and the connection can be returned to the connection-pool.
                  */
 
-                return move(reply);
+                return reply;
             }
         }
 

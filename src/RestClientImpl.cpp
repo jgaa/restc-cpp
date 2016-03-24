@@ -23,7 +23,7 @@ public:
         {}
 
         RestClient& GetClient() override { return rc_; }
-        boost::asio::yield_context& GetYield() { return yield_; }
+        boost::asio::yield_context& GetYield() override { return yield_; }
 
         std::unique_ptr<Reply> Get(string url) override {
             auto req = Request::Create(url, restc_cpp::Request::Type::GET, rc_);
@@ -76,9 +76,9 @@ public:
                                 std::placeholders::_1, fn));
     }
 
-    ConnectionPool& GetConnectionPool() { return *pool_; }
+    ConnectionPool& GetConnectionPool() override { return *pool_; }
 
-    boost::asio::io_service& GetIoService() { return io_service_; }
+    boost::asio::io_service& GetIoService() override { return io_service_; }
 
     void LogError(const char *message) override {
         log_error_(message);
