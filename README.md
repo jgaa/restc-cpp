@@ -71,7 +71,9 @@ The project is justs starting up. The code is incomplete.
 
 
 ## Short Term Tasks
+- [ ] Implement POST, PUT, DELETE
 - [ ] Implement HTTPS
+- [ ] Implement connection pool
 - [ ] Implement Chunked Reponse handling
 - [ ] Implement Chunked Requests
 - [ ] Implement simple File Upload (as body)
