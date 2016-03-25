@@ -10,8 +10,6 @@
 #include "restc-cpp/ConnectionPool.h"
 #include "restc-cpp/IoTimer.h"
 
-// TODO: If we have a ready body in a buffer, send the header and body as two buffers
-
 using namespace std;
 
 namespace restc_cpp {
@@ -64,6 +62,7 @@ public:
         return names[static_cast<int>(requestType)];
     }
 
+private:
     std::string BuildOutgoingRequest() {
         static const std::string crlf{"\r\n"};
         static const std::string column{": "};
@@ -223,7 +222,6 @@ public:
         throw runtime_error("Failed to connect");
     }
 
-private:
     const std::string url_;
     const Url parsed_url_;
     const Type request_type_;
