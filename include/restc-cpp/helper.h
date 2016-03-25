@@ -3,6 +3,7 @@
 #ifndef RESTC_CPP_HELPER_H_
 #define RESTC_CPP_HELPER_H_
 
+#include <memory>
 #include <string>
 #include <cstring>
 #include <boost/utility/string_ref.hpp>
@@ -46,6 +47,8 @@ public:
 private:
     const std::string buf_;
 };
+
+
 
 } // restc_cpp
 

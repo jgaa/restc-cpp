@@ -8,6 +8,7 @@
 
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/Socket.h"
+#include "restc-cpp/IoTimer.h"
 
 using namespace std;
 
@@ -19,10 +20,10 @@ class ReplyImpl : public Reply {
 public:
     using buffer_t = std::array<char, 1024 * 16>;
 
-    ReplyImpl(Connection::ptr_t& connection,
+    ReplyImpl(Connection::ptr_t connection,
               Context& ctx,
               RestClient& owner)
-    : connection_{connection}, ctx_{ctx}, owner_{owner}
+    : connection_{move(connection)}, ctx_{ctx}, owner_{owner}
     {
     }
 
@@ -90,9 +91,16 @@ public:
         }
 
         assert(want_bytes);
+        size_t received = 0;
 
-        const size_t received = connection_->GetSocket().AsyncReadSome(
-            {read_buffer_->data(), want_bytes}, ctx_.GetYield());
+        {
+            auto timer = IoTimer::Create(
+                owner_.GetConnectionProperties()->replyTimeoutMs,
+                owner_.GetIoService(), connection_);
+
+            received = connection_->GetSocket().AsyncReadSome(
+                {read_buffer_->data(), want_bytes}, ctx_.GetYield());
+        }
 
         if (received == 0) {
             throw runtime_error("Got 0 bytes from server");
@@ -262,6 +270,10 @@ private:
         size_t bytes_used = 0;
         static string end_of_header{"\r\n\r\n"};
 
+        auto timer = IoTimer::Create(
+                owner_.GetConnectionProperties()->replyTimeoutMs,
+                owner_.GetIoService(), connection_);
+
         while(true) {
             if (BYTES_AVAILABLE < 1) {
                 throw runtime_error("Header is too long - out of buffer space");
@@ -306,11 +318,11 @@ private:
 
 
 std::unique_ptr<Reply>
-Reply::Create(Connection::ptr_t& connection,
+Reply::Create(Connection::ptr_t connection,
        Context& ctx,
        RestClient& owner) {
 
-    return make_unique<ReplyImpl>(connection, ctx, owner);
+    return make_unique<ReplyImpl>(move(connection), ctx, owner);
 }
 
 } // restc_cpp

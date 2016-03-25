@@ -54,6 +54,8 @@ void DoSomethingInteresting(Context& ctx) {
         json = repl->GetBodyAsString();
         clog << "Received https GET data: " << json << endl;
 
+        clog << "Done" << endl;
+
     } catch (const exception& ex) {
         std::clog << "Process: Caught exception: " << ex.what() << endl;
     }

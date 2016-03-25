@@ -8,6 +8,7 @@
 #include "restc-cpp/Url.h"
 #include "restc-cpp/Socket.h"
 #include "restc-cpp/ConnectionPool.h"
+#include "restc-cpp/IoTimer.h"
 
 // TODO: If we have a ready body in a buffer, send the header and body as two buffers
 
@@ -156,10 +157,15 @@ public:
 
                 // Connect if the connection is new.
                 if (!connection->GetSocket().GetSocket().is_open()) {
-                    // TODO: Set connect timeout
+
                     std::ostringstream msg;
                     msg << "Connecting to " << endpoint << endl;
                     owner_.LogDebug(msg);
+
+
+                    auto timer = IoTimer::Create(properties_->connectTimeoutMs,
+                                                 owner_.GetIoService(),
+                                                 connection);
 
                     try {
                         connection->GetSocket().AsyncConnect(
@@ -175,16 +181,22 @@ public:
                 }
 
                 // Send the request.
-                try {
-                    connection->GetSocket().AsyncWrite(
-                        ToBuffer(request_buffer), ctx.GetYield());
-                } catch(const exception& ex) {
-                    std::ostringstream msg;
-                    msg << "Write failed with exception type: "
-                        << typeid(ex).name()
-                        << ", message: " << ex.what();
-                    owner_.LogDebug(msg);
-                    continue;
+                {
+                    auto timer = IoTimer::Create(properties_->connectTimeoutMs,
+                                                 owner_.GetIoService(),
+                                                 connection);
+
+                    try {
+                        connection->GetSocket().AsyncWrite(
+                            ToBuffer(request_buffer), ctx.GetYield());
+                    } catch(const exception& ex) {
+                        std::ostringstream msg;
+                        msg << "Write failed with exception type: "
+                            << typeid(ex).name()
+                            << ", message: " << ex.what();
+                        owner_.LogDebug(msg);
+                        continue;
+                    }
                 }
 
                 // Pass IO resposibility to the Reply

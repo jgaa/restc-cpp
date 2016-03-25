@@ -50,7 +50,8 @@ public:
 
         int maxRedirects = 3;
         int connectTimeoutMs = (1000 * 12);
-        int replyTimeoutMs =  (1000 * 60);
+        int sendTimeoutMs = (1000 * 12); // For each IO operation
+        int replyTimeoutMs =  (1000 * 21); // For each IO operation
         headers_t headers;
         args_t args;
     };
@@ -85,7 +86,7 @@ public:
 class Reply {
 public:
 
-    static std::unique_ptr<Reply> Create(Connection::ptr_t& connection,
+    static std::unique_ptr<Reply> Create(Connection::ptr_t connection,
                                          Context& ctx,
                                          RestClient& owner);
 
