@@ -7,6 +7,17 @@
 
 using namespace std;
 
+std::ostream& operator <<(std::ostream& out,
+                          const restc_cpp::Url::Protocol& protocol) {
+    static const vector<string> names = {"UNKNOWN", "HTTP", "HTTPS"};
+
+    const auto index = static_cast<unsigned>(protocol);
+    if (index > static_cast<unsigned>(restc_cpp::Url::Protocol::HTTPS)) {
+        throw std::invalid_argument("Unknown protocol enum value");
+    }
+    return out << names[index];
+}
+
 namespace restc_cpp {
 
 Url::Url(const char *url)
@@ -32,7 +43,9 @@ Url::Url(const char *url)
         }
         port_ = boost::string_ref(&host_[port_start+1]);
         host_ = boost::string_ref(host_.data(), port_start);
-        if (auto path_start = port_.find('/') != port_.npos) {
+
+        const auto path_start = port_.find('/');
+        if (path_start != port_.npos) {
             path_ = &port_[path_start];
             port_ = boost::string_ref(port_.data(), path_start);
         }

@@ -32,8 +32,9 @@ namespace restc_cpp {
      Protocol protocol_ = Protocol::UNKNOWN;
  };
 
-
 } // namespace restc_cpp
 
+std::ostream& operator <<(std::ostream& out,
+                          const restc_cpp::Url::Protocol& protocol);
 
 #endif // RESTC_CPP_URL_H_
