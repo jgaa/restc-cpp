@@ -5,6 +5,7 @@
 #include <boost/utility/string_ref.hpp>
 
 #include "restc-cpp/restc-cpp.h"
+#include "restc-cpp/Socket.h"
 
 namespace restc_cpp {
 

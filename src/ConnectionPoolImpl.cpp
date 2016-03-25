@@ -5,6 +5,8 @@
 #include <boost/utility/string_ref.hpp>
 
 #include "restc-cpp/restc-cpp.h"
+#include "restc-cpp/Connection.h"
+#include "restc-cpp/ConnectionPool.h"
 #include "ConnectionImpl.h"
 #include "SocketImpl.h"
 #include "TlsSocketImpl.h"
@@ -52,7 +54,7 @@ GetConnection(const boost::asio::ip::tcp::endpoint ep,
               bool new_connection_please) override {
 
     // TODO: Implement the pool
-                  
+
     unique_ptr<Socket> socket;
     if (connectionType == Connection::Type::HTTP) {
         socket = make_unique<SocketImpl>(owner_.GetIoService());

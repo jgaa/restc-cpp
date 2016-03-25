@@ -5,6 +5,7 @@
 #include <future>
 
 #include "restc-cpp/restc-cpp.h"
+#include "restc-cpp/ConnectionPool.h"
 
 using namespace std;
 

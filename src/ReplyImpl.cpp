@@ -7,6 +7,7 @@
 #include <boost/optional.hpp>
 
 #include "restc-cpp/restc-cpp.h"
+#include "restc-cpp/Socket.h"
 
 using namespace std;
 

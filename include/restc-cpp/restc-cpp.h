@@ -12,6 +12,7 @@
 
 #include "restc-cpp/config.h"
 #include "restc-cpp/helper.h"
+#include "restc-cpp/Connection.h"
 
 namespace restc_cpp {
 
@@ -19,36 +20,11 @@ class RestClient;
 class Reply;
 class Request;
 class Connection;
+class ConnectionPool;
 class Socket;
 class Request;
 class Reply;
 class Context;
-
-class Connection {
-public:
-    using ptr_t = std::shared_ptr<Connection>;
-    using release_callback_t = std::function<void (Connection&)>;
-
-    enum class Type {
-        HTTP,
-        HTTPS
-    };
-
-    virtual ~Connection() = default;
-
-    virtual Socket& GetSocket() = 0;
-};
-
-class ConnectionPool {
-public:
-    virtual Connection::ptr_t GetConnection(
-        const boost::asio::ip::tcp::endpoint ep,
-        const Connection::Type connectionType,
-        bool new_connection_please = false) = 0;
-
-        static std::unique_ptr<ConnectionPool> Create(RestClient& owner);
-};
-
 
 class Request {
 public:
@@ -108,9 +84,11 @@ public:
                                          Context& ctx,
                                          RestClient& owner);
 
-    /*! Called after a request is sent to receive data from the server
+    /*! Called after a request is sent to start interacting with the server.
      *
-     * TODO: Hide this method - it's internal
+     * This will send the request to to the server and fetch the first
+     * part of the reply, including the HTTP reply status and headers.
+     *
      */
     virtual void StartReceiveFromServer() = 0;
 
@@ -153,37 +131,25 @@ public:
     virtual boost::asio::yield_context& GetYield() = 0;
     virtual RestClient& GetClient() = 0;
 
+    /*! Send a GET request asynchronously to the server. */
     virtual std::unique_ptr<Reply> Get(std::string url) = 0;
+
+    /*! Send a POST request asynchronously to the server. */
     virtual std::unique_ptr<Reply> Post(std::string url, std::string body) = 0;
+
+    /*! Send a PUT request asynchronously to the server. */
     virtual std::unique_ptr<Reply> Put(std::string url, std::string body) = 0;
+
+    /*! Send a DELETE request asynchronously to the server. */
     virtual std::unique_ptr<Reply> Delete(std::string url) = 0;
+
+    /*! Send a request asynchronously to the server.
+     *
+     * At the time the method returns, the request is sent, and the
+     * first chunk of data is received from the server,. so that the
+     * status code in the reply will ve valid.
+     */
     virtual std::unique_ptr<Reply> Request(Request& req) = 0;
-};
-
-
-class Socket
-{
-public:
-    virtual ~Socket() = default;
-
-    virtual boost::asio::ip::tcp::socket& GetSocket() = 0;
-
-    virtual const boost::asio::ip::tcp::socket& GetSocket() const = 0;
-
-    virtual std::size_t AsyncReadSome(boost::asio::mutable_buffers_1 buffers,
-                                      boost::asio::yield_context& yield) = 0;
-
-    virtual std::size_t AsyncRead(boost::asio::mutable_buffers_1 buffers,
-                                  boost::asio::yield_context& yield) = 0;
-
-    virtual void AsyncWrite(const boost::asio::const_buffers_1& buffers,
-                            boost::asio::yield_context& yield) = 0;
-
-    virtual void AsyncConnect(const boost::asio::ip::tcp::endpoint& ep,
-                              boost::asio::yield_context& yield) = 0;
-
-    virtual void AsyncShutdown(boost::asio::yield_context& yield) = 0;
-
 };
 
 /*! Factory and resource management

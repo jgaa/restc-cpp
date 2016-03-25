@@ -6,6 +6,8 @@
 
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/Url.h"
+#include "restc-cpp/Socket.h"
+#include "restc-cpp/ConnectionPool.h"
 
 // TODO: If we have a ready body in a buffer, send the header and body as two buffers
 

@@ -8,6 +8,7 @@
 #ifdef RESTC_CPP_WITH_TLS
 
 #include <boost/asio/ssl.hpp>
+#include "restc-cpp/Socket.h"
 
 namespace restc_cpp {
 
