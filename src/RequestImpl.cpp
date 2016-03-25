@@ -8,7 +8,6 @@
 #include "restc-cpp/Url.h"
 
 // TODO: If we have a ready body in a buffer, send the header and body as two buffers
-// TODO: Implement HTTPS transport
 
 using namespace std;
 
