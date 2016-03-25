@@ -29,7 +29,12 @@ public:
     {
         if (args || headers) {
             properties_ = make_shared<Properties>(*owner_.GetConnectionProperties());
-            merge_map(args, properties_->args);
+
+            if (args) {
+                properties_->args.insert(properties_->args.end(),
+                                         args->begin(), args->end());
+            }
+
             merge_map(headers, properties_->headers);
         } else {
             properties_ = owner_.GetConnectionProperties();
@@ -68,7 +73,7 @@ public:
 
         // Add arguments to the path as ?name=value&name=value...
         bool first_arg = true;
-        for(const auto& it : properties_->args) {
+        for(const auto& arg : properties_->args) {
             // TODO: Add escaping of strings
             if (first_arg) {
                 first_arg = false;
@@ -80,7 +85,7 @@ public:
                 request_buffer << '&';
             }
 
-            request_buffer << it.first << '=' << it.second;
+            request_buffer << arg.name<< '=' << arg.value;
         }
 
         request_buffer << " HTTP/1.1" << crlf;

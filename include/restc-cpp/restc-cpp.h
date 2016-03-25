@@ -4,6 +4,7 @@
 
 #include <string>
 #include <map>
+#include <list>
 #include <memory>
 
 #include <boost/asio.hpp>
@@ -28,8 +29,13 @@ class Context;
 
 class Request {
 public:
+    struct Arg {
+        std::string name;
+        std::string value;
+    };
+
     using headers_t = std::map<std::string, std::string, ciLessLibC>;
-    using args_t = std::map<std::string, std::string>;
+    using args_t = std::list<Arg>;
 
     enum class Type {
         GET,
@@ -40,7 +46,6 @@ public:
 
     class Properties {
     public:
-
         using ptr_t = std::shared_ptr<Properties>;
 
         int maxRedirects = 3;
@@ -88,7 +93,6 @@ public:
      *
      * This will send the request to to the server and fetch the first
      * part of the reply, including the HTTP reply status and headers.
-     *
      */
     virtual void StartReceiveFromServer() = 0;
 
@@ -125,7 +129,14 @@ public:
     virtual boost::optional<std::string> GetHeader(const std::string& name) = 0;
 };
 
-
+/*! The context is used to keep state within a co-routine.
+ *
+ * The Request and Reply classes depend on an instance of the
+ * context to do their job.
+ *
+ * Internally, the Context is created in a functor referenced
+ * by boost::asio::spawn().
+ */
 class Context {
 public:
     virtual boost::asio::yield_context& GetYield() = 0;
@@ -146,14 +157,20 @@ public:
     /*! Send a request asynchronously to the server.
      *
      * At the time the method returns, the request is sent, and the
-     * first chunk of data is received from the server,. so that the
-     * status code in the reply will ve valid.
+     * first chunk of data is received from the server. The status code
+     * in the reply will be valid.
      */
     virtual std::unique_ptr<Reply> Request(Request& req) = 0;
 };
 
 /*! Factory and resource management
-*/
+ *
+ * Each instance of this class has it's own internal worker-thread
+ * that will execute the co-routines passed to Process().
+ *
+ * Because REST calls are typically slow at the server end, you can
+ * normally pass a large number of requests to one instance.
+ */
 class RestClient {
 public:
     using logger_t = std::function<void (const char *)>;
@@ -163,6 +180,18 @@ public:
 
     using prc_fn_t = std::function<void (Context& ctx)>;
 
+    /*! Create a context and execute fn as a co-routine
+     *
+     * The REST operations in the coroutine are carried out by Request and
+     * Reply. They will be executed asynchronously, and while an IO operation
+     * is pending the co-routine will be suspended and the thread ready to
+     * handle other co-routines.
+     *
+     * You should therefore not do time-consuming things within
+     * fn, but rather execute long-running (more than a few milliseconds)
+     * tasks in worker-threads. Do not wait for input or sleep() inside
+     * the co-rourtine.
+     */
     virtual void Process(const prc_fn_t& fn) = 0;
 
     virtual ConnectionPool& GetConnectionPool() = 0;
