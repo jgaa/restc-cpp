@@ -1,3 +1,6 @@
 [submodule "externals/unittest-cpp"]
 	path = externals/unittest-cpp
 	url = https://github.com/unittest-cpp/unittest-cpp
+[submodule "externals/rapidjson"]
+	path = externals/rapidjson
+	url = https://github.com/miloyip/rapidjson.git
