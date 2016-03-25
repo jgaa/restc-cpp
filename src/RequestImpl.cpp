@@ -64,9 +64,11 @@ public:
         return names[static_cast<int>(requestType)];
     }
 
-    void BuildOutgoingRequest(std::ostream& request_buffer) {
+    std::string BuildOutgoingRequest() {
         static const std::string crlf{"\r\n"};
         static const std::string column{": "};
+
+        std::ostringstream request_buffer;
 
         // Build the request-path
         request_buffer << Verb(request_type_) << ' '
@@ -106,8 +108,10 @@ public:
             request_buffer << it.first << column << it.second << crlf;
         }
 
-        // Prepare the body
-        request_buffer << crlf << body_;
+        // End the header section.
+        request_buffer << crlf;
+
+        return request_buffer.str();
     }
 
     unique_ptr<Reply> Execute(Context& ctx) override {
@@ -116,14 +120,16 @@ public:
             ? Connection::Type::HTTPS
             : Connection::Type::HTTP;
 
-        std::ostringstream request_buffer;
-        BuildOutgoingRequest(request_buffer);
+        Socket::write_buffers_t write_buffer;
+        ToBuffer headers(BuildOutgoingRequest());
+        write_buffer.push_back(headers);
+        if (!body_.empty()) {
+            write_buffer.push_back({body_.data(), body_.size()});
+        }
 
-        // TODO: Remove logging here. Too expensive. We can log from async write.
-        owner_.LogDebug(request_buffer.str().c_str());
+        owner_.LogDebug(headers);
 
 
-        // Prepare a reply object
         const int max_retries = 3;
 
         /* Loop three times (on connect or write error) over each IP
@@ -187,8 +193,8 @@ public:
                                                  connection);
 
                     try {
-                        connection->GetSocket().AsyncWrite(
-                            ToBuffer(request_buffer), ctx.GetYield());
+                        connection->GetSocket().AsyncWrite(write_buffer,
+                                                           ctx.GetYield());
                     } catch(const exception& ex) {
                         std::ostringstream msg;
                         msg << "Write failed with exception type: "

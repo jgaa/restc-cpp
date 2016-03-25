@@ -20,7 +20,6 @@ public:
     ~IoTimer() {
         if (is_active_) {
             is_active_ = false;
-            timer_.cancel();
         }
     }
 

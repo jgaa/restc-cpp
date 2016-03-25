@@ -174,7 +174,7 @@ public:
  */
 class RestClient {
 public:
-    using logger_t = std::function<void (const char *)>;
+    using logger_t = std::function<void (const boost::string_ref)>;
 
     /*! Get the default connection properties. */
     virtual const Request::Properties::ptr_t GetConnectionProperties() const = 0;
@@ -202,20 +202,16 @@ public:
     static std::unique_ptr<RestClient>
         Create(boost::optional<Request::Properties> properties = {});
 
-    virtual void LogError(const char *message) = 0;
-    virtual void LogWarning(const char *message) = 0;
-    virtual void LogNotice(const char *message) = 0;
-    virtual void LogDebug(const char *message) = 0;
 
-    void LogError(const std::ostringstream& str) { LogError(str.str().c_str()); }
-    void LogWarning(const std::ostringstream& str) { LogWarning(str.str().c_str()); }
-    void LogNotice(const std::ostringstream& str) { LogNotice(str.str().c_str()); }
-    void LogDebug(const std::ostringstream& str) { LogDebug(str.str().c_str()); }
+    virtual void LogError(const boost::string_ref message) = 0;
+    virtual void LogWarning(const boost::string_ref message) = 0;
+    virtual void LogNotice(const boost::string_ref message) = 0;
+    virtual void LogDebug(const boost::string_ref message) = 0;
 
-    void LogError(const std::string& str) { LogError(str.c_str()); }
-    void LogWarning(const std::string& str) { LogWarning(str.c_str()); }
-    void LogNotice(const std::string& str) { LogNotice(str.c_str()); }
-    void LogDebug(const std::string& str) { LogDebug(str.c_str()); }
+    void LogError(const std::ostringstream& str) { LogError(str.str()); }
+    void LogWarning(const std::ostringstream& str) { LogWarning(str.str()); }
+    void LogNotice(const std::ostringstream& str) { LogNotice(str.str()); }
+    void LogDebug(const std::ostringstream& str) { LogDebug(str.str()); }
 };
 
 

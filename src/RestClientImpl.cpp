@@ -107,19 +107,19 @@ public:
 
     boost::asio::io_service& GetIoService() override { return io_service_; }
 
-    void LogError(const char *message) override {
+    void LogError(const boost::string_ref message) override {
         log_error_(message);
     }
 
-    void LogWarning(const char *message) override {
+    void LogWarning(const boost::string_ref message) override {
         log_warn_(message);
     }
 
-    void LogNotice(const char *message) override {
+    void LogNotice(const boost::string_ref message) override {
         log_notice_(message);
     }
 
-    void LogDebug(const char *message) override {
+    void LogDebug(const boost::string_ref message) override {
         log_debug_(message);
     }
 
@@ -130,10 +130,10 @@ private:
     unique_ptr<boost::asio::io_service::work> work_;
     unique_ptr<ConnectionPool> pool_;
 
-    logger_t log_error_ = [](const char *msg) { std::clog << "ERROR: " << msg << std::endl; };
-    logger_t log_warn_ = [](const char *msg) { std::clog << "WARN: " << msg << std::endl; };
-    logger_t log_notice_ = [](const char *msg) { std::clog << "NOTICE: " << msg << std::endl; };
-    logger_t log_debug_ = [](const char *msg) { std::clog << "DEBUG: " << msg << std::endl; };
+    logger_t log_error_ = [](const boost::string_ref msg) { std::clog << "ERROR: " << msg << std::endl; };
+    logger_t log_warn_ = [](const boost::string_ref msg) { std::clog << "WARN: " << msg << std::endl; };
+    logger_t log_notice_ = [](const boost::string_ref msg) { std::clog << "NOTICE: " << msg << std::endl; };
+    logger_t log_debug_ = [](const boost::string_ref msg) { std::clog << "DEBUG: " << msg << std::endl; };
 
 };
 

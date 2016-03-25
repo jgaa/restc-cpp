@@ -40,8 +40,17 @@ public:
     {
     }
 
+    ToBuffer(std::string&& str)
+    : buf_{std::move(str)}
+    {
+    }
+
     operator const boost::asio::const_buffers_1 () const {
         return {buf_.c_str(), buf_.size()};
+    }
+
+    operator const boost::string_ref() const {
+        return buf_;
     }
 
 private:
