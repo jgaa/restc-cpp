@@ -107,7 +107,7 @@ void DoSomethingInteresting(Context& ctx) {
     // Declare what the Post structure contains so restc_cpp can
     // serialize it to and from json.
     Serialize<Post> post_serializer = {
-        DECL_FIELD_JN(Post, int, userId, user_id),
+        DECL_FIELD_JN(Post, int, userId, user_id), // json name != C++ name
         DECL_FIELD(Post, int, id),
         DECL_FIELD(Post, std::string, title),
         DECL_FIELD(Post, std::string, body)
@@ -124,10 +124,10 @@ void DoSomethingInteresting(Context& ctx) {
     // to C++ objects was we go.
     converter->FetchAll(ctx.Get("http://jsonplaceholder.typicode.com/posts"));
 
+    // Just dump the data.
     for(auto post : posts_list) {
         cout << "Post id=" << post.id << ", title: " << post.title << endl;
     }
-
 }
 
 ```

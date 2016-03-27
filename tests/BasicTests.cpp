@@ -43,13 +43,10 @@ void DoSomethingInteresting(Context& ctx) {
         // to C++ objects was we go.
         json_handler->FetchAll(ctx.Get(http_url));
 
+        // Just dump the data.
         for(auto post : posts_list) {
             cout << "Post id=" << post.id << ", title: " << post.title << endl;
         }
-
-
-        // Just dump the data.
-        //clog << "Received GET data: " << json << endl;
 
         // Asynchronously connect to server and POST data.
         auto repl = ctx.Post(http_url, "{ 'test' : 'teste' }");
