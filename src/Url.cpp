@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <array>
 
 #include <boost/utility/string_ref.hpp>
 #include "restc-cpp/restc-cpp.h"
@@ -9,13 +10,9 @@ using namespace std;
 
 std::ostream& operator <<(std::ostream& out,
                           const restc_cpp::Url::Protocol& protocol) {
-    static const vector<string> names = {"UNKNOWN", "HTTP", "HTTPS"};
+    static const array<string, 3> names = {{"UNKNOWN", "HTTP", "HTTPS"}};
 
-    const auto index = static_cast<unsigned>(protocol);
-    if (index > static_cast<unsigned>(restc_cpp::Url::Protocol::HTTPS)) {
-        throw std::invalid_argument("Unknown protocol enum value");
-    }
-    return out << names[index];
+    return out << names.at(static_cast<unsigned>(protocol));
 }
 
 namespace restc_cpp {

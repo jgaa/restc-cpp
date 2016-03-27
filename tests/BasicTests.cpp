@@ -1,52 +1,61 @@
 
 #include <iostream>
+#include <boost/lexical_cast.hpp>
 
 #include "restc-cpp/restc-cpp.h"
+#include "restc-cpp/Serialize.h"
 
 using namespace std;
 using namespace restc_cpp;
 
-void SleepUntilDoomdsay()
-{
-    boost::asio::io_service io_service;
 
-    boost::asio::signal_set signals(io_service, SIGINT, SIGTERM
-    #ifdef SIGQUIT
-    ,SIGQUIT
-    #endif
-    );
-    signals.async_wait([](boost::system::error_code /*ec*/, int signo) {
-
-        std::clog << "Reiceived signal " << signo << ". Shutting down" << endl;
-    });
-
-    std::clog << "Main thread going to sleep - waiting for shtudown signal" << endl;
-    io_service.run();
-    std::clog << "Main thread is awake" << endl;
-}
+// For entries received from http://jsonplaceholder.typicode.com/posts
+struct Post {
+    int user_id = 0;
+    int id = 0;
+    string title;
+    string body;
+};
 
 
 const string http_url = "http://jsonplaceholder.typicode.com/posts";
 const string https_url = "https://jsonplaceholder.typicode.com/posts";
 
+
 void DoSomethingInteresting(Context& ctx) {
 
-    try {
+    Serialize<Post> post_serializer = {
+        DECL_FIELD_JN(Post, int, userId, user_id),
+        DECL_FIELD(Post, int, id),
+        DECL_FIELD(Post, std::string, title),
+        DECL_FIELD(Post, std::string, body)
+    };
 
-        // Asynchronously connect to server and fetch data.
-        auto repl = ctx.Get(http_url);
+    try {
+        // We expcet a list of Post objects
+        std::list<Post> posts_list;
+
+        // Create a root handler for our list of objects
+        auto json_handler = CreateRootRapidJsonHandler<
+            RapidJsonHandlerObjectArray<Post>>(posts_list, post_serializer);
+
+        // Asynchronously fetch the entire data-set, and convert it from json
+        // to C++ objects was we go.
+        json_handler->FetchAll(ctx.Get(http_url));
+
+        for(auto post : posts_list) {
+            cout << "Post id=" << post.id << ", title: " << post.title << endl;
+        }
+
+
+        // Just dump the data.
+        //clog << "Received GET data: " << json << endl;
+
+        // Asynchronously connect to server and POST data.
+        auto repl = ctx.Post(http_url, "{ 'test' : 'teste' }");
 
         // Asynchronously fetch the entire data-set and return it as a string.
         auto json = repl->GetBodyAsString();
-
-        // Just dump the data.
-        clog << "Received GET data: " << json << endl;
-
-        // Asynchronously connect to server and POST data.
-        repl = ctx.Post(http_url, "{ 'test' : 'teste' }");
-
-        // Asynchronously fetch the entire data-set and return it as a string.
-        json = repl->GetBodyAsString();
         clog << "Received POST data: " << json << endl;
 
         // Try with https
@@ -67,7 +76,9 @@ int main(int argc, char *argv[]) {
     try {
         auto rest_client = RestClient::Create();
         rest_client->Process(DoSomethingInteresting);
-        SleepUntilDoomdsay();
+
+        // Hold the main thread to allow the worker to do it's job
+        cin.get();
         // TODO: Shut down the client and wait for the worker thread to exit.
     } catch (const exception& ex) {
         std::clog << "main: Caught exception: " << ex.what() << endl;

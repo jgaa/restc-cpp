@@ -45,7 +45,7 @@ public:
     {
     }
 
-    operator const boost::asio::const_buffers_1 () const {
+    operator boost::asio::const_buffers_1 () const {
         return {buf_.c_str(), buf_.size()};
     }
 

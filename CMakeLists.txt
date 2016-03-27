@@ -49,7 +49,9 @@ if (NOT EMBEDDED_RESTC_CPP)
     set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib CACHE PATH "Destination location")
     link_directories(${LIBRARY_OUTPUT_PATH})
 
-    include_directories(include)
+    include_directories(include
+        ${RESTC_ROOT_DIR}/externals/rapidjson/include/
+        )
 endif()
 
 add_subdirectory(src)

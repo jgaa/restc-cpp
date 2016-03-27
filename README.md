@@ -55,12 +55,80 @@ main(int argc, char *argv[]) {
 }
 ```
 
+Another example - here we fetch a json list like this one and convert
+it to a std::list of a native C++ data type
+
+```json
+[
+  {
+    "userId": 1,
+    "id": 1,
+    "title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
+    "body": "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto"
+  },
+  {
+    "userId": 1,
+    "id": 2,
+    "title": "qui est esse",
+    "body": "est rerum tempore vitae\nsequi sint nihil reprehenderit dolor beatae ea dolores neque\nfugiat blanditiis voluptate porro vel nihil molestiae ut reiciendis\nqui aperiam non debitis possimus qui neque nisi nulla"
+  },
+...
+```
+
+Since C++ does not (yet) offer reflection in any standard manner, we need to
+tell the library how to map json members to aa type. (This is still vey much
+work in progress).
+
+```C++
+#include <iostream>
+#include "restc-cpp/restc-cpp.h"
+#include "restc-cpp/Serialize.h"
+
+using namespace std;
+using namespace restc_cpp;
+
+
+// For entries received from http://jsonplaceholder.typicode.com/posts
+struct Post {
+    int user_id = 0;
+    int id = 0;
+    string title;
+    string body;
+};
+
+
+void DoSomethingInteresting(Context& ctx) {
+
+    Serialize<Post> post_serializer = {
+        DECL_FIELD_JN(Post, int, userId, user_id),
+        DECL_FIELD(Post, int, id),
+        DECL_FIELD(Post, std::string, title),
+        DECL_FIELD(Post, std::string, body)
+    };
+
+    // We expcet a list of Post objects
+    std::list<Post> posts_list;
+
+    // Create a root handler for our list of objects
+    auto json_handler = CreateRootRapidJsonHandler<
+        RapidJsonHandlerObjectArray<Post>>(posts_list, post_serializer);
+
+    // Asynchronously fetch the entire data-set, and convert it from json
+    // to C++ objects was we go.
+    json_handler->FetchAll(ctx.Get("http://jsonplaceholder.typicode.com/posts"));
+
+    for(auto post : posts_list) {
+        cout << "Post id=" << post.id << ", title: " << post.title << endl;
+    }
+
+}
+
+```
 
 ## Current Status
-The project is justs starting up.
 
-The code is immature and not properly tested, but capable of executing
-simple REST requests.
+The code is still a bit immature and not properly tested, but capable of executing
+REST requests.
 
 
 ## Supported development platforms:
@@ -78,6 +146,7 @@ simple REST requests.
 ## Short Term Tasks
 - [x] ~~Implement GET, POST, PUT, DELETE~~~
 - [x] ~~Implement HTTPS~~
+- [ ] Json support (work in progress)
 - [ ] Unit tests for parsers
 - [ ] Implement connection pool
 - [ ] Implement Chunked Reponse handling
