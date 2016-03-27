@@ -76,7 +76,7 @@ it to a std::list of a native C++ data type
 ```
 
 Since C++ does not (yet) offer reflection in any standard manner, we need to
-tell the library how to map json members to aa type. (This is still vey much
+tell the library how to map json members to a type. (This is still very much
 work in progress).
 
 ```C++
@@ -106,7 +106,7 @@ void DoSomethingInteresting(Context& ctx) {
         DECL_FIELD(Post, std::string, body)
     };
 
-    // We expcet a list of Post objects
+    // We expect a list of Post objects
     std::list<Post> posts_list;
 
     // Create a root handler for our list of objects
