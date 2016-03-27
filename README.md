@@ -99,6 +99,8 @@ struct Post {
 
 void DoSomethingInteresting(Context& ctx) {
 
+    // Declare what the Post structure contains so restc_cpp can
+    // serialize it to and from json
     Serialize<Post> post_serializer = {
         DECL_FIELD_JN(Post, int, userId, user_id),
         DECL_FIELD(Post, int, id),
