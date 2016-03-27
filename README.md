@@ -19,7 +19,9 @@ library however is so tiny and general that I have released it
 under the more permissive MIT license. It is Free. Free as in Free Beer.
 Free as in Free Air.
 
-## Example
+## Examples
+
+### Fetch raw data
 
 The following code is all that is needed to run REST requests asynchronously,
 using the co-routine support in boost::asio behind the scenes. (To see how
@@ -54,6 +56,9 @@ main(int argc, char *argv[]) {
     cin.get();
 }
 ```
+
+
+### Fetch json data and convert to native C++ types.
 
 Another example - here we fetch a json list like this one and convert
 it to a std::list of a native C++ data type
@@ -100,7 +105,7 @@ struct Post {
 void DoSomethingInteresting(Context& ctx) {
 
     // Declare what the Post structure contains so restc_cpp can
-    // serialize it to and from json
+    // serialize it to and from json.
     Serialize<Post> post_serializer = {
         DECL_FIELD_JN(Post, int, userId, user_id),
         DECL_FIELD(Post, int, id),
