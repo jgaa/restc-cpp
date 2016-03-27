@@ -109,13 +109,13 @@ void DoSomethingInteresting(Context& ctx) {
     // We expect a list of Post objects
     std::list<Post> posts_list;
 
-    // Create a root handler for our list of objects
-    auto json_handler = CreateRootRapidJsonHandler<
+    // Create a converter for our list of objects
+    auto converter = CreateRootRapidJsonHandler<
         RapidJsonHandlerObjectArray<Post>>(posts_list, post_serializer);
 
     // Asynchronously fetch the entire data-set, and convert it from json
     // to C++ objects was we go.
-    json_handler->FetchAll(ctx.Get("http://jsonplaceholder.typicode.com/posts"));
+    converter->FetchAll(ctx.Get("http://jsonplaceholder.typicode.com/posts"));
 
     for(auto post : posts_list) {
         cout << "Post id=" << post.id << ", title: " << post.title << endl;
