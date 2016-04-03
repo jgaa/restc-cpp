@@ -31,3 +31,12 @@ target_link_libraries(url_tests
 )
 
 add_test(URL_UNITTESTS url_tests)
+
+add_executable(json_serialize_tests JsonSerializeTests.cpp)
+target_link_libraries(json_serialize_tests
+    restc-cpp
+    ${DEFAULT_LIBRARIES}
+    UnitTest++
+)
+
+add_test(JSON_UNITTESTS json_serialize_tests)

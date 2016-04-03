@@ -55,8 +55,8 @@ private:
 /*! Base class that satisfies the requirements from rapidjson */
 class RapidJsonHandler {
 public:
-    RapidJsonHandler(RapidJsonHandler *root)
-    : root_{root}
+    RapidJsonHandler(RapidJsonHandler *parent)
+    : parent_{parent}
     {
     }
 
@@ -65,13 +65,14 @@ public:
     }
 
     virtual void Push(const std::shared_ptr<RapidJsonHandler>& handler) {
-        root_->Push(handler);
+        parent_->Push(handler);
     }
 
     virtual void Pop() {
-        root_->Pop();
+        parent_->Pop();
     }
 
+    // Outer interface
     virtual bool Null() = 0;
 
     virtual bool Bool(bool b) = 0;
@@ -100,8 +101,46 @@ public:
 
     virtual bool EndArray(std::size_t elementCount) = 0;
 
+     // Inner interface
+    virtual bool DoNull() { return false; }
+
+    virtual bool DoBool(bool b) { return false; }
+
+    virtual bool DoInt(int i) { return false; }
+
+    virtual bool DoUint(unsigned u) { return false; }
+
+    virtual bool DoInt64(int64_t i) { return false; }
+
+    virtual bool DoUint64(uint64_t u) { return false; }
+
+    virtual bool DoDouble(double d) { return false; }
+
+    virtual bool DoString(const char* str, std::size_t Tlength, bool copy) { return false; }
+
+    virtual bool DoRawNumber(const char* str, std::size_t length, bool copy) { return false; }
+
+    virtual bool DoStartObject() { return false; }
+
+    virtual bool DoKey(const char* str, std::size_t length, bool copy) { return false; }
+
+    virtual bool DoEndObject(std::size_t memberCount) { return false; }
+
+    virtual bool DoStartArray() { return false; }
+
+    virtual bool DoEndArray(std::size_t elementCount) { return false; }
+
+    virtual void OnChildIsDone() {};
+    RapidJsonHandler& GetParent() {
+        assert(parent_ != nullptr);
+        return *parent_;
+    }
+    bool HaveParent() const noexcept {
+        return parent_ != nullptr;
+    }
+
 private:
-    RapidJsonHandler *root_;
+    RapidJsonHandler *parent_;
 };
 
 class Reply;
@@ -302,7 +341,7 @@ private:
     std::string current_name_;
     bool is_in_object_ = false;
     SerializeT& serializer_;
-    std::unique_ptr<RootRapidJsonHandler> root_handler_instance_;
+    std::unique_ptr<RootRapidJsonHandler> parent_handler_instance_;
 };
 
 /*! Handler for cases where the json is an object */
