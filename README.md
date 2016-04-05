@@ -164,6 +164,8 @@ REST requests.
  - [ ] Deserialization: std::map
  - [ ] Serialization of the above
 - [ ] Unit tests for parsers
+ - [x] ~~~Url parser~~~
+ - [ ] HTTP header parser
 - [ ] Implement connection pool
 - [ ] Implement Chunked Reponse handling
 - [ ] Implement Chunked Requests
