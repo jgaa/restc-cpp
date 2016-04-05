@@ -2,7 +2,6 @@
 #include <boost/fusion/adapted.hpp>
 
 #include "restc-cpp/restc-cpp.h"
-#include "restc-cpp/Serialize.h"
 #include "restc-cpp/SerializeJson.h"
 
 #include "UnitTest++/UnitTest++.h"

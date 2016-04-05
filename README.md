@@ -99,7 +99,7 @@ using namespace restc_cpp;
 
 // For entries received from http://jsonplaceholder.typicode.com/posts
 struct Post {
-    int user_id = 0;
+    int userId = 0;
     int id = 0;
     string title;
     string body;
@@ -107,7 +107,7 @@ struct Post {
 
 BOOST_FUSION_ADAPT_STRUCT(
     Post,
-    (int, user_id)
+    (int, userId)
     (int, id)
     (string, title)
     (string, body)
