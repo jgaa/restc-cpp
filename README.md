@@ -159,6 +159,10 @@ REST requests.
 - [x] ~~Implement GET, POST, PUT, DELETE~~~
 - [x] ~~Implement HTTPS~~
 - [ ] Json support (work in progress)
+ - [x] ~~~Deserialization: Simple and nested classes (must be declared with BOOST_FUSION_ADAPT_STRUCT)~~~
+ - [x] ~~~Deserialization: std::vector or json native datatypes and classes~~~
+ - [ ] Deserialization: std::map
+ - [ ] Serialization of the above
 - [ ] Unit tests for parsers
 - [ ] Implement connection pool
 - [ ] Implement Chunked Reponse handling
