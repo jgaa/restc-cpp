@@ -124,7 +124,7 @@ void DoSomethingInteresting(Context& ctx) {
             ctx.Get("http://jsonplaceholder.typicode.com/posts"));
 
         // Just dump the data.
-        for(auto post : posts_list) {
+        for(const auto& post : posts_list) {
             cout << "Post id=" << post.id << ", title: " << post.title << endl;
         }
 

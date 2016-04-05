@@ -42,7 +42,7 @@ void DoSomethingInteresting(Context& ctx) {
         SerializeFromJson(posts_list, ctx.Get(http_url));
 
         // Just dump the data.
-        for(auto post : posts_list) {
+        for(const auto& post : posts_list) {
             cout << "Post id=" << post.id << ", title: " << post.title << endl;
         }
 
