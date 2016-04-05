@@ -80,14 +80,18 @@ it to a std::list of a native C++ data type
 ...
 ```
 
-Since C++ does not (yet) offer reflection in any standard manner, we need to
-tell the library how to map json members to a type. (This is still very much
-work in progress).
+Since C++ does not (yet) offer reflection, we need to tell the library how
+to map json members to a type. We are doing this by declaring the
+structs/classes with BOOST_FUSION_ADAPT_STRUCT from the boost libraries.
 
 ```C++
 #include <iostream>
+
+#include <boost/lexical_cast.hpp>
+#include <boost/fusion/adapted.hpp>
+
 #include "restc-cpp/restc-cpp.h"
-#include "restc-cpp/Serialize.h"
+#include "restc-cpp/SerializeJson.h"
 
 using namespace std;
 using namespace restc_cpp;
@@ -101,32 +105,33 @@ struct Post {
     string body;
 };
 
+BOOST_FUSION_ADAPT_STRUCT(
+    Post,
+    (int, user_id)
+    (int, id)
+    (string, title)
+    (string, body)
+)
 
 void DoSomethingInteresting(Context& ctx) {
 
-    // Declare what the Post structure contains so restc_cpp can
-    // serialize it to and from json.
-    Serialize<Post> post_serializer = {
-        DECL_FIELD_JN(Post, int, userId, user_id), // json name != C++ name
-        DECL_FIELD(Post, int, id),
-        DECL_FIELD(Post, std::string, title),
-        DECL_FIELD(Post, std::string, body)
-    };
+     try {
+        // Asynchronously fetch the entire data-set, and convert it from json
+        // to C++ objects was we go.
+        // We expcet a list of Post objects
+        list<Post> posts_list;
+        SerializeFromJson(posts_list,
+            ctx.Get("http://jsonplaceholder.typicode.com/posts"));
 
-    // We expect a list of Post objects
-    std::list<Post> posts_list;
+        // Just dump the data.
+        for(auto post : posts_list) {
+            cout << "Post id=" << post.id << ", title: " << post.title << endl;
+        }
 
-    // Create a converter for our list of objects
-    auto converter = CreateRootRapidJsonHandler<
-        RapidJsonHandlerObjectArray<Post>>(posts_list, post_serializer);
+        clog << "Done" << endl;
 
-    // Asynchronously fetch the entire data-set, and convert it from json
-    // to C++ objects was we go.
-    converter->FetchAll(ctx.Get("http://jsonplaceholder.typicode.com/posts"));
-
-    // Just dump the data.
-    for(auto post : posts_list) {
-        cout << "Post id=" << post.id << ", title: " << post.title << endl;
+    } catch (const exception& ex) {
+        std::clog << "Process: Caught exception: " << ex.what() << endl;
     }
 }
 
