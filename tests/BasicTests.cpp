@@ -1,9 +1,11 @@
 
 #include <iostream>
+
 #include <boost/lexical_cast.hpp>
+#include <boost/fusion/adapted.hpp>
 
 #include "restc-cpp/restc-cpp.h"
-#include "restc-cpp/Serialize.h"
+#include "restc-cpp/SerializeJson.h"
 
 using namespace std;
 using namespace restc_cpp;
@@ -17,6 +19,13 @@ struct Post {
     string body;
 };
 
+BOOST_FUSION_ADAPT_STRUCT(
+    Post,
+    (int, user_id)
+    (int, id)
+    (string, title)
+    (string, body)
+)
 
 const string http_url = "http://jsonplaceholder.typicode.com/posts";
 const string https_url = "https://jsonplaceholder.typicode.com/posts";
@@ -24,24 +33,13 @@ const string https_url = "https://jsonplaceholder.typicode.com/posts";
 
 void DoSomethingInteresting(Context& ctx) {
 
-    Serialize<Post> post_serializer = {
-        DECL_FIELD_JN(Post, int, userId, user_id),
-        DECL_FIELD(Post, int, id),
-        DECL_FIELD(Post, std::string, title),
-        DECL_FIELD(Post, std::string, body)
-    };
 
     try {
-        // We expcet a list of Post objects
-        std::list<Post> posts_list;
-
-        // Create a root handler for our list of objects
-        auto json_handler = CreateRootRapidJsonHandler<
-            RapidJsonHandlerObjectArray<Post>>(posts_list, post_serializer);
-
         // Asynchronously fetch the entire data-set, and convert it from json
         // to C++ objects was we go.
-        json_handler->FetchAll(ctx.Get(http_url));
+        // We expcet a list of Post objects
+        list<Post> posts_list;
+        SerializeFromJson(posts_list, ctx.Get(http_url));
 
         // Just dump the data.
         for(auto post : posts_list) {
