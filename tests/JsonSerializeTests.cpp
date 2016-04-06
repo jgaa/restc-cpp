@@ -149,14 +149,14 @@ TEST(DeserializeNestedObject)
     CHECK_EQUAL(100, group.leader.id);
     CHECK_EQUAL("Dolly Doe", group.leader.name);
     CHECK_EQUAL(123.45, group.leader.balance);
-    CHECK_EQUAL(2, group.members.size());
+    CHECK_EQUAL(2, static_cast<int>(group.members.size()));
     CHECK_EQUAL(101, group.members[0].id);
     CHECK_EQUAL("m1", group.members[0].name);
     CHECK_EQUAL(0.0, group.members[0].balance);
     CHECK_EQUAL(102, group.members[1].id);
     CHECK_EQUAL("m2", group.members[1].name);
     CHECK_EQUAL(1.0, group.members[1].balance);
-    CHECK_EQUAL(2, group.more_members.size());
+    CHECK_EQUAL(2, static_cast<int>(group.more_members.size()));
     CHECK_EQUAL(103, group.more_members.front().id);
     CHECK_EQUAL("m3", group.more_members.front().name);
     CHECK_EQUAL(0.1, group.more_members.front().balance);
@@ -175,7 +175,7 @@ TEST(DeserializeIntVector)
     StringStream ss(json.c_str());
     reader.Parse(ss, handler);
 
-    CHECK_EQUAL(10, ints.size());
+    CHECK_EQUAL(10, static_cast<int>(ints.size()));
 
     auto val = 0;
     for(auto v : ints) {

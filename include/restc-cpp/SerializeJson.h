@@ -25,8 +25,8 @@
 #include "restc-cpp/RapidJsonReader.h"
 
 
-//#define RESTC_CPP_LOG std::clog
-#define RESTC_CPP_LOG false && std::clog
+
+#define RESTC_CPP_LOG std::clog
 
 namespace restc_cpp {
 
@@ -148,19 +148,17 @@ void assign_value(varT& var, valT val) {
 
 template <typename T>
 struct is_container {
-    using data_t = T;
-    static const bool value = false;
+    constexpr static const bool value = false;
 };
 
 template <typename T,typename Alloc>
 struct is_container<std::vector<T,Alloc> > {
-    static const bool value = true;
-    using data_t = T;
+    constexpr static const bool value = true;
 };
 
 template <typename T,typename Alloc>
 struct is_container<std::list<T,Alloc> > {
-    static const bool value = true;
+    constexpr static const bool value = true;
     using data_t = T;
 };
 
@@ -319,6 +317,8 @@ private:
         assert(false);
     }
 
+
+
     template <typename dataT>
     void RecurseToMember(typename std::enable_if<
             boost::fusion::traits::is_sequence<dataT>::value
@@ -338,7 +338,12 @@ private:
             if (get_name(item).compare(current_name_) == 0) {
                 using const_field_type_t = decltype(boost::fusion::at_c<0>(item));
                 using native_field_type_t = typename std::remove_const<typename std::remove_reference<const_field_type_t>::type>::type;
-                DoRecurseToMember<native_field_type_t>(item);
+
+                /* Very obscure. g++ 5.3 is unable to resolve the symbol below
+                 * without "this". I don't know if this is according to the
+                 * standard or a bug. It works without in clang 3.6.
+                 */
+                this->DoRecurseToMember<native_field_type_t>(item);
                 found = true;
             }
         });
@@ -397,8 +402,10 @@ private:
             !boost::fusion::traits::is_sequence<dataT>::value
             >::type* = 0) {
 
+#ifdef RESTC_CPP_LOG
         RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
             << " BAD SetValueOnMember: " << std::endl;
+#endif
 
         assert(false);
         return true;
@@ -438,8 +445,10 @@ private:
     template<typename argT>
     bool SetValue(argT val) {
 
+#ifdef RESTC_CPP_LOG
         RESTC_CPP_LOG << boost::typeindex::type_id<data_t>().pretty_name()
             << " SetValue: " << current_name_ << std::endl;
+#endif
 
         if (state_ == State::IN_OBJECT) {
             return SetValueOnMember<data_t>(val);
@@ -488,8 +497,10 @@ private:
     }
 
     bool DoStartObject() {
+#ifdef RESTC_CPP_LOG
         RESTC_CPP_LOG << boost::typeindex::type_id<data_t>().pretty_name()
             << " DoStartObject: " << current_name_ << std::endl;
+#endif
 
         // TODO: Recurse into nested objects
         switch (state_) {
@@ -515,16 +526,18 @@ private:
     bool DoKey(const char* str, std::size_t length, bool copy) {
         assert(current_name_.empty());
         current_name_.assign(str, length);
-
+#ifdef RESTC_CPP_LOG
         RESTC_CPP_LOG << boost::typeindex::type_id<data_t>().pretty_name()
             << " DoKey: " << current_name_ << std::endl;
-
+#endif
         return true;
     }
 
     bool DoEndObject(std::size_t memberCount) {
+#ifdef RESTC_CPP_LOG
         RESTC_CPP_LOG << boost::typeindex::type_id<data_t>().pretty_name()
             << " DoEndObject: " << current_name_ << std::endl;
+#endif
 
         current_name_.clear();
 
@@ -549,8 +562,10 @@ private:
     }
 
     bool DoStartArray() {
+#ifdef RESTC_CPP_LOG
         RESTC_CPP_LOG << boost::typeindex::type_id<data_t>().pretty_name()
             << " DoStartArray: " << current_name_ << std::endl;
+#endif
 
         if (state_ == State::INIT) {
             state_ = State::IN_ARRAY;
@@ -564,9 +579,10 @@ private:
     }
 
     bool DoEndArray(std::size_t elementCount) {
+#ifdef RESTC_CPP_LOG
         RESTC_CPP_LOG << boost::typeindex::type_id<data_t>().pretty_name()
             << " DoEndArray: " << current_name_ << std::endl;
-
+#endif
         current_name_.clear();
 
         switch (state_) {
@@ -590,9 +606,10 @@ private:
     }
 
     void OnChildIsDone() override {
-
+#ifdef RESTC_CPP_LOG
         RESTC_CPP_LOG << boost::typeindex::type_id<data_t>().pretty_name()
             << "OnChildIsDone" << std::endl;
+#endif
 
         assert(state_ == State::RECURSED);
         assert(!saved_state_.empty());
@@ -692,10 +709,10 @@ namespace {
         typename std::enable_if<
             is_container<dataT>::value
             >::type* = 0) {
-
+#ifdef RESTC_CPP_LOG
         RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
             << " StartArray: " << std::endl;
-
+#endif
         serializer.StartArray();
 
         for(const auto& v: object) {
@@ -705,10 +722,10 @@ namespace {
 
             do_serialize<native_field_type_t>(v, serializer);
         }
-
+#ifdef RESTC_CPP_LOG
         RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
             << " EndArray: " << std::endl;
-
+#endif
         serializer.EndArray();
     };
 
@@ -719,19 +736,19 @@ namespace {
             >::type*) {
 
         serializer.StartObject();
-
+#ifdef RESTC_CPP_LOG
         RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
             << " StartObject: " << std::endl;
-
+#endif
 
         boost::fusion::for_each(with_names(object), [&](const auto item) {
             /* It's probably better to use a recursive search,
              * but this will do for now.
              */
-
+#ifdef RESTC_CPP_LOG
             RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
                 << " Key: " << get_name(item) << std::endl;
-
+#endif
 
             serializer.Key(get_name(item).c_str());
 
@@ -745,10 +762,10 @@ namespace {
             do_serialize<native_field_type_t>(value, serializer);
 
         });
-
+#ifdef RESTC_CPP_LOG
         RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
             << " EndObject: " << std::endl;
-
+#endif
         serializer.EndObject();
     };
 }
