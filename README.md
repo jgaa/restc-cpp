@@ -160,15 +160,17 @@ REST requests.
 - [x] ~~Implement HTTPS~~
 - [ ] Json support (work in progress)
  - [x] ~~Deserialization: Simple and nested classes (must be declared with BOOST_FUSION_ADAPT_STRUCT)~~
- - [x] ~~Deserialization: std::vector or json native datatypes and classes~~
- - [ ] Deserialization: std::map
- - [ ] Serialization of the above
+ - [x] ~~Deserialization: std::vector of json native datatypes and classes~~
+ - [v] ~~Serialization of the above~~
+ - [ ] Serialization / Deserialization: std::map
 - [ ] Unit tests for parsers
  - [x] ~~Url parser~~
  - [ ] HTTP header parser
 - [ ] Implement connection pool
 - [ ] Implement Chunked Reponse handling
 - [ ] Implement Chunked Requests
+ - [ ] General support In HTTP Requests module
+ - [ ] Async from json Serialization
 - [ ] Handle redirects
 - [ ] Implement simple File Upload (as body)
 - [ ] Implement simple File Download (from body)

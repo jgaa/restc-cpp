@@ -3,6 +3,8 @@
 
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/SerializeJson.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
 
 #include "UnitTest++/UnitTest++.h"
 
@@ -42,12 +44,80 @@ BOOST_FUSION_ADAPT_STRUCT(
     (std::list<Person>, more_members)
 )
 
+TEST(SerializeSimpleObject)
+{
+    Person person = { 100, "John Doe", 123.45 };
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(person), decltype(writer)>
+        serializer(person, writer);
+
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({"id":100,"name":"John Doe","balance":123.45})",
+                s.GetString());
+
+}
+
+TEST(SerializeNestedObject)
+{
+    Group group = {"Group name", 99, { 100, "John Doe", 123.45 }};
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(group), decltype(writer)>
+        serializer(group, writer);
+
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({"name":"Group name","gid":99,"leader":{"id":100,"name":"John Doe","balance":123.45},"members":[],"more_members":[]})",
+                s.GetString());
+
+}
+
+TEST(SerializeVector)
+{
+    std::vector<int> ints = {-1,2,3,4,5,6,7,8,9,-10};
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(ints), decltype(writer)>
+        serializer(ints, writer);
+
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"([-1,2,3,4,5,6,7,8,9,-10])",
+                s.GetString());
+
+}
+
+TEST(SerializeList)
+{
+    std::list<unsigned int> ints = {1,2,3,4,5,6,7,8,9,10};
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(ints), decltype(writer)>
+        serializer(ints, writer);
+
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"([1,2,3,4,5,6,7,8,9,10])",
+                s.GetString());
+
+}
+
 TEST(DeserializeSimpleObject)
 {
     Person person;
     std::string json = R"({ "id" : 100, "name" : "John Doe", "balance" : 123.45 })";
 
-    RapidJsonHandlerImpl<Person> handler(person);
+    RapidJsonDeserializer<Person> handler(person);
     Reader reader;
     StringStream ss(json.c_str());
     reader.Parse(ss, handler);
@@ -69,7 +139,7 @@ TEST(DeserializeNestedObject)
         R"("more_members" : [{ "id" : 103, "name" : "m3", "balance" : 0.1}, { "id" : 104, "name" : "m4", "balance" : 2.0}])"
         R"(})";
 
-    RapidJsonHandlerImpl<Group> handler(group);
+    RapidJsonDeserializer<Group> handler(group);
     Reader reader;
     StringStream ss(json.c_str());
     reader.Parse(ss, handler);
@@ -100,7 +170,7 @@ TEST(DeserializeIntVector)
     std::string json = R"([1,2,3,4,5,6,7,8,9,10])";
 
     std::vector<int> ints;
-    RapidJsonHandlerImpl<decltype(ints)> handler(ints);
+    RapidJsonDeserializer<decltype(ints)> handler(ints);
     Reader reader;
     StringStream ss(json.c_str());
     reader.Parse(ss, handler);

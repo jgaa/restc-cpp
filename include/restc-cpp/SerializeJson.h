@@ -31,18 +31,18 @@
 namespace restc_cpp {
 
 /*! Base class that satisfies the requirements from rapidjson */
-class RapidJsonHandler {
+class RapidJsonDeserializerBase {
 public:
-    RapidJsonHandler(RapidJsonHandler *parent)
+    RapidJsonDeserializerBase(RapidJsonDeserializerBase *parent)
     : parent_{parent}
     {
     }
 
-    virtual ~RapidJsonHandler()
+    virtual ~RapidJsonDeserializerBase()
     {
     }
 
-    virtual void Push(const std::shared_ptr<RapidJsonHandler>& handler) {
+    virtual void Push(const std::shared_ptr<RapidJsonDeserializerBase>& handler) {
         parent_->Push(handler);
     }
 
@@ -80,7 +80,7 @@ public:
     virtual bool EndArray(std::size_t elementCount) = 0;
 
     virtual void OnChildIsDone() {};
-    RapidJsonHandler& GetParent() {
+    RapidJsonDeserializerBase& GetParent() {
         assert(parent_ != nullptr);
         return *parent_;
     }
@@ -89,7 +89,7 @@ public:
     }
 
 private:
-    RapidJsonHandler *parent_;
+    RapidJsonDeserializerBase *parent_;
 };
 
 
@@ -112,6 +112,26 @@ auto& get_value(const T& x)
 {
     return boost::fusion::at_c<0>(x);
 }
+
+// template <typename T>
+// auto get_native_type(const T& x) {
+//     using const_field_type_t = decltype(get_value(item));
+//     return typename std::remove_const<typename std::remove_reference<const_field_type_t>::type>::type;
+// }
+//
+//
+// template <typename T>
+// auto& get_ref_value(const T& x) {
+//     using const_field_type_t = decltype(get_value(item));
+//     using native_field_type_t = typename std::remove_const<typename std::remove_reference<const_field_type_t>::type>::type;
+//     using field_type_t = typename std::add_lvalue_reference<native_field_type_t>::type;
+//
+//     auto& const_value = get_value(item);
+//     auto& value = const_cast<field_type_t&>(const_value);
+//
+// }
+
+
 
 template<class T>
 std::string get_name(const T& x)
@@ -167,14 +187,14 @@ struct is_container<std::list<T,Alloc> > {
 } // anonymous namespace
 
 template <typename T>
-class RapidJsonHandlerImpl : public RapidJsonHandler {
+class RapidJsonDeserializer : public RapidJsonDeserializerBase {
 public:
     using data_t = typename std::remove_const<typename std::remove_reference<T>::type>::type;
     enum class State { INIT, IN_OBJECT, IN_ARRAY, RECURSED, DONE };
 
 
-    RapidJsonHandlerImpl(data_t& object, RapidJsonHandler *parent = nullptr)
-    : RapidJsonHandler(parent)
+    RapidJsonDeserializer(data_t& object, RapidJsonDeserializerBase *parent = nullptr)
+    : RapidJsonDeserializerBase(parent)
     , object_{object}
     //, struct_members_{with_names(object_)}
     {
@@ -276,7 +296,7 @@ private:
         auto& const_value = get_value(item);
         auto& value = const_cast<field_type_t&>(const_value);
 
-        recursed_to_ = std::make_unique<RapidJsonHandlerImpl<field_type_t>>(value, this);
+        recursed_to_ = std::make_unique<RapidJsonDeserializer<field_type_t>>(value, this);
     }
 
     template <typename classT, typename itemT>
@@ -299,7 +319,7 @@ private:
 
         using native_type_t = typename std::remove_const<
             typename std::remove_reference<typename dataT::value_type>::type>::type;
-        recursed_to_ = std::make_unique<RapidJsonHandlerImpl<native_type_t>>(object_.back(), this);
+        recursed_to_ = std::make_unique<RapidJsonDeserializer<native_type_t>>(object_.back(), this);
         saved_state_.push(state_);
         state_ = State::RECURSED;
     }
@@ -608,13 +628,180 @@ private:
     //decltype(with_names(object_)) struct_members_;
     State state_ = State::INIT;
     std::stack<State> saved_state_;
-    std::unique_ptr<RapidJsonHandler> recursed_to_;
+    std::unique_ptr<RapidJsonDeserializerBase> recursed_to_;
+};
+
+
+namespace {
+
+    template <typename T, typename S>
+    void do_serialize_integral(const T& v, S& serializer) {
+        assert(false);
+    }
+
+    template <typename S>
+    void do_serialize_integral(const bool& v, S& serializer) {
+        serializer.Bool(v);
+    }
+
+    template <typename S>
+    void do_serialize_integral(const int& v, S& serializer) {
+        serializer.Int(v);
+    }
+
+    template <typename S>
+    void do_serialize_integral(const unsigned int& v, S& serializer) {
+        serializer.Uint(v);
+    }
+
+    template <typename S>
+    void do_serialize_integral(const double& v, S& serializer) {
+        serializer.Double(v);
+    }
+
+    template <typename S>
+    void do_serialize_integral(const std::int64_t& v, S& serializer) {
+        serializer.Int64(v);
+    }
+
+    template <typename S>
+    void do_serialize_integral(const std::uint64_t& v, S& serializer) {
+        serializer.Uint64(v);
+    }
+
+
+    template <typename dataT, typename serializerT>
+    void do_serialize(const dataT& object, serializerT& serializer,
+        typename std::enable_if<
+            !boost::fusion::traits::is_sequence<dataT>::value
+            && !std::is_integral<dataT>::value
+            && !std::is_floating_point<dataT>::value
+            && !std::is_same<dataT, std::string>::value
+            && !is_container<dataT>::value
+            >::type* = 0) {
+        assert(false);
+    };
+
+    template <typename dataT, typename serializerT>
+    void do_serialize(const dataT& object, serializerT& serializer,
+        typename std::enable_if<
+            std::is_integral<dataT>::value
+            || std::is_floating_point<dataT>::value
+            >::type* = 0) {
+
+        do_serialize_integral(object, serializer);
+    };
+
+    template <typename dataT, typename serializerT>
+    void do_serialize(const dataT& object, serializerT& serializer,
+        typename std::enable_if<
+            std::is_same<dataT, std::string>::value
+            >::type* = 0) {
+
+        serializer.String(object.c_str(), object.size(), true);
+    };
+
+    template <typename dataT, typename serializerT>
+    void do_serialize(const dataT& object, serializerT& serializer,
+         typename std::enable_if<
+            boost::fusion::traits::is_sequence<dataT>::value
+            >::type* = 0);
+
+    template <typename dataT, typename serializerT>
+    void do_serialize(const dataT& object, serializerT& serializer,
+        typename std::enable_if<
+            is_container<dataT>::value
+            >::type* = 0) {
+
+        RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
+            << " StartArray: " << std::endl;
+
+        serializer.StartArray();
+
+        for(const auto& v: object) {
+
+            using native_field_type_t = typename std::remove_const<
+                typename std::remove_reference<decltype(v)>::type>::type;
+
+            do_serialize<native_field_type_t>(v, serializer);
+        }
+
+        RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
+            << " EndArray: " << std::endl;
+
+        serializer.EndArray();
+    };
+
+    template <typename dataT, typename serializerT>
+    void do_serialize(const dataT& object, serializerT& serializer,
+         typename std::enable_if<
+            boost::fusion::traits::is_sequence<dataT>::value
+            >::type*) {
+
+        serializer.StartObject();
+
+        RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
+            << " StartObject: " << std::endl;
+
+
+        boost::fusion::for_each(with_names(object), [&](const auto item) {
+            /* It's probably better to use a recursive search,
+             * but this will do for now.
+             */
+
+            RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
+                << " Key: " << get_name(item) << std::endl;
+
+
+            serializer.Key(get_name(item).c_str());
+
+            using const_field_type_t = decltype(get_value(item));
+            using native_field_type_t = typename std::remove_const<typename std::remove_reference<const_field_type_t>::type>::type;
+            using field_type_t = typename std::add_lvalue_reference<native_field_type_t>::type;
+
+            auto& const_value = get_value(item);
+            auto& value = const_cast<field_type_t&>(const_value);
+
+            do_serialize<native_field_type_t>(value, serializer);
+
+        });
+
+        RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
+            << " EndObject: " << std::endl;
+
+        serializer.EndObject();
+    };
+}
+
+template <typename objectT, typename serializerT>
+class RapidJsonSerializer
+{
+public:
+    using data_t = typename std::remove_const<typename std::remove_reference<objectT>::type>::type;
+
+    RapidJsonSerializer(data_t& object, serializerT& serializer)
+    : object_{object}, serializer_{serializer}
+    {
+    }
+
+    /*! Recursively serialize the C++ object to the json serializer
+     *
+     * See https://github.com/miloyip/rapidjson/blob/master/doc/sax.md#writer-writer
+     */
+    void Serialize() {
+        do_serialize<data_t>(object_, serializer_);
+    }
+
+private:
+
+    data_t& object_;
+    serializerT& serializer_;
 };
 
 
 template <typename dataT>
 void SerializeFromJson(dataT& rootData, Reply& reply) {
-    RapidJsonHandlerImpl<dataT> handler(rootData);
+    RapidJsonDeserializer<dataT> handler(rootData);
     RapidJsonReader reply_stream(reply);
     rapidjson::Reader json_reader;
     json_reader.Parse(reply_stream, handler);
