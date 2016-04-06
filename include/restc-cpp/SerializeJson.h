@@ -113,26 +113,6 @@ auto& get_value(const T& x)
     return boost::fusion::at_c<0>(x);
 }
 
-// template <typename T>
-// auto get_native_type(const T& x) {
-//     using const_field_type_t = decltype(get_value(item));
-//     return typename std::remove_const<typename std::remove_reference<const_field_type_t>::type>::type;
-// }
-//
-//
-// template <typename T>
-// auto& get_ref_value(const T& x) {
-//     using const_field_type_t = decltype(get_value(item));
-//     using native_field_type_t = typename std::remove_const<typename std::remove_reference<const_field_type_t>::type>::type;
-//     using field_type_t = typename std::add_lvalue_reference<native_field_type_t>::type;
-//
-//     auto& const_value = get_value(item);
-//     auto& value = const_cast<field_type_t&>(const_value);
-//
-// }
-
-
-
 template<class T>
 std::string get_name(const T& x)
 {
