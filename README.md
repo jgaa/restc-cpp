@@ -161,7 +161,7 @@ REST requests.
 - [ ] Json support (work in progress)
  - [x] ~~Deserialization: Simple and nested classes (must be declared with BOOST_FUSION_ADAPT_STRUCT)~~
  - [x] ~~Deserialization: std::vector of json native datatypes and classes~~
- - [v] ~~Serialization of the above~~
+ - [x] ~~Serialization of the above~~
  - [ ] Serialization / Deserialization: std::map
 - [ ] Unit tests for parsers
  - [x] ~~Url parser~~
