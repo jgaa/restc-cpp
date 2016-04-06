@@ -125,13 +125,13 @@ void DoSomethingInteresting(Context& ctx) {
 
         // Just dump the data.
         for(const auto& post : posts_list) {
-            cout << "Post id=" << post.id << ", title: " << post.title << endl;
+            clog << "Post id=" << post.id << ", title: " << post.title << endl;
         }
 
         clog << "Done" << endl;
 
     } catch (const exception& ex) {
-        std::clog << "Process: Caught exception: " << ex.what() << endl;
+        clog << "Process: Caught exception: " << ex.what() << endl;
     }
 }
 
