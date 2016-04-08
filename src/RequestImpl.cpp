@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <thread>
 #include <future>
 
@@ -23,7 +24,7 @@ public:
                 boost::optional<Body> body,
                 const boost::optional<args_t>& args,
                 const boost::optional<headers_t>& headers)
-    : url_{url}, parsed_url_{url.c_str()} , request_type_{requestType}
+    : url_{url}, parsed_url_{url_.c_str()} , request_type_{requestType}
     , owner_{owner}
     {
         if (args || headers) {
@@ -99,8 +100,8 @@ private:
                 << crlf;
         }
 
-        if (headers.find("Content-Lenght") == headers.end()) {
-            request_buffer << "Content-Lenght: " << body_.size() << crlf;
+        if (headers.find("Content-Length") == headers.end()) {
+            request_buffer << "Content-Length: " << body_.size() << crlf;
         }
 
         for(const auto& it : headers) {
@@ -122,12 +123,12 @@ private:
         Socket::write_buffers_t write_buffer;
         ToBuffer headers(BuildOutgoingRequest());
         write_buffer.push_back(headers);
+        std::string request_data = BuildOutgoingRequest();
         if (!body_.empty()) {
             write_buffer.push_back({body_.data(), body_.size()});
         }
 
-        owner_.LogDebug(headers);
-
+        //owner_.LogDebug(headers);
 
         const int max_retries = 3;
 
@@ -194,6 +195,28 @@ private:
                     try {
                         connection->GetSocket().AsyncWrite(write_buffer,
                                                            ctx.GetYield());
+
+                        clog << "--> Sent "
+                            <<  boost::asio::buffer_size(write_buffer) << " bytes: "
+                            << std::endl << "--------------- WRITE START --------------" << endl;
+
+//                         std::ofstream dump("/tmp/writedump.bin",
+//                                            std::ios::binary | std::ios::trunc);
+                        for(const auto& b : write_buffer) {
+
+                            auto bb = boost::string_ref(
+                                 boost::asio::buffer_cast<const char*>(b),
+                                 boost::asio::buffer_size(b));
+
+                            clog << bb;
+//                            dump << bb;
+                        }
+
+                        clog  << std::endl
+                            << "--------------- WRITE END --------------" << endl
+                            << std::endl;
+
+
                     } catch(const exception& ex) {
                         std::ostringstream msg;
                         msg << "Write failed with exception type: "

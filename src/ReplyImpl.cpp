@@ -48,19 +48,29 @@ public:
 
         ParseHeaders();
 
-        // Check for errors
-        if (GetResponseCode() >= 400) {
-            throw runtime_error("The request failed");
-        }
+//         // Check for errors
+//         if (GetResponseCode() >= 400) {
+//             throw runtime_error("The request failed");
+//         }
 
         // TODO: Handle redirects
 
         auto cl = GetHeader(content_len_name);
         if (cl) {
             content_length_ = stoi(*cl);
+
+            if (*content_length_ < body_.size()) {
+
+                clog << "*** content_length_ = " << *content_length_
+                    << ", body_.size() = " << body_.size() << endl;
+
+                //assert(*content_length_ >= body_.size());
+                // TODO: Close the connection
+            }
         }
 
         // TODO: Handle chunked responses
+        // TODO: Check for Connection: close header and tag the connectio for close
 
         body_bytes_received_ = body_.size();
         CheckIfWeAreDone();
@@ -106,6 +116,12 @@ public:
             throw runtime_error("Got 0 bytes from server");
         }
 
+        std::clog << "--> Received " << received << " bytes: "
+            << std::endl << "--------------- RECEIVED MORE START --------------" << endl
+            << boost::string_ref(read_buffer_->data(), received)
+            << std::endl << "--------------- RECEIVED MORE END --------------" << endl
+            << std::endl;
+
         data_bytes_received_ += received;
         body_bytes_received_ += received;
 
@@ -132,12 +148,12 @@ public:
 
 private:
     void CheckIfWeAreDone() {
-        if (!have_received_all_data_
-            && content_length_
-            && (*content_length_ == body_bytes_received_)) {
-
-            have_received_all_data_ = true;
-            owner_.LogDebug("Have received all data in the current request.");
+        if (!have_received_all_data_) {
+            if ((content_length_ && (*content_length_ == body_bytes_received_))
+            || (this->GetResponseCode() == 204)) {
+                have_received_all_data_ = true;
+                owner_.LogDebug("Have received all data in the current request.");
+            }
         }
     }
 
@@ -285,6 +301,12 @@ private:
             if (received == 0) {
                 throw runtime_error("Received 0 bytes on read.");
             }
+
+            std::clog << "--> Received " << received << " bytes: "
+                << std::endl << "--------------- RECEIVED START --------------" << endl
+                << boost::string_ref(read_buffer_->data() + bytes_used, received)
+                << std::endl << "--------------- RECEIVED END --------------" << endl
+                << std::endl;
 
             bytes_used += received;
 

@@ -4,6 +4,7 @@
 #include <type_traits>
 #include <assert.h>
 #include <stack>
+#include <set>
 
 #include <boost/type_index.hpp>
 #include <boost/mpl/range_c.hpp>
@@ -26,7 +27,7 @@
 
 
 
-#define RESTC_CPP_LOG std::clog
+//#define RESTC_CPP_LOG std::clog
 
 namespace restc_cpp {
 
@@ -631,6 +632,51 @@ private:
 
 namespace {
 
+    struct serialize_properties {
+        bool ignore_empty_fileds = false;
+        const std::set<std::string> *excluded_names = nullptr;
+
+        bool is_excluded(const std::string& name) const noexcept {
+            return excluded_names
+                && excluded_names->find(name) != excluded_names->end();
+        }
+    };
+
+    template <typename T>
+    constexpr bool is_empty_field_(const T& value,
+        typename std::enable_if<
+            !std::is_integral<T>::value
+            && !std::is_floating_point<T>::value
+            && !std::is_same<T, std::string>::value
+            && !is_container<T>::value
+            >::type* = 0) {
+
+        return false;
+    }
+
+    template <typename T>
+    constexpr bool is_empty_field_(const T& value,
+        typename std::enable_if<
+            std::is_integral<T>::value
+            || std::is_floating_point<T>::value
+            >::type* = 0) {
+        return value == T{};
+    }
+
+    template <typename T>
+    constexpr bool is_empty_field_(const T& value,
+        typename std::enable_if<
+            std::is_same<T, std::string>::value || is_container<T>::value
+            >::type* = 0) {
+        return value.empty();
+    }
+
+    template <typename T>
+    constexpr bool is_empty_field(T&& value) {
+        using data_type = typename std::remove_const<typename std::remove_reference<T>::type>::type;
+        return is_empty_field_<data_type>(value);
+    }
+
     template <typename T, typename S>
     void do_serialize_integral(const T& v, S& serializer) {
         assert(false);
@@ -669,6 +715,7 @@ namespace {
 
     template <typename dataT, typename serializerT>
     void do_serialize(const dataT& object, serializerT& serializer,
+                      const serialize_properties& properties,
         typename std::enable_if<
             !boost::fusion::traits::is_sequence<dataT>::value
             && !std::is_integral<dataT>::value
@@ -681,6 +728,7 @@ namespace {
 
     template <typename dataT, typename serializerT>
     void do_serialize(const dataT& object, serializerT& serializer,
+                      const serialize_properties& properties,
         typename std::enable_if<
             std::is_integral<dataT>::value
             || std::is_floating_point<dataT>::value
@@ -691,6 +739,7 @@ namespace {
 
     template <typename dataT, typename serializerT>
     void do_serialize(const dataT& object, serializerT& serializer,
+                      const serialize_properties& properties,
         typename std::enable_if<
             std::is_same<dataT, std::string>::value
             >::type* = 0) {
@@ -700,12 +749,14 @@ namespace {
 
     template <typename dataT, typename serializerT>
     void do_serialize(const dataT& object, serializerT& serializer,
+                      const serialize_properties& properties,
          typename std::enable_if<
             boost::fusion::traits::is_sequence<dataT>::value
             >::type* = 0);
 
     template <typename dataT, typename serializerT>
     void do_serialize(const dataT& object, serializerT& serializer,
+                      const serialize_properties& properties,
         typename std::enable_if<
             is_container<dataT>::value
             >::type* = 0) {
@@ -713,6 +764,7 @@ namespace {
         RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
             << " StartArray: " << std::endl;
 #endif
+
         serializer.StartArray();
 
         for(const auto& v: object) {
@@ -720,7 +772,7 @@ namespace {
             using native_field_type_t = typename std::remove_const<
                 typename std::remove_reference<decltype(v)>::type>::type;
 
-            do_serialize<native_field_type_t>(v, serializer);
+            do_serialize<native_field_type_t>(v, serializer, properties);
         }
 #ifdef RESTC_CPP_LOG
         RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
@@ -731,6 +783,7 @@ namespace {
 
     template <typename dataT, typename serializerT>
     void do_serialize(const dataT& object, serializerT& serializer,
+                      const serialize_properties& properties,
          typename std::enable_if<
             boost::fusion::traits::is_sequence<dataT>::value
             >::type*) {
@@ -749,6 +802,24 @@ namespace {
             RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
                 << " Key: " << get_name(item) << std::endl;
 #endif
+            if (properties.ignore_empty_fileds) {
+                if (is_empty_field(get_value(item))) {
+#ifdef RESTC_CPP_LOG
+            RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
+                << " ignoring empty field." << std::endl;
+#endif
+                    return;
+                }
+            }
+
+            if (properties.excluded_names
+                && properties.is_excluded(get_name(item))) {
+#ifdef RESTC_CPP_LOG
+                RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
+                    << " ignoring excluded field." << std::endl;
+#endif
+                return;
+            }
 
             serializer.Key(get_name(item).c_str());
 
@@ -759,7 +830,7 @@ namespace {
             auto& const_value = get_value(item);
             auto& value = const_cast<field_type_t&>(const_value);
 
-            do_serialize<native_field_type_t>(value, serializer);
+            do_serialize<native_field_type_t>(value, serializer, properties);
 
         });
 #ifdef RESTC_CPP_LOG
@@ -776,7 +847,7 @@ class RapidJsonSerializer
 public:
     using data_t = typename std::remove_const<typename std::remove_reference<objectT>::type>::type;
 
-    RapidJsonSerializer(data_t& object, serializerT& serializer)
+    RapidJsonSerializer(const data_t& object, serializerT& serializer)
     : object_{object}, serializer_{serializer}
     {
     }
@@ -786,13 +857,23 @@ public:
      * See https://github.com/miloyip/rapidjson/blob/master/doc/sax.md#writer-writer
      */
     void Serialize() {
-        do_serialize<data_t>(object_, serializer_);
+        do_serialize<data_t>(object_, serializer_, properties_);
+    }
+
+    void IgnoreEmptyMembers(bool ignore = true) {
+        properties_.ignore_empty_fileds = ignore;
+    }
+
+    // Set to nullptr to disable lookup
+    void ExcludeNames(const std::set<std::string> *names) {
+        properties_.excluded_names = names;
     }
 
 private:
 
-    data_t& object_;
+    const data_t& object_;
     serializerT& serializer_;
+    serialize_properties properties_;
 };
 
 
