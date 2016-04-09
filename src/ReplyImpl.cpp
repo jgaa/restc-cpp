@@ -5,6 +5,7 @@
 
 #include <boost/utility/string_ref.hpp>
 #include <boost/optional.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/Socket.h"
@@ -19,6 +20,8 @@ namespace restc_cpp {
 class ReplyImpl : public Reply {
 public:
     using buffer_t = std::array<char, 1024 * 16>;
+    enum class ChunkedState
+        { NOT_CHUNKED, GET_SIZE, IN_SEGMENT, IN_TRAILER, DONE };
 
     ReplyImpl(Connection::ptr_t connection,
               Context& ctx,
@@ -40,6 +43,8 @@ public:
 
     void StartReceiveFromServer() override {
         static const std::string content_len_name{"Content-Length"};
+        static const std::string transfer_encoding_name{"Transfer-Encoding"};
+        static const std::string chunked_name{"chunked"};
 
         read_buffer_ = make_unique<buffer_t>();
 
@@ -47,11 +52,6 @@ public:
         data_bytes_received_ = ReadHeaderAndMayBeSomeMore();
 
         ParseHeaders();
-
-//         // Check for errors
-//         if (GetResponseCode() >= 400) {
-//             throw runtime_error("The request failed");
-//         }
 
         // TODO: Handle redirects
 
@@ -65,20 +65,31 @@ public:
                     << ", body_.size() = " << body_.size() << endl;
 
                 //assert(*content_length_ >= body_.size());
-                // TODO: Close the connection
+                // TODO: Fix the body bunderies, Tag the connection for close
+            }
+
+            body_bytes_received_ = body_.size();
+
+        } else {
+            auto te = GetHeader(transfer_encoding_name);
+            if (te && boost::iequals(*te, chunked_name)) {
+                PrepareChunkedPayload();
             }
         }
 
-        // TODO: Handle chunked responses
         // TODO: Check for Connection: close header and tag the connectio for close
 
-        body_bytes_received_ = body_.size();
         CheckIfWeAreDone();
+    }
+
+    bool IsChunked() const noexcept {
+        return chunked_ != ChunkedState::NOT_CHUNKED;
     }
 
     int GetResponseCode() const override { return status_code_; }
 
     boost::asio::const_buffers_1 GetSomeData() override {
+        // We have some data ready to serve.
         if (!body_.empty()) {
 
             auto rval = boost::asio::const_buffers_1{body_.data(), body_.size()};
@@ -86,49 +97,11 @@ public:
             return rval;
         }
 
-        if (have_received_all_data_)
-            return  boost::asio::const_buffers_1{nullptr, 0};
-
-        // Determine how much data we should read
-        size_t want_bytes = 0;
-
-        if (content_length_) {
-            const auto bytes_left = *content_length_ - body_bytes_received_;
-            want_bytes = std::min(bytes_left, read_buffer_->size());
-        } else {
-            // TODO: Implement chunked mode
-            assert("Chunked response not yet implemented");
-        }
-
-        assert(want_bytes);
-        size_t received = 0;
-
-        {
-            auto timer = IoTimer::Create(
-                owner_.GetConnectionProperties()->replyTimeoutMs,
-                owner_.GetIoService(), connection_);
-
-            received = connection_->GetSocket().AsyncReadSome(
-                {read_buffer_->data(), want_bytes}, ctx_.GetYield());
-        }
-
-        if (received == 0) {
-            throw runtime_error("Got 0 bytes from server");
-        }
-
-        std::clog << "--> Received " << received << " bytes: "
-            << std::endl << "--------------- RECEIVED MORE START --------------" << endl
-            << boost::string_ref(read_buffer_->data(), received)
-            << std::endl << "--------------- RECEIVED MORE END --------------" << endl
-            << std::endl;
-
-        data_bytes_received_ += received;
-        body_bytes_received_ += received;
-
-        CheckIfWeAreDone();
-
-        return {read_buffer_->data(), received};
+        if (IsChunked())
+            return DoGetSomeChunkedData();
+        return DoGetSomeData();
     }
+
 
     string GetBodyAsString() override {
         std::string buffer;
@@ -149,11 +122,21 @@ public:
 private:
     void CheckIfWeAreDone() {
         if (!have_received_all_data_) {
-            if ((content_length_ && (*content_length_ == body_bytes_received_))
-            || (this->GetResponseCode() == 204)) {
-                have_received_all_data_ = true;
-                owner_.LogDebug("Have received all data in the current request.");
+            if (IsChunked()) {
+                if (chunked_ == ChunkedState::DONE) {
+                    have_received_all_data_ = true;
+                }
+            } else {
+                if ((content_length_
+                    && (*content_length_ <= body_bytes_received_))
+                || (this->GetResponseCode() == 204)) {
+
+                    have_received_all_data_ = true;
+                    owner_.LogDebug("Have received all data in the current request.");
+                }
             }
+
+            assert(chunked_ != ChunkedState::DONE);
         }
     }
 
@@ -281,7 +264,6 @@ private:
         }
     }
 
-
     size_t ReadHeaderAndMayBeSomeMore() {
         size_t bytes_used = 0;
         static string end_of_header{"\r\n\r\n"};
@@ -320,20 +302,283 @@ private:
         }
     }
 
+    void PrepareChunkedPayload() {
+        assert(chunked_ == ChunkedState::NOT_CHUNKED);
+        buffer_ = body_;
+        body_.clear();
+        chunked_ = ChunkedState::GET_SIZE;
+    }
+
+
+    /* 1) Assume that buffer points to the start of a segment.
+     * 2) If we find the header, and it's complete, set
+     *    body_ to the content (if any) after the header and return
+     *    true. Update the state to IN_SEGMENT. Update current_chunk_len_
+     * 3) On errors, throw std::runtime_error
+     * 4) If the header is valid, but incomplete, return
+     *    false and set the state to GET_SIZE
+     * 5) If we reached the last segment and have the header
+     *    and no padding data, return true. Set the state to DONE.
+     *    in the buffer and return true. Set the state to IN_TRAILER
+     * 6) If we reached the last segment and have a valid buffer,
+     *    update body_ wit whatever remaining data there is
+     *    in the buffer and return true. Set the state to IN_TRAILER
+     */
+    bool ProcessChunkHeader(const boost::string_ref buffer) {
+        static const string crlf{"\r\n"};
+
+        chunked_ = ChunkedState::GET_SIZE;
+        current_chunk_len_ = 0;
+        current_chunk_read_ = 0;
+        body_.clear();
+
+        if (buffer.size() < 3) {// smallest possible header length
+            return false;
+        }
+
+        size_t seg_len = 0;
+        for(auto it = buffer_.cbegin(); it != buffer_.cend(); ++it) {
+            if (std::isxdigit(*it)) {
+                if (++seg_len > 7) {
+                    throw runtime_error("More than 7 hex digit in chunk length!");
+                }
+                continue;
+            }
+            break;
+        }
+
+        if (!seg_len) {
+            throw runtime_error("Chunked segment must start with a hex digit.");
+        }
+
+
+        auto pos = buffer_.find(crlf);
+        if (pos == buffer_.npos) {
+            return false;
+        }
+        pos += 2; // crlf
+
+        const auto seg = boost::string_ref(buffer_.data(), seg_len);
+        current_chunk_len_ = std::stoul(seg.to_string(), nullptr, 16);
+
+        std::clog << "---> Chunked header: Segment lenght is "
+            << current_chunk_len_ << " bytes." << endl;
+
+        if (current_chunk_len_ == 0) {
+            // Last segment. No more payload.
+
+            body_ = {buffer_.data() + pos, buffer_.size() - pos};
+
+            if (body_.compare(crlf)) {
+                // We have a complete last segment. let's end this.
+                body_.clear();
+                chunked_ = ChunkedState::DONE;
+            } else {
+                chunked_ = ChunkedState::IN_TRAILER;
+            }
+        } else {
+            assert(current_chunk_len_ > 0);
+
+            /* Adjust the body to the actual payload.
+             * If we crop the body (the socket may received
+             * more data than the the current chunk, the remaining
+             * part will still be visible in buffer_.
+             */
+            body_ = {buffer_.data() + pos,
+                std::min(buffer_.size() - pos, current_chunk_len_)};
+
+            chunked_ = ChunkedState::IN_SEGMENT;
+        }
+
+        return true;
+    }
+
+    // Return true when we have received the entire trailer
+    bool ProcessChunkTrailer(const boost::string_ref buffer) {
+        // TODO: Implement
+        assert(false);
+    }
+
+    boost::asio::const_buffers_1 DoGetSomeChunkedData() {
+        assert(body_.empty());
+
+        if (chunked_ == ChunkedState::GET_SIZE) {
+
+            auto work_buffer = buffer_;
+            size_t offset = 0;
+            bool virgin = true;
+
+            while(!ProcessChunkHeader(work_buffer)) {
+
+                /* Move whatever data was left in buffer_ to the start
+                 * of read_buffer, so that ProcessChunkHeader can use
+                 * it together with received data
+                 */
+                if (virgin) {
+                    virgin = false;
+                    if (!buffer_.empty()) {
+                        offset = buffer_.size();
+                        memmove(read_buffer_->begin(),
+                                buffer_.begin(),
+                                buffer_.size());
+                        buffer_.clear();
+                    }
+                }
+
+                if (offset >= read_buffer_->size()) {
+                    throw runtime_error("Out of buffer-space reading chunk header");
+                }
+
+                const auto rcvd_buffer = ReadSomeData(
+                    (read_buffer_->begin() + offset),
+                    read_buffer_->size() - offset);
+
+                const auto bytes_received = boost::asio::buffer_size(rcvd_buffer);
+
+                offset += bytes_received;
+                buffer_ = {read_buffer_->begin(), offset};
+                work_buffer = buffer_;
+            }
+
+            if (body_.empty()) {
+                buffer_.clear(); // No remaining data
+            } else {
+                boost::asio::const_buffers_1 rval{
+                    body_.begin(), body_.size()};
+
+                // Shrink the buffer to whatever is left after body.
+                buffer_ = {body_.end(), buffer_.size() - body_.size()};
+
+                if (chunked_ == ChunkedState::IN_SEGMENT) {
+                    current_chunk_read_ = body_.size();
+                    body_bytes_received_ += body_.size();
+                    body_.clear();
+                    return rval;
+                }
+            }
+        }
+
+        if (chunked_ == ChunkedState::IN_SEGMENT) {
+            auto want_bytes = current_chunk_len_ = current_chunk_read_;
+
+            if (want_bytes == 0) {
+                chunked_ = ChunkedState::GET_SIZE;
+                return DoGetSomeChunkedData(); // Need to
+            }
+
+            if (!buffer_.empty()) {
+                 // Return data from the existing buffer
+                return TakeSegmentDataFromBuffer();
+            }
+
+            assert(buffer_.empty());
+            const auto rcvd_buffer = ReadSomeData(
+                    (read_buffer_->begin()), read_buffer_->size());
+
+            const auto bytes_received = boost::asio::buffer_size(rcvd_buffer);
+
+            buffer_ = {read_buffer_->begin(), bytes_received};
+
+            return TakeSegmentDataFromBuffer();
+        }
+
+        if (chunked_ == ChunkedState::IN_TRAILER) {
+            // TODO: Implement
+            assert(false);
+        }
+
+        CheckIfWeAreDone();
+
+        return {nullptr, 0};
+    }
+
+    boost::asio::const_buffers_1 TakeSegmentDataFromBuffer() {
+        auto want_bytes = current_chunk_len_ = current_chunk_read_;
+        assert(want_bytes);
+
+        const boost::string_ref rval = {buffer_.begin(),
+            std::min(buffer_.size(), want_bytes)};
+
+        current_chunk_read_ += rval.size();
+        body_bytes_received_ += rval.size();
+
+        // Shrink the buffer to whatever is left after body.
+        buffer_ = {rval.end(), buffer_.size() - rval.size()};
+
+        return {rval.begin(), rval.size()};
+    }
+
+    // Simple non-chunked get-data
+    boost::asio::const_buffers_1 DoGetSomeData() {
+        if (have_received_all_data_)
+            return  {nullptr, 0};
+
+        // Determine how much data we should read
+        size_t want_bytes = 0;
+
+        if (content_length_) {
+            const auto bytes_left = *content_length_ - body_bytes_received_;
+            want_bytes = std::min(bytes_left, read_buffer_->size());
+        } else {
+            // TODO: Implement chunked mode
+            assert("Chunked response not yet implemented");
+        }
+
+        const auto return_buffer = ReadSomeData(read_buffer_->data(),
+                                                want_bytes);
+
+        body_bytes_received_ = boost::asio::buffer_size(return_buffer);
+        CheckIfWeAreDone();
+
+        return return_buffer;
+    }
+
+    boost::asio::const_buffers_1
+    ReadSomeData(void *ptr, size_t bytes) {
+        assert(bytes);
+        size_t received = 0;
+
+        {
+            auto timer = IoTimer::Create(
+                owner_.GetConnectionProperties()->replyTimeoutMs,
+                owner_.GetIoService(), connection_);
+
+            received = connection_->GetSocket().AsyncReadSome(
+                {ptr, bytes}, ctx_.GetYield());
+        }
+
+        if (received == 0) {
+            throw runtime_error("Got 0 bytes from server");
+        }
+
+        std::clog << "---> Received " << received << " bytes: "
+            << std::endl << "--------------- RECEIVED START --------------" << endl
+            << boost::string_ref(read_buffer_->data(), received)
+            << std::endl << "--------------- RECEIVED END --------------" << endl
+            << std::endl;
+
+        data_bytes_received_ += received;
+
+        return {ptr, received};
+    }
+
+
     Connection::ptr_t connection_;
     Context& ctx_;
     RestClient& owner_;
-    std::vector<char> memory_buffer_;
-    boost::string_ref buffer_;
-    boost::string_ref status_line_;;
-    boost::string_ref header_;
-    boost::string_ref body_;
+    boost::string_ref buffer_; // Valid window into memory_buffer_
+    boost::string_ref status_line_; // Valid only during header processing
+    boost::string_ref header_; // Valid only during header processing
+    boost::string_ref body_; // payload
     int status_code_ = 0;
     boost::string_ref status_message_;
     map<string, string, ciLessLibC> headers_;
     bool have_received_all_data_ = false;
     std::unique_ptr<buffer_t> read_buffer_;
     boost::optional<size_t> content_length_;
+    size_t current_chunk_len_ = 0;
+    size_t current_chunk_read_ = 0;
+    ChunkedState chunked_ = ChunkedState::NOT_CHUNKED;
     size_t data_bytes_received_ = 0;
     size_t body_bytes_received_ = 0;
 };
