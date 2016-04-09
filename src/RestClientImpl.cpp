@@ -83,24 +83,45 @@ public:
     }
 
 
-    const void ProcessInWorker(boost::asio::yield_context yield,
-                               const prc_fn_t& fn) {
+    const void
+    ProcessInWorker(boost::asio::yield_context yield,
+                    const prc_fn_t& fn,
+                    const std::shared_ptr<std::promise<void>>& promise) {
 
         ContextImpl ctx(yield, *this);
 
         try {
             fn(ctx);
         } catch(std::exception& ex) {
+            if (promise) {
+                promise->set_exception(std::current_exception());
+            }
             std::ostringstream msg;
             msg << "Caught exception: " << ex.what();
             RestClient::LogError(msg);
+            return;
+        }
+
+        if (promise) {
+            promise->set_value();
         }
     }
 
     void Process(const prc_fn_t& fn) override {
         boost::asio::spawn(io_service_,
                            bind(&RestClientImpl::ProcessInWorker, this,
-                                std::placeholders::_1, fn));
+                                std::placeholders::_1, fn, nullptr));
+    }
+
+    std::future< void > ProcessWithPromise(const prc_fn_t& fn) override {
+        auto promise = make_shared<std::promise<void>>();
+        auto future = promise->get_future();
+
+        boost::asio::spawn(io_service_,
+                           bind(&RestClientImpl::ProcessInWorker, this,
+                                std::placeholders::_1, fn, promise));
+
+        return future;
     }
 
     ConnectionPool& GetConnectionPool() override { return *pool_; }

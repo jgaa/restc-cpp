@@ -20,6 +20,8 @@ target_link_libraries(basic_tests
     ${DEFAULT_LIBRARIES}
 )
 
+add_test(JSON_FUNCTIONAL_TESTS basic_tests)
+
 include_directories(${UNITTEST_CPP_INCLUDE_PATH})
 link_directories(${UNITTEST_CPP_LIBPATH})
 

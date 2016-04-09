@@ -70,11 +70,10 @@ int main(int argc, char *argv[]) {
 
     try {
         auto rest_client = RestClient::Create();
-        rest_client->Process(DoSomethingInteresting);
+        auto future = rest_client->ProcessWithPromise(DoSomethingInteresting);
 
         // Hold the main thread to allow the worker to do it's job
-        cin.get();
-        // TODO: Shut down the client and wait for the worker thread to exit.
+        future.wait();
     } catch (const exception& ex) {
         std::clog << "main: Caught exception: " << ex.what() << endl;
     }

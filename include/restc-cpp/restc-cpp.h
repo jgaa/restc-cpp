@@ -6,6 +6,7 @@
 #include <map>
 #include <list>
 #include <memory>
+#include <future>
 
 #include <boost/asio.hpp>
 #include <boost/asio/spawn.hpp>
@@ -194,6 +195,9 @@ public:
      * the co-rourtine.
      */
     virtual void Process(const prc_fn_t& fn) = 0;
+
+    /*! Same as process, but returns a void future */
+    virtual std::future<void> ProcessWithPromise(const prc_fn_t& fn) = 0;
 
     virtual ConnectionPool& GetConnectionPool() = 0;
     virtual boost::asio::io_service& GetIoService() = 0;
