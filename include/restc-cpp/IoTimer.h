@@ -3,6 +3,8 @@
 #ifndef RESTC_CPP_IO_TIMER_H_
 #define RESTC_CPP_IO_TIMER_H_
 
+#include <iostream>
+
 #include <boost/utility/string_ref.hpp>
 
 #include "restc-cpp/restc-cpp.h"
@@ -57,6 +59,7 @@ public:
             [weak_connection]() {
                 if (auto connection = weak_connection.lock()) {
                     if (connection->GetSocket().GetSocket().is_open()) {
+                        std::clog << "Socket timed out." << std::endl;
                         connection->GetSocket().GetSocket().close();
                     }
                 }
