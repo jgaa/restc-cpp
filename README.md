@@ -50,10 +50,14 @@ void DoSomethingInteresting(Context& ctx) {
 
 main(int argc, char *argv[]) {
     auto rest_client = RestClient::Create();
-    rest_client->Process(DoSomethingInteresting);
+
+    /* Call DoSomethingInteresting as a co-routine in a worker-thread.
+     * This version of Proces*() returns a future.
+     */
+    auto future = rest_client->ProcessWithPromise(DoSomethingInteresting);
 
     // Hold the main thread...
-    cin.get();
+    future.wait();
 }
 ```
 
