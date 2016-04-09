@@ -125,6 +125,7 @@ private:
             if (IsChunked()) {
                 if (chunked_ == ChunkedState::DONE) {
                     have_received_all_data_ = true;
+                    owner_.LogDebug("Have received all data in the current request.");
                 }
             } else {
                 if ((content_length_
