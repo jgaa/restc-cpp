@@ -172,9 +172,10 @@ REST requests.
  - [ ] HTTP header parser
 - [ ] Implement connection pool
 - [ ] Implement Chunked Reponse handling
-- [ ] Implement Chunked Requests
- - [x] ~~General support In HTTP Requests module~~
+ - [x] ~~Handle normal use-cases~~
  - [ ] Handle trailers
+- [ ] Implement Chunked Requests
+ - [ ] General support In HTTP Requests module
  - [ ] Async from json Serialization
 - [ ] Handle redirects
 - [ ] Implement simple File Upload (as body)
