@@ -173,7 +173,8 @@ REST requests.
 - [ ] Implement connection pool
 - [ ] Implement Chunked Reponse handling
 - [ ] Implement Chunked Requests
- - [ ] General support In HTTP Requests module
+ - [x] ~~General support In HTTP Requests module~~
+ - [ ] Handle trailers
  - [ ] Async from json Serialization
 - [ ] Handle redirects
 - [ ] Implement simple File Upload (as body)
