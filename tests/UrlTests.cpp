@@ -8,14 +8,6 @@
 using namespace std;
 using namespace restc_cpp;
 
-TEST(UrlRest)
-{
-    Url url("http://127.0.0.1:8080/scg-external-api/api/v1/messaging/channels/o3RokAKmTNmL-5YLbEwqqw");
-    CHECK_EQUAL("127.0.0.1", url.GetHost());
-    CHECK_EQUAL("8080", url.GetPort());
-    CHECK_EQUAL(Url::Protocol::HTTP, url.GetProtocol());
-    CHECK_EQUAL("/scg-external-api/api/v1/messaging/channels/o3RokAKmTNmL-5YLbEwqqw", url.GetPath());
-}
 
 TEST(UrlSimple)
 {
