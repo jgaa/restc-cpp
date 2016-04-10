@@ -120,29 +120,49 @@ std::string get_name(const T& x)
     return boost::fusion::at_c<1>(x);
 }
 
-void assign_value(int& var, unsigned val) {
-    var = static_cast<int>(val);
-}
+// void assign_value(int& var, unsigned val) {
+//     var = static_cast<int>(val);
+// }
+//
+// void assign_value(std::int64_t& var, std::uint64_t val) {
+//     var = static_cast<int64_t>(val);
+// }
+//
+// void assign_value(std::int64_t& var, std::uint64_t val) {
+//     var = static_cast<int64_t>(val);
+// }
+//
+// // Double& = double fails std::is_assignable
+// void assign_value(double& var, double val) {
+//     var = val;
+// }
 
-void assign_value(std::int64_t& var, std::uint64_t val) {
-    var = static_cast<int64_t>(val);
-}
-
-// Double& = double fails std::is_assignable
-void assign_value(double& var, double val) {
-    var = val;
+template <typename varT, typename valT,
+    typename std::enable_if<
+        ((std::is_integral<varT>::value && std::is_integral<valT>::value)
+            || (std::is_floating_point<varT>::value && std::is_floating_point<valT>::value))
+        && !std::is_assignable<varT, valT>::value
+        >::type* = nullptr>
+void assign_value(varT& var, valT val) {
+    var = static_cast<varT>(val);
 }
 
 template <typename varT, typename valT,
     typename std::enable_if<
-        std::is_assignable<varT, valT>::value
+        !((std::is_integral<varT>::value && std::is_integral<valT>::value)
+            || (std::is_floating_point<varT>::value && std::is_floating_point<valT>::value))
+        && std::is_assignable<varT, valT>::value
         >::type* = nullptr>
 void assign_value(varT& var, valT val) {
     var = val;
 }
 
 template <typename varT, typename valT,
-    typename std::enable_if<!std::is_assignable<varT, valT>::value>::type* = nullptr>
+    typename std::enable_if<
+        !std::is_assignable<varT, valT>::value
+        && !((std::is_integral<varT>::value && std::is_integral<valT>::value)
+            || (std::is_floating_point<varT>::value && std::is_floating_point<valT>::value))
+        >::type* = nullptr>
 void assign_value(varT& var, valT val) {
     assert(false);
 }
