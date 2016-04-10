@@ -31,6 +31,34 @@
 
 namespace restc_cpp {
 
+struct json_field_mapping {
+    struct entry {
+        std::string native_name;
+        std::string json_name;
+    };
+    std::vector<entry> entries;
+
+    const std::string&
+    to_json_name(const std::string& name) const noexcept {
+        for(const auto& entry : entries) {
+            if (name.compare(entry.native_name) == 0) {
+                return entry.json_name;
+            }
+        }
+        return name;
+    }
+
+    const std::string&
+    to_native_name(const std::string& name) const noexcept {
+        for(const auto& entry : entries) {
+            if (name.compare(entry.json_name) == 0) {
+                return entry.native_name;
+            }
+        }
+        return name;
+    }
+};
+
 /*! Base class that satisfies the requirements from rapidjson */
 class RapidJsonDeserializerBase {
 public:
@@ -120,23 +148,6 @@ std::string get_name(const T& x)
     return boost::fusion::at_c<1>(x);
 }
 
-// void assign_value(int& var, unsigned val) {
-//     var = static_cast<int>(val);
-// }
-//
-// void assign_value(std::int64_t& var, std::uint64_t val) {
-//     var = static_cast<int64_t>(val);
-// }
-//
-// void assign_value(std::int64_t& var, std::uint64_t val) {
-//     var = static_cast<int64_t>(val);
-// }
-//
-// // Double& = double fails std::is_assignable
-// void assign_value(double& var, double val) {
-//     var = val;
-// }
-
 template <typename varT, typename valT,
     typename std::enable_if<
         ((std::is_integral<varT>::value && std::is_integral<valT>::value)
@@ -192,9 +203,12 @@ public:
     enum class State { INIT, IN_OBJECT, IN_ARRAY, RECURSED, DONE };
 
 
-    RapidJsonDeserializer(data_t& object, RapidJsonDeserializerBase *parent = nullptr)
+    RapidJsonDeserializer(data_t& object,
+                          RapidJsonDeserializerBase *parent = nullptr,
+                          const json_field_mapping *nameMapping = nullptr)
     : RapidJsonDeserializerBase(parent)
     , object_{object}
+    , name_mapping_{nameMapping}
     //, struct_members_{with_names(object_)}
     {
 
@@ -295,7 +309,8 @@ private:
         auto& const_value = get_value(item);
         auto& value = const_cast<field_type_t&>(const_value);
 
-        recursed_to_ = std::make_unique<RapidJsonDeserializer<field_type_t>>(value, this);
+        recursed_to_ = std::make_unique<RapidJsonDeserializer<field_type_t>>(
+            value, this, name_mapping_);
     }
 
     template <typename classT, typename itemT>
@@ -546,7 +561,14 @@ private:
 
     bool DoKey(const char* str, std::size_t length, bool copy) {
         assert(current_name_.empty());
-        current_name_.assign(str, length);
+
+        if (name_mapping_ == nullptr) {
+            current_name_.assign(str, length);
+        } else {
+            std::string name{str, length};
+            current_name_ = name_mapping_->to_native_name(name);
+        }
+
 #ifdef RESTC_CPP_LOG
         RESTC_CPP_LOG << boost::typeindex::type_id<data_t>().pretty_name()
             << " DoKey: " << current_name_ << std::endl;
@@ -642,6 +664,7 @@ private:
 
 private:
     data_t& object_;
+    const json_field_mapping *name_mapping_ = nullptr;
     std::string current_name_;
     //decltype(with_names(object_)) struct_members_;
     State state_ = State::INIT;
@@ -655,10 +678,17 @@ namespace {
     struct serialize_properties {
         bool ignore_empty_fileds = false;
         const std::set<std::string> *excluded_names = nullptr;
+        const json_field_mapping *name_mapping = nullptr;
 
         bool is_excluded(const std::string& name) const noexcept {
             return excluded_names
                 && excluded_names->find(name) != excluded_names->end();
+        }
+
+        const std::string& map_name_to_json(const std::string& name) const noexcept {
+            if (name_mapping == nullptr)
+                return name;
+            return name_mapping->to_json_name(name);
         }
     };
 
@@ -818,9 +848,10 @@ namespace {
             /* It's probably better to use a recursive search,
              * but this will do for now.
              */
+            auto name = get_name(item);
 #ifdef RESTC_CPP_LOG
             RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
-                << " Key: " << get_name(item) << std::endl;
+                << " Key: " << name << std::endl;
 #endif
             if (properties.ignore_empty_fileds) {
                 if (is_empty_field(get_value(item))) {
@@ -833,7 +864,7 @@ namespace {
             }
 
             if (properties.excluded_names
-                && properties.is_excluded(get_name(item))) {
+                && properties.is_excluded(name)) {
 #ifdef RESTC_CPP_LOG
                 RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
                     << " ignoring excluded field." << std::endl;
@@ -841,7 +872,7 @@ namespace {
                 return;
             }
 
-            serializer.Key(get_name(item).c_str());
+            serializer.Key(properties.map_name_to_json(name).c_str());
 
             using const_field_type_t = decltype(get_value(item));
             using native_field_type_t = typename std::remove_const<typename std::remove_reference<const_field_type_t>::type>::type;
@@ -889,6 +920,10 @@ public:
         properties_.excluded_names = names;
     }
 
+    void SetNameMapping(const json_field_mapping *mapping) {
+        properties_.name_mapping = mapping;
+    }
+
 private:
 
     const data_t& object_;
@@ -898,16 +933,20 @@ private:
 
 
 template <typename dataT>
-void SerializeFromJson(dataT& rootData, Reply& reply) {
-    RapidJsonDeserializer<dataT> handler(rootData);
+void SerializeFromJson(dataT& rootData,
+                       Reply& reply,
+                       const json_field_mapping *nameMapper = nullptr) {
+    RapidJsonDeserializer<dataT> handler(rootData, nullptr, nameMapper);
     RapidJsonReader reply_stream(reply);
     rapidjson::Reader json_reader;
     json_reader.Parse(reply_stream, handler);
 }
 
 template <typename dataT>
-void SerializeFromJson(dataT& rootData, std::unique_ptr<Reply>&& reply) {
-   SerializeFromJson(rootData, *reply);
+void SerializeFromJson(dataT& rootData,
+                       std::unique_ptr<Reply>&& reply,
+                       const json_field_mapping *nameMapper = nullptr) {
+   SerializeFromJson(rootData, *reply, nameMapper);
 }
 
 } // namespace
