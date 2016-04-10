@@ -59,6 +59,23 @@ struct json_field_mapping {
     }
 };
 
+struct serialize_properties {
+    bool ignore_empty_fileds = false;
+    const std::set<std::string> *excluded_names = nullptr;
+    const json_field_mapping *name_mapping = nullptr;
+
+    bool is_excluded(const std::string& name) const noexcept {
+        return excluded_names
+            && excluded_names->find(name) != excluded_names->end();
+    }
+
+    const std::string& map_name_to_json(const std::string& name) const noexcept {
+        if (name_mapping == nullptr)
+            return name;
+        return name_mapping->to_json_name(name);
+    }
+};
+
 /*! Base class that satisfies the requirements from rapidjson */
 class RapidJsonDeserializerBase {
 public:
@@ -674,24 +691,6 @@ private:
 
 
 namespace {
-
-    struct serialize_properties {
-        bool ignore_empty_fileds = false;
-        const std::set<std::string> *excluded_names = nullptr;
-        const json_field_mapping *name_mapping = nullptr;
-
-        bool is_excluded(const std::string& name) const noexcept {
-            return excluded_names
-                && excluded_names->find(name) != excluded_names->end();
-        }
-
-        const std::string& map_name_to_json(const std::string& name) const noexcept {
-            if (name_mapping == nullptr)
-                return name;
-            return name_mapping->to_json_name(name);
-        }
-    };
-
     template <typename T>
     constexpr bool is_empty_field_(const T& value,
         typename std::enable_if<
