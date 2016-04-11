@@ -180,7 +180,7 @@ REST requests.
  - [ ] General support In HTTP Requests module
  - [ ] Async from json Serialization
 - [ ] Handle redirects
-- [ ] Implement simple File Upload (as body)
+- [x] Implement simple File Upload (as body)
 - [ ] Implement simple File Download (from body)
 - [ ] Verify that it compiles with Debian Stable
 - [ ] Verify that it compiles with Windows 10 / Visual Studio
