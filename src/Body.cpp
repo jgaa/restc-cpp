@@ -46,6 +46,7 @@ bool Request::Body::GetData(write_buffers_t& buffers) {
 
         bytes_read_ += read_this_time;
         buffers.push_back({buffer_->begin(), read_this_time});
+        return true;
     }
     return false;
 }
