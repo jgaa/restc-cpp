@@ -24,6 +24,7 @@ template <typename T>
 void merge_map(const boost::optional<T> src, T& dst) {
     if (src) {
         for(const auto& it : *src) {
+            dst.erase(it.first);
             dst.insert(it);
         }
     }
