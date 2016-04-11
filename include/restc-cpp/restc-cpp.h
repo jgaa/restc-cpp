@@ -7,10 +7,14 @@
 #include <list>
 #include <memory>
 #include <future>
+#include <fstream>
+#include <iostream>
+#include <array>
 
 #include <boost/asio.hpp>
 #include <boost/asio/spawn.hpp>
 #include <boost/optional.hpp>
+#include <boost/filesystem.hpp>
 
 #include "restc-cpp/config.h"
 #include "restc-cpp/helper.h"
@@ -27,6 +31,8 @@ class Socket;
 class Request;
 class Reply;
 class Context;
+
+using write_buffers_t = std::vector<boost::asio::const_buffer>;
 
 class Request {
 public:
@@ -57,18 +63,46 @@ public:
         args_t args;
     };
 
+    // TODO: Switch to interface and may be specialized implementations
     struct Body {
         enum class Type {
             NONE,
-            STRING
+            STRING,
+            FILE
         };
 
-        Body() = default;
+        Body() : eof_{true} {}
         Body(const std::string& body) : body_str_(body), type_{Type::STRING} {}
         Body(std::string&& body) : body_str_(move(body)), type_{Type::STRING} {}
+        Body(const boost::filesystem::path& path) : path_(path), type_{Type::FILE} {}
 
+        bool HaveSize() const noexcept {
+            return true;
+        }
+
+        bool HaveAllDataReadyInBuffers() const noexcept {
+            return type_ == Type::STRING;
+        }
+
+        bool IsEof() const noexcept {
+            return eof_;
+        }
+
+        // Return true if we added data
+        bool GetData(write_buffers_t& buffers);
+
+        // Typically the value of the content-length header
+        std::uint64_t GetFizxedSize() const;
+
+    private:
         boost::optional<std::string> body_str_;
+        boost::optional<boost::filesystem::path> path_;
         const Type type_ = Type::NONE;
+        bool eof_ = false;
+        std::unique_ptr<std::ifstream> file_;
+        std::unique_ptr<std::array<char, 1024 * 8>> buffer_;
+        std::uint64_t bytes_read_ = 0;
+        mutable boost::optional<std::uint64_t> size_;
     };
 
     virtual const Properties& GetProperties() const = 0;
@@ -79,7 +113,7 @@ public:
     Create(const std::string& url,
            const Type requestType,
            RestClient& owner,
-           boost::optional<Body> body = {},
+           std::unique_ptr<Body> body = nullptr,
            const boost::optional<args_t>& args = {},
            const boost::optional<headers_t>& headers = {});
 };

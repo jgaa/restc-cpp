@@ -33,13 +33,13 @@ public:
 
         unique_ptr< Reply > Post(string url, string body) override {
             auto req = Request::Create(url, restc_cpp::Request::Type::POST, rc_,
-                                       {Request::Body{move(body)}});
+                                       {make_unique<Request::Body>(move(body))});
             return Request(*req);
         }
 
         unique_ptr< Reply > Put(string url, string body) override {
             auto req = Request::Create(url, restc_cpp::Request::Type::PUT, rc_,
-                                       {Request::Body{move(body)}});
+                                       {make_unique<Request::Body>(move(body))});
             return Request(*req);
         }
 

@@ -13,8 +13,6 @@ namespace restc_cpp {
 class Socket
 {
 public:
-    using write_buffers_t = std::vector<boost::asio::const_buffer>;
-
     virtual ~Socket() = default;
 
     virtual boost::asio::ip::tcp::socket& GetSocket() = 0;

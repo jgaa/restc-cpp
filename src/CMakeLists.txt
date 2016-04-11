@@ -5,6 +5,7 @@ set(ACTUAL_SOURCES
     ReplyImpl.cpp
     ConnectionPoolImpl.cpp
     Url.cpp
+    Body.cpp
     )
 set(HEADERS
     ${RESTC_ROOT_DIR}/include/restc-cpp/restc-cpp.h
