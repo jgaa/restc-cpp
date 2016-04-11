@@ -167,9 +167,11 @@ REST requests.
  - [x] ~~Deserialization: std::vector of json native datatypes and classes~~
  - [x] ~~Serialization of the above~~
  - [ ] Serialization / Deserialization: std::map
-- [ ] Unit tests for parsers
+- [ ] Unit tests
  - [x] ~~Url parser~~
+ - [x] ~~Json / C++ transformation~~
  - [ ] HTTP header parser
+ - [ ] HTTP Chunked repsponse / odd cases
 - [ ] Implement connection pool
 - [ ] Implement Chunked Reponse handling
  - [x] ~~Handle normal use-cases~~
@@ -180,7 +182,7 @@ REST requests.
 - [ ] Handle redirects
 - [ ] Implement simple File Upload (as body)
 - [ ] Implement simple File Download (from body)
-- [x] ~~Verify that it compiles with Debian Stable~~
+- [ ] Verify that it compiles with Debian Stable
 - [ ] Verify that it compiles with Windows 10 / Visual Studio
 - [ ] Verify that it compiles with OS/X
 - [ ] Implement Mime multipart Requests
@@ -190,3 +192,4 @@ REST requests.
 - [ ] Implement asynchronous iterators for requests data and integrate with json generator.
 - [ ] Add options to secure TLS connections (avoid weak encryption and verify server certs).
 - [ ] Add compression for the IO stream
+-
