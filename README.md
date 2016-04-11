@@ -167,6 +167,7 @@ REST requests.
  - [x] ~~Deserialization: std::vector of json native datatypes and classes~~
  - [x] ~~Serialization of the above~~
  - [ ] Serialization / Deserialization: std::map
+ - [ ] Serialization / Deserialization: std::deque
 - [ ] Unit tests
  - [x] ~~Url parser~~
  - [x] ~~Json / C++ transformation~~
