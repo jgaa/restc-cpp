@@ -50,8 +50,15 @@ public:
 
         // Get the header part of the message into header_
         data_bytes_received_ = ReadHeaderAndMayBeSomeMore();
-
         ParseHeaders();
+
+        clog << "### Initial read: header_.size() + crlf = "
+            << (header_.size() + 4)
+            << ", body_.size() = " << body_.size()
+            << ", totals to " << (body_.size() + header_.size() + 4)
+            << endl;
+
+        assert((body_.size() + header_.size() + 4 /* crlf */ ) == data_bytes_received_);
 
         // TODO: Handle redirects
 
@@ -136,8 +143,6 @@ private:
                     owner_.LogDebug("Have received all data in the current request.");
                 }
             }
-
-            assert(chunked_ != ChunkedState::DONE);
         }
     }
 
@@ -146,7 +151,7 @@ private:
         static const string crlf{"\r\n"};
         static const string expected_protocol{"HTTP/1.1"};
 
-        owner_.LogDebug(header_.to_string());
+        //owner_.LogDebug(header_.to_string());
 
         auto remaining = header_;
 
@@ -325,7 +330,7 @@ private:
      *    update body_ wit whatever remaining data there is
      *    in the buffer and return true. Set the state to IN_TRAILER
      */
-    bool ProcessChunkHeader(const boost::string_ref buffer) {
+    bool ProcessChunkHeader(boost::string_ref buffer) {
         static const string crlf{"\r\n"};
 
         chunked_ = ChunkedState::GET_SIZE;
@@ -333,33 +338,44 @@ private:
         current_chunk_read_ = 0;
         body_.clear();
 
-        if (buffer.size() < 3) {// smallest possible header length
+        if (buffer.size() < (current_chunk_ ? 6 : 3)) {// smallest possible header length
             return false;
         }
 
         size_t seg_len = 0;
-        for(auto it = buffer_.cbegin(); it != buffer_.cend(); ++it) {
+
+        if (current_chunk_) {
+            if ((buffer[0] != '\r') || (buffer[1] != '\n')) {
+                throw runtime_error("Missing CRLF before HTTP 1.1 chunk header!");
+            }
+
+            // Shrink buffer so that it starts with the segment length
+            buffer = {buffer.begin() + 2, buffer.size() - 2};
+        }
+
+        for(auto it = buffer.cbegin(); it != buffer.cend(); ++it) {
             if (std::isxdigit(*it)) {
                 if (++seg_len > 7) {
-                    throw runtime_error("More than 7 hex digit in chunk length!");
+                    throw runtime_error("More than 7 hex digit in HTTP 1.1 chunk length!");
                 }
                 continue;
             }
             break;
         }
 
+
         if (!seg_len) {
             throw runtime_error("Chunked segment must start with a hex digit.");
         }
 
 
-        auto pos = buffer_.find(crlf);
-        if (pos == buffer_.npos) {
+        auto pos = buffer.find(crlf);
+        if (pos == buffer.npos) {
             return false;
         }
         pos += 2; // crlf
 
-        const auto seg = boost::string_ref(buffer_.data(), seg_len);
+        const auto seg = boost::string_ref(buffer.data(), seg_len);
         current_chunk_len_ = std::stoul(seg.to_string(), nullptr, 16);
 
         std::clog << "---> Chunked header: Segment lenght is "
@@ -368,7 +384,7 @@ private:
         if (current_chunk_len_ == 0) {
             // Last segment. No more payload.
 
-            body_ = {buffer_.data() + pos, buffer_.size() - pos};
+            body_ = {buffer.data() + pos, buffer.size() - pos};
 
             if (body_.compare(crlf)) {
                 // We have a complete last segment. let's end this.
@@ -383,14 +399,15 @@ private:
             /* Adjust the body to the actual payload.
              * If we crop the body (the socket may received
              * more data than the the current chunk, the remaining
-             * part will still be visible in buffer_.
+             * part will still be visible in buffer.
              */
-            body_ = {buffer_.data() + pos,
-                std::min(buffer_.size() - pos, current_chunk_len_)};
+            body_ = {buffer.data() + pos,
+                std::min(buffer.size() - pos, current_chunk_len_)};
 
             chunked_ = ChunkedState::IN_SEGMENT;
         }
 
+        ++current_chunk_;
         return true;
     }
 
@@ -448,19 +465,28 @@ private:
                     body_.begin(), body_.size()};
 
                 // Shrink the buffer to whatever is left after body.
-                buffer_ = {body_.end(), buffer_.size() - body_.size()};
+                buffer_ = {body_.end(),
+                    static_cast<size_t>(buffer_.end() - body_.end())};
 
                 if (chunked_ == ChunkedState::IN_SEGMENT) {
                     current_chunk_read_ = body_.size();
                     body_bytes_received_ += body_.size();
                     body_.clear();
+
+                    clog << "### Got chunked header: current_chunk_read_ = "
+                        << current_chunk_read_
+                        << ", current_chunk_len_ = " << current_chunk_len_
+                        << ", remaining = " << ((int)current_chunk_len_ - (int)current_chunk_read_)
+                        << ", buffer size = " << boost::asio::buffer_size(rval)
+                        << endl;
+
                     return rval;
                 }
             }
         }
 
         if (chunked_ == ChunkedState::IN_SEGMENT) {
-            auto want_bytes = current_chunk_len_ = current_chunk_read_;
+            auto want_bytes = current_chunk_len_ - current_chunk_read_;
 
             if (want_bytes == 0) {
                 chunked_ = ChunkedState::GET_SIZE;
@@ -485,7 +511,7 @@ private:
 
         if (chunked_ == ChunkedState::IN_TRAILER) {
             // TODO: Implement
-            assert(false);
+            chunked_ = ChunkedState::DONE;
         }
 
         CheckIfWeAreDone();
@@ -494,7 +520,7 @@ private:
     }
 
     boost::asio::const_buffers_1 TakeSegmentDataFromBuffer() {
-        auto want_bytes = current_chunk_len_ = current_chunk_read_;
+        auto want_bytes = current_chunk_len_ - current_chunk_read_;
         assert(want_bytes);
 
         const boost::string_ref rval = {buffer_.begin(),
@@ -505,6 +531,13 @@ private:
 
         // Shrink the buffer to whatever is left after body.
         buffer_ = {rval.end(), buffer_.size() - rval.size()};
+
+        clog << "### TakeSegmentDataFromBuffer: current_chunk_read_ = "
+            << current_chunk_read_
+            << ", current_chunk_len_ = " << current_chunk_len_
+            << ", remaining = " << ((int)current_chunk_len_ - (int)current_chunk_read_)
+            << ", rval.size = " <<  rval.size()
+            << endl;
 
         return {rval.begin(), rval.size()};
     }
@@ -579,6 +612,7 @@ private:
     boost::optional<size_t> content_length_;
     size_t current_chunk_len_ = 0;
     size_t current_chunk_read_ = 0;
+    size_t current_chunk_ = 0;
     ChunkedState chunked_ = ChunkedState::NOT_CHUNKED;
     size_t data_bytes_received_ = 0;
     size_t body_bytes_received_ = 0;
