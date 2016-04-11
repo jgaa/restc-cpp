@@ -160,7 +160,7 @@ REST requests.
 
 
 ## Short Term Tasks
-- [x] ~~Implement GET, POST, PUT, DELETE~~~
+- [x] ~~Implement GET, POST, PUT, DELETE~~
 - [x] ~~Implement HTTPS~~
 - [ ] Json support (work in progress)
  - [x] ~~Deserialization: Simple and nested classes (must be declared with BOOST_FUSION_ADAPT_STRUCT)~~
@@ -192,4 +192,4 @@ REST requests.
 - [ ] Implement asynchronous iterators for requests data and integrate with json generator.
 - [ ] Add options to secure TLS connections (avoid weak encryption and verify server certs).
 - [ ] Add compression for the IO stream
--
+
