@@ -146,6 +146,12 @@ void DoSomethingInteresting(Context& ctx) {
 The code is still a bit immature and not properly tested, but capable of executing
 REST requests.
 
+The latest code compiles with Debian "testing" and Ubuntu "wily". There is a problem
+with boost::fusion un Debian "stable". I suspect that the problem will be resolved
+by using a newer version of the boost libraries. The code is not yet tested under Windows.
+
+Full support for Debian "stable" and Windows should be ready in a week.
+
 
 ## Supported development platforms:
 - Linux (Debian stable and testing)
