@@ -13,6 +13,15 @@ using namespace restc_cpp;
 using namespace rapidjson;
 
 struct Person {
+  
+    Person(int id_, std::string name_, double balance_)
+    : id{id_}, name{std::move(name_)}, balance{balance_}
+    {}
+    
+    Person() = default;
+    Person(const Person&) = default;
+    Person(Person&&) = default;
+  
     int id = 0;
     std::string name;
     double balance = 0;
@@ -26,6 +35,16 @@ BOOST_FUSION_ADAPT_STRUCT(
 )
 
 struct Group {
+  
+    Group(std::string name_, int gid_, Person leader_,
+	  std::vector<Person> members_ = {}, std::list<Person> more_members_ = {})
+    : name{std::move(name_)}, gid{gid_}, leader{std::move(leader_)}
+    , members{move(members_)}, more_members{move(more_members_)}
+    {}
+  
+    Group() = default;
+    Group(const Group&) = default;
+    Group(Group&&) = default;
 
     std::string name;
     int gid = 0;
@@ -63,7 +82,7 @@ TEST(SerializeSimpleObject)
 
 TEST(SerializeNestedObject)
 {
-    Group group = {"Group name", 99, { 100, "John Doe", 123.45 }};
+    Group group = Group(string("Group name"), 99, Person( 100, string("John Doe"), 123.45 ));
 
     StringBuffer s;
     Writer<StringBuffer> writer(s);

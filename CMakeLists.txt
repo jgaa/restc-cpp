@@ -37,7 +37,7 @@ if (NOT EMBEDDED_RESTC_CPP)
         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG=1 -o3 ")
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1 -D_DEBUG=1 -o0 -g ")
         add_definitions(-D__USE_LARGEFILE64=1 -D__USE_FILE_OFFSET64=1
-            -Wall -fPIC -std=c++1y -pthread
+            -Wall -fPIC -std=c++14 -pthread
         )
     elseif(WIN32)
         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG=1 ")

@@ -6,7 +6,7 @@
 #include <stack>
 #include <set>
 
-#include <boost/type_index.hpp>
+//#include <boost/type_index.hpp>
 #include <boost/mpl/range_c.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/contains.hpp>
