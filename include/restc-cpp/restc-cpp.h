@@ -20,6 +20,19 @@
 #include "restc-cpp/helper.h"
 #include "restc-cpp/Connection.h"
 
+#ifdef _MSC_VER
+	// Thank you Microsoft for making every developers day propductive
+#ifdef min
+#	undef min
+#endif
+#ifdef max
+#	undef max
+#endif
+#ifdef DELETE
+#	undef DELETE
+#endif
+#endif
+
 namespace restc_cpp {
 
 class RestClient;
@@ -48,7 +61,7 @@ public:
         GET,
         POST,
         PUT,
-        DELETE,
+        DELETE
     };
 
     class Properties {

@@ -27,7 +27,20 @@ set(CONF_PATH ${RESTC_ROOT_DIR}/include/restc-cpp/config.h)
 message(STATUS "Using ${CMAKE_CXX_COMPILER}")
 
 if (NOT EMBEDDED_RESTC_CPP)
-    find_package(OpenSSL REQUIRED)
+	if (UNIX)
+		find_package(OpenSSL REQUIRED)
+	else()
+		# find_package fails to do anything sane with openssl 1.1 under Windows
+		if (NOT DEFINED OPENSSL_INCLUDE_DIR)
+			set(OPENSSL_INCLUDE_DIR C:/devel/openssl/include)
+		endif()
+		if (NOT DEFINED OPENSSL_LIB_DIR)
+			set(OPENSSL_LIB_DIR C:/devel/openssl/lib-i386)
+		endif()
+		include_directories(${OPENSSL_INCLUDE_DIR})
+		
+	endif()
+		
 
     include(cmake_scripts/boost.cmake)
     include(cmake_scripts/pch.cmake)

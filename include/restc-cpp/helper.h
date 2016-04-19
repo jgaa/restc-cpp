@@ -8,6 +8,11 @@
 #include <cstring>
 #include <boost/utility/string_ref.hpp>
 
+#if defined(_WIN32) || defined(_WIN64)
+	#define strcasecmp _stricmp
+	#define strncasecmp _strnicmp
+#endif
+
 namespace restc_cpp {
 
 // recommended in Meyers, Effective STL when internationalization and embedded

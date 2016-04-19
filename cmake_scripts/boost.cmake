@@ -57,7 +57,7 @@ if (UNIX)
 	set(THREADLIBS pthread)
 	set(SSL_LIBS ssl crypto)
 else()
-	set(SSL_LIBS optimized libeay32MT debug libeay32MTd optimized ssleay32MT debug ssleay32MTd)
+	set(SSL_LIBS libcrypto libssl)
 endif()
 
 set (DEFAULT_LIBRARIES
