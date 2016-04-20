@@ -12,7 +12,7 @@ set(HEADERS
     )
 
 if (WIN32)
-    ADD_MSVC_PRECOMPILED_HEADER(restc-cpp.h pch.cpp ACTUAL_SOURCES)
+    ADD_MSVC_PRECOMPILED_HEADER(restc-cpp/restc-cpp.h pch.cpp ACTUAL_SOURCES)
     add_definitions(-DWAR_PCH)
     set(SOURCES ${ACTUAL_SOURCES} pch.cpp ${HEADERS} ${RESFILES})
 else()

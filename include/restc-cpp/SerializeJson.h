@@ -21,6 +21,7 @@
 #include <boost/fusion/support/is_sequence.hpp>
 #include <boost/fusion/include/is_sequence.hpp>
 #include <boost/fusion/container.hpp>
+#include <boost/type_traits.hpp>
 
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/RapidJsonReader.h"
@@ -141,6 +142,17 @@ private:
 
 namespace {
 
+template <typename T>
+struct type_conv
+{
+	using const_field_type_t = const T;
+	using native_field_type_t = typename std::remove_const<typename std::remove_reference<const_field_type_t>::type>::type;
+	using noconst_ref_type_t = typename std::add_lvalue_reference<native_field_type_t>::type;
+
+	/*static noconst_ref_type_t& to_nc_ref(const T& v) {
+		return  std::const_cast<noconst_ref_type_t>(v);
+	}*/
+};
 
 template <typename T, typename fnT>
 struct on_name_and_value
@@ -151,7 +163,7 @@ struct on_name_and_value
     }
 
     template <typename valT>
-    void operator () (const char* name, valT& val) const {
+    void operator () (const char* name, const valT& val) const {
         fn_(name, val);
     }
 
@@ -163,13 +175,16 @@ private:
     fnT fn_;
 };
 
+#if 0
+
 template <typename varT, typename valT,
     typename std::enable_if<
         ((std::is_integral<varT>::value && std::is_integral<valT>::value)
             || (std::is_floating_point<varT>::value && std::is_floating_point<valT>::value))
-        && !std::is_assignable<varT, valT>::value
+        && !boost::is_assignable<varT&, const valT&>::value
         >::type* = nullptr>
-void assign_value(varT& var, valT& val) {
+void assign_value(varT& var, const valT& val) {
+	static_assert(!boost::is_assignable<varT&, valT>::value, "assignable");
     var = static_cast<varT>(val);
 }
 
@@ -177,21 +192,179 @@ template <typename varT, typename valT,
     typename std::enable_if<
         !((std::is_integral<varT>::value && std::is_integral<valT>::value)
             || (std::is_floating_point<varT>::value && std::is_floating_point<valT>::value))
-        && std::is_assignable<varT, valT>::value
+        && boost::is_assignable<varT&, const valT&>::value
         >::type* = nullptr>
-void assign_value(varT& var, valT& val) {
-    var = val;
+void assign_value(varT& var, const valT& val) {
+	using native_field_type_t = typename std::remove_const<typename std::remove_reference<decltype(var)>::type>::type;
+	using noconst_ref_type_t = typename std::add_lvalue_reference<native_field_type_t>::type;
+	auto& nc_var = const_cast<noconst_ref_type_t&>(var);
+
+	static_assert(boost::is_assignable<varT&, valT>::value, "assignable");
+
+	//native_field_type_t tmp = static_cast<native_field_type_t>(val);
+
+	auto tmp = val;
+
+	var = static_cast<native_field_type_t>(tmp);
 }
 
 template <typename varT, typename valT,
     typename std::enable_if<
-        !std::is_assignable<varT, valT>::value
+        !boost::is_assignable<varT&, valT>::value
         && !((std::is_integral<varT>::value && std::is_integral<valT>::value)
             || (std::is_floating_point<varT>::value && std::is_floating_point<valT>::value))
         >::type* = nullptr>
-void assign_value(varT& var, valT val) {
+void assign_value(varT& var, const valT& val) {
     assert(false);
 }
+
+
+#else
+// The C++ compiler from hell cannot select the correct template from the generics above.
+
+
+template <typename varT, typename valT>
+void assign_value(varT var, valT val) {
+	assert(false);
+	throw std::runtime_error("assign_value: Invalid data conversion");
+}
+
+template <>
+void assign_value(int& var, const int& val) {
+	var = val;
+}
+
+template <>
+void assign_value(unsigned int& var, const int& val) {
+	var = static_cast<unsigned int>(val);
+}
+
+template <>
+void assign_value(unsigned int& var, const unsigned int& val) {
+	var = val;
+}
+
+template <>
+void assign_value(int& var, const unsigned int& val) {
+	var = static_cast<int>(val);
+}
+
+template <>
+void assign_value(int& var, const bool& val) {
+	var = static_cast<int>(val);
+}
+
+template <>
+void assign_value(unsigned int& var, const bool& val) {
+	var = static_cast<int>(val);
+}
+
+template <>
+void assign_value(std::int64_t& var, const int& val) {
+	var = val;
+}
+
+template <>
+void assign_value(std::int64_t& var, const unsigned int& val) {
+	var = static_cast<std::int64_t>(val);
+}
+
+template <>
+void assign_value(std::int64_t& var, const std::int64_t& val) {
+	var = val;
+}
+
+template <>
+void assign_value(std::int64_t& var, const std::uint64_t& val) {
+	var = static_cast<std::int64_t>(val);
+}
+
+template <>
+void assign_value(std::uint64_t& var, const int& val) {
+	var = static_cast<std::uint64_t>(val);
+}
+
+template <>
+void assign_value(std::uint64_t& var, const unsigned int& val) {
+	var = val;
+}
+
+template <>
+void assign_value(std::uint64_t& var, const std::int64_t& val) {
+	var = static_cast<std::uint64_t>(val);
+}
+
+template <>
+void assign_value(std::uint64_t& var, const std::uint64_t& val) {
+	var = val;
+}
+
+template <>
+void assign_value(bool& var, const int& val) {
+	var = val ? true : false;
+}
+
+template <>
+void assign_value(bool& var, const unsigned int& val) {
+	var = val ? true : false;
+}
+
+template <>
+void assign_value(double& var, const double& val) {
+	var = val;
+}
+
+template <>
+void assign_value(float& var, const double& val) {
+	var = static_cast<float>(val);
+}
+
+template <>
+void assign_value(short& var, const int& val) {
+	var = static_cast<short>(val);
+}
+
+template <>
+void assign_value(short& var, const unsigned int& val) {
+	var = static_cast<short>(val);
+}
+
+template <>
+void assign_value(unsigned short& var, const int& val) {
+	var = static_cast<unsigned short>(val);
+}
+
+template <>
+void assign_value(unsigned short& var, const unsigned int& val) {
+	var = static_cast<unsigned short>(val);
+}
+
+template <>
+void assign_value(char& var, const int& val) {
+	var = static_cast<char>(val);
+}
+
+template <>
+void assign_value(char& var, const unsigned int& val) {
+	var = static_cast<char>(val);
+}
+
+template <>
+void assign_value(unsigned char& var, const int& val) {
+	var = static_cast<unsigned char>(val);
+}
+
+template <>
+void assign_value(unsigned char& var, const unsigned int& val) {
+	var = static_cast<unsigned char>(val);
+}
+
+template <>
+void assign_value(std::string& var, const std::string& val) {
+	var = val;
+}
+
+#endif // Compiler fromhell
 
 template <typename T>
 struct is_container {
@@ -273,6 +446,7 @@ public:
     bool RawNumber(const char* str, std::size_t length, bool copy) override {
         assert(((state_ == State::RECURSED) && recursed_to_) || !recursed_to_);
         assert(false);
+		return true;
     }
 
     bool StartObject() override {
@@ -413,7 +587,7 @@ private:
     }
 
     template<typename dataT, typename argT>
-    bool SetValueOnMember(argT new_value,
+    bool SetValueOnMember(const argT& new_value,
         typename std::enable_if<
             boost::fusion::traits::is_sequence<dataT>::value
             >::type* = 0) {
@@ -432,10 +606,9 @@ private:
                     typename std::remove_reference<const_field_type_t>::type>::type;
                 using field_type_t = typename std::add_lvalue_reference<native_field_type_t>::type;
 
-                auto& const_value = val;
-                auto& value = const_cast<field_type_t&>(const_value);
+                auto& value = const_cast<field_type_t&>(val);
 
-                assign_value(value, new_value);
+                assign_value<decltype(value), decltype(new_value)>(value, new_value);
                 found = true;
             }
         };
@@ -463,14 +636,14 @@ private:
     }
 
     template<typename dataT, typename argT>
-    void SetValueInArray(argT val,
+    void SetValueInArray(const argT& val,
         typename std::enable_if<
             !boost::fusion::traits::is_sequence<typename dataT::value_type>::value
             && is_container<dataT>::value
             >::type* = 0) {
 
-        object_.push_back({});
-        assign_value(object_.back(), val);
+		object_.push_back({});
+        assign_value<decltype(object_.back()), decltype(val)>(object_.back(), val);
     }
 
     template<typename dataT, typename argT>
@@ -508,6 +681,7 @@ private:
             return true;
         }
         assert(false && "Invalid state for setting a value");
+		return true;
     }
 
     bool DoNull() {

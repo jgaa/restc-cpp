@@ -53,11 +53,12 @@ void DoSomethingInteresting(Context& ctx) {
         auto json = repl->GetBodyAsString();
         clog << "Received POST data: " << json << endl;
 
+#ifdef RESTC_CPP_WITH_TLS
         // Try with https
         repl = ctx.Get(https_url);
         json = repl->GetBodyAsString();
         clog << "Received https GET data: " << json << endl;
-
+#endif // TLS
         clog << "Done" << endl;
 
     } catch (const exception& ex) {

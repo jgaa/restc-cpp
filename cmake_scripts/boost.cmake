@@ -57,7 +57,7 @@ if (UNIX)
 	set(THREADLIBS pthread)
 	set(SSL_LIBS ssl crypto)
 else()
-	set(SSL_LIBS libcrypto libssl)
+	#set(SSL_LIBS libcrypto libssl)
 endif()
 
 set (DEFAULT_LIBRARIES

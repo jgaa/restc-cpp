@@ -102,7 +102,7 @@ private:
 
             size_t length = 0;
             if (body_ && body_->HaveSize()) {
-                length = body_->GetFizxedSize();
+                length = static_cast<decltype(length)>(body_->GetFizxedSize());
             }
 
             request_buffer << "Content-Length: " << length << crlf;

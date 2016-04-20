@@ -36,16 +36,16 @@ bool Request::Body::GetData(write_buffers_t& buffers) {
             return false;
         }
 
-        auto want_bytes = std::min(buffer_->size(), bytes_left);
-        file_->read(buffer_->begin(), want_bytes);
-        const size_t read_this_time = file_->gcount();
+        auto want_bytes = std::min(buffer_->size(), static_cast<size_t>(bytes_left));
+        file_->read(buffer_->data(), want_bytes);
+        const size_t read_this_time = static_cast<size_t>(file_->gcount());
         if (read_this_time == 0) {
             eof_ = true;
             return false;
         }
 
         bytes_read_ += read_this_time;
-        buffers.push_back({buffer_->begin(), read_this_time});
+        buffers.push_back({buffer_->data(), read_this_time});
         return true;
     }
     return false;

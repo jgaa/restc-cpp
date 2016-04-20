@@ -69,6 +69,7 @@ public:
     //! \return The begin writer pointer.
     Ch* PutBegin() {
         assert(false);
+		return nullptr;
     }
 
     //! Write a character.
@@ -86,6 +87,7 @@ public:
     //! \return Number of characters written.
     size_t PutEnd(Ch* begin) {
         assert(false);
+		return 0;
     }
 
 private:

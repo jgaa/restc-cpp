@@ -27,20 +27,21 @@ set(CONF_PATH ${RESTC_ROOT_DIR}/include/restc-cpp/config.h)
 message(STATUS "Using ${CMAKE_CXX_COMPILER}")
 
 if (NOT EMBEDDED_RESTC_CPP)
-	if (UNIX)
-		find_package(OpenSSL REQUIRED)
-	else()
-		# find_package fails to do anything sane with openssl 1.1 under Windows
-		if (NOT DEFINED OPENSSL_INCLUDE_DIR)
-			set(OPENSSL_INCLUDE_DIR C:/devel/openssl/include)
+	if (RESTC_CPP_WITH_TLS)
+		if (UNIX)
+			find_package(OpenSSL REQUIRED)
+		else()
+			# find_package fails to do anything sane with openssl 1.1 under Windows
+			if (NOT DEFINED OPENSSL_INCLUDE_DIR)
+				set(OPENSSL_INCLUDE_DIR C:/devel/openssl/include)
+			endif()
+			if (NOT DEFINED OPENSSL_LIB_DIR)
+				set(OPENSSL_LIB_DIR C:/devel/openssl/lib-i386)
+			endif()
+			include_directories(${OPENSSL_INCLUDE_DIR})
 		endif()
-		if (NOT DEFINED OPENSSL_LIB_DIR)
-			set(OPENSSL_LIB_DIR C:/devel/openssl/lib-i386)
-		endif()
-		include_directories(${OPENSSL_INCLUDE_DIR})
-		
+		set(SSL_LIBS ${OPENSSL_LIB_DIR}/libcrypto ${OPENSSL_LIB_DIR}/libssl)
 	endif()
-		
 
     include(cmake_scripts/boost.cmake)
     include(cmake_scripts/pch.cmake)
@@ -57,6 +58,7 @@ if (NOT EMBEDDED_RESTC_CPP)
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1 -D_DEBUG=1 ")
         # We will support windows from Windows Vista
         add_definitions(-D_WIN32_WINNT=0x0600)
+		set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
     endif()
 
     set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib CACHE PATH "Destination location")

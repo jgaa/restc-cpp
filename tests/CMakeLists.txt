@@ -12,7 +12,17 @@ project(tests)
 
 set(UNITTEST_CPP_PATH ${RESTC_ROOT_DIR}/externals/unittest-cpp)
 set(UNITTEST_CPP_INCLUDE_PATH ${UNITTEST_CPP_PATH})
-set(UNITTEST_CPP_LIBPATH ${UNITTEST_CPP_PATH}/build)
+if (UNIX)
+	set(UNITTEST_CPP_LIBPATH ${UNITTEST_CPP_PATH}/build)
+else()
+	set(UNITTEST_CPP_LIBPATH ${UNITTEST_CPP_PATH}/build/Debug)
+endif()
+
+include_directories(${UNITTEST_CPP_INCLUDE_PATH})
+link_directories(
+	${UNITTEST_CPP_LIBPATH}
+	${BOOST_LIBRARYDIR}
+	)
 
 add_executable(basic_tests BasicTests.cpp)
 target_link_libraries(basic_tests
@@ -22,8 +32,7 @@ target_link_libraries(basic_tests
 
 add_test(JSON_FUNCTIONAL_TESTS basic_tests)
 
-include_directories(${UNITTEST_CPP_INCLUDE_PATH})
-link_directories(${UNITTEST_CPP_LIBPATH})
+message(STATUS "UNITTEST_CPP_LIBPATH is ${UNITTEST_CPP_LIBPATH}")
 
 add_executable(url_tests UrlTests.cpp)
 target_link_libraries(url_tests

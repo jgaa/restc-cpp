@@ -58,10 +58,14 @@ GetConnection(const boost::asio::ip::tcp::endpoint ep,
     unique_ptr<Socket> socket;
     if (connectionType == Connection::Type::HTTP) {
         socket = make_unique<SocketImpl>(owner_.GetIoService());
-    } else {
-        socket = make_unique<TlsSocketImpl>(owner_.GetIoService());
-    }
-
+    } 
+	else {
+#ifdef RESTC_CPP_WITH_TLS
+		socket = make_unique<TlsSocketImpl>(owner_.GetIoService());
+#else
+		throw runtime_error("restc_cpp is compiled without TLS support");
+#endif
+	}
     auto connection = make_unique<ConnectionWrapper>(
         make_shared<ConnectionImpl>(move(socket)));
 

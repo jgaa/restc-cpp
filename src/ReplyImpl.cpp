@@ -338,7 +338,7 @@ private:
         current_chunk_read_ = 0;
         body_.clear();
 
-        if (buffer.size() < (current_chunk_ ? 6 : 3)) {// smallest possible header length
+        if (buffer.size() < static_cast<decltype(buffer.size())>(current_chunk_ ? 6 : 3)) {// smallest possible header length
             return false;
         }
 
@@ -436,7 +436,7 @@ private:
                     virgin = false;
                     if (!buffer_.empty()) {
                         offset = buffer_.size();
-                        memmove(read_buffer_->begin(),
+                        memmove(read_buffer_->data(),
                                 buffer_.begin(),
                                 buffer_.size());
                         buffer_.clear();
@@ -448,13 +448,13 @@ private:
                 }
 
                 const auto rcvd_buffer = ReadSomeData(
-                    (read_buffer_->begin() + offset),
+                    (read_buffer_->data() + offset),
                     read_buffer_->size() - offset);
 
                 const auto bytes_received = boost::asio::buffer_size(rcvd_buffer);
 
                 offset += bytes_received;
-                buffer_ = {read_buffer_->begin(), offset};
+                buffer_ = {read_buffer_->data(), offset};
                 work_buffer = buffer_;
             }
 
@@ -500,11 +500,11 @@ private:
 
             assert(buffer_.empty());
             const auto rcvd_buffer = ReadSomeData(
-                    (read_buffer_->begin()), read_buffer_->size());
+                    (read_buffer_->data()), read_buffer_->size());
 
             const auto bytes_received = boost::asio::buffer_size(rcvd_buffer);
 
-            buffer_ = {read_buffer_->begin(), bytes_received};
+            buffer_ = {read_buffer_->data(), bytes_received};
 
             return TakeSegmentDataFromBuffer();
         }
@@ -523,7 +523,7 @@ private:
         auto want_bytes = current_chunk_len_ - current_chunk_read_;
         assert(want_bytes);
 
-        const boost::string_ref rval = {buffer_.begin(),
+        const boost::string_ref rval = {buffer_.data(),
             std::min(buffer_.size(), want_bytes)};
 
         current_chunk_read_ += rval.size();
@@ -539,7 +539,7 @@ private:
             << ", rval.size = " <<  rval.size()
             << endl;
 
-        return {rval.begin(), rval.size()};
+        return {rval.data(), rval.size()};
     }
 
     // Simple non-chunked get-data
