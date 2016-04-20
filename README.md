@@ -148,24 +148,26 @@ REST requests.
 
 The latest code is tested with Debian "stable" and "testing", and Ubuntu "wily".
 
-The code is stil not 100% adjusted to msvc (the C++ compiler from hell). It should be
-fixed in a day or so.
+The library compiles and passes all tests under Windows as well, except that
+TLS is currently not working with boost 1.60.0 and OpenSSL 1.1.0. That
+means that https support is broken under Windows at the moment.
 
 
 ## Supported development platforms:
 - Linux (Debian stable and testing, Ubuntu)
-- ~~Windows 10 (Latest "community" C++ compiler from Microsoft~~
+- Windows 10 (Latest "community" C++ compiler from Microsoft
 
 ## Suggested target platforms:
 - Linux
 - OS/X
 - Android (via NDK)
-- ~~Windows Vista and later~~
+- Windows Vista and later
 
 
 ## Short Term Tasks
 - [x] ~~Implement GET, POST, PUT, DELETE~~
 - [x] ~~Implement HTTPS~~
+- [ ] Implement proper logging
 - [ ] Json support (work in progress)
  - [x] ~~Deserialization: Simple and nested classes (must be declared with BOOST_FUSION_ADAPT_STRUCT)~~
  - [x] ~~Deserialization: std::vector of json native datatypes and classes~~
