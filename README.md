@@ -187,7 +187,7 @@ fixed in a day or so.
 - [ ] Handle redirects
 - [x] ~~Implement simple File Upload (as body)~~
 - [ ] Implement simple File Download (from body)
-- [v] ~~Verify that it compiles with Debian Stable~~
+- [x] ~~Verify that it compiles with Debian Stable~~
 - [ ] Verify that it compiles with Windows 10 / Visual Studio
 - [ ] Verify that it compiles with OS/X
 - [ ] Implement Mime multipart Requests
