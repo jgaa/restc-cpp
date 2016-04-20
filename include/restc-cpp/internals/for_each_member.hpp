@@ -69,9 +69,7 @@ for_each_member_linear(First const& first,
 
     auto name = boost::fusion::extension::struct_member_name<type_t, First::index::value>::call();
 
-    f(name, //boost::fusion::extension::struct_member_name<typename First::seq_type, First::index::value>::call(),
-        *first
-    );
+    f(name, *first);
 
     for_each_member_linear(
         next(first),
