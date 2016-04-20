@@ -601,6 +601,9 @@ private:
             }
 
             if (strcmp(name, current_name_.c_str()) == 0) {
+
+                const auto& new_value_ = new_value;
+
                 using const_field_type_t = decltype(val);
                 using native_field_type_t = typename std::remove_const<
                     typename std::remove_reference<const_field_type_t>::type>::type;
@@ -608,7 +611,7 @@ private:
 
                 auto& value = const_cast<field_type_t&>(val);
 
-                assign_value<decltype(value), decltype(new_value)>(value, new_value);
+                assign_value<decltype(value), decltype(new_value_)>(value, new_value_);
                 found = true;
             }
         };
