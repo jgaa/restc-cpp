@@ -25,7 +25,7 @@
 
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/RapidJsonReader.h"
-
+#include "restc-cpp/internals/for_each_member.hpp"
 
 
 //#define RESTC_CPP_LOG std::clog
