@@ -146,23 +146,21 @@ void DoSomethingInteresting(Context& ctx) {
 The code is still a bit immature and not properly tested, but capable of executing
 REST requests.
 
-The latest code compiles with Debian "testing" and Ubuntu "wily". There is a problem
-with boost::fusion un Debian "stable". I suspect that the problem will be resolved
-by using a newer version of the boost libraries. The code is not yet tested under Windows.
+The latest code is tested with Debian "stable" and "testing", and Ubuntu "wily".
 
-Full support for Debian "stable" and Windows should be ready in a week.
+The code is stil not 100% adjusted to msvc (the C++ compiler from hell). It should be
+fixed in a day or so.
 
 
 ## Supported development platforms:
-- Linux (Debian stable and testing)
-- Windows 10 (Latest "community" C++ compiler from Microsoft
+- Linux (Debian stable and testing, Ubuntu)
+- ~~Windows 10 (Latest "community" C++ compiler from Microsoft~~
 
 ## Suggested target platforms:
 - Linux
 - OS/X
 - Android (via NDK)
-- Windows Vista and later
-- Windows mobile
+- ~~Windows Vista and later~~
 
 
 ## Short Term Tasks
@@ -189,7 +187,7 @@ Full support for Debian "stable" and Windows should be ready in a week.
 - [ ] Handle redirects
 - [x] ~~Implement simple File Upload (as body)~~
 - [ ] Implement simple File Download (from body)
-- [ ] Verify that it compiles with Debian Stable
+- [v] ~~Verify that it compiles with Debian Stable~~
 - [ ] Verify that it compiles with Windows 10 / Visual Studio
 - [ ] Verify that it compiles with OS/X
 - [ ] Implement Mime multipart Requests
