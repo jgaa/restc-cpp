@@ -377,9 +377,6 @@ private:
         bool found = false;
 
         auto fn = [&](const char *name, auto& val) {
-            /* It's probably better to use a recursive search,
-             * but this will do for now.
-             */
             if (found) {
                 return;
             }
@@ -425,9 +422,6 @@ private:
         bool found = false;
 
         auto fn = [&](const char *name, auto& val) {
-            /* It's probably better to use a recursive search,
-             * but this will do for now.
-             */
             if (found) {
                 return;
             }
