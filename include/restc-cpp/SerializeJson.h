@@ -141,29 +141,27 @@ private:
 
 namespace {
 
-template<class Struct>
-auto with_names(const Struct& s)
+
+template <typename T, typename fnT>
+struct on_name_and_value
 {
-    using range = boost::mpl::range_c<int, 0, (boost::fusion::result_of::size<Struct>())>;
-    static auto names = boost::fusion::transform(range(), [](auto i) -> std::string
+    on_name_and_value(fnT fn)
+    : fn_{fn}
     {
-        return boost::fusion::extension::struct_member_name<Struct, i>::call();
-    });
-    return boost::fusion::zip(s, names);
-}
+    }
 
+    template <typename valT>
+    void operator () (const char* name, valT& val) const {
+        fn_(name, val);
+    }
 
-template<class T>
-auto& get_value(const T& x)
-{
-    return boost::fusion::at_c<0>(x);
-}
+    void for_each_member(const T& instance) {
+        restc_cpp::for_each_member(instance, *this);
+    }
 
-template<class T>
-std::string get_name(const T& x)
-{
-    return boost::fusion::at_c<1>(x);
-}
+private:
+    fnT fn_;
+};
 
 template <typename varT, typename valT,
     typename std::enable_if<
@@ -171,7 +169,7 @@ template <typename varT, typename valT,
             || (std::is_floating_point<varT>::value && std::is_floating_point<valT>::value))
         && !std::is_assignable<varT, valT>::value
         >::type* = nullptr>
-void assign_value(varT& var, valT val) {
+void assign_value(varT& var, valT& val) {
     var = static_cast<varT>(val);
 }
 
@@ -181,7 +179,7 @@ template <typename varT, typename valT,
             || (std::is_floating_point<varT>::value && std::is_floating_point<valT>::value))
         && std::is_assignable<varT, valT>::value
         >::type* = nullptr>
-void assign_value(varT& var, valT val) {
+void assign_value(varT& var, valT& val) {
     var = val;
 }
 
@@ -226,7 +224,6 @@ public:
     : RapidJsonDeserializerBase(parent)
     , object_{object}
     , name_mapping_{nameMapping}
-    //, struct_members_{with_names(object_)}
     {
 
     }
@@ -319,12 +316,11 @@ private:
             || is_container<classT>::value
             >::type* = 0) {
 
-        using const_field_type_t = decltype(get_value(item));
+        using const_field_type_t = decltype(item);
         using native_field_type_t = typename std::remove_const<typename std::remove_reference<const_field_type_t>::type>::type;
         using field_type_t = typename std::add_lvalue_reference<native_field_type_t>::type;
 
-        auto& const_value = get_value(item);
-        auto& value = const_cast<field_type_t&>(const_value);
+        auto& value = const_cast<field_type_t&>(item);
 
         recursed_to_ = std::make_unique<RapidJsonDeserializer<field_type_t>>(
             value, this, name_mapping_);
@@ -371,7 +367,6 @@ private:
     }
 
 
-
     template <typename dataT>
     void RecurseToMember(typename std::enable_if<
             boost::fusion::traits::is_sequence<dataT>::value
@@ -380,7 +375,8 @@ private:
         assert(!current_name_.empty());
 
         bool found = false;
-        boost::fusion::for_each(with_names(object_), [&](const auto item) {
+
+        auto fn = [&](const char *name, auto& val) {
             /* It's probably better to use a recursive search,
              * but this will do for now.
              */
@@ -388,18 +384,22 @@ private:
                 return;
             }
 
-            if (get_name(item).compare(current_name_) == 0) {
-                using const_field_type_t = decltype(boost::fusion::at_c<0>(item));
+            if (strcmp(name, current_name_.c_str()) == 0) {
+                using const_field_type_t = decltype(val);
                 using native_field_type_t = typename std::remove_const<typename std::remove_reference<const_field_type_t>::type>::type;
 
                 /* Very obscure. g++ 5.3 is unable to resolve the symbol below
                  * without "this". I don't know if this is according to the
                  * standard or a bug. It works without in clang 3.6.
                  */
-                this->DoRecurseToMember<native_field_type_t>(item);
+                this->DoRecurseToMember<native_field_type_t>(val);
                 found = true;
             }
-        });
+
+        };
+
+        on_name_and_value<dataT, decltype(fn)> handler(fn);
+        handler.for_each_member(object_);
 
         assert(recursed_to_);
         assert(found);
@@ -416,14 +416,15 @@ private:
     }
 
     template<typename dataT, typename argT>
-    bool SetValueOnMember(argT val,
+    bool SetValueOnMember(argT new_value,
         typename std::enable_if<
             boost::fusion::traits::is_sequence<dataT>::value
             >::type* = 0) {
         assert(!current_name_.empty());
 
         bool found = false;
-        boost::fusion::for_each(with_names(object_), [&](const auto item) {
+
+        auto fn = [&](const char *name, auto& val) {
             /* It's probably better to use a recursive search,
              * but this will do for now.
              */
@@ -431,19 +432,22 @@ private:
                 return;
             }
 
-            if (get_name(item).compare(current_name_) == 0) {
-                using const_field_type_t = decltype(boost::fusion::at_c<0>(item));
+            if (strcmp(name, current_name_.c_str()) == 0) {
+                using const_field_type_t = decltype(val);
                 using native_field_type_t = typename std::remove_const<
                     typename std::remove_reference<const_field_type_t>::type>::type;
                 using field_type_t = typename std::add_lvalue_reference<native_field_type_t>::type;
 
-                auto& const_value = get_value(item);
+                auto& const_value = val;
                 auto& value = const_cast<field_type_t&>(const_value);
 
-                assign_value(value, val);
+                assign_value(value, new_value);
                 found = true;
             }
-        });
+        };
+
+        on_name_and_value<dataT, decltype(fn)> handler(fn);
+        handler.for_each_member(object_);
 
         current_name_.clear();
         return true;
@@ -842,18 +846,13 @@ namespace {
         RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
             << " StartObject: " << std::endl;
 #endif
-
-        boost::fusion::for_each(with_names(object), [&](const auto item) {
-            /* It's probably better to use a recursive search,
-             * but this will do for now.
-             */
-            auto name = get_name(item);
+           auto fn = [&](const char *name, auto& val) {
 #ifdef RESTC_CPP_LOG
             RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
                 << " Key: " << name << std::endl;
 #endif
             if (properties.ignore_empty_fileds) {
-                if (is_empty_field(get_value(item))) {
+                if (is_empty_field(val)) {
 #ifdef RESTC_CPP_LOG
             RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
                 << " ignoring empty field." << std::endl;
@@ -873,16 +872,20 @@ namespace {
 
             serializer.Key(properties.map_name_to_json(name).c_str());
 
-            using const_field_type_t = decltype(get_value(item));
+            using const_field_type_t = decltype(val);
             using native_field_type_t = typename std::remove_const<typename std::remove_reference<const_field_type_t>::type>::type;
             using field_type_t = typename std::add_lvalue_reference<native_field_type_t>::type;
 
-            auto& const_value = get_value(item);
+            auto& const_value = val;
             auto& value = const_cast<field_type_t&>(const_value);
 
             do_serialize<native_field_type_t>(value, serializer, properties);
 
-        });
+        };
+
+        on_name_and_value<dataT, decltype(fn)> handler(fn);
+        handler.for_each_member(object);
+
 #ifdef RESTC_CPP_LOG
         RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
             << " EndObject: " << std::endl;

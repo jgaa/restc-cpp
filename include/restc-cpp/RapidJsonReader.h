@@ -7,8 +7,8 @@
 #include <assert.h>
 
 #include "rapidjson/reader.h"
-
 #include "restc-cpp/restc-cpp.h"
+#include "restc-cpp/internals/for_each_member.hpp"
 
 namespace restc_cpp {
 
