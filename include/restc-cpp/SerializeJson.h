@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <stack>
 #include <set>
+#include <deque>
 
 //#include <boost/type_index.hpp>
 #include <boost/mpl/range_c.hpp>
@@ -174,8 +175,7 @@ private:
     fnT fn_;
 };
 
-#ifndef _MSC_VER
-// The C++ compiler from hell cannot select the correct template from the generics below.
+#ifndef _MSC_VER // g++, clang
 
 template <typename varT, typename valT,
     typename std::enable_if<
@@ -211,7 +211,9 @@ void assign_value(varT& var, const valT& val) {
 }
 
 
-#else // g++, clang
+#else
+
+// The C++ compiler from hell cannot select the correct template from the generics below.
 
 template <typename varT, typename valT>
 void assign_value(varT var, valT val) {
@@ -353,7 +355,6 @@ template <>
 void assign_value(std::string& var, const std::string& val) {
 	var = val;
 }
-
 #endif // Compiler from hell
 
 template <typename T>
@@ -368,6 +369,12 @@ struct is_container<std::vector<T,Alloc> > {
 
 template <typename T,typename Alloc>
 struct is_container<std::list<T,Alloc> > {
+    constexpr static const bool value = true;
+    using data_t = T;
+};
+
+template <typename T,typename Alloc>
+struct is_container<std::deque<T,Alloc> > {
     constexpr static const bool value = true;
     using data_t = T;
 };

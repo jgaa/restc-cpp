@@ -13,15 +13,15 @@ using namespace restc_cpp;
 using namespace rapidjson;
 
 struct Person {
-  
+
     Person(int id_, std::string name_, double balance_)
     : id{id_}, name{std::move(name_)}, balance{balance_}
     {}
-    
+
     Person() = default;
     Person(const Person&) = default;
     Person(Person&&) = default;
-  
+
     int id = 0;
     std::string name;
     double balance = 0;
@@ -35,13 +35,16 @@ BOOST_FUSION_ADAPT_STRUCT(
 )
 
 struct Group {
-  
+
     Group(std::string name_, int gid_, Person leader_,
-	  std::vector<Person> members_ = {}, std::list<Person> more_members_ = {})
+	  std::vector<Person> members_ = {},
+          std::list<Person> more_members_ = {},
+          std::deque<Person> even_more_members_ = {})
     : name{std::move(name_)}, gid{gid_}, leader{std::move(leader_)}
     , members{move(members_)}, more_members{move(more_members_)}
+    , even_more_members{move(even_more_members_)}
     {}
-  
+
     Group() = default;
     Group(const Group&) = default;
     Group(Group&&) = default;
@@ -52,6 +55,7 @@ struct Group {
     Person leader;
     std::vector<Person> members;
     std::list<Person> more_members;
+    std::deque<Person> even_more_members;
 };
 
 BOOST_FUSION_ADAPT_STRUCT(
@@ -61,6 +65,7 @@ BOOST_FUSION_ADAPT_STRUCT(
     (Person, leader)
     (std::vector<Person>, members)
     (std::list<Person>, more_members)
+    (std::deque<Person>, even_more_members)
 )
 
 TEST(SerializeSimpleObject)
@@ -92,7 +97,7 @@ TEST(SerializeNestedObject)
 
     serializer.Serialize();
 
-    CHECK_EQUAL(R"({"name":"Group name","gid":99,"leader":{"id":100,"name":"John Doe","balance":123.45},"members":[],"more_members":[]})",
+    CHECK_EQUAL(R"({"name":"Group name","gid":99,"leader":{"id":100,"name":"John Doe","balance":123.45},"members":[],"more_members":[],"even_more_members":[]})",
                 s.GetString());
 
 }
@@ -155,7 +160,8 @@ TEST(DeserializeNestedObject)
     std::string json =
         R"({"name" : "qzar", "gid" : 1, "leader" : { "id" : 100, "name" : "Dolly Doe", "balance" : 123.45 },)"
         R"("members" : [{ "id" : 101, "name" : "m1", "balance" : 0.0}, { "id" : 102, "name" : "m2", "balance" : 1.0}],)"
-        R"("more_members" : [{ "id" : 103, "name" : "m3", "balance" : 0.1}, { "id" : 104, "name" : "m4", "balance" : 2.0}])"
+        R"("more_members" : [{ "id" : 103, "name" : "m3", "balance" : 0.1}, { "id" : 104, "name" : "m4", "balance" : 2.0}],)"
+        R"("even_more_members" : [{ "id" : 321, "name" : "m10", "balance" : 0.1}, { "id" : 322, "name" : "m11", "balance" : 22.0}])"
         R"(})";
 
     RapidJsonDeserializer<Group> handler(group);
@@ -182,6 +188,12 @@ TEST(DeserializeNestedObject)
     CHECK_EQUAL(104, group.more_members.back().id);
     CHECK_EQUAL("m4", group.more_members.back().name);
     CHECK_EQUAL(2.0, group.more_members.back().balance);
+    CHECK_EQUAL(321, group.even_more_members.front().id);
+    CHECK_EQUAL("m10", group.even_more_members.front().name);
+    CHECK_EQUAL(0.1, group.even_more_members.front().balance);
+    CHECK_EQUAL(322, group.even_more_members.back().id);
+    CHECK_EQUAL("m11", group.even_more_members.back().name);
+    CHECK_EQUAL(22.0, group.even_more_members.back().balance);
 }
 
 TEST(DeserializeIntVector)
