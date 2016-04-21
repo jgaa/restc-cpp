@@ -21,7 +21,6 @@
 #include <boost/fusion/support/is_sequence.hpp>
 #include <boost/fusion/include/is_sequence.hpp>
 #include <boost/fusion/container.hpp>
-#include <boost/type_traits.hpp>
 
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/RapidJsonReader.h"
@@ -175,16 +174,17 @@ private:
     fnT fn_;
 };
 
-#if 0
+#ifndef _MSC_VER
+// The C++ compiler from hell cannot select the correct template from the generics below.
 
 template <typename varT, typename valT,
     typename std::enable_if<
         ((std::is_integral<varT>::value && std::is_integral<valT>::value)
             || (std::is_floating_point<varT>::value && std::is_floating_point<valT>::value))
-        && !boost::is_assignable<varT&, const valT&>::value
+        && !std::is_assignable<varT&, const valT&>::value
         >::type* = nullptr>
 void assign_value(varT& var, const valT& val) {
-	static_assert(!boost::is_assignable<varT&, valT>::value, "assignable");
+	static_assert(!std::is_assignable<varT&, valT>::value, "assignable");
     var = static_cast<varT>(val);
 }
 
@@ -192,41 +192,31 @@ template <typename varT, typename valT,
     typename std::enable_if<
         !((std::is_integral<varT>::value && std::is_integral<valT>::value)
             || (std::is_floating_point<varT>::value && std::is_floating_point<valT>::value))
-        && boost::is_assignable<varT&, const valT&>::value
+        && std::is_assignable<varT&, const valT&>::value
         >::type* = nullptr>
 void assign_value(varT& var, const valT& val) {
-	using native_field_type_t = typename std::remove_const<typename std::remove_reference<decltype(var)>::type>::type;
-	using noconst_ref_type_t = typename std::add_lvalue_reference<native_field_type_t>::type;
-	auto& nc_var = const_cast<noconst_ref_type_t&>(var);
 
-	static_assert(boost::is_assignable<varT&, valT>::value, "assignable");
-
-	//native_field_type_t tmp = static_cast<native_field_type_t>(val);
-
-	auto tmp = val;
-
-	var = static_cast<native_field_type_t>(tmp);
+    var = val;
 }
 
 template <typename varT, typename valT,
     typename std::enable_if<
-        !boost::is_assignable<varT&, valT>::value
+        !std::is_assignable<varT&, valT>::value
         && !((std::is_integral<varT>::value && std::is_integral<valT>::value)
             || (std::is_floating_point<varT>::value && std::is_floating_point<valT>::value))
         >::type* = nullptr>
 void assign_value(varT& var, const valT& val) {
     assert(false);
+    throw std::runtime_error("assign_value: Invalid data conversion");
 }
 
 
-#else
-// The C++ compiler from hell cannot select the correct template from the generics above.
-
+#else // g++, clang
 
 template <typename varT, typename valT>
 void assign_value(varT var, valT val) {
-	assert(false);
-	throw std::runtime_error("assign_value: Invalid data conversion");
+    assert(false);
+    throw std::runtime_error("assign_value: Invalid data conversion");
 }
 
 template <>
@@ -364,7 +354,7 @@ void assign_value(std::string& var, const std::string& val) {
 	var = val;
 }
 
-#endif // Compiler fromhell
+#endif // Compiler from hell
 
 template <typename T>
 struct is_container {
