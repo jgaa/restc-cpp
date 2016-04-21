@@ -168,13 +168,12 @@ means that https support is broken under Windows at the moment.
 - [x] ~~Implement GET, POST, PUT, DELETE~~
 - [x] ~~Implement HTTPS~~
 - [ ] Implement proper logging
-- [ ] Json support (work in progress)
+- [x] ~~Json support~~
  - [x] ~~Deserialization: Simple and nested classes (must be declared with BOOST_FUSION_ADAPT_STRUCT)~~
  - [x] ~~Deserialization: std::vector of json native datatypes and classes~~
  - [x] ~~Serialization of the above~~
- - [ ] Serialization / Deserialization: std::map
- - [ ] Serialization / Deserialization: std::deque
-- [ ] Unit tests
+ - [x] ~~Serialization / Deserialization: std::deque~~
+- [x] Unit tests
  - [x] ~~Url parser~~
  - [x] ~~Json / C++ transformation~~
  - [ ] HTTP header parser
@@ -194,11 +193,17 @@ means that https support is broken under Windows at the moment.
  - [x] Library and json, unittests, functional tests
  - [ ] https (boost::asio/tls 1.60 not compiling with the latest openssl)
 - [ ] Verify that it compiles with OS/X
-- [ ] Implement Mime multipart Requests
-- [ ] Implement Mime multipart Responses
 - [ ] Implement Form Data encoding (with File Upload)
 - [ ] Implement asynchronous iterators for received data and integrate with json parser.
 - [ ] Implement asynchronous iterators for requests data and integrate with json generator.
 - [ ] Add options to secure TLS connections (avoid weak encryption and verify server certs).
 - [ ] Add compression for the IO stream
 
+
+## Future maybe someday features
+- Json
+ - std::set and std::map
+ - True genneric container support (any object that support forward iteration and insert/add)
+- Mime content in HTTP body
+ - Mime multipart Requests
+ - Mime multipart Responses
