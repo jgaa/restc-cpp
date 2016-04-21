@@ -191,6 +191,8 @@ means that https support is broken under Windows at the moment.
 - [ ] Implement simple File Download (from body)
 - [x] ~~Verify that it compiles with Debian Stable~~
 - [ ] Verify that it compiles with Windows 10 / Visual Studio
+ - [x] Library and json, unittests, functional tests
+ - [ ] https (boost::asio/tls 1.60 not compiling with the latest openssl)
 - [ ] Verify that it compiles with OS/X
 - [ ] Implement Mime multipart Requests
 - [ ] Implement Mime multipart Responses
