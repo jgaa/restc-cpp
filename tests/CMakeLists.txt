@@ -51,3 +51,12 @@ target_link_libraries(json_serialize_tests
 )
 
 add_test(JSON_UNITTESTS json_serialize_tests)
+
+add_executable(http_reply_tests HttpReplyTests.cpp)
+target_link_libraries(http_reply_tests
+    restc-cpp
+    ${DEFAULT_LIBRARIES}
+    UnitTest++
+)
+
+add_test(HTTP_REPLY_UNITTESTS http_reply_tests)

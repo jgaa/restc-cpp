@@ -53,6 +53,10 @@ public:
         boost::asio::io_service& io_service,
             const Connection::ptr_t& connection) {
 
+        if (!connection) {
+            return nullptr;
+        }
+
         std::weak_ptr<Connection> weak_connection = connection;
 
         return Create(milliseconds_timeout, io_service,
