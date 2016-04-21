@@ -147,15 +147,16 @@ private:
     }
 
 
-    void ParseHeaders() {
+    void ParseHeaders(bool skip_requestline = false) {
         static const string crlf{"\r\n"};
         static const string expected_protocol{"HTTP/1.1"};
 
         //owner_.LogDebug(header_.to_string());
 
         auto remaining = header_;
+        bool first_line = skip_requestline;
 
-        {
+        if (!skip_requestline) {
             auto pos = remaining.find(crlf);
             if (pos == remaining.npos) {
                 throw runtime_error(
@@ -195,13 +196,18 @@ private:
 
         while(true) {
             // Get Next Line
-            auto start_of_line = remaining.find(crlf);
-            if (start_of_line == remaining.npos) {
-                throw runtime_error("Invalid header - missing CRLF");
+            if (first_line) {
+                first_line = false;
+            } else {
+                // Go to the next line
+                auto start_of_line = remaining.find(crlf);
+                if (start_of_line == remaining.npos) {
+                    throw runtime_error("Invalid header - missing CRLF");
+                }
+                start_of_line += 2;
+                remaining = {remaining.data() + start_of_line,
+                    remaining.size() - start_of_line};
             }
-            start_of_line += 2;
-            remaining = {remaining.data() + start_of_line,
-                remaining.size() - start_of_line};
             auto end_of_line = remaining.find(crlf);
             if (end_of_line == remaining.npos) {
                 // We are done.
@@ -270,8 +276,7 @@ private:
         }
     }
 
-    size_t ReadHeaderAndMayBeSomeMore() {
-        size_t bytes_used = 0;
+    size_t ReadHeaderAndMayBeSomeMore(size_t bytes_used = 0) {
         static string end_of_header{"\r\n\r\n"};
 
         auto timer = IoTimer::Create(
@@ -392,6 +397,25 @@ private:
                 chunked_ = ChunkedState::DONE;
             } else {
                 chunked_ = ChunkedState::IN_TRAILER;
+                // Clean up the buffer so we are prepared to receive headers
+                size_t offset = 0;
+                if (!body_.empty()) {
+                    memmove(read_buffer_.get(), body_.data(), body_.size());
+                    offset = body_.size();
+                    body_.clear();
+                    buffer_.clear();
+                    header_.clear();
+                }
+
+                // Finish up. Read trailer, process headers.
+                ReadHeaderAndMayBeSomeMore(offset);
+                ParseHeaders(true /* No request line */ );
+                chunked_ = ChunkedState::DONE;
+
+                if (body_.size()) {
+                    assert(false && "Received data after last chunk");
+                    // TODO: Tag for close - the connection cannot be reused
+                }
             }
         } else {
             assert(current_chunk_len_ > 0);
@@ -510,8 +534,7 @@ private:
         }
 
         if (chunked_ == ChunkedState::IN_TRAILER) {
-            // TODO: Implement
-            chunked_ = ChunkedState::DONE;
+            assert(false);
         }
 
         CheckIfWeAreDone();

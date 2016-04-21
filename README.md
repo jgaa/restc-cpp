@@ -179,9 +179,9 @@ means that https support is broken under Windows at the moment.
  - [ ] HTTP header parser
  - [ ] HTTP Chunked repsponse / odd cases
 - [ ] Implement connection pool
-- [ ] Implement Chunked Reponse handling
+- [x] Implement Chunked Reponse handling
  - [x] ~~Handle normal use-cases~~
- - [ ] Handle trailers
+ - [x] Handle trailers
 - [ ] Implement Chunked Requests
  - [ ] General support In HTTP Requests module
  - [ ] Async from json Serialization
