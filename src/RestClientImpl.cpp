@@ -70,7 +70,6 @@ public:
             default_connection_properties_->headers[content_type] = json_type;
         }
 
-
         std::thread([this]() {
             pool_ = ConnectionPool::Create(*this);
             work_ = make_unique<boost::asio::io_service::work>(io_service_);
