@@ -155,7 +155,7 @@ means that https support is broken under Windows at the moment.
 
 ## Supported development platforms:
 - Linux (Debian stable and testing, Ubuntu)
-- Windows 10 (Latest "community" C++ compiler from Microsoft
+- Windows 10 (Latest "community" C++ compiler from Microsoft)
 
 ## Suggested target platforms:
 - Linux
