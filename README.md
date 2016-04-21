@@ -203,7 +203,7 @@ means that https support is broken under Windows at the moment.
 ## Future maybe someday features
 - Json
  - std::set and std::map
- - True genneric container support (any object that support forward iteration and insert/add)
+ - True generic container support (any object that support forward iteration and insert/add)
 - Mime content in HTTP body
  - Mime multipart Requests
  - Mime multipart Responses
