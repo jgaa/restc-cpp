@@ -213,7 +213,7 @@ void assign_value(varT& var, const valT& val) {
 
 #else
 
-// The C++ compiler from hell cannot select the correct template from the generics below.
+// The C++ compiler from hell cannot select the correct template from the generics above.
 
 template <typename varT, typename valT>
 void assign_value(varT var, valT val) {
