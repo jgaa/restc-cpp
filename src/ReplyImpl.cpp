@@ -343,10 +343,11 @@ bool ReplyImpl::ProcessChunkHeader(boost::string_ref buffer) {
 
             body_ = {buffer.data() + pos, buffer.size() - pos};
 
-            if (body_.compare(crlf)) {
+            if (body_.compare(crlf) == 0) {
                 // We have a complete last segment. let's end this.
                 body_.clear();
                 chunked_ = ChunkedState::DONE;
+                clog << "chunked_ = ChunkedState::DONE [simple]" << endl;
             } else {
                 chunked_ = ChunkedState::IN_TRAILER;
                 // Clean up the buffer so we are prepared to receive headers
@@ -363,6 +364,7 @@ bool ReplyImpl::ProcessChunkHeader(boost::string_ref buffer) {
                 ReadHeaderAndMayBeSomeMore(offset);
                 ParseHeaders(true /* No request line */ );
                 chunked_ = ChunkedState::DONE;
+                clog << "chunked_ = ChunkedState::DONE [fetched trailer]" << endl;
 
                 if (body_.size()) {
                     assert(false && "Received data after last chunk");
