@@ -262,12 +262,6 @@ size_t ReplyImpl::ReadHeaderAndMayBeSomeMore(size_t bytes_used) {
             throw runtime_error("Received 0 bytes on read.");
         }
 
-        std::clog << "--> Received " << received << " bytes: "
-            << std::endl << "--------------- RECEIVED START --------------" << endl
-            << boost::string_ref(read_buffer_->data() + bytes_used, received)
-            << std::endl << "--------------- RECEIVED END --------------" << endl
-            << std::endl;
-
         bytes_used += received;
 
         buffer_ = {read_buffer_->data(), bytes_used};
@@ -541,7 +535,7 @@ boost::asio::const_buffers_1 ReplyImpl::DoGetSomeData() {
 }
 
 boost::asio::const_buffers_1
-ReplyImpl::ReadSomeData(void *ptr, size_t bytes, bool with_timer) {
+ReplyImpl::ReadSomeData(char *ptr, size_t bytes, bool with_timer) {
     assert(bytes);
     size_t received = 0;
 
@@ -560,7 +554,7 @@ ReplyImpl::ReadSomeData(void *ptr, size_t bytes, bool with_timer) {
 
     std::clog << "---> Received " << received << " bytes: "
         << std::endl << "--------------- RECEIVED START --------------" << endl
-        << boost::string_ref(read_buffer_->data(), received)
+        << boost::string_ref(ptr, received)
         << std::endl << "--------------- RECEIVED END --------------" << endl
         << std::endl;
 

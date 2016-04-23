@@ -82,7 +82,7 @@ protected:
     boost::asio::const_buffers_1 DoGetSomeData();
 
     boost::asio::const_buffers_1
-    ReadSomeData(void *ptr, size_t bytes, bool with_timer = true);
+    ReadSomeData(char *ptr, size_t bytes, bool with_timer = true);
 
     virtual size_t AsyncReadSome(boost::asio::mutable_buffers_1 read_buffers);
 
