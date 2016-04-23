@@ -250,9 +250,6 @@ size_t ReplyImpl::ReadHeaderAndMayBeSomeMore(size_t bytes_used) {
             throw runtime_error("Header is too long - out of buffer space");
         }
 
-        //const size_t received = connection_->GetSocket().AsyncReadSome(
-        //    {read_buffer_->data() + bytes_used, BYTES_AVAILABLE}, ctx_.GetYield());
-
         auto received_buffer = ReadSomeData(read_buffer_->data() + bytes_used,
                                         BYTES_AVAILABLE, false /* no timer */);
 
@@ -345,10 +342,12 @@ bool ReplyImpl::ProcessChunkHeader(boost::string_ref buffer) {
             } else {
                 chunked_ = ChunkedState::IN_TRAILER;
                 // Clean up the buffer so we are prepared to receive headers
-                size_t offset = 0;
+                size_t offset = 2;
+                memcpy(read_buffer_->data(), "\r\n", 2); // The header parser may need this
                 if (!body_.empty()) {
-                    memmove(read_buffer_.get(), body_.data(), body_.size());
-                    offset = body_.size();
+                    assert(body_.size() + 2 <= read_buffer_->size());
+                    memmove(read_buffer_->data() + offset, body_.data(), body_.size());
+                    offset += body_.size();
                     body_.clear();
                     buffer_.clear();
                     header_.clear();
@@ -521,14 +520,14 @@ boost::asio::const_buffers_1 ReplyImpl::DoGetSomeData() {
         const auto bytes_left = *content_length_ - body_bytes_received_;
         want_bytes = std::min(bytes_left, read_buffer_->size());
     } else {
-        // TODO: Implement chunked mode
-        assert("Chunked response not yet implemented");
+        assert("No content-length");
+        throw runtime_error("No content-length");
     }
 
     const auto return_buffer = ReadSomeData(read_buffer_->data(),
                                             want_bytes);
 
-    body_bytes_received_ = boost::asio::buffer_size(return_buffer);
+    body_bytes_received_ += boost::asio::buffer_size(return_buffer);
     CheckIfWeAreDone();
 
     return return_buffer;
