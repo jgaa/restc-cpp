@@ -176,8 +176,10 @@ means that https support is broken under Windows at the moment.
 - [x] Unit tests
  - [x] ~~Url parser~~
  - [x] ~~Json / C++ transformation~~
- - [ ] HTTP header parser
- - [ ] HTTP Chunked repsponse / odd cases
+ - [x] ~~HTTP header parser~~
+ - [x] ~~HTTP Chunked repsponse / odd cases~~
+ - [ ] HTTP Chunked repsponse / Trailer with headers
+ - [ ] HTTP Chunked repsponse / Data in chunk header
 - [ ] Implement connection pool
 - [x] Implement Chunked Reponse handling
  - [x] ~~Handle normal use-cases~~
