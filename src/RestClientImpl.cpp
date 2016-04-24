@@ -92,12 +92,12 @@ public:
         try {
             fn(ctx);
         } catch(std::exception& ex) {
-            if (promise) {
-                promise->set_exception(std::current_exception());
-            }
             std::ostringstream msg;
             msg << "Caught exception: " << ex.what();
             RestClient::LogError(msg);
+            if (promise) {
+                promise->set_exception(std::current_exception());
+            }
             return;
         }
 
