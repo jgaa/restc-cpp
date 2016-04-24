@@ -178,12 +178,12 @@ means that https support is broken under Windows at the moment.
  - [x] ~~Json / C++ transformation~~
  - [x] ~~HTTP header parser~~
  - [x] ~~HTTP Chunked response / odd cases~~
- - [ ] HTTP Chunked response / Trailer with headers
- - [ ] HTTP Chunked ressponse / Data in chunk header
+ - [x] ~~HTTP Chunked response / Trailer with headers~~
+ - [x] ~~HTTP Chunked ressponse / Data in chunk header~~
 - [ ] Implement connection pool
-- [x] Implement Chunked Reponse handling
+- [x] ~~Implement Chunked Reponse handling~~
  - [x] ~~Handle normal use-cases~~
- - [x] Handle trailers
+ - [x] ~~Handle trailers~~
 - [ ] Implement Chunked Requests
  - [ ] General support In HTTP Requests module
  - [ ] Async from json Serialization
