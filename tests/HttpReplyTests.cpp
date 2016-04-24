@@ -83,7 +83,15 @@ TEST(TestSimpleHeader)
 
          reply.SimulateServerReply();
 
+         CHECK_EQUAL("Cowboy", *reply.GetHeader("Server"));
          CHECK_EQUAL("keep-alive", *reply.GetHeader("Connection"));
+         CHECK_EQUAL("Express", *reply.GetHeader("X-Powered-By"));
+         CHECK_EQUAL("Origin, Accept-Encoding", *reply.GetHeader("Vary"));
+         CHECK_EQUAL("no-cache", *reply.GetHeader("Cache-Control"));
+         CHECK_EQUAL("no-cache", *reply.GetHeader("Pragma"));
+         CHECK_EQUAL("-1", *reply.GetHeader("Expires"));
+         CHECK_EQUAL("application/json; charset=utf-8", *reply.GetHeader("Content-Type"));
+         CHECK_EQUAL("Thu, 21 Apr 2016 13:44:36 GMT", *reply.GetHeader("Date"));
          CHECK_EQUAL("0", *reply.GetHeader("Content-Length"));
 
      }).wait();
@@ -369,6 +377,89 @@ TEST(TestChunkedBody4)
      }).wait();
 }
 
+
+
+TEST(TestChunkedTrailer)
+{
+    ::restc_cpp::unittests::TestReply::test_buffers_t buffer;
+
+    buffer.push_back("HTTP/1.1 200 OK\r\n"
+        "Server: Cowboy\r\n"
+        "Connection: keep-alive\r\n"
+        "Vary: Origin, Accept-Encoding\r\n"
+        "Content-Type: application/json; charset=utf-8\r\n"
+        "Transfer-Encoding: chunked\r\n"
+        "Date: Thu, 21 Apr 2016 13:44:36 GMT\r\n"
+        "\r\n");
+    buffer.push_back("4\r\nWiki\r\n");
+    buffer.push_back("5\r\npedia\r\n");
+    buffer.push_back("E\r\n in\r\n\r\nchunks.\r\n");
+    buffer.push_back("0\r\n");
+    buffer.push_back("Server: Indian\r\n");
+    buffer.push_back("Connection: close\r\n");
+    buffer.push_back("\r\n");
+
+     auto rest_client = RestClient::Create();
+     rest_client->ProcessWithPromise([&](Context& ctx) {
+
+         ::restc_cpp::unittests::TestReply reply(ctx, *rest_client, buffer);
+
+         reply.SimulateServerReply();
+
+         CHECK_EQUAL("Cowboy", *reply.GetHeader("Server"));
+         CHECK_EQUAL("keep-alive", *reply.GetHeader("Connection"));
+         CHECK_EQUAL("chunked", *reply.GetHeader("Transfer-Encoding"));
+
+         auto body = reply.GetBodyAsString();
+
+         CHECK_EQUAL("Indian", *reply.GetHeader("Server"));
+         CHECK_EQUAL("close", *reply.GetHeader("Connection"));
+         CHECK_EQUAL("chunked", *reply.GetHeader("Transfer-Encoding"));
+         CHECK_EQUAL((0x4 + 0x5 + 0xE), (int)body.size());
+
+     }).wait();
+}
+
+TEST(TestChunkedParameterAndTrailer)
+{
+    ::restc_cpp::unittests::TestReply::test_buffers_t buffer;
+
+    buffer.push_back("HTTP/1.1 200 OK\r\n"
+        "Server: Cowboy\r\n"
+        "Connection: keep-alive\r\n"
+        "Vary: Origin, Accept-Encoding\r\n"
+        "Content-Type: application/json; charset=utf-8\r\n"
+        "Transfer-Encoding: chunked\r\n"
+        "Date: Thu, 21 Apr 2016 13:44:36 GMT\r\n"
+        "\r\n");
+    buffer.push_back("4;test=1;tset=\"yyyy\"\r\nWiki\r\n");
+    buffer.push_back("5;more-to-follow\r\npedia\r\n");
+    buffer.push_back("E;77\r\n in\r\n\r\nchunks.\r\n");
+    buffer.push_back("0;this-is-the-end\r\n");
+    buffer.push_back("Server: Indian\r\n");
+    buffer.push_back("Connection: close\r\n");
+    buffer.push_back("\r\n");
+
+     auto rest_client = RestClient::Create();
+     rest_client->ProcessWithPromise([&](Context& ctx) {
+
+         ::restc_cpp::unittests::TestReply reply(ctx, *rest_client, buffer);
+
+         reply.SimulateServerReply();
+
+         CHECK_EQUAL("Cowboy", *reply.GetHeader("Server"));
+         CHECK_EQUAL("keep-alive", *reply.GetHeader("Connection"));
+         CHECK_EQUAL("chunked", *reply.GetHeader("Transfer-Encoding"));
+
+         auto body = reply.GetBodyAsString();
+
+         CHECK_EQUAL("Indian", *reply.GetHeader("Server"));
+         CHECK_EQUAL("close", *reply.GetHeader("Connection"));
+         CHECK_EQUAL("chunked", *reply.GetHeader("Transfer-Encoding"));
+         CHECK_EQUAL((0x4 + 0x5 + 0xE), (int)body.size());
+
+     }).wait();
+}
 
 int main(int, const char *[])
 {
