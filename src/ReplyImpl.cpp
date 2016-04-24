@@ -116,7 +116,6 @@ void ReplyImpl::ParseHeaders(bool skip_requestline) {
     //owner_.LogDebug(header_.to_string());
 
     auto remaining = header_;
-    bool first_line = skip_requestline;
 
     if (!skip_requestline) {
         auto pos = remaining.find(crlf);
@@ -156,24 +155,23 @@ void ReplyImpl::ParseHeaders(bool skip_requestline) {
         }
     }
 
-    while(true) {
+    bool done = false;
+    while(!done) {
         // Get Next Line
-        if (first_line) {
-            first_line = false;
-        } else {
-            // Go to the next line
-            auto start_of_line = remaining.find(crlf);
-            if (start_of_line == remaining.npos) {
-                throw runtime_error("Invalid header - missing CRLF");
-            }
-            start_of_line += 2;
-            remaining = {remaining.data() + start_of_line,
-                remaining.size() - start_of_line};
+        auto start_of_line = remaining.find(crlf);
+        if (start_of_line == remaining.npos) {
+            throw runtime_error("Invalid header - missing CRLF");
         }
+        start_of_line += 2;
+        remaining = {remaining.data() + start_of_line,
+            remaining.size() - start_of_line};
         auto end_of_line = remaining.find(crlf);
         if (end_of_line == remaining.npos) {
-            // We are done.
-            return;
+            done = true;
+            if (remaining.empty()) {
+                return;
+            }
+            end_of_line = remaining.size();
         }
 
         auto line = boost::string_ref(remaining.data(), end_of_line);
@@ -204,9 +202,13 @@ void ReplyImpl::ParseHeaders(bool skip_requestline) {
                     case State::PARSE_NAME:
                         break; // Consume
                     case State::PARSE_DELIM:
-                        state = State::PARSE_VALUE;
-                        value.assign(ch,
-                                        static_cast<size_t>(line.cend() - ch));
+                        {
+                            state = State::PARSE_VALUE;
+                            const ptrdiff_t cont_len = line.cend() - ch;
+                            assert(cont_len > 0);
+                            assert(cont_len <= (ptrdiff_t)line.size());
+                            value.assign(ch, static_cast<size_t>(cont_len));
+                        }
                         break;
                     case State::PARSE_VALUE:
                         break;
