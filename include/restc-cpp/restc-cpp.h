@@ -21,15 +21,15 @@
 #include "restc-cpp/Connection.h"
 
 #ifdef _MSC_VER
-	// Thank you Microsoft for making every developers day propductive
+// Thank you Microsoft for making every developers day propductive
 #ifdef min
-#	undef min
+#   undef min
 #endif
 #ifdef max
-#	undef max
+#   undef max
 #endif
 #ifdef DELETE
-#	undef DELETE
+#   undef DELETE
 #endif
 #endif
 
@@ -239,7 +239,7 @@ public:
      * You should therefore not do time-consuming things within
      * fn, but rather execute long-running (more than a few milliseconds)
      * tasks in worker-threads. Do not wait for input or sleep() inside
-     * the co-rourtine.
+     * the co-routine.
      */
     virtual void Process(const prc_fn_t& fn) = 0;
 
