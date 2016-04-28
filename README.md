@@ -11,7 +11,7 @@ framework.
 
 You can use it's single components, like the HTTP client to send and receive non-json
 data. You can use the template code that transforms data between C++ and Json
-fore other purposes - but the library is designed and implemented for the single
+for other purposes - but the library is designed and implemented for the single
 purpose of using C++ to interact efficiently and effortless with REST API servers.
 
 Restc-cpp depends only on C++14 with its standard libraries and boost, rapidjson
