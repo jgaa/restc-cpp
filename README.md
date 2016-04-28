@@ -1,10 +1,24 @@
 # restc-cpp
 
-This is a minimalistic but still functioning and very fast
-(at least, that is the intention) HTTP/HTTPS client library in C++.
+This is a small and very fast REST HTTP[S] client library in C++. It's designed
+in the traditional UNIX philosophy to do one thing only, and to do it well.
 
-It depends on C++14 with its standard libraries and boost.
-It uses boost::asio for IO.
+Simply said; it transforms the data in a C++ class to Json, and transmits it
+to a HTTP server. It queries a HTTP server using the appropriate URL and query
+arguments, receives a Json payload, and initializes a C++ object with that data.
+That's it. It does not solve world hunger. It does not attempts to be a C++
+framework.
+
+You can use it's single components, like the HTTP client to send and receive non-json
+data. You can use the template code that transforms data between C++ and Json
+fore other purposes - but the library is designed and implemented for the single
+purpose of using C++ to interact efficiently and effortless with REST API servers.
+
+Restc-cpp depends only on C++14 with its standard libraries and boost, rapidjson
+and unittest-cpp. Rapidjson is a mature, ultrta-fast, json sax, header-only
+library.
+
+restc-cpp uses boost::asio for IO.
 
 The library is written by Jarle (jgaa) Aase, an enthusiastic
 C++ software developer since 1996. (Before that, I used C).
@@ -15,7 +29,7 @@ simple to use in C++ projects, but still very fast (which is why
 we use C++ in the first place, right?).
 
 Usually I use some version of GPL or LGPL for my projects. This
-library however is so tiny and general that I have released it
+library however is so limited and general that I have released it
 under the more permissive MIT license. It is Free. Free as in Free Beer.
 Free as in Free Air.
 
