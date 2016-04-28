@@ -6,7 +6,7 @@ in the traditional UNIX philosophy to do one thing only, and to do it well.
 Simply said; it transforms the data in a C++ class to Json, and transmits it
 to a HTTP server. It queries a HTTP server using the appropriate URL and query
 arguments, receives a Json payload, and initializes a C++ object with that data.
-That's it. It does not solve world hunger. It does not attempts to be a C++
+That's it. It does not solve world hunger. It make no attempts to be a C++
 framework.
 
 You can use it's single components, like the HTTP client to send and receive non-json
