@@ -160,16 +160,12 @@ void DoSomethingInteresting(Context& ctx) {
 The code is still a bit immature and not properly tested, but capable of executing
 REST requests.
 
-The latest code is tested with Debian "stable" and "testing", and Ubuntu "wily".
-
-The library compiles and passes all tests under Windows as well, except that
-TLS is currently not working with boost 1.60.0 and OpenSSL 1.1.0. That
-means that https support is broken under Windows at the moment.
-
+The latest code is tested with Debian "stable" and "testing", Ubuntu "wily"
+and Windows 10 (it should work with Windows Vista and up).
 
 ## Supported development platforms:
 - Linux (Debian stable and testing, Ubuntu)
-- Windows 10 (Latest "community" C++ compiler from Microsoft)
+- Windows 10 (Visual Studio 14 / 2015 update 2)
 
 ## Suggested target platforms:
 - Linux
@@ -205,9 +201,9 @@ means that https support is broken under Windows at the moment.
 - [x] ~~Implement simple File Upload (as body)~~
 - [ ] Implement simple File Download (from body)
 - [x] ~~Verify that it compiles with Debian Stable~~
-- [ ] Verify that it compiles with Windows 10 / Visual Studio
- - [x] Library and json, unittests, functional tests
- - [ ] https (boost::asio/tls 1.60 not compiling with the latest openssl)
+- [x] ~~Verify that it compiles with Windows 10 / Visual Studio~~
+ - [x] ~~Library and json, unittests, functional tests~~
+ - [x] ~~https (boost::asio/tls 1.60 not compiling with the latest openssl)~~
 - [ ] Verify that it compiles with OS/X
 - [ ] Implement Form Data encoding (with File Upload)
 - [ ] Implement asynchronous iterators for received data and integrate with json parser.
