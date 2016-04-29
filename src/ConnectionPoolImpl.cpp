@@ -9,7 +9,10 @@
 #include "restc-cpp/ConnectionPool.h"
 #include "ConnectionImpl.h"
 #include "SocketImpl.h"
-#include "TlsSocketImpl.h"
+
+#ifdef RESTC_CPP_WITH_TLS
+#   include "TlsSocketImpl.h"
+#endif
 
 
 using namespace std;
