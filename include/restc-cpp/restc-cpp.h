@@ -50,6 +50,12 @@ using write_buffers_t = std::vector<boost::asio::const_buffer>;
 class Request {
 public:
     struct Arg {
+
+        Arg() = default;
+        Arg(const Arg&) = default;
+        Arg(const std::string& use_name, const std::string& use_value)
+        : name{use_name}, value{use_value} {}
+
         std::string name;
         std::string value;
     };
