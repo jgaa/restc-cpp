@@ -113,6 +113,13 @@ public:
         // Typically the value of the content-length header
         std::uint64_t GetFizxedSize() const;
 
+        /*! Set the body up for a new run.
+         *
+         * This is typically done if request fails and the client wants
+         * to re-try.
+         */
+        void Reset();
+
     private:
         boost::optional<std::string> body_str_;
         boost::optional<boost::filesystem::path> path_;

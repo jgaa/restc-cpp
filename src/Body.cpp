@@ -33,6 +33,8 @@ bool Request::Body::GetData(write_buffers_t& buffers) {
         const auto bytes_left = GetFizxedSize() - bytes_read_;
         if (bytes_left == 0) {
             eof_ = true;
+            file_.reset();
+            buffer_.reset();
             return false;
         }
 
@@ -50,6 +52,15 @@ bool Request::Body::GetData(write_buffers_t& buffers) {
     }
     return false;
 }
+
+void Request::Body::Reset() {
+    eof_ = false;
+    file_.reset();
+    size_ = 0;
+    bytes_read_ = 0;
+    buffer_.reset();
+}
+
 
 std::uint64_t  Request::Body::GetFizxedSize() const {
     if (!size_) {

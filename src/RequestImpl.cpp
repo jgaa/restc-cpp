@@ -125,15 +125,21 @@ private:
             ? Connection::Type::HTTPS
             : Connection::Type::HTTP;
 
+        bytes_sent_ = 0;
+
         write_buffers_t write_buffer;
         ToBuffer headers(BuildOutgoingRequest());
         write_buffer.push_back(headers);
         header_size_ = boost::asio::buffer_size(write_buffer);
         std::string request_data = BuildOutgoingRequest();
         if (body_) {
+            if (dirty_) {
+                body_->Reset();
+            }
             body_->GetData(write_buffer);
         }
 
+        dirty_ = true;
         boost::asio::ip::tcp::resolver resolver(owner_.GetIoService());
         // Resolve the hostname
         const boost::asio::ip::tcp::resolver::query query{
@@ -228,7 +234,7 @@ private:
                 if (body_ && !body_->IsEof()) {
                     write_buffer.clear();
                     if (!body_->GetData(write_buffer))
-                        break; // No more data 
+                        break; // No more data
                 } else {
                     break; //No more data to send
                 }
@@ -273,6 +279,7 @@ private:
     size_t header_size_ = 0;
     std::uint64_t bytes_sent_ = 0;
     boost::optional<uint64_t> fixed_content_lenght_;
+    bool dirty_ = false;
 };
 
 
