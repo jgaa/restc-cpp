@@ -50,7 +50,7 @@ if (NOT EMBEDDED_RESTC_CPP)
         set(SSL_LIBS libeay32 ssleay32)
     endif()
 
-    include(cmake_scripts/boost.cmake)
+    include(${RESTC_ROOT_DIR}/cmake_scripts/boost.cmake)
     include(cmake_scripts/pch.cmake)
 
     if (UNIX)
