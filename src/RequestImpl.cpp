@@ -260,8 +260,8 @@ private:
             reply->StartReceiveFromServer();
 
             /* Return the reply. At this time the reply headers and body
-                * is returned, and the connection can be returned to the
-                * connection-pool.
+                * is returned. However, the body may or may not be
+                * received.
                 */
 
             return reply;
