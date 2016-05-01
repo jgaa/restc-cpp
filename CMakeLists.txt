@@ -36,7 +36,7 @@ if (NOT EMBEDDED_RESTC_CPP)
 				SET (OPENSSL_ROOT C:/devel/openssl/lib-386)
 				message(STATUS "Using OpenSSL from ${OPENSSL_ROOT}")
 			endIF()
-			
+
             if (NOT DEFINED OPENSSL_INCLUDE_DIR)
                     set(OPENSSL_INCLUDE_DIR ${OPENSSL_ROOT}/include)
             endif()
@@ -71,6 +71,8 @@ if (NOT EMBEDDED_RESTC_CPP)
     set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib CACHE PATH "Destination location")
     link_directories(${LIBRARY_OUTPUT_PATH})
 
+    include(cmake_scripts/doxygen.cmake)
+
 endif()
 
 include_directories(
@@ -88,4 +90,3 @@ endif()
 message(STATUS "Writing the current configuration to ${CONF_PATH}")
 CONFIGURE_FILE(config.h.template ${CONF_PATH})
 
-include(cmake_scripts/doxygen.cmake)
