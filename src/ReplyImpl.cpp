@@ -555,7 +555,7 @@ ReplyImpl::ReadSomeData(char *ptr, size_t bytes, bool with_timer) {
     }
 
     RESTC_CPP_LOG_TRACE << "---> Received " << received << " bytes: "
-        << "\r\n--------------- RECEIVED START --------------"
+        << "\r\n--------------- RECEIVED START --------------\r\n"
         << boost::string_ref(ptr, received)
         << "\r\n--------------- RECEIVED END --------------";
 
