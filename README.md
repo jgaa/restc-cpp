@@ -177,7 +177,7 @@ and Windows 10 (it should work with Windows Vista and up).
 ## Short Term Tasks
 - [x] ~~Implement GET, POST, PUT, DELETE~~
 - [x] ~~Implement HTTPS~~
-- [ ] Implement proper logging
+- [v] ~~Implement proper logging~~
 - [x] ~~Json support~~
  - [x] ~~Deserialization: Simple and nested classes (must be declared with BOOST_FUSION_ADAPT_STRUCT)~~
  - [x] ~~Deserialization: std::vector of json native datatypes and classes~~

@@ -8,6 +8,7 @@
 #include <boost/utility/string_ref.hpp>
 
 #include "restc-cpp/restc-cpp.h"
+#include "restc-cpp/logging.h"
 #include "restc-cpp/Socket.h"
 #include "restc-cpp/Connection.h"
 
@@ -63,7 +64,7 @@ public:
             [weak_connection]() {
                 if (auto connection = weak_connection.lock()) {
                     if (connection->GetSocket().GetSocket().is_open()) {
-                        std::clog << "Socket timed out." << std::endl;
+                        RESTC_CPP_LOG_WARN << "Socket timed out.";
                         connection->GetSocket().GetSocket().close();
                     }
                 }

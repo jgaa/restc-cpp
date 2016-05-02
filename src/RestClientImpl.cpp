@@ -5,6 +5,7 @@
 #include <future>
 
 #include "restc-cpp/restc-cpp.h"
+#include "restc-cpp/logging.h"
 #include "restc-cpp/ConnectionPool.h"
 
 using namespace std;
@@ -92,9 +93,7 @@ public:
         try {
             fn(ctx);
         } catch(std::exception& ex) {
-            std::ostringstream msg;
-            msg << "Caught exception: " << ex.what();
-            RestClient::LogError(msg);
+            RESTC_CPP_LOG_ERROR << "Caught exception: " << ex.what();
             if (promise) {
                 promise->set_exception(std::current_exception());
             }
@@ -127,34 +126,11 @@ public:
 
     boost::asio::io_service& GetIoService() override { return io_service_; }
 
-    void LogError(const boost::string_ref message) override {
-        log_error_(message);
-    }
-
-    void LogWarning(const boost::string_ref message) override {
-        log_warn_(message);
-    }
-
-    void LogNotice(const boost::string_ref message) override {
-        log_notice_(message);
-    }
-
-    void LogDebug(const boost::string_ref message) override {
-        log_debug_(message);
-    }
-
-
 private:
     Request::Properties::ptr_t default_connection_properties_;
     boost::asio::io_service io_service_;
     unique_ptr<boost::asio::io_service::work> work_;
     unique_ptr<ConnectionPool> pool_;
-
-    logger_t log_error_ = [](const boost::string_ref msg) { std::clog << "ERROR: " << msg << std::endl; };
-    logger_t log_warn_ = [](const boost::string_ref msg) { std::clog << "WARN: " << msg << std::endl; };
-    logger_t log_notice_ = [](const boost::string_ref msg) { std::clog << "NOTICE: " << msg << std::endl; };
-    logger_t log_debug_ = [](const boost::string_ref msg) { std::clog << "DEBUG: " << msg << std::endl; };
-
 };
 
 unique_ptr<RestClient> RestClient::Create(boost::optional<Request::Properties> properties) {

@@ -6,6 +6,7 @@
 #include <boost/utility/string_ref.hpp>
 
 #include "restc-cpp/restc-cpp.h"
+#include "restc-cpp/logging.h"
 #include "restc-cpp/Url.h"
 #include "restc-cpp/Socket.h"
 #include "restc-cpp/ConnectionPool.h"
@@ -147,10 +148,8 @@ private:
             parsed_url_.GetPort().to_string()};
 
         {
-            std::ostringstream msg;
-            msg << "Resolving " << query.host_name() << ":"
-                << query.service_name() << endl;
-            owner_.LogDebug(msg);
+            RESTC_CPP_LOG_DEBUG << "Resolving " << query.host_name() << ":"
+                << query.service_name();
         }
 
         auto address_it = resolver.async_resolve(query,ctx.GetYield());
@@ -168,10 +167,7 @@ private:
             // Connect if the connection is new.
             if (!connection->GetSocket().GetSocket().is_open()) {
 
-                std::ostringstream msg;
-                msg << "Connecting to " << endpoint << endl;
-                owner_.LogDebug(msg);
-
+                RESTC_CPP_LOG_DEBUG << "Connecting to " << endpoint;
 
                 auto timer = IoTimer::Create(properties_->connectTimeoutMs,
                                                 owner_.GetIoService(),
@@ -181,11 +177,11 @@ private:
                     connection->GetSocket().AsyncConnect(
                         endpoint, ctx.GetYield());
                 } catch(const exception& ex) {
-                    std::ostringstream msg;
-                    msg << "Connect failed with exception type: "
+                    RESTC_CPP_LOG_WARN << "Connect to "
+                        << endpoint
+                        << " failed with exception type: "
                         << typeid(ex).name()
                         << ", message: " << ex.what();
-                    owner_.LogDebug(msg);
                     continue;
                 }
             }
@@ -203,9 +199,9 @@ private:
                     connection->GetSocket().AsyncWrite(write_buffer,
                                                         ctx.GetYield());
 
-                    clog << "--> Sent "
+                    RESTC_CPP_LOG_TRACE << "--> Sent "
                         <<  boost::asio::buffer_size(write_buffer) << " bytes: "
-                        << std::endl << "--------------- WRITE START --------------" << endl;
+                        << "\r\n--------------- WRITE START --------------\r\n";
 
                     for(const auto& b : write_buffer) {
 
@@ -213,21 +209,18 @@ private:
                                 boost::asio::buffer_cast<const char*>(b),
                                 boost::asio::buffer_size(b));
 
-                        clog << bb;
+                        RESTC_CPP_LOG_TRACE << bb;
                     }
 
-                    clog  << std::endl
-                        << "--------------- WRITE END --------------" << endl
-                        << std::endl;
+                    RESTC_CPP_LOG_TRACE
+                        << "\r\n--------------- WRITE END --------------";
 
                     bytes_sent_ += boost::asio::buffer_size(write_buffer);
 
                 } catch(const exception& ex) {
-                    std::ostringstream msg;
-                    msg << "Write failed with exception type: "
+                    RESTC_CPP_LOG_WARN << "Write failed with exception type: "
                         << typeid(ex).name()
                         << ", message: " << ex.what();
-                    owner_.LogDebug(msg);
                     throw;
                 }
 
@@ -243,12 +236,10 @@ private:
             // Check that we sent whatever was in the content-length header
             if (fixed_content_lenght_) {
                 if (fixed_content_lenght_ != GetContentBytesSent()) {
-                    std::ostringstream msg;
-                    msg << "I set content-lenght header to "
+                    RESTC_CPP_LOG_ERROR << "I set content-lenght header to "
                         << *fixed_content_lenght_
                         << " but sent " << GetContentBytesSent()
                         << " content bytes.";
-                    owner_.LogError(msg.str());
                     throw runtime_error("Sent incorrect payload size");
                 }
             }

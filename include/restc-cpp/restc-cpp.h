@@ -265,17 +265,6 @@ public:
     /*! Factory */
     static std::unique_ptr<RestClient>
         Create(boost::optional<Request::Properties> properties = {});
-
-
-    virtual void LogError(const boost::string_ref message) = 0;
-    virtual void LogWarning(const boost::string_ref message) = 0;
-    virtual void LogNotice(const boost::string_ref message) = 0;
-    virtual void LogDebug(const boost::string_ref message) = 0;
-
-    void LogError(const std::ostringstream& str) { LogError(str.str()); }
-    void LogWarning(const std::ostringstream& str) { LogWarning(str.str()); }
-    void LogNotice(const std::ostringstream& str) { LogNotice(str.str()); }
-    void LogDebug(const std::ostringstream& str) { LogDebug(str.str()); }
 };
 
 

@@ -18,6 +18,9 @@ if (NOT DEFINED RESTC_CPP_WITH_TLS)
         option(RESTC_CPP_WITH_TLS "Enable TLS (Trough OpenSSL)" ON)
 endif()
 
+if (NOT DEFINED RESTC_CPP_LOG_WITH_BOOST_LOG)
+    option(RESTC_CPP_LOG_WITH_BOOST_LOG "Use boost::log for logging" ON)
+endif()
 
 
 # We create a configuration file so that other code that
@@ -31,11 +34,11 @@ if (NOT EMBEDDED_RESTC_CPP)
         if (UNIX)
             find_package(OpenSSL REQUIRED)
         else()
-            # find_package fails to do anything sane with openssl 1.1 under Windows
-			if (NOT DEFINED OPENSSL_ROOT)
-				SET (OPENSSL_ROOT C:/devel/openssl/lib-386)
-				message(STATUS "Using OpenSSL from ${OPENSSL_ROOT}")
-			endIF()
+        # find_package fails to do anything sane with openssl 1.1 under Windows
+            if (NOT DEFINED OPENSSL_ROOT)
+                SET (OPENSSL_ROOT C:/devel/openssl/lib-386)
+                message(STATUS "Using OpenSSL from ${OPENSSL_ROOT}")
+            endIF()
 
             if (NOT DEFINED OPENSSL_INCLUDE_DIR)
                     set(OPENSSL_INCLUDE_DIR ${OPENSSL_ROOT}/include)
@@ -44,8 +47,8 @@ if (NOT EMBEDDED_RESTC_CPP)
                     set(OPENSSL_LIB_DIR ${OPENSSL_ROOT}/lib)
             endif()
             include_directories(${OPENSSL_INCLUDE_DIR})
-			link_directories(${OPENSSL_LIB_DIR})
-			message(STATUS "Using OpenSSL headers from ${OPENSSL_INCLUDE_DIR}")
+                link_directories(${OPENSSL_LIB_DIR})
+                message(STATUS "Using OpenSSL headers from ${OPENSSL_INCLUDE_DIR}")
         endif()
         set(SSL_LIBS libeay32 ssleay32)
     endif()

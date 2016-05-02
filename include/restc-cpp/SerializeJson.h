@@ -7,7 +7,17 @@
 #include <set>
 #include <deque>
 
-//#include <boost/type_index.hpp>
+#ifdef HAVE_BOOST_TYPEINDEX
+    #include <boost/type_index.hpp>
+
+    #define RESTC_CPP_TYPENAME(type) \
+        boost::typeindex::type_id<type>().pretty_name()
+#else
+    #define RESTC_CPP_TYPENAME(type) \
+        typeid(type).name()
+#endif
+
+
 #include <boost/mpl/range_c.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/contains.hpp>
@@ -24,11 +34,9 @@
 #include <boost/fusion/container.hpp>
 
 #include "restc-cpp/restc-cpp.h"
+#include "restc-cpp/logging.h"
 #include "restc-cpp/RapidJsonReader.h"
 #include "restc-cpp/internals/for_each_member.hpp"
-
-
-//#define RESTC_CPP_LOG std::clog
 
 namespace restc_cpp {
 
@@ -626,10 +634,8 @@ private:
             !boost::fusion::traits::is_sequence<dataT>::value
             >::type* = 0) {
 
-#ifdef RESTC_CPP_LOG
-        RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
-            << " BAD SetValueOnMember: " << std::endl;
-#endif
+        RESTC_CPP_LOG_ERROR << RESTC_CPP_TYPENAME(dataT)
+            << " BAD SetValueOnMember: ";
 
         assert(false);
         return true;
@@ -669,10 +675,8 @@ private:
     template<typename argT>
     bool SetValue(argT val) {
 
-#ifdef RESTC_CPP_LOG
-        RESTC_CPP_LOG << boost::typeindex::type_id<data_t>().pretty_name()
-            << " SetValue: " << current_name_ << std::endl;
-#endif
+        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
+            << " SetValue: " << current_name_;
 
         if (state_ == State::IN_OBJECT) {
             return SetValueOnMember<data_t>(val);
@@ -722,10 +726,8 @@ private:
     }
 
     bool DoStartObject() {
-#ifdef RESTC_CPP_LOG
-        RESTC_CPP_LOG << boost::typeindex::type_id<data_t>().pretty_name()
-            << " DoStartObject: " << current_name_ << std::endl;
-#endif
+        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
+            << " DoStartObject: " << current_name_;
 
         // TODO: Recurse into nested objects
         switch (state_) {
@@ -758,18 +760,15 @@ private:
             current_name_ = name_mapping_->to_native_name(name);
         }
 
-#ifdef RESTC_CPP_LOG
-        RESTC_CPP_LOG << boost::typeindex::type_id<data_t>().pretty_name()
-            << " DoKey: " << current_name_ << std::endl;
-#endif
+        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
+            << " DoKey: " << current_name_;
         return true;
     }
 
     bool DoEndObject(std::size_t memberCount) {
-#ifdef RESTC_CPP_LOG
-        RESTC_CPP_LOG << boost::typeindex::type_id<data_t>().pretty_name()
-            << " DoEndObject: " << current_name_ << std::endl;
-#endif
+
+        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
+            << " DoEndObject: " << current_name_;
 
         current_name_.clear();
 
@@ -794,10 +793,9 @@ private:
     }
 
     bool DoStartArray() {
-#ifdef RESTC_CPP_LOG
-        RESTC_CPP_LOG << boost::typeindex::type_id<data_t>().pretty_name()
-            << " DoStartArray: " << current_name_ << std::endl;
-#endif
+
+        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
+            << " DoStartArray: " << current_name_;
 
         if (state_ == State::INIT) {
             state_ = State::IN_ARRAY;
@@ -811,10 +809,9 @@ private:
     }
 
     bool DoEndArray(std::size_t elementCount) {
-#ifdef RESTC_CPP_LOG
-        RESTC_CPP_LOG << boost::typeindex::type_id<data_t>().pretty_name()
-            << " DoEndArray: " << current_name_ << std::endl;
-#endif
+        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
+            << " DoEndArray: " << current_name_;
+
         current_name_.clear();
 
         switch (state_) {
@@ -838,10 +835,8 @@ private:
     }
 
     void OnChildIsDone() override {
-#ifdef RESTC_CPP_LOG
-        RESTC_CPP_LOG << boost::typeindex::type_id<data_t>().pretty_name()
-            << "OnChildIsDone" << std::endl;
-#endif
+        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
+            << "OnChildIsDone";
 
         assert(state_ == State::RECURSED);
         assert(!saved_state_.empty());
@@ -981,10 +976,8 @@ namespace {
         typename std::enable_if<
             is_container<dataT>::value
             >::type* = 0) {
-#ifdef RESTC_CPP_LOG
-        RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
-            << " StartArray: " << std::endl;
-#endif
+        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
+            << " StartArray: ";
 
         serializer.StartArray();
 
@@ -995,10 +988,8 @@ namespace {
 
             do_serialize<native_field_type_t>(v, serializer, properties);
         }
-#ifdef RESTC_CPP_LOG
-        RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
-            << " EndArray: " << std::endl;
-#endif
+        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
+            << " EndArray: ";
         serializer.EndArray();
     };
 
@@ -1010,31 +1001,23 @@ namespace {
             >::type*) {
 
         serializer.StartObject();
-#ifdef RESTC_CPP_LOG
-        RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
-            << " StartObject: " << std::endl;
-#endif
+        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
+            << " StartObject: ";
            auto fn = [&](const char *name, auto& val) {
-#ifdef RESTC_CPP_LOG
-            RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
-                << " Key: " << name << std::endl;
-#endif
+            RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
+                << " Key: " << name;
             if (properties.ignore_empty_fileds) {
                 if (is_empty_field(val)) {
-#ifdef RESTC_CPP_LOG
-            RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
-                << " ignoring empty field." << std::endl;
-#endif
+            RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
+                << " ignoring empty field.";
                     return;
                 }
             }
 
             if (properties.excluded_names
                 && properties.is_excluded(name)) {
-#ifdef RESTC_CPP_LOG
-                RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
-                    << " ignoring excluded field." << std::endl;
-#endif
+                RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
+                    << " ignoring excluded field.";
                 return;
             }
 
@@ -1054,10 +1037,8 @@ namespace {
         on_name_and_value<dataT, decltype(fn)> handler(fn);
         handler.for_each_member(object);
 
-#ifdef RESTC_CPP_LOG
-        RESTC_CPP_LOG << boost::typeindex::type_id<dataT>().pretty_name()
-            << " EndObject: " << std::endl;
-#endif
+        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
+            << " EndObject: ";
         serializer.EndObject();
     };
 }

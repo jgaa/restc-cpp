@@ -1,4 +1,10 @@
 
+// Include before boost::log headers
+#include "restc-cpp/logging.h"
+
+#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/fusion/adapted.hpp>
 
 #include "restc-cpp/restc-cpp.h"
@@ -7,6 +13,7 @@
 #include "rapidjson/stringbuffer.h"
 
 #include "UnitTest++/UnitTest++.h"
+
 
 using namespace std;
 using namespace restc_cpp;
@@ -216,6 +223,11 @@ TEST(DeserializeIntVector)
 
 int main(int, const char *[])
 {
-   return UnitTest::RunAllTests();
+    namespace logging = boost::log;
+    logging::core::get()->set_filter
+    (
+        logging::trivial::severity >= logging::trivial::debug
+    );
+    return UnitTest::RunAllTests();
 }
 

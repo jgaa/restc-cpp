@@ -1,4 +1,5 @@
 
+#include "restc-cpp/logging.h"
 #include "ReplyImpl.h"
 
 namespace restc_cpp {
@@ -25,11 +26,11 @@ void ReplyImpl::StartReceiveFromServer() {
     ReadHeaderAndMayBeSomeMore();
     ParseHeaders();
 
-    clog << "### Initial read: header_.size() + crlf = "
+    RESTC_CPP_LOG_TRACE << "### Initial read: header_.size() + crlf = "
         << (header_.size() + 4)
         << ", body_.size() = " << body_.size()
         << ", totals to " << (body_.size() + header_.size() + 4)
-        << endl;
+        ;
 
     assert((body_.size() + header_.size() + 4 /* crlf */ ) == data_bytes_received_);
 
@@ -41,8 +42,8 @@ void ReplyImpl::StartReceiveFromServer() {
 
         if (*content_length_ < body_.size()) {
 
-            clog << "*** content_length_ = " << *content_length_
-                << ", body_.size() = " << body_.size() << endl;
+            RESTC_CPP_LOG_TRACE << "*** content_length_ = " << *content_length_
+                << ", body_.size() = " << body_.size() ;
 
             //assert(*content_length_ >= body_.size());
             // TODO: Fix the body bunderies, Tag the connection for close
@@ -95,7 +96,7 @@ void ReplyImpl::CheckIfWeAreDone() {
         if (IsChunked()) {
             if (chunked_ == ChunkedState::DONE) {
                 have_received_all_data_ = true;
-                owner_.LogDebug("Have received all data in the current request.");
+                RESTC_CPP_LOG_TRACE << "Have received all data in the current request.";
             }
         } else {
             if ((content_length_
@@ -103,7 +104,7 @@ void ReplyImpl::CheckIfWeAreDone() {
             || (this->GetResponseCode() == 204)) {
 
                 have_received_all_data_ = true;
-                owner_.LogDebug("Have received all data in the current request.");
+                RESTC_CPP_LOG_TRACE  << "Have received all data in the current request.";
             }
         }
     }
@@ -328,8 +329,8 @@ bool ReplyImpl::ProcessChunkHeader(boost::string_ref buffer) {
         const auto seg = boost::string_ref(buffer.data(), seg_len);
         current_chunk_len_ = std::stoul(seg.to_string(), nullptr, 16);
 
-        std::clog << "---> Chunked header: Segment lenght is "
-            << current_chunk_len_ << " bytes." << endl;
+        RESTC_CPP_LOG_TRACE << "---> Chunked header: Segment lenght is "
+            << current_chunk_len_ << " bytes." ;
 
         if (current_chunk_len_ == 0) {
             // Last segment. No more payload.
@@ -340,7 +341,7 @@ bool ReplyImpl::ProcessChunkHeader(boost::string_ref buffer) {
                 // We have a complete last segment. let's end this.
                 body_.clear();
                 chunked_ = ChunkedState::DONE;
-                clog << "chunked_ = ChunkedState::DONE [simple]" << endl;
+                RESTC_CPP_LOG_TRACE << "chunked_ = ChunkedState::DONE [simple]" ;
             } else {
                 chunked_ = ChunkedState::IN_TRAILER;
                 // Clean up the buffer so we are prepared to receive headers
@@ -359,7 +360,7 @@ bool ReplyImpl::ProcessChunkHeader(boost::string_ref buffer) {
                 ReadHeaderAndMayBeSomeMore(offset);
                 ParseHeaders(true /* No request line */ );
                 chunked_ = ChunkedState::DONE;
-                clog << "chunked_ = ChunkedState::DONE [fetched trailer]" << endl;
+                RESTC_CPP_LOG_TRACE << "chunked_ = ChunkedState::DONE [fetched trailer]" ;
 
                 if (body_.size()) {
                     assert(false && "Received data after last chunk");
@@ -441,12 +442,12 @@ bool ReplyImpl::ProcessChunkHeader(boost::string_ref buffer) {
                 body_bytes_received_ += body_.size();
                 body_.clear();
 
-                clog << "### Got chunked header: current_chunk_read_ = "
+                RESTC_CPP_LOG_TRACE << "### Got chunked header: current_chunk_read_ = "
                     << current_chunk_read_
                     << ", current_chunk_len_ = " << current_chunk_len_
                     << ", remaining = " << ((int)current_chunk_len_ - (int)current_chunk_read_)
                     << ", buffer size = " << boost::asio::buffer_size(rval)
-                    << endl;
+                    ;
 
                 return rval;
             }
@@ -500,12 +501,12 @@ ReplyImpl::TakeSegmentDataFromBuffer() {
     // Shrink the buffer to whatever is left after body.
     buffer_ = {rval.end(), buffer_.size() - rval.size()};
 
-    clog << "### TakeSegmentDataFromBuffer: current_chunk_read_ = "
+    RESTC_CPP_LOG_TRACE << "### TakeSegmentDataFromBuffer: current_chunk_read_ = "
         << current_chunk_read_
         << ", current_chunk_len_ = " << current_chunk_len_
         << ", remaining = " << ((int)current_chunk_len_ - (int)current_chunk_read_)
         << ", rval.size = " <<  rval.size()
-        << endl;
+        ;
 
     return {rval.data(), rval.size()};
 }
@@ -553,11 +554,10 @@ ReplyImpl::ReadSomeData(char *ptr, size_t bytes, bool with_timer) {
         throw runtime_error("Got 0 bytes from server");
     }
 
-    std::clog << "---> Received " << received << " bytes: "
-        << std::endl << "--------------- RECEIVED START --------------" << endl
+    RESTC_CPP_LOG_TRACE << "---> Received " << received << " bytes: "
+        << "\r\n--------------- RECEIVED START --------------"
         << boost::string_ref(ptr, received)
-        << std::endl << "--------------- RECEIVED END --------------" << endl
-        << std::endl;
+        << "\r\n--------------- RECEIVED END --------------";
 
     data_bytes_received_ += received;
 

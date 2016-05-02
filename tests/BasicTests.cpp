@@ -1,6 +1,12 @@
 
 #include <iostream>
 
+// Include before boost::log headers
+#include "restc-cpp/logging.h"
+
+#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/fusion/adapted.hpp>
 
@@ -43,7 +49,7 @@ void DoSomethingInteresting(Context& ctx) {
 
         // Just dump the data.
         for(const auto& post : posts_list) {
-            cout << "Post id=" << post.id << ", title: " << post.title << endl;
+            RESTC_CPP_LOG_INFO << "Post id=" << post.id << ", title: " << post.title;
         }
 
         // Asynchronously connect to server and POST data.
@@ -51,23 +57,29 @@ void DoSomethingInteresting(Context& ctx) {
 
         // Asynchronously fetch the entire data-set and return it as a string.
         auto json = repl->GetBodyAsString();
-        clog << "Received POST data: " << json << endl;
+        RESTC_CPP_LOG_INFO << "Received POST data: " << json;
 
 #ifdef RESTC_CPP_WITH_TLS
         // Try with https
         repl = ctx.Get(https_url);
         json = repl->GetBodyAsString();
-        clog << "Received https GET data: " << json << endl;
+        RESTC_CPP_LOG_INFO << "Received https GET data: " << json;
 #endif // TLS
-        clog << "Done" << endl;
+        RESTC_CPP_LOG_INFO << "Done";
 
     } catch (const exception& ex) {
-        std::clog << "Process: Caught exception: " << ex.what() << endl;
+        RESTC_CPP_LOG_INFO << "Process: Caught exception: " << ex.what();
     }
 }
 
 
 int main(int argc, char *argv[]) {
+
+    namespace logging = boost::log;
+    logging::core::get()->set_filter
+    (
+        logging::trivial::severity >= logging::trivial::debug
+    );
 
     try {
         auto rest_client = RestClient::Create();
@@ -76,7 +88,7 @@ int main(int argc, char *argv[]) {
         // Hold the main thread to allow the worker to do it's job
         future.wait();
     } catch (const exception& ex) {
-        std::clog << "main: Caught exception: " << ex.what() << endl;
+        RESTC_CPP_LOG_INFO << "main: Caught exception: " << ex.what();
     }
 
     return 0;

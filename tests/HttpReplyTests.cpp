@@ -1,4 +1,11 @@
 
+// Include before boost::log headers
+#include "restc-cpp/logging.h"
+
+#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
+
 #include "../src/ReplyImpl.h"
 
 #include "UnitTest++/UnitTest++.h"
@@ -33,10 +40,6 @@ public:
 
         memcpy(boost::asio::buffer_cast<char *>(read_buffers),
               ret.data(), ret.size());
-
-//         clog << "----- Returning " << ret.size() << " bytes ----" << endl
-//             << ret
-//             << "------------" << endl;
 
         auto rval = next_buffer_->size();
         ++next_buffer_;
@@ -463,6 +466,12 @@ TEST(TestChunkedParameterAndTrailer)
 
 int main(int, const char *[])
 {
-   return UnitTest::RunAllTests();
+    namespace logging = boost::log;
+    logging::core::get()->set_filter
+    (
+        logging::trivial::severity >= logging::trivial::debug
+    );
+
+    return UnitTest::RunAllTests();
 }
 
