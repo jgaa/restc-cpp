@@ -219,3 +219,5 @@ and Windows 10 (it should work with Windows Vista and up).
 - Mime content in HTTP body
  - Mime multipart Requests
  - Mime multipart Responses
+- Circuit Breaker (Fail fast for hosts that don't work)
+- Bulkheads (Use separate connection pools for different services)
