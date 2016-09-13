@@ -20,13 +20,10 @@ public:
     TlsSocketImpl(boost::asio::io_service& io_service)
     {
         tls_context_.set_options(boost::asio::ssl::context::default_workarounds
-            /*| boost::asio::ssl::context::no_sslv2
-            | boost::asio::ssl::context::single_dh_use*/);
-
-        //tls_context_.use_certificate_chain_file("server.pem");
-        //tls_context_.use_private_key_file("server.pem",
-        //                                  boost::asio::ssl::context::pem);
-        //tls_context_.use_tmp_dh_file("dh512.pem");
+            | boost::asio::ssl::context::no_sslv2
+            | boost::asio::ssl::context::no_sslv3
+            | boost::asio::ssl::context::no_tlsv1_1
+            | boost::asio::ssl::context::single_dh_use);
 
         ssl_socket_ = std::make_unique<ssl_socket_t>(io_service, tls_context_);
     }
