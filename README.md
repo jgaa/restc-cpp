@@ -190,6 +190,12 @@ and Windows 10 (it should work with Windows Vista and up).
  - [x] ~~HTTP Chunked response / odd cases~~
  - [x] ~~HTTP Chunked response / Trailer with headers~~
  - [x] ~~HTTP Chunked ressponse / Data in chunk header~~
+- [ ] Functional tests
+ - [ ] Move the current tests to test against a predictible docker container
+ - [ ] Test HTTP GET (list), GET (object), POST (create), PUT (update), DELETE
+ - [ ] test GET (list) or a large dataset (10.000 records)
+ - [ ] test redirect
+ - [ ] test redirect loop
 - [ ] Implement connection pool
 - [x] ~~Implement Chunked Reponse handling~~
  - [x] ~~Handle normal use-cases~~
