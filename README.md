@@ -216,6 +216,7 @@ and Windows 10 (it should work with Windows Vista and up).
 - [ ] Implement asynchronous iterators for requests data and integrate with json generator.
 - [ ] Add options to secure TLS connections (avoid weak encryption and verify server certs).
 - [ ] Add compression for the IO stream
+- [ ] Add data-type suitable for representing money (must be able to serialize/deserialize like float/ BigDecimal)
 
 
 ## Future maybe someday features
