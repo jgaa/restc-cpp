@@ -156,7 +156,7 @@ void ReplyImpl::ParseHeaders(bool skip_requestline) {
         }
     }
 
-    bool done = false;
+    bool done = remaining.empty();
     while(!done) {
         // Get Next Line
         auto start_of_line = remaining.find(crlf);

@@ -17,6 +17,7 @@ using namespace restc_cpp;
 namespace restc_cpp{
 namespace unittests {
 
+    
 class TestReply : public ReplyImpl
 {
 public:
@@ -27,6 +28,26 @@ public:
     {
         next_buffer_ = test_buffers_.begin();
     }
+    
+//     string Dump(const char *p, const size_t len) {
+//         std::string rval;
+//         
+//         for(size_t i = 0; i < len; i++) {
+//             if (*p == '\r') {
+//                 rval += "\\r";
+//             } else if (*p == '\n') {
+//                 rval += "\\n";
+//             } else if (*p == 0) {
+//                 rval += "\\0";
+//             } else {
+//                 rval += *p;
+//             }
+//             
+//             ++p;
+//         }
+//         
+//         return rval;
+//     }
 
     size_t
     AsyncReadSome(boost::asio::mutable_buffers_1 read_buffers) override {
@@ -40,9 +61,13 @@ public:
 
         memcpy(boost::asio::buffer_cast<char *>(read_buffers),
               ret.data(), ret.size());
+        
+        //cerr << "Inserting " << ret.size() << " bytes, " << " data: '" << Dump(ret.data(), ret.size()) << "'" << endl;
+        
 
         auto rval = next_buffer_->size();
         ++next_buffer_;
+        
 
         return rval;
     }
@@ -97,7 +122,7 @@ TEST(TestSimpleHeader)
          CHECK_EQUAL("Thu, 21 Apr 2016 13:44:36 GMT", *reply.GetHeader("Date"));
          CHECK_EQUAL("0", *reply.GetHeader("Content-Length"));
 
-     }).wait();
+     }).get();
 }
 
 TEST(TestSimpleSegmentedHeader)
@@ -127,7 +152,7 @@ TEST(TestSimpleSegmentedHeader)
          CHECK_EQUAL("keep-alive", *reply.GetHeader("Connection"));
          CHECK_EQUAL("0", *reply.GetHeader("Content-Length"));
 
-     }).wait();
+     }).get();
 }
 
 TEST(TestSimpleVerySegmentedHeader)
@@ -160,7 +185,7 @@ TEST(TestSimpleVerySegmentedHeader)
          CHECK_EQUAL("keep-alive", *reply.GetHeader("Connection"));
          CHECK_EQUAL("0", *reply.GetHeader("Content-Length"));
 
-     }).wait();
+     }).get();
 }
 
 TEST(TestSimpleBody)
@@ -189,7 +214,7 @@ TEST(TestSimpleBody)
          CHECK_EQUAL("10", *reply.GetHeader("Content-Length"));
          CHECK_EQUAL(10, (int)body.size());
 
-     }).wait();
+     }).get();
 }
 
 TEST(TestSimpleBody2)
@@ -218,7 +243,7 @@ TEST(TestSimpleBody2)
          CHECK_EQUAL("10", *reply.GetHeader("Content-Length"));
          CHECK_EQUAL(10, (int)body.size());
 
-     }).wait();
+     }).get();
 }
 
 TEST(TestSimpleBody3)
@@ -248,7 +273,7 @@ TEST(TestSimpleBody3)
          CHECK_EQUAL("10", *reply.GetHeader("Content-Length"));
          CHECK_EQUAL(10, (int)body.size());
 
-     }).wait();
+     }).get();
 }
 
 TEST(TestSimpleBody4)
@@ -278,7 +303,7 @@ TEST(TestSimpleBody4)
          CHECK_EQUAL("10", *reply.GetHeader("Content-Length"));
          CHECK_EQUAL(10, (int)body.size());
 
-     }).wait();
+     }).get();
 }
 
 TEST(TestChunkedBody)
@@ -308,7 +333,7 @@ TEST(TestChunkedBody)
          CHECK_EQUAL("chunked", *reply.GetHeader("Transfer-Encoding"));
          CHECK_EQUAL((0x4 + 0x5 + 0xE), (int)body.size());
 
-     }).wait();
+     }).get();
 }
 
 TEST(TestChunkedBody2)
@@ -340,7 +365,7 @@ TEST(TestChunkedBody2)
          CHECK_EQUAL("chunked", *reply.GetHeader("Transfer-Encoding"));
          CHECK_EQUAL((0x4 + 0x5 + 0xE), (int)body.size());
 
-     }).wait();
+     }).get();
 }
 
 TEST(TestChunkedBody4)
@@ -377,7 +402,7 @@ TEST(TestChunkedBody4)
          CHECK_EQUAL("chunked", *reply.GetHeader("Transfer-Encoding"));
          CHECK_EQUAL((0x4 + 0x5 + 0xE), (int)body.size());
 
-     }).wait();
+     }).get();
 }
 
 
@@ -420,7 +445,7 @@ TEST(TestChunkedTrailer)
          CHECK_EQUAL("chunked", *reply.GetHeader("Transfer-Encoding"));
          CHECK_EQUAL((0x4 + 0x5 + 0xE), (int)body.size());
 
-     }).wait();
+     }).get();
 }
 
 TEST(TestChunkedParameterAndTrailer)
@@ -461,7 +486,7 @@ TEST(TestChunkedParameterAndTrailer)
          CHECK_EQUAL("chunked", *reply.GetHeader("Transfer-Encoding"));
          CHECK_EQUAL((0x4 + 0x5 + 0xE), (int)body.size());
 
-     }).wait();
+     }).get();
 }
 
 int main(int, const char *[])
