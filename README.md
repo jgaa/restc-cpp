@@ -191,12 +191,13 @@ and Windows 10 (it should work with Windows Vista and up).
  - [x] ~~HTTP Chunked response / Trailer with headers~~
  - [x] ~~HTTP Chunked ressponse / Data in chunk header~~
 - [ ] Functional tests
- - [ ] Move the current tests to test against a predictible docker container
+ - [x] Move the current tests to test against a predictible docker container
  - [ ] Test HTTP GET (list), GET (object), POST (create), PUT (update), DELETE
  - [ ] test GET (list) or a large dataset (10.000 records)
  - [ ] test redirect
  - [ ] test redirect loop
 - [ ] Implement connection pool
+- [ ] Design a better request interface (easy to use, elegant) especially for querying with objects (POST, PUT)
 - [x] ~~Implement Chunked Reponse handling~~
  - [x] ~~Handle normal use-cases~~
  - [x] ~~Handle trailers~~
