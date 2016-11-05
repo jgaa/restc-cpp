@@ -7,6 +7,7 @@
 #include <boost/utility/string_ref.hpp>
 #include <boost/optional.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/uuid/uuid_generators.hpp>
 
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/Socket.h"
@@ -28,7 +29,8 @@ public:
               Context& ctx,
               RestClient& owner)
     : connection_{move(connection)}, ctx_{ctx}, owner_{owner}
-    , connection_id_{connection_->GetId()}
+    , connection_id_{connection_ ? connection_->GetId()
+        : boost::uuids::random_generator()()}
     {
     }
 
