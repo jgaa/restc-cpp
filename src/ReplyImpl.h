@@ -28,8 +28,11 @@ public:
               Context& ctx,
               RestClient& owner)
     : connection_{move(connection)}, ctx_{ctx}, owner_{owner}
+    , connection_id_{connection_->GetId()}
     {
     }
+
+    ~ReplyImpl();
 
     boost::optional< string > GetHeader(const string& name) override;
 
@@ -48,8 +51,14 @@ public:
         return !body_.empty() || !have_received_all_data_;
     }
 
+    boost::uuids::uuid GetConnectionId() const {
+        return connection_id_;
+    }
+
 protected:
     void CheckIfWeAreDone();
+
+    void ReleaseConnection();
 
     void ParseHeaders(bool skip_requestline = false);
 
@@ -98,6 +107,7 @@ protected:
     boost::string_ref status_message_;
     map<string, string, ciLessLibC> headers_;
     bool have_received_all_data_ = false;
+    bool do_close_connection_ = false;
     std::unique_ptr<buffer_t> read_buffer_;
     boost::optional<size_t> content_length_;
     size_t current_chunk_len_ = 0;
@@ -106,6 +116,7 @@ protected:
     ChunkedState chunked_ = ChunkedState::NOT_CHUNKED;
     size_t data_bytes_received_ = 0;
     size_t body_bytes_received_ = 0;
+    const boost::uuids::uuid connection_id_;
 };
 
 

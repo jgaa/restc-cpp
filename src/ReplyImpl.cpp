@@ -1,5 +1,6 @@
 
 #include "restc-cpp/logging.h"
+#include "restc-cpp/helper.h"
 #include "ReplyImpl.h"
 
 namespace restc_cpp {
@@ -15,8 +16,25 @@ boost::optional< string > ReplyImpl::GetHeader(const string& name) {
     return rval;
 }
 
+ReplyImpl::~ReplyImpl() {
+    if (connection_ && connection_->GetSocket().IsOpen()) {
+        try {
+            RESTC_CPP_LOG_TRACE << "~ReplyImpl(): " << *connection_
+                << " is still open. Closing it to prevent problems with partially "
+                << "received data.";
+            connection_->GetSocket().Close();
+            connection_.reset();
+        } catch(std::exception& ex) {
+            RESTC_CPP_LOG_WARN << "~ReplyImpl(): Caught exception:" << ex.what();
+        }
+    }
+}
+
+
 void ReplyImpl::StartReceiveFromServer() {
     static const std::string content_len_name{"Content-Length"};
+    static const std::string connection_name{"Connection"};
+    static const std::string keep_alive_name{"keep-alive"};
     static const std::string transfer_encoding_name{"Transfer-Encoding"};
     static const std::string chunked_name{"chunked"};
 
@@ -36,17 +54,15 @@ void ReplyImpl::StartReceiveFromServer() {
 
     // TODO: Handle redirects
 
-    auto cl = GetHeader(content_len_name);
-    if (cl) {
+    if (const auto cl = GetHeader(content_len_name)) {
         content_length_ = stoi(*cl);
 
         if (*content_length_ < body_.size()) {
+            RESTC_CPP_LOG_DEBUG << "*** Invalid content_length_ = " << *content_length_
+                << ", body_.size() = " << body_.size()
+                << ". Tagging " << *connection_ << " for close.";
 
-            RESTC_CPP_LOG_TRACE << "*** content_length_ = " << *content_length_
-                << ", body_.size() = " << body_.size() ;
-
-            //assert(*content_length_ >= body_.size());
-            // TODO: Fix the body bunderies, Tag the connection for close
+            do_close_connection_ = true;
         }
 
         body_bytes_received_ = body_.size();
@@ -58,7 +74,14 @@ void ReplyImpl::StartReceiveFromServer() {
         }
     }
 
-    // TODO: Check for Connection: close header and tag the connectio for close
+    // TODO: Check for Connection: close header and tag the connection for close
+    const auto conn_hdr = GetHeader(connection_name);
+    if (!conn_hdr || !ciEqLibC()(*conn_hdr, keep_alive_name)) {
+        string value = *conn_hdr;
+        RESTC_CPP_LOG_TRACE << "No 'Connection: keep-alive' header. "
+            << "Tagging " << *connection_ << " for close.";
+        do_close_connection_ = true;
+    }
 
     CheckIfWeAreDone();
 }
@@ -107,7 +130,23 @@ void ReplyImpl::CheckIfWeAreDone() {
                 RESTC_CPP_LOG_TRACE  << "Have received all data in the current request.";
             }
         }
+
+        if (have_received_all_data_) {
+            ReleaseConnection();
+        }
     }
+}
+
+void ReplyImpl::ReleaseConnection() {
+    if (do_close_connection_) {
+        RESTC_CPP_LOG_TRACE << "Closing connection because do_close_connection_ is true: "
+            << *connection_;
+        if (connection_->GetSocket().IsOpen()) {
+            connection_->GetSocket().Close();
+        }
+    }
+
+    connection_.reset();
 }
 
 void ReplyImpl::ParseHeaders(bool skip_requestline) {
@@ -550,6 +589,10 @@ ReplyImpl::ReadSomeData(char *ptr, size_t bytes, bool with_timer) {
 
     received = AsyncReadSome({ptr, bytes});
 
+    if (timer) {
+        timer->Cancel();
+    }
+
     if (received == 0) {
         throw runtime_error("Got 0 bytes from server");
     }
@@ -565,6 +608,11 @@ ReplyImpl::ReadSomeData(char *ptr, size_t bytes, bool with_timer) {
 }
 
 size_t ReplyImpl::AsyncReadSome(boost::asio::mutable_buffers_1 read_buffers) {
+
+    assert(connection_);
+    if (!connection_) {
+        throw runtime_error("AsyncReadSome(): Connection is released");
+    }
     return connection_->GetSocket().AsyncReadSome(read_buffers,
                                                     ctx_.GetYield());
 }

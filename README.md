@@ -192,11 +192,20 @@ and Windows 10 (it should work with Windows Vista and up).
  - [x] ~~HTTP Chunked ressponse / Data in chunk header~~
 - [ ] Functional tests
  - [x] Move the current tests to test against a predictible docker container
+ - [x] Test connection pool
+  - [x] Connection recycling
+  - [x] Obey server header to keep or close the connection
+  - [x] Limit per endpoint
+  - [x] Total limit
+  - [x] Cleanup (timer)
+  - [x] Connection not recycled if we quit before fetching all data
+  - [x] Override - get new connection no matter limits
  - [ ] Test HTTP GET (list), GET (object), POST (create), PUT (update), DELETE
  - [ ] test GET (list) or a large dataset (10.000 records)
  - [ ] test redirect
  - [ ] test redirect loop
-- [ ] Implement connection pool
+ - [ ] test 1000 simultaneous sessions
+- [x] Implement connection pool
 - [ ] Design a better request interface (easy to use, elegant) especially for querying with objects (POST, PUT)
 - [x] ~~Implement Chunked Reponse handling~~
  - [x] ~~Handle normal use-cases~~

@@ -71,11 +71,18 @@ public:
             default_connection_properties_->headers[content_type] = json_type;
         }
 
-        std::thread([this]() {
+        std::promise<void> wait;
+        auto done = wait.get_future();
+
+        std::thread([&]() {
             pool_ = ConnectionPool::Create(*this);
             work_ = make_unique<boost::asio::io_service::work>(io_service_);
+            wait.set_value();
             io_service_.run();
         }).detach();
+
+        // Wait for the ConnectionPool to be constructed
+        done.get();
     }
 
     const Request::Properties::ptr_t GetConnectionProperties() const override {

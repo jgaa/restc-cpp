@@ -148,7 +148,7 @@ private:
             parsed_url_.GetPort().to_string()};
 
         {
-            RESTC_CPP_LOG_DEBUG << "Resolving " << query.host_name() << ":"
+            RESTC_CPP_LOG_TRACE << "Resolving " << query.host_name() << ":"
                 << query.service_name();
         }
 
@@ -244,10 +244,13 @@ private:
                 }
             }
 
-            // Pass IO resposibility to the Reply
+            // Pass IO responsibility to the Reply
+            RESTC_CPP_LOG_DEBUG << "Sending request to '" << url_ << "' " 
+                << *connection;
             auto reply = Reply::Create(connection, ctx, owner_);
 
             // TODO: Handle redirects
+            
             reply->StartReceiveFromServer();
 
             /* Return the reply. At this time the reply headers and body

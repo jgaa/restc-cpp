@@ -15,13 +15,15 @@
 #include <boost/asio/spawn.hpp>
 #include <boost/optional.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 #include "restc-cpp/config.h"
 #include "restc-cpp/helper.h"
 #include "restc-cpp/Connection.h"
 
 #ifdef _MSC_VER
-// Thank you Microsoft for making every developers day propductive
+// Thank you Microsoft for making every developers day productive
 #ifdef min
 #   undef min
 #endif
@@ -78,6 +80,10 @@ public:
         int connectTimeoutMs = (1000 * 12);
         int sendTimeoutMs = (1000 * 12); // For each IO operation
         int replyTimeoutMs =  (1000 * 21); // For each IO operation
+        std::size_t cacheMaxConnectionsPerEndpoint = 16;
+        std::size_t cacheMaxConnections = 128;
+        int cacheTtlSeconds = 60;
+        int cacheCleanupIntervalSeconds = 3;
         headers_t headers;
         args_t args;
     };
@@ -135,6 +141,8 @@ public:
     virtual void SetProperties(Properties::ptr_t propreties) = 0;
     virtual std::unique_ptr<Reply> Execute(Context& ctx) = 0;
 
+    virtual ~Request() = default;
+
     static std::unique_ptr<Request>
     Create(const std::string& url,
            const Type requestType,
@@ -147,6 +155,8 @@ public:
 class Reply {
 public:
 
+    virtual ~Reply() = default;
+
     static std::unique_ptr<Reply> Create(Connection::ptr_t connection,
                                          Context& ctx,
                                          RestClient& owner);
@@ -158,6 +168,8 @@ public:
      */
     virtual void StartReceiveFromServer() = 0;
 
+    /*! Get the unique ID for the connection */
+    virtual boost::uuids::uuid GetConnectionId() const = 0;
 
     virtual int GetResponseCode() const = 0;
 
@@ -235,8 +247,6 @@ public:
  */
 class RestClient {
 public:
-    using logger_t = std::function<void (const boost::string_ref)>;
-
     /*! Get the default connection properties. */
     virtual const Request::Properties::ptr_t GetConnectionProperties() const = 0;
 

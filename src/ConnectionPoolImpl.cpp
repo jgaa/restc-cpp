@@ -1,12 +1,14 @@
 #include <iostream>
 #include <thread>
 #include <future>
+#include <queue>
 
 #include <boost/utility/string_ref.hpp>
 
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/Connection.h"
 #include "restc-cpp/ConnectionPool.h"
+#include "restc-cpp/logging.h"
 #include "ConnectionImpl.h"
 #include "SocketImpl.h"
 
@@ -14,70 +16,264 @@
 #   include "TlsSocketImpl.h"
 #endif
 
+// TODO: Implement timer routine to clean up idle connections.
 
 using namespace std;
 
 namespace restc_cpp {
 
-class ConnectionWrapper : public Connection
-{
-public:
-    ConnectionWrapper(shared_ptr<Connection> connection,
-                      release_callback_t on_release = nullptr)
-    : on_release_{on_release}, connection_{connection}
-    {
-        if (on_release_) {
-            on_release_(*this);
-        }
-    }
-
-    Socket& GetSocket() override {
-        return connection_->GetSocket();
-    }
-
-    ~ConnectionWrapper() {
-    }
-
-private:
-    release_callback_t on_release_;
-    shared_ptr<Connection> connection_;
-};
-
 class ConnectionPoolImpl : public ConnectionPool {
 public:
 
-    ConnectionPoolImpl(RestClient& owner)
-    : owner_{owner}
+    struct Key {
+        Key(const boost::asio::ip::tcp::endpoint ep,
+            const Connection::Type connectionType)
+        : endpoint{ep}, type{connectionType} {}
+
+        Key(const Key&) = default;
+
+        Key(Key&&) = default;
+
+        bool operator < (const Key& key) const {
+            if (static_cast<int>(type) < static_cast<int>(key.type)) {
+                return true;
+            }
+
+            return endpoint < key.endpoint;
+        }
+
+        friend std::ostream& operator << (std::ostream& o, const Key& v) {
+            return o << "{Key "
+                << (v.type == Connection::Type::HTTPS? "https" : "http")
+                << "://"
+                << v.endpoint
+                << "}";
+        }
+
+        const boost::asio::ip::tcp::endpoint endpoint;
+        const Connection::Type type;
+    };
+
+    struct Entry {
+        using timestamp_t = decltype(chrono::steady_clock::now());
+        using ptr_t = std::shared_ptr<Entry>;
+
+        Entry(const boost::asio::ip::tcp::endpoint ep,
+              const Connection::Type connectionType,
+              Connection::ptr_t conn,
+              const Request::Properties& prop)
+        : key{ep, connectionType}, connection{move(conn)}, ttl{prop.cacheTtlSeconds}
+        , created{time(nullptr)} {}
+
+        friend ostream& operator << (ostream& o, const Entry& e) {
+            o << "{Entry " << e.key;
+            if (e.connection) {
+                o << ' ' << *e.connection;
+            } else {
+                o << "No connection";
+            }
+            return o << '}';
+        }
+
+        const Key key;
+        Connection::ptr_t connection;
+        int ttl = 60;
+        const time_t created;
+        timestamp_t last_used = chrono::steady_clock::now();
+    };
+
+    // Owns the connection
+    class ConnectionWrapper : public Connection
     {
+    public:
+        using release_callback_t = std::function<void (const Entry::ptr_t&)>;
+        ConnectionWrapper(const Entry::ptr_t& entry,
+                        release_callback_t on_release)
+        : on_release_{on_release}, entry_{entry}
+        {
+        }
+
+        Socket& GetSocket() override {
+            return entry_->connection->GetSocket();
+        }
+
+        const Socket& GetSocket() const override {
+             return entry_->connection->GetSocket();
+        }
+
+        boost::uuids::uuid GetId() const override {
+            return entry_->connection->GetId();
+        }
+
+        ~ConnectionWrapper() {
+            if (on_release_) {
+                on_release_(entry_);
+            }
+        }
+
+    private:
+        release_callback_t on_release_;
+        shared_ptr<Entry> entry_;
+    };
+
+
+    ConnectionPoolImpl(RestClient& owner)
+    : owner_{owner}, properties_{owner.GetConnectionProperties()}
+    , cache_cleanup_timer_{owner.GetIoService()}
+
+    {
+        on_release_ = [this](const Entry::ptr_t& entry) { OnRelease(entry); };
+        ScheduleNextCacheCleanup();
     }
 
-Connection::ptr_t
-GetConnection(const boost::asio::ip::tcp::endpoint ep,
-              const Connection::Type connectionType,
-              bool new_connection_please) override {
+    Connection::ptr_t
+    GetConnection(const boost::asio::ip::tcp::endpoint ep,
+                const Connection::Type connectionType,
+                bool newConnectionPlease) override {
 
-    // TODO: Implement the pool
+        if (!newConnectionPlease) {
+            if (auto conn = GetFromCache(ep, connectionType)) {
+                RESTC_CPP_LOG_TRACE << "Reusing connection from cache " << *conn;
+                return conn;
+            }
 
-    unique_ptr<Socket> socket;
-    if (connectionType == Connection::Type::HTTP) {
-        socket = make_unique<SocketImpl>(owner_.GetIoService());
-    } 
-	else {
-#ifdef RESTC_CPP_WITH_TLS
-		socket = make_unique<TlsSocketImpl>(owner_.GetIoService());
-#else
-		throw runtime_error("restc_cpp is compiled without TLS support");
-#endif
-	}
-    auto connection = make_unique<ConnectionWrapper>(
-        make_shared<ConnectionImpl>(move(socket)));
+            if (!CanCreateNewConnection(ep, connectionType)) {
+                throw runtime_error("Cannot create connection - too many connections");
+            }
+        }
 
-    return move(connection);
-}
+        return CreateNew(ep, connectionType);
+    }
+
+    std::future<std::size_t> GetIdleConnections() const override {
+        auto my_promise = make_shared<promise<size_t>>() ;
+        owner_.GetIoService().dispatch([my_promise, this]() {
+            my_promise->set_value(idle_.size());
+        });
+        return my_promise->get_future();
+    }
 
 private:
+    void ScheduleNextCacheCleanup() {
+        cache_cleanup_timer_.expires_from_now(
+            boost::posix_time::seconds(properties_->cacheCleanupIntervalSeconds));
+        cache_cleanup_timer_.async_wait(std::bind(&ConnectionPoolImpl::OnCacheCleanup,
+                                                  this, std::placeholders::_1));
+    }
+
+    void OnCacheCleanup(const boost::system::error_code& error) {
+        if (error) {
+            return;
+        }
+
+        RESTC_CPP_LOG_TRACE << "Cleaning cache...";
+
+        const auto now = std::chrono::steady_clock::now();
+        for(auto it = idle_.begin(); it != idle_.end();) {
+
+            auto current = it;
+            ++it;
+
+            const auto& entry = *current->second;
+            auto expires = entry.last_used + std::chrono::seconds(entry.ttl);
+            if (expires < now) {
+                RESTC_CPP_LOG_TRACE << "Expiring " << *current->second->connection;
+                idle_.erase(current);
+            } /*else {
+                RESTC_CPP_LOG_TRACE << "Keeping << " << *current->second->connection
+                    << " expieres in "
+                    << std::chrono::duration_cast<std::chrono::seconds>(expires - now).count()
+                    << " seconds ";
+            } */
+        }
+
+        ScheduleNextCacheCleanup();
+    }
+
+    void OnRelease(const Entry::ptr_t& entry) {
+        in_use_.erase(entry->key);
+        if (!entry->connection->GetSocket().GetSocket().is_open()) {
+            RESTC_CPP_LOG_TRACE << "Discarding " << *entry << " after use";
+            return;
+        }
+
+        RESTC_CPP_LOG_TRACE << "Recycling " << *entry << " after use";
+        entry->last_used = chrono::steady_clock::now();
+        idle_.insert({entry->key, entry});
+    }
+
+    // Check the constraints to see if we can create a new connection
+    bool CanCreateNewConnection(const boost::asio::ip::tcp::endpoint ep,
+                                const Connection::Type connectionType) {
+
+        {
+            const size_t all_cnt = idle_.size() + in_use_.size();
+            if (all_cnt >= properties_->cacheMaxConnections) {
+                RESTC_CPP_LOG_DEBUG << "No more available slots (max=" <<
+                    properties_->cacheMaxConnections
+                    << ", used=" << all_cnt << ")";
+                    return false;
+            }
+        }
+
+        {
+            const auto key = Key{ep, connectionType};
+            const size_t ep_cnt = idle_.count(key) + in_use_.count(key);
+            if (ep_cnt >= properties_->cacheMaxConnectionsPerEndpoint) {
+                RESTC_CPP_LOG_DEBUG << "No more available slots for " << key;
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // Get a connection from the cache if it's there.
+    Connection::ptr_t GetFromCache(const boost::asio::ip::tcp::endpoint ep,
+                                   const Connection::Type connectionType) {
+        const auto key = Key{ep, connectionType};
+        auto it = idle_.find(key);
+        if (it != idle_.end()) {
+            auto wrapper = make_unique<ConnectionWrapper>(it->second, on_release_);
+            idle_.erase(it);
+            in_use_.insert(*it);
+            return wrapper;
+        }
+
+        return nullptr;
+    }
+
+    Connection::ptr_t CreateNew(const boost::asio::ip::tcp::endpoint ep,
+                                const Connection::Type connectionType) {
+        unique_ptr<Socket> socket;
+        if (connectionType == Connection::Type::HTTP) {
+            socket = make_unique<SocketImpl>(owner_.GetIoService());
+        }
+        else {
+#ifdef RESTC_CPP_WITH_TLS
+            socket = make_unique<TlsSocketImpl>(owner_.GetIoService());
+#else
+            throw runtime_error("restc_cpp is compiled without TLS support");
+#endif
+        }
+
+        auto entry = make_shared<Entry>(ep, connectionType,
+                                        make_shared<ConnectionImpl>(move(socket)),
+                                        *properties_);
+
+        RESTC_CPP_LOG_TRACE << "Created new connection " << *entry;
+        in_use_.insert({entry->key, entry});
+        return make_unique<ConnectionWrapper>(entry, on_release_);
+    }
+
     RestClient& owner_;
-};
+    multimap<Key, Entry::ptr_t> idle_;
+    multimap<Key, std::weak_ptr<Entry>> in_use_;
+    std::queue<Entry> pending_;
+    const Request::Properties::ptr_t properties_;
+    ConnectionWrapper::release_callback_t on_release_;
+    boost::asio::deadline_timer cache_cleanup_timer_;
+}; // ConnectionPoolImpl
 
 
 std::unique_ptr<ConnectionPool>

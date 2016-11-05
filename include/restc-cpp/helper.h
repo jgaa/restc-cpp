@@ -7,6 +7,8 @@
 #include <string>
 #include <cstring>
 #include <boost/utility/string_ref.hpp>
+#include <boost/optional.hpp>
+#include <boost/asio.hpp>
 
 #if defined(_WIN32) || defined(_WIN64)
 	#define strcasecmp _stricmp
@@ -21,6 +23,12 @@ namespace restc_cpp {
 struct ciLessLibC : public std::binary_function<std::string, std::string, bool> {
     bool operator()(const std::string &lhs, const std::string &rhs) const {
         return strcasecmp(lhs.c_str(), rhs.c_str()) < 0 ;
+    }
+};
+
+struct ciEqLibC : public std::binary_function<std::string, std::string, bool> {
+    bool operator()(const std::string &lhs, const std::string &rhs) const {
+        return strcasecmp(lhs.c_str(), rhs.c_str()) == 0 ;
     }
 };
 

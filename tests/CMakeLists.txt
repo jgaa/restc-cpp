@@ -32,6 +32,16 @@ target_link_libraries(basic_tests
 
 add_test(JSON_FUNCTIONAL_TESTS basic_tests)
 
+add_executable(ccache_tests ConnectionCacheTests.cpp)
+target_link_libraries(ccache_tests
+    restc-cpp
+    ${DEFAULT_LIBRARIES}
+    UnitTest++
+)
+
+add_test(CCACHE_FUNCTIONAL_TESTS ccache_tests)
+
+
 message(STATUS "UNITTEST_CPP_LIBPATH is ${UNITTEST_CPP_LIBPATH}")
 
 add_executable(url_tests UrlTests.cpp)

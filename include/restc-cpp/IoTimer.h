@@ -27,6 +27,11 @@ public:
     }
 
     void Handler(const boost::system::error_code& error) {
+        
+        if (error) {
+            return;
+        }
+        
         if (is_active_) {
             is_active_ = false;
             is_expiered_ = true;
