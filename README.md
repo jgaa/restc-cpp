@@ -202,8 +202,8 @@ and Windows 10 (it should work with Windows Vista and up).
   - [x] Override - get new connection no matter limits
  - [ ] Test HTTP GET (list), GET (object), POST (create), PUT (update), DELETE
  - [ ] test GET (list) or a large dataset (10.000 records)
- - [ ] test redirect
- - [ ] test redirect loop
+ - [x] test redirect
+ - [x] test redirect loop
  - [ ] test 1000 simultaneous sessions
 - [x] Implement connection pool
 - [ ] Design a better request interface (easy to use, elegant) especially for querying with objects (POST, PUT)
@@ -213,7 +213,7 @@ and Windows 10 (it should work with Windows Vista and up).
 - [ ] Implement Chunked Requests
  - [ ] General support In HTTP Requests module
  - [ ] Async from json Serialization
-- [ ] Handle redirects
+- [x] Handle redirects
 - [x] ~~Implement simple File Upload (as body)~~
 - [ ] Implement simple File Download (from body)
 - [x] ~~Verify that it compiles with Debian Stable~~

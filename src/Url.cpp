@@ -19,8 +19,11 @@ namespace restc_cpp {
 
 Url::Url(const char *url)
 {
-    assert(url != nullptr && "A valid URL is required");
+    operator = (url);
+}
 
+Url& Url::operator = (const char *url) {
+    assert(url != nullptr && "A valid URL is required");
     protocol_name_ = boost::string_ref(url);
     if (protocol_name_.find("https://") == 0) {
         protocol_name_ = boost::string_ref(url, 8);
@@ -62,7 +65,6 @@ Url::Url(const char *url)
         }
     }
 }
-
 
 } // restc_cpp
 

@@ -18,6 +18,8 @@ namespace restc_cpp {
 
      Url(const char *url);
 
+     Url& operator = (const char *url);
+
      boost::string_ref GetProtocolName() const { return protocol_name_; }
      boost::string_ref GetHost() const { return host_; }
      boost::string_ref GetPort() const { return port_; }

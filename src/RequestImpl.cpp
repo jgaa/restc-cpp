@@ -19,6 +19,18 @@ namespace restc_cpp {
 class RequestImpl : public Request {
 public:
 
+    struct RedirectException{
+
+        RedirectException(const RedirectException&) = default;
+        RedirectException(RedirectException &&) = default;
+
+        RedirectException(int redirCode, string redirUrl)
+        : code{redirCode}, url{move(redirUrl)} {}
+
+        const int code;
+        std::string url;
+    };
+
     RequestImpl(const std::string& url,
                 const Type requestType,
                 RestClient& owner,
@@ -60,6 +72,31 @@ public:
     const uint64_t GetContentBytesSent() const noexcept {
         return bytes_sent_ - header_size_;
     }
+
+
+    unique_ptr<Reply> Execute(Context& ctx) override {
+        int redirects = 0;
+        while(true) {
+            try {
+                return DoExecute((ctx));
+            } catch(RedirectException& ex) {
+                if ((redirects >= 0)
+                    && (++redirects > properties_->maxRedirects)) {
+                    throw runtime_error("Too many redirects.");
+                }
+
+                RESTC_CPP_LOG_DEBUG << "Redirecting ("
+                    << ex.code
+                    << ") '" << url_
+                    << "' --> '"
+                    << ex.url
+                    << "') ";
+                url_ = move(ex.url);
+                parsed_url_ = url_.c_str();
+            }
+        }
+    }
+
 
 private:
     std::string BuildOutgoingRequest() {
@@ -120,14 +157,13 @@ private:
         return request_buffer.str();
     }
 
-    unique_ptr<Reply> Execute(Context& ctx) override {
+    unique_ptr<Reply> DoExecute(Context& ctx) {
         const Connection::Type protocol_type =
             (parsed_url_.GetProtocol() == Url::Protocol::HTTPS)
             ? Connection::Type::HTTPS
             : Connection::Type::HTTP;
 
         bytes_sent_ = 0;
-
         write_buffers_t write_buffer;
         ToBuffer headers(BuildOutgoingRequest());
         write_buffer.push_back(headers);
@@ -245,18 +281,24 @@ private:
             }
 
             // Pass IO responsibility to the Reply
-            RESTC_CPP_LOG_DEBUG << "Sending request to '" << url_ << "' " 
+            RESTC_CPP_LOG_DEBUG << "Sending request to '" << url_ << "' "
                 << *connection;
             auto reply = Reply::Create(connection, ctx, owner_);
-
-            // TODO: Handle redirects
-            
             reply->StartReceiveFromServer();
 
+            const auto http_code = reply->GetResponseCode();
+            if (http_code == 301 || http_code == 302) {
+                auto redirect_location = reply->GetHeader("Location");
+                if (!redirect_location) {
+                    throw runtime_error("No Location header in redirect reply");
+                }
+                throw RedirectException(http_code, *redirect_location);
+            }
+
             /* Return the reply. At this time the reply headers and body
-                * is returned. However, the body may or may not be
-                * received.
-                */
+             * is returned. However, the body may or may not be
+             * received.
+             */
 
             return reply;
         }
@@ -264,8 +306,8 @@ private:
         throw runtime_error("Failed to connect");
     }
 
-    const std::string url_;
-    const Url parsed_url_;
+    std::string url_;
+    Url parsed_url_;
     const Type request_type_;
     std::unique_ptr<Body> body_;
     Properties::ptr_t properties_;
