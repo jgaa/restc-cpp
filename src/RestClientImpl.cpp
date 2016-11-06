@@ -19,7 +19,7 @@ public:
     class ContextImpl : public Context {
     public:
         ContextImpl(boost::asio::yield_context& yield,
-                    RestClientImpl& rc)
+                    RestClient& rc)
         : yield_{yield}
         , rc_{rc}
         {}
@@ -54,7 +54,7 @@ public:
         }
 
         boost::asio::yield_context& yield_;
-        RestClientImpl& rc_;
+        RestClient& rc_;
     };
 
     RestClientImpl(boost::optional<Request::Properties> properties)
@@ -142,6 +142,11 @@ private:
 
 unique_ptr<RestClient> RestClient::Create(boost::optional<Request::Properties> properties) {
     return make_unique<RestClientImpl>(properties);
+}
+
+std::unique_ptr<Context> Context::Create(boost::asio::yield_context& yield,
+                                                RestClient& rc) {
+    return make_unique<RestClientImpl::ContextImpl>(yield, rc);
 }
 
 } // restc_cpp

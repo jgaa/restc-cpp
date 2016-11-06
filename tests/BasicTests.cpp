@@ -20,14 +20,14 @@ using namespace restc_cpp;
 // For entries received from http://jsonplaceholder.typicode.com/posts
 struct Post {
     int id = 0;
-    string userid;
+    string username;
     string motto;
 };
 
 BOOST_FUSION_ADAPT_STRUCT(
     Post,
     (int, id)
-    (string, userid)
+    (string, username)
     (string, motto)
 )
 
@@ -69,7 +69,7 @@ void DoSomethingInteresting(Context& ctx) {
         repl.reset();
 
         Post data_object;
-        data_object.userid = "testid";
+        data_object.username = "testid";
         data_object.motto = "Carpe diem";
 
         repl = RequestBuilder(ctx)
@@ -113,6 +113,17 @@ int main(int argc, char *argv[]) {
         future.get();
     } catch (const exception& ex) {
         RESTC_CPP_LOG_INFO << "main: Caught exception: " << ex.what();
+    }
+
+    // Fetch a result trough a future
+    {
+        Post my_post = RestClient::Create()->ProcessWithPromiseT<Post>([&](Context& ctx) {
+            Post post;
+            SerializeFromJson(post, ctx.Get(http_url + "/1"));
+            return post;
+        }).get();
+
+        cout << "Received post# " << my_post.id << ", username: " << my_post.username;
     }
 
     return 0;

@@ -64,6 +64,8 @@ Url& Url::operator = (const char *url) {
             port_ = {"80"};
         }
     }
+
+    return *this;
 }
 
 } // restc_cpp

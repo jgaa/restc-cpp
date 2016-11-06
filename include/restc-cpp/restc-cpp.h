@@ -240,6 +240,9 @@ public:
      * in the reply will be valid.
      */
     virtual std::unique_ptr<Reply> Request(Request& req) = 0;
+
+    static std::unique_ptr<Context> Create(boost::asio::yield_context& yield,
+                                           RestClient& rc);
 };
 
 /*! Factory and resource management
@@ -273,6 +276,25 @@ public:
 
     /*! Same as process, but returns a void future */
     virtual std::future<void> ProcessWithPromise(const prc_fn_t& fn) = 0;
+
+    template <typename T>
+    std::future<T> ProcessWithPromiseT(const std::function<T (Context& ctx)>& fn) {
+
+        auto prom = std::make_shared<std::promise<T>>();
+
+        boost::asio::spawn(GetIoService(),
+                           [prom,fn,this](boost::asio::yield_context yield) {
+            auto ctx = Context::Create(yield, *this);
+            try {
+                prom->set_value(fn(*ctx));
+            } catch(...) {
+                prom->set_exception(std::current_exception());
+            }
+        });
+
+        return prom->get_future();
+    }
+
 
     virtual ConnectionPool& GetConnectionPool() = 0;
     virtual boost::asio::io_service& GetIoService() = 0;
