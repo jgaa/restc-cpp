@@ -183,6 +183,17 @@ REST requests.
 The latest code is tested with Debian "stable" and "testing", Ubuntu "wily"
 and Windows 10 (it should work with Windows Vista and up).
 
+## Features
+- Raw GET, POST, PUT and DELETE requests with no data conversions
+- Low level interface to create requests
+- High level interface (similar to Java HTTP clients) for convenience
+- Follows redirects without any extra code at the API layer
+- Json serialization to and from native C++ objects
+- All IO operations are asynchronous trough boost::asio coroutines
+- Logging trough boost::log or trough your own log macros
+
+
+
 ## Supported development platforms:
 - Linux (Debian stable and testing, Ubuntu)
 - Windows 10 (Visual Studio 14 / 2015 update 2)
