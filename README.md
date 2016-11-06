@@ -218,7 +218,8 @@ int main()
         // The calling thread waits here for the worker thread to finish.
         done.get();
     } catch(const exception& ex) {
-        clog << "Main thread: Caught exception: " << ex.what() << endl;
+        clog << "Main thread: Caught exception from coroutine: "
+            << ex.what() << endl;
     }
 }
 
