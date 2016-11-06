@@ -226,7 +226,7 @@ and Windows 10 (it should work with Windows Vista and up).
  - [x] test redirect loop
  - [ ] test 1000 simultaneous sessions
 - [x] Implement connection pool
-- [ ] Design a better request interface (easy to use, elegant) especially for querying with objects (POST, PUT)
+- [x] Design a better request interface (easy to use, elegant) especially for querying with objects (POST, PUT)
 - [x] Implement Chunked Reponse handling
  - [x] Handle normal use-cases
  - [x] Handle trailers
