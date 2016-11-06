@@ -215,7 +215,9 @@ int main()
     });
 
     try {
-        // The calling thread waits here for the worker thread to finish.
+        // The calling thread waits here for the coroutine to finish.
+        // (The worker thread is still available, as the RestClient
+        // instance (rest_client) is still in scope.)
         done.get();
     } catch(const exception& ex) {
         clog << "Main thread: Caught exception from coroutine: "
