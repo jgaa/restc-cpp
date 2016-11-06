@@ -191,6 +191,7 @@ and Windows 10 (it should work with Windows Vista and up).
 - Json serialization to and from native C++ objects
 - All IO operations are asynchronous trough boost::asio coroutines
 - Logging trough boost::log or trough your own log macros
+- Connection Pool for fast re-use of existing server connections.
 
 
 
