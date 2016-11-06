@@ -169,13 +169,13 @@ void DoSomethingInteresting(Context& ctx) {
         clog << "Done" << endl;
 
     } catch (const exception& ex) {
-        clog << "Process: Caught exception: " << ex.what() << endl;
+        clog << "Caught exception: " << ex.what() << endl;
     }
 }
 
 ```
 
-You can use futures to synchronize or result of the
+You can use futures to synchronize the
 requests, and to get exceptions from failed requests.
 In the example below we use a lambda as our coroutine.
 
@@ -195,23 +195,31 @@ int main()
         logging::trivial::severity >= logging::trivial::debug
     );
 
-    // Create a rest client, and do the work in a lambda
+    // Create a rest client.
     auto rest_client = RestClient::Create();
-    rest_client->ProcessWithPromise([&](Context& ctx) {
+
+    // Do the work in a lambda
+    auto done = rest_client->ProcessWithPromise([&](Context& ctx) {
         // Here we are executing the coroutine in a worker thread.
         // The worker thread belongs to the RestClient instance.
         // We can run a large number of concurrent, independent
         // coroutines with this thread.
 
         // Fetch some data
-        auto repl = ctx.Get(https://example.com/api/data);
+        auto repl = ctx.Get("https://example.com/api/data");
 
         // Do something
         ...
 
         // Exit the coroutine
+    });
 
-    }).get(); // The calling thread waits here for the worker thread to finish.
+    try {
+        // The calling thread waits here for the worker thread to finish.
+        done.get();
+    } catch(const exception& ex) {
+        clog << "Main thread: Caught exception: " << ex.what() << endl;
+    }
 }
 
 ```
