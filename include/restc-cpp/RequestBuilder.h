@@ -62,13 +62,12 @@ public:
         return *this;
     }
 
-    RequestBuilder& Argument(const std::string name,
-                             const int64_t value) {
+    RequestBuilder& Argument(std::string name, int64_t value) {
         return Argument(move(name), std::to_string(value));
     }
 
-    RequestBuilder& Argument(const std::string name,
-                             const std::string value) {
+    RequestBuilder& Argument(std::string name,
+                             std::string value) {
         if (!args_) {
             args_ = std::move(Request::args_t());
         }
