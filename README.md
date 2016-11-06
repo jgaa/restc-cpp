@@ -236,20 +236,21 @@ from a std::future.
 
 struct Post {
     int id = 0;
-    string username;
+    string userid;
     string motto;
 };
 
 BOOST_FUSION_ADAPT_STRUCT(
     Post,
     (int, id)
-    (string, username)
+    (string, userid)
     (string, motto)
 )
 
 
 int main()
 {
+    static const string http_url = "http://jsonplaceholder.typicode.com/posts";
     Post my_post = RestClient::Create()->ProcessWithPromiseT<Post>(
         [&](Context& ctx) {
         Post post;
@@ -263,7 +264,7 @@ int main()
     }).get();
 
     cout << "Received post# " << my_post.id
-        << ", username: " << my_post.username;
+        << ", userid: " << my_post.userid;
 }
 
 ```
