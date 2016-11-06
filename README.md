@@ -234,6 +234,9 @@ from a std::future.
 #include <boost/fusion/adapted.hpp>
 #include "restc-cpp/restc-cpp.h"
 
+using namespace std;
+using namespace restc_cpp;
+
 struct Post {
     int id = 0;
     string userid;
