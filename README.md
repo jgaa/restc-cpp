@@ -175,6 +175,47 @@ void DoSomethingInteresting(Context& ctx) {
 
 ```
 
+You can use futures to synchronize or result of the
+requests, and to get exceptions from failed requests.
+In the example below we use a lambda as our coroutine.
+
+```C++
+#include "restc-cpp/restc-cpp.h"
+#include "restc-cpp/logging.h"
+
+#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
+
+int main()
+{
+    // Set up logging
+    namespace logging = boost::log;
+    logging::core::get()->set_filter (
+        logging::trivial::severity >= logging::trivial::debug
+    );
+
+    // Create a rest client, and do the work in a lambda
+    auto rest_client = RestClient::Create();
+    rest_client->ProcessWithPromise([&](Context& ctx) {
+        // Here we are executing the coroutine in a worker thread.
+        // The worker thread belongs to the RestClient instance.
+        // We can run a large number of concurrent, independent
+        // coroutines with this thread.
+
+        // Fetch some data
+        auto repl = ctx.Get(https://example.com/api/data);
+
+        // Do something
+        ...
+
+        // Exit the coroutine
+
+    }).get(); // The calling thread waits here for the worker thread to finish.
+}
+
+```
+
 ## Current Status
 
 The code is still a bit immature and not properly tested, but capable of executing
