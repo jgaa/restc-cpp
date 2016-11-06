@@ -227,6 +227,47 @@ int main()
 
 ```
 
+You can also get the result from a request or a series of requests
+from a std::future.
+
+```C++
+#include <boost/fusion/adapted.hpp>
+#include "restc-cpp/restc-cpp.h"
+
+struct Post {
+    int id = 0;
+    string username;
+    string motto;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(
+    Post,
+    (int, id)
+    (string, username)
+    (string, motto)
+)
+
+
+int main()
+{
+    Post my_post = RestClient::Create()->ProcessWithPromiseT<Post>(
+        [&](Context& ctx) {
+        Post post;
+
+        // Get record #1 into a C++ struct.
+        SerializeFromJson(post, ctx.Get(http_url + "/1"));
+
+        // Return the data we received. It will be stored in the
+        // future and fetched by the main thread.
+        return post;
+    }).get();
+
+    cout << "Received post# " << my_post.id
+        << ", username: " << my_post.username;
+}
+
+```
+
 ## Current Status
 
 The code is still a bit immature and not properly tested, but capable of executing
