@@ -25,6 +25,6 @@
 
 
 #else
-// No logging
+// The user of the API framework must provide log macros
 #error "No log framework is selected"
 #endif
