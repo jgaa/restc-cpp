@@ -35,15 +35,15 @@ public:
         boost::asio::yield_context& yield) = 0;
 
     virtual void AsyncShutdown(boost::asio::yield_context& yield) = 0;
-    
+
     virtual void Close() = 0;
-    
+
     virtual bool IsOpen() const noexcept = 0;
-    
+
     friend std::ostream& operator << (std::ostream& o, const Socket& v) {
         return v.Print(o);
     }
-    
+
 protected:
     virtual std::ostream& Print(std::ostream& o) const = 0;
 };

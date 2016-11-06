@@ -110,6 +110,7 @@ structs/classes with BOOST_FUSION_ADAPT_STRUCT from the boost libraries.
 
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/SerializeJson.h"
+#include "restc-cpp/RequestBuilder.h"
 
 using namespace std;
 using namespace restc_cpp;
@@ -145,6 +146,25 @@ void DoSomethingInteresting(Context& ctx) {
         for(const auto& post : posts_list) {
             clog << "Post id=" << post.id << ", title: " << post.title << endl;
         }
+
+        // Use the RequestBuilder and POST a json serialized native C++ object
+        Post data_object;
+        data_object.userid   = "catch22";
+        data_object.motto    = "Carpe Diem!";
+
+        auto repl = RequestBuilder(ctx)
+            .Post("http://jsonplaceholder.typicode.com/posts") // URL
+            .Header("X-Client", "RESTC_CPP")                   // Optional header
+            .Data(data_object)                                 // Data object to send
+            .Execute();                                        // Do it!
+
+        // Upload a file to a HTTP service
+        repl = RequestBuilder(ctx)
+            .Post("http://example.com/upload")                 // URL
+            .Header("X-Client", "RESTC_CPP")                   // Optional header
+            .Argument("filename", "cute.jpg")                  // Optional URL argument
+            .File("/var/data/cats/cute.jpg")                   // The file to send
+            .Execute(); // Do it!
 
         clog << "Done" << endl;
 

@@ -11,7 +11,7 @@
 #include <boost/fusion/adapted.hpp>
 
 #include "restc-cpp/restc-cpp.h"
-#include "restc-cpp/SerializeJson.h"
+#include "restc-cpp/RequestBuilder.h"
 
 using namespace std;
 using namespace restc_cpp;
@@ -57,6 +57,32 @@ void DoSomethingInteresting(Context& ctx) {
         auto json = repl->GetBodyAsString();
         RESTC_CPP_LOG_INFO << "Received POST data: " << json;
 
+        // Use RequestBuilder to fetch a record
+        repl = RequestBuilder(ctx)
+            .Get(http_url)
+            .Header("X-Client", "RESTC_CPP")
+            .Header("X-Client-Purpose", "Testing")
+            .Argument("id", 1)
+            .Argument("testflag", "true")
+            .Execute();
+
+        repl.reset();
+
+        Post data_object;
+        data_object.userid = "testid";
+        data_object.motto = "Carpe diem";
+
+        repl = RequestBuilder(ctx)
+            .Post(http_url)
+            .Header("X-Client", "RESTC_CPP")
+            .Data(data_object)
+            .Execute();
+
+        repl.reset();
+
+        // Use RequestBuilder to post a record
+
+
 // #ifdef RESTC_CPP_WITH_TLS
 //         // Try with https
 //         repl = ctx.Get(https_url);
@@ -76,7 +102,7 @@ int main(int argc, char *argv[]) {
     namespace logging = boost::log;
     logging::core::get()->set_filter
     (
-        logging::trivial::severity >= logging::trivial::trace
+        logging::trivial::severity >= logging::trivial::debug
     );
 
     try {

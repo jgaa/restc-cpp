@@ -6,6 +6,11 @@
 #       error "Include restc-cpp.h first"
 #endif
 
+#include "restc-cpp/SerializeJson.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
+
+
 #include <string>
 #include <assert.h>
 
@@ -92,8 +97,16 @@ public:
 
     // Json serialization
     template<typename T>
-    RequestBuilder& Data(const T&& data) {
-        return *this;
+    RequestBuilder& Data(const T& data) {
+        rapidjson::StringBuffer s;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(s);
+        restc_cpp::RapidJsonSerializer<T, decltype(writer)>
+            serializer(data, writer);
+        serializer.IgnoreEmptyMembers();
+        serializer.Serialize();
+        // TODO: See if we can use the buffer without copying it
+        std::string json = s.GetString();
+        return Data(std::move(json));
     }
 
     std::unique_ptr<Request> Build() {

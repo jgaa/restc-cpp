@@ -5,6 +5,7 @@
 #include <string>
 #include <map>
 #include <list>
+#include <deque>
 #include <memory>
 #include <future>
 #include <fstream>
@@ -55,15 +56,19 @@ public:
 
         Arg() = default;
         Arg(const Arg&) = default;
+
         Arg(const std::string& use_name, const std::string& use_value)
         : name{use_name}, value{use_value} {}
+
+        Arg(std::string&& use_name, std::string&& use_value)
+        : name{std::move(use_name)}, value{std::move(use_value)} {}
 
         std::string name;
         std::string value;
     };
 
     using headers_t = std::map<std::string, std::string, ciLessLibC>;
-    using args_t = std::list<Arg>;
+    using args_t = std::deque<Arg>;
 
     enum class Type {
         GET,
