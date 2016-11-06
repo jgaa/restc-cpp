@@ -152,19 +152,19 @@ void DoSomethingInteresting(Context& ctx) {
         data_object.userid   = "catch22";
         data_object.motto    = "Carpe Diem!";
 
-        auto repl = RequestBuilder(ctx)
+        auto reply = RequestBuilder(ctx)
             .Post("http://jsonplaceholder.typicode.com/posts") // URL
             .Header("X-Client", "RESTC_CPP")                   // Optional header
             .Data(data_object)                                 // Data object to send
             .Execute();                                        // Do it!
 
         // Upload a file to a HTTP service
-        repl = RequestBuilder(ctx)
+        reply = RequestBuilder(ctx)
             .Post("http://example.com/upload")                 // URL
             .Header("X-Client", "RESTC_CPP")                   // Optional header
             .Argument("filename", "cute.jpg")                  // Optional URL argument
             .File("/var/data/cats/cute.jpg")                   // The file to send
-            .Execute(); // Do it!
+            .Execute();                                        // Do it!
 
         clog << "Done" << endl;
 
