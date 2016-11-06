@@ -175,21 +175,21 @@ and Windows 10 (it should work with Windows Vista and up).
 
 
 ## Short Term Tasks
-- [x] ~~Implement GET, POST, PUT, DELETE~~
-- [x] ~~Implement HTTPS~~
-- [x] ~~Implement proper logging~~
-- [x] ~~Json support~~
- - [x] ~~Deserialization: Simple and nested classes (must be declared with BOOST_FUSION_ADAPT_STRUCT)~~
- - [x] ~~Deserialization: std::vector of json native datatypes and classes~~
- - [x] ~~Serialization of the above~~
- - [x] ~~Serialization / Deserialization: std::deque~~
+- [x] Implement GET, POST, PUT, DELETE
+- [x] Implement HTTPS
+- [x] Implement proper logging
+- [x] Json support
+ - [x] Deserialization: Simple and nested classes (must be declared with BOOST_FUSION_ADAPT_STRUCT)
+ - [x] Deserialization: std::vector of json native datatypes and classes
+ - [x] Serialization of the above
+ - [x] Serialization / Deserialization: std::deque
 - [x] Unit tests
- - [x] ~~Url parser~~
- - [x] ~~Json / C++ transformation~~
- - [x] ~~HTTP header parser~~
- - [x] ~~HTTP Chunked response / odd cases~~
- - [x] ~~HTTP Chunked response / Trailer with headers~~
- - [x] ~~HTTP Chunked ressponse / Data in chunk header~~
+ - [x] Url parser
+ - [x] Json / C++ transformation
+ - [x] HTTP header parser
+ - [x] HTTP Chunked response / odd cases
+ - [x] HTTP Chunked response / Trailer with headers
+ - [x] HTTP Chunked ressponse / Data in chunk header
 - [ ] Functional tests
  - [x] Move the current tests to test against a predictible docker container
  - [x] Test connection pool
@@ -207,19 +207,19 @@ and Windows 10 (it should work with Windows Vista and up).
  - [ ] test 1000 simultaneous sessions
 - [x] Implement connection pool
 - [ ] Design a better request interface (easy to use, elegant) especially for querying with objects (POST, PUT)
-- [x] ~~Implement Chunked Reponse handling~~
- - [x] ~~Handle normal use-cases~~
- - [x] ~~Handle trailers~~
+- [x] Implement Chunked Reponse handling
+ - [x] Handle normal use-cases
+ - [x] Handle trailers
 - [ ] Implement Chunked Requests
  - [ ] General support In HTTP Requests module
  - [ ] Async from json Serialization
 - [x] Handle redirects
-- [x] ~~Implement simple File Upload (as body)~~
+- [x] Implement simple File Upload (as body)
 - [ ] Implement simple File Download (from body)
-- [x] ~~Verify that it compiles with Debian Stable~~
-- [x] ~~Verify that it compiles with Windows 10 / Visual Studio~~
- - [x] ~~Library and json, unittests, functional tests~~
- - [x] ~~https (boost::asio/tls 1.60 not compiling with the latest openssl)~~
+- [x] Verify that it compiles with Debian Stable
+- [x] Verify that it compiles with Windows 10 / Visual Studio
+ - [x] Library and json, unittests, functional tests
+ - [x] https (boost::asio/tls 1.60 not compiling with the latest openssl)
 - [ ] Verify that it compiles with OS/X
 - [ ] Implement Form Data encoding (with File Upload)
 - [ ] Implement asynchronous iterators for received data and integrate with json parser.
