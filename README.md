@@ -307,11 +307,12 @@ and Windows 10 (it should work with Windows Vista and up).
 - [x] Implement GET, POST, PUT, DELETE
 - [x] Implement HTTPS
 - [x] Implement proper logging
-- [x] Json support
+- [ ] Json support
  - [x] Deserialization: Simple and nested classes (must be declared with BOOST_FUSION_ADAPT_STRUCT)
  - [x] Deserialization: std::vector of json native datatypes and classes
  - [x] Serialization of the above
  - [x] Serialization / Deserialization: std::deque
+ - [ ] Serialization / Deserialization: std::map
 - [x] Unit tests
  - [x] Url parser
  - [x] Json / C++ transformation
@@ -360,7 +361,7 @@ and Windows 10 (it should work with Windows Vista and up).
 
 ## Future maybe someday features
 - Json
- - std::set and std::map
+ - std::set
  - True generic container support (any object that support forward iteration and insert/add)
 - Mime content in HTTP body
  - Mime multipart Requests

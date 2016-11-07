@@ -3,7 +3,10 @@
 #include "restc-cpp/helper.h"
 #include "ReplyImpl.h"
 
+using namespace std;
+
 namespace restc_cpp {
+
 
 boost::optional< string > ReplyImpl::GetHeader(const string& name) {
     boost::optional< string > rval;
@@ -14,6 +17,25 @@ boost::optional< string > ReplyImpl::GetHeader(const string& name) {
     }
 
     return rval;
+}
+
+ReplyImpl::ReplyImpl(Connection::ptr_t connection,
+                     Context& ctx,
+                     RestClient& owner)
+: connection_{move(connection)}, ctx_{ctx}, owner_{owner}
+, connection_id_{connection_->GetId()}
+{
+    reader_ = DataReader::CreateIoReader(*connection_, ctx_);
+}
+
+ReplyImpl::ReplyImpl(Connection::ptr_t connection, Context& ctx,
+                     RestClient& owner,
+                     std::unique_ptr<DataReader>&& reader)
+: connection_{move(connection)}, ctx_{ctx}, owner_{owner}
+, connection_id_{connection_ ? connection_->GetId()
+    : boost::uuids::random_generator()()}
+, reader_{move(reader)}
+{
 }
 
 ReplyImpl::~ReplyImpl() {
@@ -587,7 +609,7 @@ ReplyImpl::ReadSomeData(char *ptr, size_t bytes, bool with_timer) {
             owner_.GetIoService(), connection_);
     }
 
-    received = AsyncReadSome({ptr, bytes});
+    received = reader_->ReadSome({ptr, bytes});
 
     if (timer) {
         timer->Cancel();
@@ -605,16 +627,6 @@ ReplyImpl::ReadSomeData(char *ptr, size_t bytes, bool with_timer) {
     data_bytes_received_ += received;
 
     return {ptr, received};
-}
-
-size_t ReplyImpl::AsyncReadSome(boost::asio::mutable_buffers_1 read_buffers) {
-
-    assert(connection_);
-    if (!connection_) {
-        throw runtime_error("AsyncReadSome(): Connection is released");
-    }
-    return connection_->GetSocket().AsyncReadSome(read_buffers,
-                                                    ctx_.GetYield());
 }
 
 std::unique_ptr<Reply>

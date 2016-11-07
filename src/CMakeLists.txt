@@ -1,5 +1,6 @@
 
 set(ACTUAL_SOURCES
+    DataReaderImpl.cpp
     RestClientImpl.cpp
     RequestImpl.cpp
     ReplyImpl.cpp

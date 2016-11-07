@@ -17,41 +17,16 @@ using namespace restc_cpp;
 namespace restc_cpp{
 namespace unittests {
 
-    
-class TestReply : public ReplyImpl
-{
+using test_buffers_t = std::list<std::string>;
+
+class Mockreader : public DataReader {
 public:
-    using test_buffers_t = std::list<std::string>;
-
-    TestReply(Context& ctx, RestClient& owner, test_buffers_t& buffers)
-    : ReplyImpl(nullptr, ctx, owner), test_buffers_{buffers}
-    {
-        next_buffer_ = test_buffers_.begin();
+    Mockreader(test_buffers_t& buffers)
+    : test_buffers_{buffers} {
+         next_buffer_ = test_buffers_.begin();
     }
-    
-//     string Dump(const char *p, const size_t len) {
-//         std::string rval;
-//         
-//         for(size_t i = 0; i < len; i++) {
-//             if (*p == '\r') {
-//                 rval += "\\r";
-//             } else if (*p == '\n') {
-//                 rval += "\\n";
-//             } else if (*p == 0) {
-//                 rval += "\\0";
-//             } else {
-//                 rval += *p;
-//             }
-//             
-//             ++p;
-//         }
-//         
-//         return rval;
-//     }
 
-    size_t
-    AsyncReadSome(boost::asio::mutable_buffers_1 read_buffers) override {
-
+    size_t ReadSome(boost::asio::mutable_buffers_1 read_buffers) override {
         if (next_buffer_ == test_buffers_.end())
             return 0;
 
@@ -61,25 +36,33 @@ public:
 
         memcpy(boost::asio::buffer_cast<char *>(read_buffers),
               ret.data(), ret.size());
-        
+
         //cerr << "Inserting " << ret.size() << " bytes, " << " data: '" << Dump(ret.data(), ret.size()) << "'" << endl;
-        
+
 
         auto rval = next_buffer_->size();
         ++next_buffer_;
-        
+
 
         return rval;
-    }
-
-    void SimulateServerReply() {
-        StartReceiveFromServer();
     }
 
 private:
     test_buffers_t& test_buffers_;
     test_buffers_t::iterator next_buffer_;
+};
 
+class TestReply : public ReplyImpl
+{
+public:
+    TestReply(Context& ctx, RestClient& owner, test_buffers_t& buffers)
+    : ReplyImpl(nullptr, ctx, owner, make_unique<Mockreader>(buffers))
+    {
+    }
+
+    void SimulateServerReply() {
+        StartReceiveFromServer();
+    }
 };
 
 
@@ -89,7 +72,7 @@ private:
 
 TEST(TestSimpleHeader)
 {
-    ::restc_cpp::unittests::TestReply::test_buffers_t buffer;
+    ::restc_cpp::unittests::test_buffers_t buffer;
 
     buffer.push_back("HTTP/1.1 200 OK\r\n"
         "Server: Cowboy\r\n"
@@ -127,7 +110,7 @@ TEST(TestSimpleHeader)
 
 TEST(TestSimpleSegmentedHeader)
 {
-    ::restc_cpp::unittests::TestReply::test_buffers_t buffer;
+    ::restc_cpp::unittests::test_buffers_t buffer;
 
     buffer.push_back("HTTP/1.1 200 OK\r\n");
     buffer.push_back("Server: Cowboy\r\n");
@@ -157,7 +140,7 @@ TEST(TestSimpleSegmentedHeader)
 
 TEST(TestSimpleVerySegmentedHeader)
 {
-    ::restc_cpp::unittests::TestReply::test_buffers_t buffer;
+    ::restc_cpp::unittests::test_buffers_t buffer;
 
     buffer.push_back("HTTP/1.1 200 OK\r\nSer");
     buffer.push_back("ver: Cowboy\r\n");
@@ -190,7 +173,7 @@ TEST(TestSimpleVerySegmentedHeader)
 
 TEST(TestSimpleBody)
 {
-    ::restc_cpp::unittests::TestReply::test_buffers_t buffer;
+    ::restc_cpp::unittests::test_buffers_t buffer;
 
     buffer.push_back("HTTP/1.1 200 OK\r\n"
         "Server: Cowboy\r\n"
@@ -219,7 +202,7 @@ TEST(TestSimpleBody)
 
 TEST(TestSimpleBody2)
 {
-    ::restc_cpp::unittests::TestReply::test_buffers_t buffer;
+    ::restc_cpp::unittests::test_buffers_t buffer;
 
     buffer.push_back("HTTP/1.1 200 OK\r\n"
         "Server: Cowboy\r\n"
@@ -248,7 +231,7 @@ TEST(TestSimpleBody2)
 
 TEST(TestSimpleBody3)
 {
-    ::restc_cpp::unittests::TestReply::test_buffers_t buffer;
+    ::restc_cpp::unittests::test_buffers_t buffer;
 
     buffer.push_back("HTTP/1.1 200 OK\r\n"
         "Server: Cowboy\r\n"
@@ -278,7 +261,7 @@ TEST(TestSimpleBody3)
 
 TEST(TestSimpleBody4)
 {
-    ::restc_cpp::unittests::TestReply::test_buffers_t buffer;
+    ::restc_cpp::unittests::test_buffers_t buffer;
 
     buffer.push_back("HTTP/1.1 200 OK\r\n"
         "Server: Cowboy\r\n"
@@ -308,7 +291,7 @@ TEST(TestSimpleBody4)
 
 TEST(TestChunkedBody)
 {
-    ::restc_cpp::unittests::TestReply::test_buffers_t buffer;
+    ::restc_cpp::unittests::test_buffers_t buffer;
 
     buffer.push_back("HTTP/1.1 200 OK\r\n"
         "Server: Cowboy\r\n"
@@ -338,7 +321,7 @@ TEST(TestChunkedBody)
 
 TEST(TestChunkedBody2)
 {
-    ::restc_cpp::unittests::TestReply::test_buffers_t buffer;
+    ::restc_cpp::unittests::test_buffers_t buffer;
 
     buffer.push_back("HTTP/1.1 200 OK\r\n"
         "Server: Cowboy\r\n"
@@ -370,7 +353,7 @@ TEST(TestChunkedBody2)
 
 TEST(TestChunkedBody4)
 {
-    ::restc_cpp::unittests::TestReply::test_buffers_t buffer;
+    ::restc_cpp::unittests::test_buffers_t buffer;
 
     buffer.push_back("HTTP/1.1 200 OK\r\n"
         "Server: Cowboy\r\n"
@@ -409,7 +392,7 @@ TEST(TestChunkedBody4)
 
 TEST(TestChunkedTrailer)
 {
-    ::restc_cpp::unittests::TestReply::test_buffers_t buffer;
+    ::restc_cpp::unittests::test_buffers_t buffer;
 
     buffer.push_back("HTTP/1.1 200 OK\r\n"
         "Server: Cowboy\r\n"
@@ -450,7 +433,7 @@ TEST(TestChunkedTrailer)
 
 TEST(TestChunkedParameterAndTrailer)
 {
-    ::restc_cpp::unittests::TestReply::test_buffers_t buffer;
+    ::restc_cpp::unittests::test_buffers_t buffer;
 
     buffer.push_back("HTTP/1.1 200 OK\r\n"
         "Server: Cowboy\r\n"

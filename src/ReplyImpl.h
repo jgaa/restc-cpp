@@ -12,6 +12,7 @@
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/Socket.h"
 #include "restc-cpp/IoTimer.h"
+#include "DataReader.h"
 
 using namespace std;
 
@@ -25,14 +26,11 @@ public:
     enum class ChunkedState
         { NOT_CHUNKED, GET_SIZE, IN_SEGMENT, IN_TRAILER, DONE };
 
-    ReplyImpl(Connection::ptr_t connection,
-              Context& ctx,
-              RestClient& owner)
-    : connection_{move(connection)}, ctx_{ctx}, owner_{owner}
-    , connection_id_{connection_ ? connection_->GetId()
-        : boost::uuids::random_generator()()}
-    {
-    }
+    ReplyImpl(Connection::ptr_t connection, Context& ctx,
+              RestClient& owner);
+
+    ReplyImpl(Connection::ptr_t connection, Context& ctx,
+              RestClient& owner, std::unique_ptr<DataReader>&& reader);
 
     ~ReplyImpl();
 
@@ -95,9 +93,6 @@ protected:
     boost::asio::const_buffers_1
     ReadSomeData(char *ptr, size_t bytes, bool with_timer = true);
 
-    virtual size_t AsyncReadSome(boost::asio::mutable_buffers_1 read_buffers);
-
-
     Connection::ptr_t connection_;
     Context& ctx_;
     RestClient& owner_;
@@ -119,6 +114,7 @@ protected:
     size_t data_bytes_received_ = 0;
     size_t body_bytes_received_ = 0;
     const boost::uuids::uuid connection_id_;
+    std::unique_ptr<DataReader> reader_;
 };
 
 
