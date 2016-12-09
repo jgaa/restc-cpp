@@ -423,6 +423,7 @@ and Windows 10 (it should work with Windows Vista and up).
  - [ ] Ubuntu LTS
 
 # Tasks planned for Q1 2017
+- Performance analysis and optimizations for speed and memory footprint
 - Refactor
  - [ ] split the json serialization and HTTP client into independent sub-projects
 - Implement Chunked Requests (chained DataWriter interface)
