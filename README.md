@@ -390,11 +390,14 @@ and Windows 10 (it should work with Windows Vista and up).
 - Uses C++ / boost coroutines for application logic
 - High level Request Builder interface (similar to Java HTTP Clients) for convenience
 - Follows redirects without any extra code at the API layer
-- Json serialization to and from native C++ objects.
 - All network IO operations are asynchronous trough boost::asio
 - Logging trough boost::log or trough your own log macros
 - Connection Pool for fast re-use of existing server connections.
 - Compression (gzip, deflate)
+- Json serialization to and from native C++ objects.
+  - Optional Mapping between C++ property names and Json 'on the wire' names.
+  - Option to tag property names as read-only to filter them out when the C++ object is serialized for transfer to the server.
+  - Filters out empty C++ properties when the C++ object is serialized for transfer to the server (can be disabled).
 
 # Supported development platforms:
 - Linux (Debian stable and testing, Ubuntu)
