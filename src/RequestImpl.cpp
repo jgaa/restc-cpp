@@ -11,6 +11,7 @@
 #include "restc-cpp/Socket.h"
 #include "restc-cpp/ConnectionPool.h"
 #include "restc-cpp/IoTimer.h"
+#include "ReplyImpl.h"
 
 using namespace std;
 
@@ -283,8 +284,9 @@ private:
             // Pass IO responsibility to the Reply
             RESTC_CPP_LOG_DEBUG << "Sending request to '" << url_ << "' "
                 << *connection;
-            auto reply = Reply::Create(connection, ctx, owner_);
-            reply->StartReceiveFromServer();
+            auto reply = ReplyImpl::Create(connection, ctx, owner_);
+            reply->StartReceiveFromServer(
+                DataReader::CreateIoReader(*connection, ctx));
 
             const auto http_code = reply->GetResponseCode();
             if (http_code == 301 || http_code == 302) {

@@ -32,6 +32,16 @@ target_link_libraries(basic_tests
 
 add_test(JSON_FUNCTIONAL_TESTS basic_tests)
 
+
+
+add_executable(readme_tests ReadmeTests.cpp)
+target_link_libraries(readme_tests
+    restc-cpp
+    ${DEFAULT_LIBRARIES}
+)
+
+add_test(JSON_FUNCTIONAL_TESTS readme_tests)
+
 add_executable(ccache_tests ConnectionCacheTests.cpp)
 target_link_libraries(ccache_tests
     restc-cpp
@@ -50,8 +60,6 @@ target_link_libraries(redirect_tests
 )
 
 add_test(REDIRECT_FUNCTIONAL_TESTS redirect_tests)
-
-
 
 
 message(STATUS "UNITTEST_CPP_LIBPATH is ${UNITTEST_CPP_LIBPATH}")

@@ -12,7 +12,7 @@
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/Socket.h"
 #include "restc-cpp/IoTimer.h"
-#include "DataReader.h"
+#include "restc-cpp/DataReader.h"
 
 using namespace std;
 
@@ -29,90 +29,52 @@ public:
     ReplyImpl(Connection::ptr_t connection, Context& ctx,
               RestClient& owner);
 
-    ReplyImpl(Connection::ptr_t connection, Context& ctx,
-              RestClient& owner, std::unique_ptr<DataReader>&& reader);
-
     ~ReplyImpl();
 
     boost::optional< string > GetHeader(const string& name) override;
 
-    void StartReceiveFromServer() override;
-    bool IsChunked() const noexcept {
-        return chunked_ != ChunkedState::NOT_CHUNKED;
-    }
+    void StartReceiveFromServer(DataReader::ptr_t&& reader);
 
-    int GetResponseCode() const override { return status_code_; }
+    int GetResponseCode() const override {
+        return response_.status_code;
+    }
 
     boost::asio::const_buffers_1 GetSomeData() override;
 
     string GetBodyAsString() override;
 
     bool MoreDataToRead() override {
-        return !body_.empty() || !have_received_all_data_;
+        assert(reader_);
+        return !reader_->IsEof();
     }
 
     boost::uuids::uuid GetConnectionId() const {
         return connection_id_;
     }
 
+    static std::unique_ptr<ReplyImpl>
+    Create(Connection::ptr_t connection,
+           Context& ctx,
+           RestClient& owner);
+
+    static boost::string_ref b2sr(boost::asio::const_buffers_1 buffer) {
+        return { boost::asio::buffer_cast<const char*>(buffer),
+            boost::asio::buffer_size(buffer)};
+    }
+
+
 protected:
     void CheckIfWeAreDone();
-
     void ReleaseConnection();
-
-    void ParseHeaders(bool skip_requestline = false);
-
-    size_t ReadHeaderAndMayBeSomeMore(size_t bytes_used = 0);
-
-    void PrepareChunkedPayload();
-
-
-    /* 1) Assume that buffer points to the start of a segment.
-     * 2) If we find the header, and it's complete, set
-     *    body_ to the content (if any) after the header and return
-     *    true. Update the state to IN_SEGMENT. Update current_chunk_len_
-     * 3) On errors, throw std::runtime_error
-     * 4) If the header is valid, but incomplete, return
-     *    false and set the state to GET_SIZE
-     * 5) If we reached the last segment and have the header
-     *    and no padding data, return true. Set the state to DONE.
-     *    in the buffer and return true. Set the state to IN_TRAILER
-     * 6) If we reached the last segment and have a valid buffer,
-     *    update body_ wit whatever remaining data there is
-     *    in the buffer and return true. Set the state to IN_TRAILER
-     */
-    bool ProcessChunkHeader(boost::string_ref buffer);
-
-    boost::asio::const_buffers_1 DoGetSomeChunkedData();
-
-    boost::asio::const_buffers_1 TakeSegmentDataFromBuffer();
-
-    // Simple non-chunked get-data
-    boost::asio::const_buffers_1 DoGetSomeData();
-
-    boost::asio::const_buffers_1
-    ReadSomeData(char *ptr, size_t bytes, bool with_timer = true);
+    void HandleDecompression();
 
     Connection::ptr_t connection_;
     Context& ctx_;
     RestClient& owner_;
-    boost::string_ref buffer_; // Valid window into memory_buffer_
-    boost::string_ref status_line_; // Valid only during header processing
-    boost::string_ref header_; // Valid only during header processing
-    boost::string_ref body_; // payload
-    int status_code_ = 0;
-    boost::string_ref status_message_;
+    Reply::HttpResponse response_;
     map<string, string, ciLessLibC> headers_;
-    bool have_received_all_data_ = false;
     bool do_close_connection_ = false;
-    std::unique_ptr<buffer_t> read_buffer_;
     boost::optional<size_t> content_length_;
-    size_t current_chunk_len_ = 0;
-    size_t current_chunk_read_ = 0;
-    size_t current_chunk_ = 0;
-    ChunkedState chunked_ = ChunkedState::NOT_CHUNKED;
-    size_t data_bytes_received_ = 0;
-    size_t body_bytes_received_ = 0;
     const boost::uuids::uuid connection_id_;
     std::unique_ptr<DataReader> reader_;
 };

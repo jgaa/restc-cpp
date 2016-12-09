@@ -160,18 +160,16 @@ public:
 class Reply {
 public:
 
+    struct HttpResponse {
+        enum class HttpVersion {
+            HTTP_1_1
+        };
+        HttpVersion http_version = HttpVersion::HTTP_1_1;
+        int status_code = 0;
+        std::string reason_phrase;
+    };
+
     virtual ~Reply() = default;
-
-    static std::unique_ptr<Reply> Create(Connection::ptr_t connection,
-                                         Context& ctx,
-                                         RestClient& owner);
-
-    /*! Called after a request is sent to start interacting with the server.
-     *
-     * This will send the request to to the server and fetch the first
-     * part of the reply, including the HTTP reply status and headers.
-     */
-    virtual void StartReceiveFromServer() = 0;
 
     /*! Get the unique ID for the connection */
     virtual boost::uuids::uuid GetConnectionId() const = 0;
@@ -188,23 +186,24 @@ public:
     /*! Get some data from the server.
      *
      * This is the lowest level to fetch data. Buffers will be
-     * returned as they was returned from the web server.
+     * returned as they was returned from the web server or
+     * decompressed.
      *
      * The method will return an empty buffer when there is
      * no more data to read (the request is complete).
      *
      * The data may be returned from a pending buffer, or it may
-     * be fetched from the server.
+     * be fetched from the server. The data is safe to use until
+     * the method is called again.
      */
     virtual boost::asio::const_buffers_1 GetSomeData() = 0;
 
-    /*! Returns true as ling as you have not yet pulled all
+    /*! Returns true as long as you have not yet pulled all
      * the data from the response.
      */
     virtual bool MoreDataToRead() = 0;
 
     /*! Get the value of a header */
-
     virtual boost::optional<std::string> GetHeader(const std::string& name) = 0;
 };
 

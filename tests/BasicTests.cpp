@@ -31,12 +31,11 @@ BOOST_FUSION_ADAPT_STRUCT(
     (string, motto)
 )
 
-const string http_url = "http://localhost:3000/posts";
+const string http_url = "http://localhost:3001/normal/manyposts";
 const string https_url = "https://localhost:3002/posts";
 
 
 void DoSomethingInteresting(Context& ctx) {
-
 
     try {
         // Asynchronously fetch the entire data-set, and convert it from json
@@ -57,21 +56,48 @@ void DoSomethingInteresting(Context& ctx) {
         auto json = repl->GetBodyAsString();
         RESTC_CPP_LOG_INFO << "Received POST data: " << json;
 
+
+        // Use RequestBuilder to fetch everything
+        repl = RequestBuilder(ctx)
+            .Get(http_url)
+            .Header("X-Client", "RESTC_CPP")
+            .Header("X-Client-Purpose", "Testing")
+            .Header("Accept", "*/*")
+            .Execute();
+
+        string body = repl->GetBodyAsString();
+        cout << "Got compressed list: " << body << endl;
+        repl.reset();
+
         // Use RequestBuilder to fetch a record
         repl = RequestBuilder(ctx)
             .Get(http_url)
             .Header("X-Client", "RESTC_CPP")
             .Header("X-Client-Purpose", "Testing")
+            .Header("Accept", "*/*")
             .Argument("id", 1)
-            .Argument("testflag", "true")
             .Execute();
 
+        cout << "Got: " << repl->GetBodyAsString() << endl;
         repl.reset();
 
+        // Use RequestBuilder to fetch a record without compression
+        repl = RequestBuilder(ctx)
+            .Get(http_url)
+            .Header("X-Client", "RESTC_CPP")
+            .Header("X-Client-Purpose", "Testing")
+            .Header("Accept", "*/*")
+            .DisableCompression()
+            .Argument("id", 2)
+            .Execute();
+
+        cout << "Got: " << repl->GetBodyAsString() << endl;
+        repl.reset();
+
+        // Use RequestBuilder to post a record
         Post data_object;
         data_object.username = "testid";
         data_object.motto = "Carpe diem";
-
         repl = RequestBuilder(ctx)
             .Post(http_url)
             .Header("X-Client", "RESTC_CPP")
@@ -80,7 +106,7 @@ void DoSomethingInteresting(Context& ctx) {
 
         repl.reset();
 
-        // Use RequestBuilder to post a record
+
 
 
 // #ifdef RESTC_CPP_WITH_TLS
@@ -102,7 +128,7 @@ int main(int argc, char *argv[]) {
     namespace logging = boost::log;
     logging::core::get()->set_filter
     (
-        logging::trivial::severity >= logging::trivial::debug
+        logging::trivial::severity >= logging::trivial::trace
     );
 
     try {

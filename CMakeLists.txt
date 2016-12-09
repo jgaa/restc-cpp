@@ -30,6 +30,8 @@ set(CONF_PATH ${RESTC_ROOT_DIR}/include/restc-cpp/config.h)
 message(STATUS "Using ${CMAKE_CXX_COMPILER}")
 
 if (NOT EMBEDDED_RESTC_CPP)
+    find_package(ZLIB REQUIRED )
+
     if (RESTC_CPP_WITH_TLS)
         if (UNIX)
             find_package(OpenSSL REQUIRED)
@@ -77,6 +79,8 @@ if (NOT EMBEDDED_RESTC_CPP)
     include(cmake_scripts/doxygen.cmake)
 
 endif()
+
+set(DEFAULT_LIBRARIES "${DEFAULT_LIBRARIES} ${ZLIB_LIBRARIES}")
 
 include_directories(
     ${RESTC_ROOT_DIR}/include

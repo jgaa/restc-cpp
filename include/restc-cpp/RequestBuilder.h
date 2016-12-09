@@ -94,6 +94,12 @@ public:
         return *this;
     }
 
+    RequestBuilder& DisableCompression() {
+        assert(!body_);
+        disable_compression_ = true;
+        return *this;
+    }
+
     // Json serialization
     template<typename T>
     RequestBuilder& Data(const T& data) {
@@ -109,10 +115,17 @@ public:
     }
 
     std::unique_ptr<Request> Build() {
+        static const std::string accept_encoding{"Accept-Encoding"};
+        static const std::string gzip{"gzip"};
 #ifdef DEBUG
         assert(!built_);
         built_ = true;
 #endif
+        if (!disable_compression_) {
+            if (!headers_ || (headers_->find(accept_encoding) == headers_->end())) {
+                Header(accept_encoding, gzip);
+            }
+        }
         return Request::Create(
             url_, type_, ctx_.GetClient(), move(body_), args_, headers_);
     }
@@ -129,6 +142,7 @@ private:
     boost::optional<Request::headers_t> headers_;
     boost::optional<Request::args_t> args_;
     std::unique_ptr<Request::Body> body_;
+    bool disable_compression_ = false;
 #ifdef DEBUG
     bool built_ = false;
 #endif

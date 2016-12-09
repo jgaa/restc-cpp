@@ -1,6 +1,11 @@
 
 set(ACTUAL_SOURCES
-    DataReaderImpl.cpp
+    ChunkedReaderImpl.cpp
+    IoReaderImpl.cpp
+    PlainReaderImpl.cpp
+    NoBodyReaderImpl.cpp
+    ZipReaderImpl.cpp
+    DataReaderStream.cpp
     RestClientImpl.cpp
     RequestImpl.cpp
     ReplyImpl.cpp

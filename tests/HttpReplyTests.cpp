@@ -19,35 +19,29 @@ namespace unittests {
 
 using test_buffers_t = std::list<std::string>;
 
-class Mockreader : public DataReader {
+class MockReader : public DataReader {
 public:
-    Mockreader(test_buffers_t& buffers)
+    MockReader(test_buffers_t& buffers)
     : test_buffers_{buffers} {
-         next_buffer_ = test_buffers_.begin();
+
+        next_buffer_ = test_buffers_.begin();
     }
 
-    size_t ReadSome(boost::asio::mutable_buffers_1 read_buffers) override {
-        if (next_buffer_ == test_buffers_.end())
-            return 0;
+    bool IsEof() const override {
+        return next_buffer_ == test_buffers_.end();
+    }
 
-        assert(boost::asio::buffer_size(read_buffers) >= next_buffer_->size());
+    boost::asio::const_buffers_1 ReadSome() override {
+        if (IsEof()) {
+            return {nullptr, 0};
+        }
 
-        const boost::string_ref ret{*next_buffer_};
-
-        memcpy(boost::asio::buffer_cast<char *>(read_buffers),
-              ret.data(), ret.size());
-
-        //cerr << "Inserting " << ret.size() << " bytes, " << " data: '" << Dump(ret.data(), ret.size()) << "'" << endl;
-
-
-        auto rval = next_buffer_->size();
+        size_t data_len = next_buffer_->size();
+        const char * const data = next_buffer_->c_str();
         ++next_buffer_;
-
-
-        return rval;
+        return {data, data_len};
     }
 
-private:
     test_buffers_t& test_buffers_;
     test_buffers_t::iterator next_buffer_;
 };
@@ -56,13 +50,16 @@ class TestReply : public ReplyImpl
 {
 public:
     TestReply(Context& ctx, RestClient& owner, test_buffers_t& buffers)
-    : ReplyImpl(nullptr, ctx, owner, make_unique<Mockreader>(buffers))
+    : ReplyImpl(nullptr, ctx, owner), buffers_{buffers}
     {
     }
 
     void SimulateServerReply() {
-        StartReceiveFromServer();
+        StartReceiveFromServer(make_unique<MockReader>(buffers_));
     }
+
+private:
+    test_buffers_t& buffers_;
 };
 
 
