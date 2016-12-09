@@ -42,7 +42,7 @@ alternatives). I have also tried to imagine any possible way a malicious API ser
 could try to attack you (by exploiting or exceeding local resources - like sending
 a malicious compressed package that expands to a petabyte of zeros) and designed
 to detect any potential problems and break out of it by throwing an exception as
-soon as possible - and to use fixed sized buffers the he communications layers.
+soon as possible - and to use fixed sized buffers in the communications layers.
 
 # Why?
 In the spring of 2016 I was tasked to implement a SDK for a REST API in
@@ -54,7 +54,7 @@ overkill to use a huge GUI framework for C++ code that are most likely to run
 in high performance servers - and that may end up projects using some other
 C++ framework that can't coexist with QT).
 
-I had once, years before, done a C++ REST client for an early
+I had once, years before, done a C++ REST Client for an early
 version of Amazon AWS using libcurl - and - well, I had no strong urge to repeat
 that experience. So I decided to spend a week creating my own HTTP Client library
 using boost::asio with Json serialization/deserialization. (Thanks to Microsoft
@@ -440,7 +440,7 @@ and Windows 10 (it should work with Windows Vista and up).
  - [ ] Windows 10 / clang
  - [ ] Cent OS
  - [ ] Fedora
- - [ ] FredeBSD
+ - [ ] FreeBSD
  - [ ] OpenBSD
 
 
