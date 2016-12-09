@@ -348,12 +348,12 @@ int main()
 ```C++
 
     // Use the RequestBuilder and POST a json serialized native C++ object
-    Post data_object;
+    SomeDataClass data_object;
     data_object.userid   = "catch22";
     data_object.motto    = "Carpe Diem!";
 
     auto reply = RequestBuilder(ctx)
-        .Post("http://jsonplaceholder.typicode.com/posts") // URL
+        .Post(""https://example.com/api/data") // URL
         .Header("X-Client", "RESTC_CPP")                   // Optional header
         .Data(data_object)                                 // Data object to send
         .Execute();                                        // Do it!
@@ -388,7 +388,7 @@ and Windows 10 (it should work with Windows Vista and up).
 - Raw GET, POST, PUT and DELETE requests with no data conversions
 - Low level interface to create requests
 - Uses C++ / boost coroutines for application logic
-- High level interface (similar to Java HTTP clients) for convenience
+- High level Request Builder interface (similar to Java HTTP Clients) for convenience
 - Follows redirects without any extra code at the API layer
 - Json serialization to and from native C++ objects.
 - All network IO operations are asynchronous trough boost::asio
@@ -412,8 +412,6 @@ and Windows 10 (it should work with Windows Vista and up).
  - [ ] Test HTTP GET (list), GET (object), POST (create), PUT (update), DELETE
  - [ ] test 1000 simultaneous sessions
 - [ ] Implement asynchronous iterators for received data and integrate with json parser.
-- [ ] Implement asynchronous iterators for requests data and integrate with json generator.
-- [ ] Add options to secure TLS connections (avoid weak encryption and verify server certs).
 - [ ] Implement Basic Authentication
 - Implement Proxy support
  - [ ] HTTP Proxy
@@ -432,8 +430,10 @@ and Windows 10 (it should work with Windows Vista and up).
  - [ ] Async from json Serialization
  - [ ] Async from producer callback
  - [ ] Async from producer loop
+ - [ ] Implement asynchronous iterators for outgoing data and integrate with json generator.
 - Improve security
  - [ ] Put memory constraints on strings and lists in the json deserialization
+ - [ ] Add options to secure TLS connections (avoid weak encryption and verify server certs).
 - Implement Form Data encoding
 - Portability
  - [ ] Windows 10 / clang
