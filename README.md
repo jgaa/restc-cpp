@@ -1,7 +1,7 @@
 # restc-cpp
-
-This is a small and very fast REST HTTP[S] client library in C++. It's designed
-in the traditional UNIX philosophy to do one thing only, and to do it well.
+This is a small and fast REST HTTP[S] client library in C++. It's
+designed in the traditional UNIX philosophy to do one thing only,
+and to do it well.
 
 Simply said; it transforms the data in a C++ class to Json, and transmits it
 to a HTTP server. It queries a HTTP server using the appropriate URL and query
@@ -9,74 +9,216 @@ arguments, receives a Json payload, and initializes a C++ object with that data.
 That's it. It does not solve world hunger. It make no attempts to be a C++
 framework.
 
-You can use it's single components, like the HTTP client to send and receive non-json
-data. You can use the template code that transforms data between C++ and Json
+You can use it's single components, like the C++ HTTP Client to send and
+receive non-Json data as a native C++ replacement for libcurl.
+You can use the template code that transforms data between C++ and Json
 for other purposes - but the library is designed and implemented for the single
 purpose of using C++ to interact efficiently and effortless with REST API servers.
-
-Restc-cpp depends only on C++14 with its standard libraries and boost, rapidjson
-and unittest-cpp. Rapidjson is a mature, ultrta-fast, json sax, header-only
-library.
-
-restc-cpp uses boost::asio for IO.
 
 The library is written by Jarle (jgaa) Aase, an enthusiastic
 C++ software developer since 1996. (Before that, I used C).
 
-## Design Goal
+# Design Goals
 The design goal of this project is to make external REST API's
-simple to use in C++ projects, but still very fast (which is why
-we use C++ in the first place, right?).
+simple and safe to use in C++ projects, but still very fast and memory efficient
+(which is why we use C++ in the first place, right?).
 
+I also wanted to use coroutines for the application logic that sends data to or
+pulls data from the REST API servers. This makes the code much easier to write
+and understand, and also simplifies debugging and investigation of core dumps.
+This was a strong motivation to write a C++ HTTP Client from scratch. To see how
+this actually works, please see my
+ [modern async cpp example](https://github.com/jgaa/modern_async_cpp_example)).
+
+Finally, in a world where the Internet is getting increasingly
+[dangerous](http://www.dailydot.com/layer8/bruce-schneier-internet-of-things/),
+and all kind of malicious parties (from your own government to Russian mafia)
+search for vulnerabilities in your software stack to snoop, ddos, intercept and
+blackmail you and your customers/users - I have a strong emphasis on security in
+all software projects I'm involved in. I have limited the dependencies on third
+party libraries as much as I could (I still use OpenSSL which is a rotten pile of
+shit of yet undiscovered vulnerabilities - but as of now there are no creditable
+alternatives). I have also tried to imagine any possible way a malicious API server
+could try to attack you (by exploiting or exceeding local resources - like sending
+a malicious compressed package that expands to a petabyte of zeros) and designed
+to detect any potential problems and break out of it by throwing an exception as
+soon as possible - and to use fixed sized buffers the he communications layers.
+
+# Why?
+In the spring of 2016 I was tasked to implement a SDK for a REST API in
+several languages. For Python, Java and Ruby it was trivial to make a simple
+object oriented implementation. When I started planning the C++ implementation of the
+SDK, I found no suitable, free libraries. I could not even find a proper HTTP Client
+implementation(!). (I could have solved the problem using QT - but i found it
+overkill to use a huge GUI framework for C++ code that are most likely to run
+in high performance servers - and that may end up projects using some other
+C++ framework that can't coexist with QT).
+
+I had once, years before, done a C++ REST client for an early
+version of Amazon AWS using libcurl - and - well, I had no strong urge to repeat
+that experience. So I decided to spend a week creating my own HTTP Client library
+using boost::asio with Json serialization/deserialization. (Thanks to Microsoft
+persistent contempt for any C++ standards, it took a little longer to finish,
+as the json conversion is based on complex template meta-programming. I had some
+quite beautiful code working with clang and g++, but I had to break it up and
+do ugly work-arounds to make it work with MSVC. I hope I can refactor it into
+boost::hana some day. However, last time I checked, Micro$oft had still not implemented
+proper C++14 support - and hana was yet not working with their compiler).
+
+In the fall / winter of 2016, I threw some more hours into the project and added
+features that was not really required for the problem I started out to solve, but who
+are required in a general purpose C++ REST library (like compression, HTTP redirects,
+easy to use request builder, tests and demo code).
+
+# Dependencies
+Restc-cpp depends on C++14 with its standard libraries and:
+  - boost
+  - rapidjson (mature, ultrta-fast, json sax, header-only library)
+  - unittest-cpp (If compiled with testing enabled)
+  - openssl or libressl (If compiled with TLS support)
+  - zlib
+
+# License
 Usually I use some version of GPL or LGPL for my projects. This
 library however is so limited and general that I have released it
 under the more permissive MIT license. It is Free. Free as in Free Beer.
 Free as in Free Air.
 
-## Examples
+# Examples
 
-### Fetch raw data
+## Fetch a C++ object from a server that serialize to Json
 
-The following code is all that is needed to run REST requests asynchronously,
-using the co-routine support in boost::asio behind the scenes. (To see how
-this works, please see my
-[modern async cpp example](https://github.com/jgaa/modern_async_cpp_example)).
+Just to give you a teaser on how simple it is to use this library.
+
+```C++
+#include <iostream>
+
+#include <boost/lexical_cast.hpp>
+#include <boost/fusion/adapted.hpp>
+
+#include "restc-cpp/restc-cpp.h"
+#include "restc-cpp/RequestBuilder.h"
+
+using namespace std;
+using namespace restc_cpp;
+
+// C++ structure that match the Json entries received
+// from http://jsonplaceholder.typicode.com/posts/{id}
+struct Post {
+    int userId = 0;
+    int id = 0;
+    string title;
+    string body;
+};
+
+// Since C++ does not (yet) offer reflection, we need to tell the library how
+// to map json members to a type. We are doing this by declaring the
+// structs/classes with BOOST_FUSION_ADAPT_STRUCT from the boost libraries.
+// This allows us to convert the C++ classes to and from Json.
+
+BOOST_FUSION_ADAPT_STRUCT(
+    Post,
+    (int, userId)
+    (int, id)
+    (string, title)
+    (string, body)
+)
+
+// The C++ main function - the place where any adventure starts
+int main() {
+
+    // Create and instantiate a Post from data received from the server.
+    Post my_post = RestClient::Create()->ProcessWithPromiseT<Post>([&](Context& ctx) {
+        // This is a lambda co-routine, running in a worker-thread
+
+        // Instantiate a Post structure.
+        Post post;
+
+        // Serialize it asynchronously. The asynchronously part does not really matter
+        // here, but it may if you receive huge data structures.
+        SerializeFromJson(post,
+
+            // Construct a request to the server
+            RequestBuilder(ctx)
+                .Get("http://jsonplaceholder.typicode.com/posts/1")
+
+                // Add some headers for good taste
+                .Header("X-Client", "RESTC_CPP")
+                .Header("X-Client-Purpose", "Testing")
+
+                // Send the request
+                .Execute());
+
+        // Return the Post instance trough a C++ future<>
+        return post;
+    })
+
+    // Back in the main thread, get the Post instance from the future<>,
+    // or any C++ exception thrown within the lambda.
+    .get();
+
+    // Print the result for everyone to see.
+    cout << "Received post# " << my_post.id << ", title: " << my_post.title;
+}
+```
+
+The code above should return something like:
+```text
+Received post# 1, title: sunt aut facere repellat provident occaecati excepturi optio reprehenderit
+```
+
+## Fetch raw data
+You don't <i>have</i> to use futures or lambdas (although they are cool and lots of fun).
+You don't even have to use the Hipster inspired RequestBuilder.
+
+The following code demonstrates how to run a simple HTTP request asynchronously,
+still using the co-routine support in boost::asio behind the scenes.
 
 
 ```C++
 #include <iostream>
+#include <chrono>
+#include <thread>
 #include "restc-cpp/restc-cpp.h"
 
 using namespace std;
 using namespace restc_cpp;
 
 void DoSomethingInteresting(Context& ctx) {
+    // Here we are again in a co-routine, running in a worker-thread.
 
     // Asynchronously connect to a server and fetch some data.
-    auto reply = ctx.Get("http://jsonplaceholder.typicode.com/posts");
+    auto reply = ctx.Get("http://jsonplaceholder.typicode.com/posts/1");
 
     // Asynchronously fetch the entire data-set and return it as a string.
     auto json = reply->GetBodyAsString();
 
     // Just dump the data.
-    clog << "Received data: " << json << endl;
+    cout << "Received data: " << json << endl;
 }
 
-main(int argc, char *argv[]) {
+int main() {
     auto rest_client = RestClient::Create();
 
-    /* Call DoSomethingInteresting as a co-routine in a worker-thread.
-     * This version of Proces*() returns a future.
-     */
-    auto future = rest_client->ProcessWithPromise(DoSomethingInteresting);
+    // Call DoSomethingInteresting as a co-routine in a worker-thread.
+    rest_client->Process(DoSomethingInteresting);
 
-    // Hold the main thread...
-    future.wait();
+    // Wait for a little while to allow the worker-thread to finish
+    this_thread::sleep_for(chrono::seconds(5));
 }
 ```
 
+And here is the output you could expect
+```text
+Received data: {
+  "userId": 1,
+  "id": 1,
+  "title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
+  "body": "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto"
+}
+```
 
-### Fetch json data and convert to native C++ types.
+## Fetch json data list and convert to native C++ types.
 
 Another example - here we fetch a json list like this one and convert
 it to a std::list of a native C++ data type
@@ -97,10 +239,6 @@ it to a std::list of a native C++ data type
   },
 ...
 ```
-
-Since C++ does not (yet) offer reflection, we need to tell the library how
-to map json members to a type. We are doing this by declaring the
-structs/classes with BOOST_FUSION_ADAPT_STRUCT from the boost libraries.
 
 ```C++
 #include <iostream>
@@ -146,27 +284,6 @@ void DoSomethingInteresting(Context& ctx) {
         for(const auto& post : posts_list) {
             clog << "Post id=" << post.id << ", title: " << post.title << endl;
         }
-
-        // Use the RequestBuilder and POST a json serialized native C++ object
-        Post data_object;
-        data_object.userid   = "catch22";
-        data_object.motto    = "Carpe Diem!";
-
-        auto reply = RequestBuilder(ctx)
-            .Post("http://jsonplaceholder.typicode.com/posts") // URL
-            .Header("X-Client", "RESTC_CPP")                   // Optional header
-            .Data(data_object)                                 // Data object to send
-            .Execute();                                        // Do it!
-
-        // Upload a file to a HTTP service
-        reply = RequestBuilder(ctx)
-            .Post("http://example.com/upload")                 // URL
-            .Header("X-Client", "RESTC_CPP")                   // Optional header
-            .Argument("filename", "cute.jpg")                  // Optional URL argument
-            .File("/var/data/cats/cute.jpg")                   // The file to send
-            .Execute();                                        // Do it!
-
-        clog << "Done" << endl;
 
     } catch (const exception& ex) {
         clog << "Caught exception: " << ex.what() << endl;
@@ -227,142 +344,110 @@ int main()
 
 ```
 
-You can also get the result from a request or a series of requests
-from a std::future.
-
+## Post data to the server
 ```C++
-#include <boost/fusion/adapted.hpp>
-#include "restc-cpp/restc-cpp.h"
 
-using namespace std;
-using namespace restc_cpp;
+    // Use the RequestBuilder and POST a json serialized native C++ object
+    Post data_object;
+    data_object.userid   = "catch22";
+    data_object.motto    = "Carpe Diem!";
 
-struct Post {
-    int id = 0;
-    string userid;
-    string motto;
-};
-
-BOOST_FUSION_ADAPT_STRUCT(
-    Post,
-    (int, id)
-    (string, userid)
-    (string, motto)
-)
-
-
-int main()
-{
-    static const string http_url = "http://jsonplaceholder.typicode.com/posts";
-    Post my_post = RestClient::Create()->ProcessWithPromiseT<Post>(
-        [&](Context& ctx) {
-        Post post;
-
-        // Get record #1 into a C++ struct.
-        SerializeFromJson(post, ctx.Get(http_url + "/1"));
-
-        // Return the data we received. It will be stored in the
-        // future and fetched by the main thread.
-        return post;
-    }).get();
-
-    cout << "Received post# " << my_post.id
-        << ", userid: " << my_post.userid;
-}
+    auto reply = RequestBuilder(ctx)
+        .Post("http://jsonplaceholder.typicode.com/posts") // URL
+        .Header("X-Client", "RESTC_CPP")                   // Optional header
+        .Data(data_object)                                 // Data object to send
+        .Execute();                                        // Do it!
 
 ```
 
-## Current Status
+## Upload a file to the server
+```C++
+    // Upload a file to a HTTP service
+    reply = RequestBuilder(ctx)
+        .Post("http://example.com/upload")                 // URL
+        .Header("X-Client", "RESTC_CPP")                   // Optional header
+        .Argument("filename", "cute.jpg")                  // Optional URL argument
+        .File("/var/data/cats/cute.jpg")                   // The file to send
+        .Execute();                                        // Do it!
+
+    clog << "Done" << endl;
+```
+
+
+# Current Status
 
 The code is still a bit immature and not properly tested, but capable of executing
 REST requests.
 
-The latest code is tested with Debian "stable" and "testing", Ubuntu "wily"
+The latest code is tested with Debian "testing"
+
+Recent code was tested with Debian "stable" and "testing", Ubuntu "wily"
 and Windows 10 (it should work with Windows Vista and up).
 
-## Features
+# Features
 - Raw GET, POST, PUT and DELETE requests with no data conversions
 - Low level interface to create requests
+- Uses C++ / boost coroutines for application logic
 - High level interface (similar to Java HTTP clients) for convenience
 - Follows redirects without any extra code at the API layer
-- Json serialization to and from native C++ objects
-- All network IO operations are asynchronous trough boost::asio coroutines
+- Json serialization to and from native C++ objects.
+- All network IO operations are asynchronous trough boost::asio
 - Logging trough boost::log or trough your own log macros
 - Connection Pool for fast re-use of existing server connections.
+- Compression (gzip, deflate)
 
-
-
-## Supported development platforms:
+# Supported development platforms:
 - Linux (Debian stable and testing, Ubuntu)
 - Windows 10 (Visual Studio 14 / 2015 update 2)
 
-## Suggested target platforms:
+# Suggested target platforms:
 - Linux
 - OS/X
 - Android (via NDK)
 - Windows Vista and later
 
-
-## Short Term Tasks
-- [x] Implement GET, POST, PUT, DELETE
-- [x] Implement HTTPS
-- [x] Implement proper logging
-- [ ] Json support
- - [x] Deserialization: Simple and nested classes (must be declared with BOOST_FUSION_ADAPT_STRUCT)
- - [x] Deserialization: std::vector of json native datatypes and classes
- - [x] Serialization of the above
- - [x] Serialization / Deserialization: std::deque
- - [ ] Serialization / Deserialization: std::map
-- [x] Unit tests
- - [x] Url parser
- - [x] Json / C++ transformation
- - [x] HTTP header parser
- - [x] HTTP Chunked response / odd cases
- - [x] HTTP Chunked response / Trailer with headers
- - [x] HTTP Chunked ressponse / Data in chunk header
-- [ ] Functional tests
- - [x] Move the current tests to test against a predictible docker container
- - [x] Test connection pool
-  - [x] Connection recycling
-  - [x] Obey server header to keep or close the connection
-  - [x] Limit per endpoint
-  - [x] Total limit
-  - [x] Cleanup (timer)
-  - [x] Connection not recycled if we quit before fetching all data
-  - [x] Override - get new connection no matter limits
+# Short Term Tasks (December 2016)
+- [ ] Json Serialization / Deserialization: std::map
+- Functional tests
  - [ ] Test HTTP GET (list), GET (object), POST (create), PUT (update), DELETE
- - [ ] test GET (list) or a large dataset (10.000 records)
- - [x] test redirect
- - [x] test redirect loop
  - [ ] test 1000 simultaneous sessions
-- [x] Implement connection pool
-- [x] Design a better request interface (easy to use, elegant) especially for querying with objects (POST, PUT)
-- [x] Implement Chunked Reponse handling
- - [x] Handle normal use-cases
- - [x] Handle trailers
-- [ ] Implement Chunked Requests
- - [ ] General support In HTTP Requests module
- - [ ] Async from json Serialization
-- [x] Handle redirects
-- [x] Implement simple File Upload (as body)
-- [ ] Implement simple File Download (from body)
-- [x] Verify that it compiles with Debian Stable
-- [x] Verify that it compiles with Windows 10 / Visual Studio
- - [x] Library and json, unittests, functional tests
- - [x] https (boost::asio/tls 1.60 not compiling with the latest openssl)
-- [ ] Verify that it compiles with OS/X
-- [ ] Implement Form Data encoding (with File Upload)
 - [ ] Implement asynchronous iterators for received data and integrate with json parser.
 - [ ] Implement asynchronous iterators for requests data and integrate with json generator.
 - [ ] Add options to secure TLS connections (avoid weak encryption and verify server certs).
-- [ ] Add compression for the IO stream
-- [ ] Add data-type suitable for representing money (must be able to serialize/deserialize like float/ BigDecimal)
+- [ ] Implement Basic Authentication
+- Implement Proxy support
+ - [ ] HTTP Proxy
+ - [ ] Socks 5
+- Portability
+ - [ ] Debian Stable
+ - [ ] Windows 10 / Visual Studio
+ - [ ] OS/X
+ - [ ] Ubuntu LTS
+
+# Tasks planned for Q1 2017
+- Refactor
+ - [ ] split the json serialization and HTTP client into independent sub-projects
+- Implement Chunked Requests (chained DataWriter interface)
+ - [ ] General support In HTTP Requests module
+ - [ ] Async from json Serialization
+ - [ ] Async from producer callback
+ - [ ] Async from producer loop
+- Improve security
+ - [ ] Put memory constraints on strings and lists in the json deserialization
+- Implement Form Data encoding
+- Portability
+ - [ ] Windows 10 / clang
+ - [ ] Cent OS
+ - [ ] Fedora
+ - [ ] FredeBSD
+ - [ ] OpenBSD
 
 
-## Future maybe someday features
+# Future maybe someday features
 - Json
  - std::set
  - True generic container support (any object that support forward iteration and insert/add)
+- Add data-type suitable for representing money (must be able to serialize deserialize like float/ BigDecimal)
 - Mime content in HTTP body
  - Mime multipart Requests
  - Mime multipart Responses
