@@ -237,7 +237,7 @@ private:
             auto wrapper = make_unique<ConnectionWrapper>(it->second, on_release_);
             idle_.erase(it);
             in_use_.insert(*it);
-            return wrapper;
+            return move(wrapper);
         }
 
         return nullptr;

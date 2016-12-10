@@ -53,7 +53,7 @@ public:
     DataReaderStream(std::unique_ptr<DataReader>&& source)
     : source_{move(source)} {}
 
-     bool IsEof() const {
+     bool IsEof() const override {
          return eof_;
      }
 

@@ -42,6 +42,16 @@ target_link_libraries(readme_tests
 
 add_test(JSON_FUNCTIONAL_TESTS readme_tests)
 
+add_executable(auth_tests AuthTest.cpp)
+target_link_libraries(auth_tests
+    restc-cpp
+    ${DEFAULT_LIBRARIES}
+    UnitTest++
+)
+
+add_test(JSON_FUNCTIONAL_TESTS auth_tests)
+
+
 add_executable(ccache_tests ConnectionCacheTests.cpp)
 target_link_libraries(ccache_tests
     restc-cpp

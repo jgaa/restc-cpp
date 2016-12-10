@@ -1082,7 +1082,6 @@ private:
     serialize_properties properties_;
 };
 
-
 template <typename dataT>
 void SerializeFromJson(dataT& rootData,
                        Reply& reply,

@@ -89,6 +89,30 @@ void second() {
     this_thread::sleep_for(chrono::seconds(5));
 }
 
+void third() {
+
+    auto rest_client = RestClient::Create();
+    rest_client->ProcessWithPromise([&](Context& ctx) {
+        // Here we are again in a co-routine, running in a worker-thread.
+
+        // Asynchronously connect to a server and fetch some data.
+        auto reply = RequestBuilder(ctx)
+            .Get("http://localhost:3001/restricted/posts/1")
+
+            // Authenticate as 'alice' with a very popular password
+            .BasicAuthentication("alice", "12345")
+
+            // Send the request.
+            .Execute();
+
+        // Dump the well protected data
+        cout << "Got: " << reply->GetBodyAsString();
+
+    }).get();
+}
+
+
+
 int main() {
     try {
         cout << "First: " << endl;
@@ -96,6 +120,9 @@ int main() {
 
         cout << "Second: " << endl;
         second();
+
+        cout << "Third: " << endl;
+        third();
 
     } catch(const exception& ex) {
         cerr << "Something threw up: " << ex.what() << endl;

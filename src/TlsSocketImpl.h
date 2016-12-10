@@ -68,30 +68,30 @@ public:
     void AsyncShutdown(boost::asio::yield_context& yield) override {
         ssl_socket_->async_shutdown(yield);
     }
-    
+
     void Close() override {
         if (ssl_socket_->lowest_layer().is_open()) {
             RESTC_CPP_LOG_TRACE << "Closing " << *this;
             ssl_socket_->lowest_layer().close();
         }
     }
-    
-    bool IsOpen() const noexcept {
+
+    bool IsOpen() const noexcept override {
         return ssl_socket_->lowest_layer().is_open();
     }
-    
+
 protected:
     std::ostream& Print(std::ostream& o) const override {
         if (IsOpen()) {
             const auto& socket = GetSocket();
-            return o << "{TlsSocket " 
-                << "socket# " 
+            return o << "{TlsSocket "
+                << "socket# "
                 << static_cast<int>(
                 const_cast<boost::asio::ip::tcp::socket&>(socket).native_handle())
-                << " " << socket.local_endpoint() 
+                << " " << socket.local_endpoint()
                 << " <--> " << socket.remote_endpoint() << '}';
-        }   
-        
+        }
+
         return o << "{TlsSocket (unused/closed)}";
     }
 

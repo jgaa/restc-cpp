@@ -67,8 +67,28 @@ public:
         std::string value;
     };
 
+    struct Auth {
+        Auth() = default;
+        Auth(const Auth&) = default;
+        Auth(Auth&&) = default;
+        Auth(const std::string& authName, const std::string& authPasswd)
+        : name{authName}, passwd{authPasswd} {}
+        ~Auth() {
+            std::memset(&name[0], 0, name.capacity());
+            name.clear();
+            std::memset(&passwd[0], 0, passwd.capacity());
+            passwd.clear();
+        }
+        Auth& operator = (const Auth&) = default;
+        Auth& operator = (Auth&&) = default;
+
+        std::string name;
+        std::string passwd;
+    };
+
     using headers_t = std::map<std::string, std::string, ciLessLibC>;
     using args_t = std::deque<Arg>;
+    using auth_t = Auth;
 
     enum class Type {
         GET,
@@ -154,7 +174,8 @@ public:
            RestClient& owner,
            std::unique_ptr<Body> body = nullptr,
            const boost::optional<args_t>& args = {},
-           const boost::optional<headers_t>& headers = {});
+           const boost::optional<headers_t>& headers = {},
+           const boost::optional<auth_t>& auth = {});
 };
 
 class Reply {
@@ -174,7 +195,11 @@ public:
     /*! Get the unique ID for the connection */
     virtual boost::uuids::uuid GetConnectionId() const = 0;
 
+    /*! Get the HTTP Response code received from the server */
     virtual int GetResponseCode() const = 0;
+
+    /*! Get the HTTP Response received from the server */
+    virtual const HttpResponse& GetHttpResponse() const = 0;
 
     /*! Get the complete data from the server and return it as a string.
      *

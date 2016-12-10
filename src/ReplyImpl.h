@@ -39,6 +39,10 @@ public:
         return response_.status_code;
     }
 
+    const HttpResponse& GetHttpResponse() const override {
+        return response_;
+    }
+
     boost::asio::const_buffers_1 GetSomeData() override;
 
     string GetBodyAsString() override;
@@ -48,7 +52,7 @@ public:
         return !reader_->IsEof();
     }
 
-    boost::uuids::uuid GetConnectionId() const {
+    boost::uuids::uuid GetConnectionId() const override {
         return connection_id_;
     }
 

@@ -55,7 +55,7 @@ public:
     RequestBuilder& Header(std::string name,
                            std::string value) {
         if (!headers_) {
-            headers_ = std::move(Request::headers_t());
+            headers_ = Request::headers_t();
         }
 
         headers_->insert({std::move(name), std::move(value)});
@@ -69,7 +69,7 @@ public:
     RequestBuilder& Argument(std::string name,
                              std::string value) {
         if (!args_) {
-            args_ = std::move(Request::args_t());
+            args_ = Request::args_t();
         }
 
         args_->push_back({move(name), move(value)});
@@ -100,6 +100,14 @@ public:
         return *this;
     }
 
+    RequestBuilder& BasicAuthentication(const std::string name,
+                                        const std::string passwd) {
+        assert(!body_);
+
+        auth_ = Request::auth_t(name, passwd);
+        return *this;
+    }
+
     // Json serialization
     template<typename T>
     RequestBuilder& Data(const T& data) {
@@ -127,7 +135,7 @@ public:
             }
         }
         return Request::Create(
-            url_, type_, ctx_.GetClient(), move(body_), args_, headers_);
+            url_, type_, ctx_.GetClient(), move(body_), args_, headers_, auth_);
     }
 
     std::unique_ptr<Reply> Execute() {
@@ -141,6 +149,7 @@ private:
     Request::Type type_;
     boost::optional<Request::headers_t> headers_;
     boost::optional<Request::args_t> args_;
+    boost::optional<Request::auth_t> auth_;
     std::unique_ptr<Request::Body> body_;
     bool disable_compression_ = false;
 #ifdef DEBUG

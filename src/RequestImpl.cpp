@@ -11,6 +11,7 @@
 #include "restc-cpp/Socket.h"
 #include "restc-cpp/ConnectionPool.h"
 #include "restc-cpp/IoTimer.h"
+#include "restc-cpp/error.h"
 #include "ReplyImpl.h"
 
 using namespace std;
@@ -37,12 +38,15 @@ public:
                 RestClient& owner,
                 std::unique_ptr<Body> body,
                 const boost::optional<args_t>& args,
-                const boost::optional<headers_t>& headers)
+                const boost::optional<headers_t>& headers,
+                const boost::optional<auth_t>& auth = {})
     : url_{url}, parsed_url_{url_.c_str()} , request_type_{requestType}
     , body_{std::move(body)}, owner_{owner}
     {
-        if (args || headers) {
-            properties_ = make_shared<Properties>(*owner_.GetConnectionProperties());
+       if (args || headers || auth) {
+            Properties::ptr_t props = owner_.GetConnectionProperties();
+            assert(props);
+            properties_ = make_shared<Properties>(*props);
 
             if (args) {
                 properties_->args.insert(properties_->args.end(),
@@ -50,9 +54,41 @@ public:
             }
 
             merge_map(headers, properties_->headers);
+
+            if (auth) {
+                SetAuth(*auth);
+            }
+
         } else {
             properties_ = owner_.GetConnectionProperties();
         }
+    }
+
+    // modified from http://stackoverflow.com/questions/180947/base64-decode-snippet-in-c
+    static std::string Base64Encode(const std::string &in) {
+        static const string alphabeth {"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"};
+        string out;
+
+        int val = 0, valb = -6;
+        for (const uint8_t c : in) {
+            val = (val<<8) + c;
+            valb += 8;
+            while (valb>=0) {
+                out.push_back(alphabeth[(val>>valb)&0x3F]);
+                valb-=6;
+            }
+        }
+        if (valb>-6) out.push_back(alphabeth[((val<<8)>>(valb+8))&0x3F]);
+        while (out.size()%4) out.push_back('=');
+        return out;
+    }
+
+    void SetAuth(const Auth& auth) {
+        static const string authorization{"Authorization"};
+        std::string pre_base = auth.name + ':' + auth.passwd;
+        properties_->headers[authorization] = "Basic " + Base64Encode(pre_base);
+        std::memset(&pre_base[0], 0, pre_base.capacity());
+        pre_base.clear();
     }
 
     const Properties& GetProperties() const override {
@@ -100,6 +136,16 @@ public:
 
 
 private:
+    void ValidateReply(const Reply& reply) {
+        const auto& response = reply.GetHttpResponse();
+        if (response.status_code > 299) switch(response.status_code) {
+            case 401:
+                throw AuthenticationException(response);
+            default:
+                throw RequestFailedWithErrorException(response);
+        }
+    }
+
     std::string BuildOutgoingRequest() {
         static const std::string crlf{"\r\n"};
         static const std::string column{": "};
@@ -297,12 +343,14 @@ private:
                 throw RedirectException(http_code, *redirect_location);
             }
 
+            ValidateReply(*reply);
+
             /* Return the reply. At this time the reply headers and body
              * is returned. However, the body may or may not be
              * received.
              */
 
-            return reply;
+            return move(reply);
         }
 
         throw runtime_error("Failed to connect");
@@ -327,9 +375,10 @@ Request::Create(const std::string& url,
                 RestClient& owner,
                 std::unique_ptr<Body> body,
                 const boost::optional<args_t>& args,
-                const boost::optional<headers_t>& headers) {
+                const boost::optional<headers_t>& headers,
+                const boost::optional<auth_t>& auth) {
 
-    return make_unique<RequestImpl>(url, requestType, owner, move(body), args, headers);
+    return make_unique<RequestImpl>(url, requestType, owner, move(body), args, headers, auth);
 }
 
 } // restc_cpp

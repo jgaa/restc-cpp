@@ -68,7 +68,7 @@ proper C++14 support - and hana was yet not working with their compiler).
 In the fall / winter of 2016, I threw some more hours into the project and added
 features that was not really required for the problem I started out to solve, but who
 are required in a general purpose C++ REST library (like compression, HTTP redirects,
-easy to use request builder, tests and demo code).
+authentication, easy to use request builder, tests and demo code).
 
 # Dependencies
 Restc-cpp depends on C++14 with its standard libraries and:
@@ -373,6 +373,29 @@ int main()
     clog << "Done" << endl;
 ```
 
+## Send a request using HTTP Basic Authentication
+```C++
+
+    auto rest_client = RestClient::Create();
+    rest_client->ProcessWithPromise([&](Context& ctx) {
+        // Here we are again in a co-routine, running in a worker-thread.
+
+        // Asynchronously connect to a server and fetch some data.
+        auto reply = RequestBuilder(ctx)
+            .Get("http://localhost:3001/restricted/posts/1")
+
+            // Authenticate as 'alice' with a very popular password
+            .BasicAuthentication("alice", "12345")
+
+            // Send the request.
+            .Execute();
+
+        // Dump the well protected data
+        cout << "Got: " << reply->GetBodyAsString();
+
+    }).get();
+
+```
 
 # Current Status
 
@@ -389,7 +412,8 @@ and Windows 10 (it should work with Windows Vista and up).
 - Low level interface to create requests
 - Uses C++ / boost coroutines for application logic
 - High level Request Builder interface (similar to Java HTTP Clients) for convenience
-- Follows redirects without any extra code at the API layer
+- HTTP Redirects
+- HTTP Basic Authentication
 - All network IO operations are asynchronous trough boost::asio
 - Logging trough boost::log or trough your own log macros
 - Connection Pool for fast re-use of existing server connections.
@@ -410,15 +434,20 @@ and Windows 10 (it should work with Windows Vista and up).
 - Windows Vista and later
 
 # Short Term Tasks (December 2016)
-- [ ] Json Serialization / Deserialization: std::map
-- Functional tests
- - [ ] Test HTTP GET (list), GET (object), POST (create), PUT (update), DELETE
- - [ ] test 1000 simultaneous sessions
-- [ ] Implement asynchronous iterators for received data and integrate with json parser.
-- [ ] Implement Basic Authentication
+- [x] Implement Basic Authentication
 - Implement Proxy support
  - [ ] HTTP Proxy
  - [ ] Socks 5
+- Error handling
+ - [ ] Use finer graded exceptions
+ - [ ] Test that errors in the lower layers are visible on the API level (for example if decompression fails)
+- Implement asynchronous iterators for received data and integrate with json parser.
+  - [ ] For long lists of data items, allow us to iterate over them rather than de-serialize as std:::list
+  - [ ] Implement generic support for 'pages' of data, where we re-query for more data in the background
+- Functional tests
+ - [ ] Test HTTP GET (list), GET (object), POST (create), PUT (update), DELETE
+ - [ ] test 1000 simultaneous sessions
+ - [ ] Test HTTPS
 - Portability
  - [ ] Debian Stable
  - [ ] Windows 10 / Visual Studio

@@ -56,30 +56,30 @@ public:
     void AsyncShutdown(boost::asio::yield_context& yield) override {
         // Do nothing.
     }
-    
+
     void Close() override {
         if (socket_.is_open()) {
             RESTC_CPP_LOG_TRACE << "Closing " << *this;
             socket_.close();
         }
     }
-    
-    bool IsOpen() const noexcept {
+
+    bool IsOpen() const noexcept override {
         return socket_.is_open();
     }
-    
+
 protected:
     std::ostream& Print(std::ostream& o) const override {
         if (IsOpen()) {
             const auto& socket = GetSocket();
-            return o << "{Socket " 
-                << "socket# " 
+            return o << "{Socket "
+                << "socket# "
                 << static_cast<int>(
                 const_cast<boost::asio::ip::tcp::socket&>(socket).native_handle())
-                << " " << socket.local_endpoint() 
+                << " " << socket.local_endpoint()
                 << " <--> " << socket.remote_endpoint() << '}';
-        }   
-        
+        }
+
         return o << "{Socket (unused/closed)}";
     }
 
