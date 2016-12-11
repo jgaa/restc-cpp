@@ -51,7 +51,7 @@ object oriented implementation. When I started planning the C++ implementation o
 SDK, I found no suitable, free libraries. I could not even find a proper HTTP Client
 implementation(!). (I could have solved the problem using QT - but i found it
 overkill to use a huge GUI framework for C++ code that are most likely to run
-in high performance servers - and that may end up projects using some other
+in high performance servers - and that may end up in projects using some other
 C++ framework that can't coexist with QT).
 
 I had once, years before, done a C++ REST Client for an early
@@ -353,7 +353,7 @@ int main()
     data_object.motto    = "Carpe Diem!";
 
     auto reply = RequestBuilder(ctx)
-        .Post(""https://example.com/api/data") // URL
+        .Post("https://example.com/api/data") // URL
         .Header("X-Client", "RESTC_CPP")                   // Optional header
         .Data(data_object)                                 // Data object to send
         .Execute();                                        // Do it!
@@ -435,12 +435,10 @@ and Windows 10 (it should work with Windows Vista and up).
 
 # Short Term Tasks (December 2016)
 - [x] Implement Basic Authentication
-- Implement Proxy support
- - [ ] HTTP Proxy
- - [ ] Socks 5
+- [x] Implement HTTP Proxy support
 - Error handling
  - [ ] Use finer graded exceptions
- - [ ] Test that errors in the lower layers are visible on the API level (for example if decompression fails)
+ - [x] Test that errors in the lower layers are visible on the API level
 - Implement asynchronous iterators for received data and integrate with json parser.
   - [ ] For long lists of data items, allow us to iterate over them rather than de-serialize as std:::list
   - [ ] Implement generic support for 'pages' of data, where we re-query for more data in the background
@@ -475,6 +473,8 @@ and Windows 10 (it should work with Windows Vista and up).
  - [ ] FreeBSD
  - [ ] OpenBSD
 
+# Tasks planned for Q2 2017
+ - HTTP 2 support
 
 # Future maybe someday features
 - Json
@@ -487,3 +487,5 @@ and Windows 10 (it should work with Windows Vista and up).
 - Circuit Breaker (Fail fast for hosts that don't work)
 - Bulkheads (Use separate connection pools for different services)
 - Make performance comparisons with similar REST libraries for Java, Python and Ruby
+- Improved Proxy support
+ - Socks 5
