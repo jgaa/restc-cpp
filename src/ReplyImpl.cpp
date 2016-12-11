@@ -3,6 +3,7 @@
 
 #include "restc-cpp/logging.h"
 #include "restc-cpp/helper.h"
+#include "restc-cpp/error.h"
 #include "ReplyImpl.h"
 
 using namespace std;
@@ -52,7 +53,7 @@ void ReplyImpl::StartReceiveFromServer(DataReader::ptr_t&& reader) {
     static const std::string chunked_name{"chunked"};
 
     if (reader_) {
-        throw runtime_error("StartReceiveFromServer() is already called.");
+        throw RestcCppException("StartReceiveFromServer() is already called.");
     }
 
     assert(reader);
@@ -111,7 +112,7 @@ void ReplyImpl::HandleDecompression() {
         } else {
             RESTC_CPP_LOG_ERROR << "Unsupported compression: '" << *it
                 << "' from server on " << *connection_;
-            throw std::runtime_error("Unsupported compression.");
+            throw NotSupportedException("Unsupported compression.");
         }
     }
 }

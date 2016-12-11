@@ -5,6 +5,7 @@
 #include <boost/utility/string_ref.hpp>
 
 #include "restc-cpp.h"
+#include "error.h"
 
 namespace restc_cpp {
 
@@ -69,7 +70,7 @@ public:
      */
     char Getc() {
         if (eof_) {
-            throw std::runtime_error("Getc(): EOF");
+            throw ParseException("Getc(): EOF");
         }
 
         Fetch();

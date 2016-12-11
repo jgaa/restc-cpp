@@ -37,6 +37,7 @@
 #include "restc-cpp/logging.h"
 #include "restc-cpp/RapidJsonReader.h"
 #include "restc-cpp/internals/for_each_member.hpp"
+#include "restc-cpp/error.h"
 
 namespace restc_cpp {
 
@@ -215,7 +216,7 @@ template <typename varT, typename valT,
         >::type* = nullptr>
 void assign_value(varT& var, const valT& val) {
     assert(false);
-    throw std::runtime_error("assign_value: Invalid data conversion");
+    throw ParseException("assign_value: Invalid data conversion");
 }
 
 
@@ -226,7 +227,7 @@ void assign_value(varT& var, const valT& val) {
 template <typename varT, typename valT>
 void assign_value(varT var, valT val) {
     assert(false);
-    throw std::runtime_error("assign_value: Invalid data conversion");
+    throw ParseException("assign_value: Invalid data conversion");
 }
 
 template <>

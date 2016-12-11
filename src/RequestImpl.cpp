@@ -119,7 +119,7 @@ public:
             } catch(RedirectException& ex) {
                 if ((redirects >= 0)
                     && (++redirects > properties_->maxRedirects)) {
-                    throw runtime_error("Too many redirects.");
+                    throw ConstraintException("Too many redirects.");
                 }
 
                 RESTC_CPP_LOG_DEBUG << "Redirecting ("
@@ -342,7 +342,7 @@ private:
                         << *fixed_content_lenght_
                         << " but sent " << GetContentBytesSent()
                         << " content bytes.";
-                    throw runtime_error("Sent incorrect payload size");
+                    throw ProtocolException("Sent incorrect payload size");
                 }
             }
 
@@ -357,7 +357,7 @@ private:
             if (http_code == 301 || http_code == 302) {
                 auto redirect_location = reply->GetHeader("Location");
                 if (!redirect_location) {
-                    throw runtime_error("No Location header in redirect reply");
+                    throw ProtocolException("No Location header in redirect reply");
                 }
                 throw RedirectException(http_code, *redirect_location);
             }
@@ -372,7 +372,7 @@ private:
             return move(reply);
         }
 
-        throw runtime_error("Failed to connect");
+        throw FailedToConnectException("Failed to connect");
     }
 
     std::string url_;

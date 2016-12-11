@@ -1,6 +1,7 @@
 
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/DataReader.h"
+#include "restc-cpp/error.h"
 
 using namespace std;
 
@@ -50,11 +51,11 @@ private:
             // Eat padding CRLF
             char ch;
             if ((ch = stream_.Getc()) != '\r') {
-                throw runtime_error("Chunk: Missing padding CR!");
+                throw ParseException("Chunk: Missing padding CR!");
             }
 
             if ((ch = stream_.Getc()) != '\n') {
-                throw runtime_error("Chunk: Missing padding LF!");
+                throw ParseException("Chunk: Missing padding LF!");
             }
         }
 
@@ -66,7 +67,7 @@ private:
         char ch =  stream_.Getc();
 
         if (!isxdigit(ch)) {
-            throw runtime_error("Missing chunk-length in new chunk.");
+            throw ParseException("Missing chunk-length in new chunk.");
         }
 
         for(; isxdigit(ch); ch= stream_.Getc()) {
@@ -84,11 +85,11 @@ private:
             ;
 
         if (ch != '\r') {
-            throw runtime_error("Missing CR in first chunk line");
+            throw ParseException("Missing CR in first chunk line");
         }
 
         if ((ch = stream_.Getc()) != '\n') {
-            throw runtime_error("Missing LF in first chunk line");
+            throw ParseException("Missing LF in first chunk line");
         }
 
         return chunk_len;

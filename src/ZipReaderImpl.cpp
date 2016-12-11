@@ -19,7 +19,7 @@ public:
         const auto wsize = (format == Format::GZIP) ? (MAX_WBITS | 16) : MAX_WBITS;
 
         if (inflateInit2(&strm_, wsize) != Z_OK) {
-            throw runtime_error("Failed to initialize decompression");
+            throw DecompressException("Failed to initialize decompression");
         }
     }
 
@@ -50,7 +50,7 @@ public:
                     boost::asio::buffer_size(buffers)};
 
                 if (src.size() == 0) {
-                    throw runtime_error("Decompression failed - premature end of stream.");
+                    throw DecompressException("Decompression failed - premature end of stream.");
                 }
             }
 
@@ -100,7 +100,7 @@ private:
                     errmsg += ": ";
                     errmsg += strm_.msg;
                 }
-                throw runtime_error(errmsg);
+                throw DecompressException(errmsg);
             }
             case Z_STREAM_END:
                 done_ = true;
@@ -113,7 +113,7 @@ private:
                     errmsg += ": ";
                     errmsg += strm_.msg;
                 }
-                throw runtime_error(errmsg);
+                throw DecompressException(errmsg);
             }
         }
 

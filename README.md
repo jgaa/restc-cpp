@@ -462,7 +462,7 @@ and Windows 10 (it should work with Windows Vista and up).
 - [x] Implement Basic Authentication
 - [x] Implement HTTP Proxy support
 - Error handling
- - [ ] Use finer graded exceptions
+ - [x] Use finer graded exceptions
  - [x] Test that errors in the lower layers are visible on the API level
 - Implement asynchronous iterators for received data and integrate with json parser.
   - [ ] For long lists of data items, allow us to iterate over them rather than de-serialize as std:::list

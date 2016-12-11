@@ -1,5 +1,6 @@
 
 #include "restc-cpp/DataReader.h"
+#include "restc-cpp/error.h"
 
 using namespace std;
 
@@ -12,7 +13,7 @@ void DataReaderStream::Fetch() {
         end_ = curr_ + boost::asio::buffer_size(buf);
         eof_ = curr_ == end_;
         if (eof_) {
-            throw std::runtime_error("Fetch(): EOF");
+            throw ProtocolException("Fetch(): EOF");
         }
     }
 }
@@ -51,19 +52,19 @@ void DataReaderStream::ReadServerResponse(Reply::HttpResponse& response)
     for(ch = Getc(); ch != ' '; ch = Getc()) {
         value += ch;
         if (value.size() > 16) {
-            throw std::runtime_error("ReadHeaders(): Too much HTTP version!");
+            throw ProtocolException("ReadHeaders(): Too much HTTP version!");
         }
     }
     if (ch != ' ') {
-        throw std::runtime_error("ReadHeaders(): No space after HTTP version");
+        throw ProtocolException("ReadHeaders(): No space after HTTP version");
     }
     if (value.empty()) {
-        throw std::runtime_error("ReadHeaders(): No HTTP version");
+        throw ProtocolException("ReadHeaders(): No HTTP version");
     }
     if (ciEqLibC()(value, http_1_1)) {
         ; // Do nothing HTTP 1.1 is the default value
     } else {
-        throw std::runtime_error(
+        throw ProtocolException(
             string("ReadHeaders(): unsupported HTTP version: ") + value);
     }
 
@@ -72,11 +73,11 @@ void DataReaderStream::ReadServerResponse(Reply::HttpResponse& response)
     for(ch = Getc(); ch != ' '; ch = Getc()) {
         value += ch;
         if (value.size() > 3) {
-            throw std::runtime_error("ReadHeaders(): Too much HTTP response code!");
+            throw ProtocolException("ReadHeaders(): Too much HTTP response code!");
         }
     }
     if (value.size() != 3) {
-        throw std::runtime_error(
+        throw ProtocolException(
             string("ReadHeaders(): Incorrect length of HTTP response code!: ")
             + value);
     }
@@ -84,7 +85,7 @@ void DataReaderStream::ReadServerResponse(Reply::HttpResponse& response)
     response.status_code = stoi(value);
 
     if (ch != ' ') {
-        throw std::runtime_error("ReadHeaders(): No space after HTTP response code");
+        throw ProtocolException("ReadHeaders(): No space after HTTP response code");
     }
 
     // Get response text
@@ -92,7 +93,7 @@ void DataReaderStream::ReadServerResponse(Reply::HttpResponse& response)
     for(ch = Getc(); ch != '\r'; ch = Getc()) {
         value += ch;
         if (value.size() > 256) {
-            throw std::runtime_error("ReadHeaders(): Too long HTTP response phrase!");
+            throw ConstraintException("ReadHeaders(): Too long HTTP response phrase!");
         }
     }
 
@@ -100,7 +101,7 @@ void DataReaderStream::ReadServerResponse(Reply::HttpResponse& response)
     assert(ch == '\r');
     ch = Getc();
     if (ch != '\n') {
-        throw std::runtime_error("ReadHeaders(): No CR/LF after HTTP response phrase!");
+        throw ProtocolException("ReadHeaders(): No CR/LF after HTTP response phrase!");
     }
 
     response.reason_phrase = move(value);
@@ -121,7 +122,7 @@ void DataReaderStream::ReadHeaderLines(const add_header_fn_t& addHeader) {
             }
             name += ch;
             if (name.size() > 256) {
-                throw runtime_error("Chunk Trailer: Header name too long!");
+                throw ConstraintException("Chunk Trailer: Header name too long!");
             }
         }
 
@@ -130,18 +131,18 @@ void DataReaderStream::ReadHeaderLines(const add_header_fn_t& addHeader) {
         }
 
         if (ch != '\n') {
-            throw runtime_error("Chunk Trailer: Missing LF after parse!");
+            throw ProtocolException("Chunk Trailer: Missing LF after parse!");
         }
 
         if (name.empty()) {
             if (!value.empty()) {
-                throw runtime_error("Chunk Trailer: Header value without name!");
+                throw ProtocolException("Chunk Trailer: Header value without name!");
             }
             return; // An empty line marks the end of the trailer
         }
 
         if (++num_headers_ > 256) {
-            throw runtime_error("Chunk Trailer: Too many lines in header!");
+            throw ConstraintException("Chunk Trailer: Too many lines in header!");
         }
         addHeader(move(name), move(value));
         name.clear();
@@ -160,16 +161,16 @@ std::string DataReaderStream::GetHeaderValue() {
         for (; ch != '\r'; ch = Getc()) {
             value += ch;
             if (value.size() > (1024 * 4)) {
-                throw runtime_error("Chunk Trailer: Header value too long!");
+                throw ConstraintException("Chunk Trailer: Header value too long!");
             }
         }
 
         if (ch != '\r') {
-            throw runtime_error("Chunk Trailer: Missing CR!");
+            throw ProtocolException("Chunk Trailer: Missing CR!");
         }
 
         if ((ch = Getc()) != '\n') {
-            throw runtime_error("Chunk Trailer: Missing LF!");
+            throw ProtocolException("Chunk Trailer: Missing LF!");
         }
 
         // Peek

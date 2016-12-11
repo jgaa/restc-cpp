@@ -2,7 +2,7 @@
 #include "restc-cpp/Connection.h"
 #include "restc-cpp/Socket.h"
 #include "restc-cpp/DataReader.h"
-#include <boost/make_unique.hpp>
+#include "restc-cpp/error.h"
 
 using namespace std;
 
@@ -30,7 +30,7 @@ public:
 
         if ((static_cast<int64_t>(remaining_)
             - static_cast<int64_t>(bytes)) < 0) {
-            throw runtime_error("Body-size exceeds content-size");
+            throw ProtocolException("Body-size exceeds content-size");
         }
         remaining_ -= bytes;
         return buffer;

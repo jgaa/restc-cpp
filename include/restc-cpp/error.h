@@ -28,9 +28,49 @@ struct RequestFailedWithErrorException : public RestcCppException {
 struct AuthenticationException: public RequestFailedWithErrorException {
 
     AuthenticationException(const Reply::HttpResponse& response)
-    : RequestFailedWithErrorException(response)
-    {
-    }
+    : RequestFailedWithErrorException(response) { }
+};
+
+struct ParseException : public RestcCppException
+{
+    ParseException(const std::string& cause)
+    : RestcCppException(cause) {}
+};
+
+struct ProtocolException : public RestcCppException
+{
+    ProtocolException(const std::string& cause)
+    : RestcCppException(cause) {}
+};
+
+struct ConstraintException : public RestcCppException
+{
+    ConstraintException(const std::string& cause)
+    : RestcCppException(cause) {}
+};
+
+struct NotSupportedException : public RestcCppException
+{
+    NotSupportedException(const std::string& cause)
+    : RestcCppException(cause) {}
+};
+
+struct CommunicationException : public RestcCppException
+{
+    CommunicationException(const std::string& cause)
+    : RestcCppException(cause) {}
+};
+
+struct FailedToConnectException : public CommunicationException
+{
+    FailedToConnectException(const std::string& cause)
+    : CommunicationException(cause) {}
+};
+
+struct DecompressException : public RestcCppException
+{
+    DecompressException(const std::string& cause)
+    : RestcCppException(cause) {}
 };
 
 } // namespace
