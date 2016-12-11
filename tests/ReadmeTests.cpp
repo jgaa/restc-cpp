@@ -113,10 +113,12 @@ void third() {
 
 void forth() {
 
+    // Add the proxy information to the properties used by the client
     Request::Properties properties;
     properties.proxy.type = Request::Proxy::Type::HTTP;
     properties.proxy.address = "http://127.0.0.1:3003";
 
+    // Create the client with our configuration
     auto rest_client = RestClient::Create(properties);
     rest_client->ProcessWithPromise([&](Context& ctx) {
         // Here we are again in a co-routine, running in a worker-thread.
@@ -124,10 +126,11 @@ void forth() {
         // Asynchronously connect to a server trough a HTTP proxy and fetch some data.
         auto reply = RequestBuilder(ctx)
             .Get("http://fwd/normal/posts/1")
+
             // Send the request.
             .Execute();
 
-        // Dump the well protected data
+        // Dump the data
         cout << "Got: " << reply->GetBodyAsString();
 
     }).get();
@@ -137,14 +140,14 @@ void forth() {
 
 int main() {
     try {
-//         cout << "First: " << endl;
-//         first();
-//
-//         cout << "Second: " << endl;
-//         second();
-//
-//         cout << "Third: " << endl;
-//         third();
+        cout << "First: " << endl;
+        first();
+
+        cout << "Second: " << endl;
+        second();
+
+        cout << "Third: " << endl;
+        third();
 
         cout << "Forth: " << endl;
         forth();
