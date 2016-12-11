@@ -149,12 +149,19 @@ private:
     std::string BuildOutgoingRequest() {
         static const std::string crlf{"\r\n"};
         static const std::string column{": "};
+        static const string host{"Host"};
 
         std::ostringstream request_buffer;
 
         // Build the request-path
-        request_buffer << Verb(request_type_) << ' '
-            << parsed_url_.GetPath().to_string();
+        request_buffer << Verb(request_type_) << ' ';
+
+        if (properties_->proxy.type == Request::Proxy::Type::HTTP) {
+            request_buffer << parsed_url_.GetProtocolName() << parsed_url_.GetHost();
+        }
+
+        request_buffer << parsed_url_.GetPath().to_string();
+
 
         // Add arguments to the path as ?name=value&name=value...
         bool first_arg = true;
@@ -170,6 +177,7 @@ private:
                 request_buffer << '&';
             }
 
+            // TODO: Escape letters
             request_buffer << arg.name<< '=' << arg.value;
         }
 
@@ -204,6 +212,21 @@ private:
         return request_buffer.str();
     }
 
+    boost::asio::ip::tcp::resolver::query GetRequestEndpoint() {
+        if (properties_->proxy.type == Request::Proxy::Type::HTTP) {
+            Url proxy {properties_->proxy.address.c_str()};
+
+            RESTC_CPP_LOG_TRACE << "Using HTTP Proxy at: "
+                << proxy.GetHost() << ':' << proxy.GetPort();
+
+            return { proxy.GetHost().to_string(),
+                proxy.GetPort().to_string()};
+        }
+
+        return { parsed_url_.GetHost().to_string(),
+            parsed_url_.GetPort().to_string()};
+    }
+
     unique_ptr<Reply> DoExecute(Context& ctx) {
         const Connection::Type protocol_type =
             (parsed_url_.GetProtocol() == Url::Protocol::HTTPS)
@@ -226,14 +249,10 @@ private:
         dirty_ = true;
         boost::asio::ip::tcp::resolver resolver(owner_.GetIoService());
         // Resolve the hostname
-        const boost::asio::ip::tcp::resolver::query query{
-            parsed_url_.GetHost().to_string(),
-            parsed_url_.GetPort().to_string()};
+        const auto query = GetRequestEndpoint();
 
-        {
-            RESTC_CPP_LOG_TRACE << "Resolving " << query.host_name() << ":"
-                << query.service_name();
-        }
+        RESTC_CPP_LOG_TRACE << "Resolving " << query.host_name() << ":"
+            << query.service_name();
 
         auto address_it = resolver.async_resolve(query,ctx.GetYield());
         decltype(address_it) addr_end;

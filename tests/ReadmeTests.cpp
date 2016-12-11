@@ -111,18 +111,43 @@ void third() {
     }).get();
 }
 
+void forth() {
+
+    Request::Properties properties;
+    properties.proxy.type = Request::Proxy::Type::HTTP;
+    properties.proxy.address = "http://127.0.0.1:3003";
+
+    auto rest_client = RestClient::Create(properties);
+    rest_client->ProcessWithPromise([&](Context& ctx) {
+        // Here we are again in a co-routine, running in a worker-thread.
+
+        // Asynchronously connect to a server trough a HTTP proxy and fetch some data.
+        auto reply = RequestBuilder(ctx)
+            .Get("http://fwd/normal/posts/1")
+            // Send the request.
+            .Execute();
+
+        // Dump the well protected data
+        cout << "Got: " << reply->GetBodyAsString();
+
+    }).get();
+}
+
 
 
 int main() {
     try {
-        cout << "First: " << endl;
-        first();
+//         cout << "First: " << endl;
+//         first();
+//
+//         cout << "Second: " << endl;
+//         second();
+//
+//         cout << "Third: " << endl;
+//         third();
 
-        cout << "Second: " << endl;
-        second();
-
-        cout << "Third: " << endl;
-        third();
+        cout << "Forth: " << endl;
+        forth();
 
     } catch(const exception& ex) {
         cerr << "Something threw up: " << ex.what() << endl;

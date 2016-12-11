@@ -86,6 +86,12 @@ public:
         std::string passwd;
     };
 
+    struct Proxy {
+        enum class Type { NONE, HTTP };
+        Type type = Type::NONE;
+        std::string address;
+    };
+
     using headers_t = std::map<std::string, std::string, ciLessLibC>;
     using args_t = std::deque<Arg>;
     using auth_t = Auth;
@@ -111,6 +117,7 @@ public:
         int cacheCleanupIntervalSeconds = 3;
         headers_t headers;
         args_t args;
+        Proxy proxy;
     };
 
     // TODO: Switch to interface and may be specialized implementations
