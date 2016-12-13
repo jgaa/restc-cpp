@@ -140,17 +140,17 @@ void forth() {
 
 int main() {
     try {
-//         cout << "First: " << endl;
-//         first();
+        cout << "First: " << endl;
+        first();
 
         cout << "Second: " << endl;
         second();
 
-//         cout << "Third: " << endl;
-//         third();
-//
-//         cout << "Forth: " << endl;
-//         forth();
+        cout << "Third: " << endl;
+        third();
+
+        cout << "Forth: " << endl;
+        forth();
 
     } catch(const exception& ex) {
         cerr << "Something threw up: " << ex.what() << endl;

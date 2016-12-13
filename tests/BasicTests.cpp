@@ -76,6 +76,7 @@ void DoSomethingInteresting(Context& ctx) {
         .Header("X-Client-Purpose", "Testing")
         .Header("Accept", "*/*")
         .Argument("id", 1)
+        .Argument("test some $ stuff", "oh my my")
         .Execute();
 
     cout << "Got: " << repl->GetBodyAsString() << endl;

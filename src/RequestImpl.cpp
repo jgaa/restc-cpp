@@ -2,6 +2,7 @@
 #include <fstream>
 #include <thread>
 #include <future>
+#include <bitset>
 
 #include <boost/utility/string_ref.hpp>
 
@@ -146,6 +147,45 @@ private:
         }
     }
 
+    static std::bitset<255> GetNormalCh() {
+        std::bitset<255> bits;
+
+        for(uint8_t ch = 0; ch < bits.size(); ++ch) {
+            if ((ch >= '0' && ch <= '9')
+                || (ch >= 'a' && ch <= 'z')
+                || (ch >= 'A' && ch <= 'Z')
+                || ch == '-' || ch == '_' || ch == '.'
+                || ch == '!' || ch == '~' || ch == '*'
+                || ch == '\'' || ch == '(' || ch == ')'
+                || ch == '/')
+
+            {
+                bits[ch] = true;
+            }
+        }
+
+        return bits;
+    }
+
+    std::string UrlEncode(const boost::string_ref& src) {
+        static const string hex{"0123456789ABCDEF"};
+        static const std::bitset<255> normal_ch = GetNormalCh();
+        std::string rval;
+        rval.reserve(src.size());
+
+
+        for(auto ch : src) {
+            if (normal_ch[static_cast<uint8_t>(ch)]) {
+                rval += ch;
+            } else {
+                rval += '%';
+                rval += hex[(ch >> 4) & 0x0f];
+                rval += hex[ch & 0x0f];
+            }
+        }
+        return rval;
+    }
+
     std::string BuildOutgoingRequest() {
         static const std::string crlf{"\r\n"};
         static const std::string column{": "};
@@ -160,13 +200,12 @@ private:
             request_buffer << parsed_url_.GetProtocolName() << parsed_url_.GetHost();
         }
 
-        request_buffer << parsed_url_.GetPath().to_string();
+        request_buffer << UrlEncode(parsed_url_.GetPath());
 
 
         // Add arguments to the path as ?name=value&name=value...
         bool first_arg = true;
         for(const auto& arg : properties_->args) {
-            // TODO: Add escaping of strings
             if (first_arg) {
                 first_arg = false;
                 if (!parsed_url_.GetPath().ends_with('/')) {
@@ -177,8 +216,7 @@ private:
                 request_buffer << '&';
             }
 
-            // TODO: Escape letters
-            request_buffer << arg.name<< '=' << arg.value;
+            request_buffer << UrlEncode(arg.name) << '=' << UrlEncode(arg.value);
         }
 
         request_buffer << " HTTP/1.1" << crlf;
