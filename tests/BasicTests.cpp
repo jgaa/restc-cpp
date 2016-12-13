@@ -37,77 +37,74 @@ const string https_url = "https://localhost:3002/posts";
 
 void DoSomethingInteresting(Context& ctx) {
 
-    try {
-        // Asynchronously fetch the entire data-set, and convert it from json
-        // to C++ objects was we go.
-        // We expcet a list of Post objects
-        list<Post> posts_list;
-        SerializeFromJson(posts_list, ctx.Get(http_url));
 
-        // Just dump the data.
-        for(const auto& post : posts_list) {
-            RESTC_CPP_LOG_INFO << "Post id=" << post.id << ", title: " << post.motto;
-        }
+    // Asynchronously fetch the entire data-set, and convert it from json
+    // to C++ objects was we go.
+    // We expcet a list of Post objects
+    list<Post> posts_list;
+    SerializeFromJson(posts_list, ctx.Get(http_url));
 
-        // Asynchronously connect to server and POST data.
-        auto repl = ctx.Post(http_url, "{\"test\":\"teste\"}");
+    // Just dump the data.
+    for(const auto& post : posts_list) {
+        RESTC_CPP_LOG_INFO << "Post id=" << post.id << ", title: " << post.motto;
+    }
 
-        // Asynchronously fetch the entire data-set and return it as a string.
-        auto json = repl->GetBodyAsString();
-        RESTC_CPP_LOG_INFO << "Received POST data: " << json;
+    // Asynchronously connect to server and POST data.
+    auto repl = ctx.Post(http_url, "{\"test\":\"teste\"}");
 
-
-        // Use RequestBuilder to fetch everything
-        repl = RequestBuilder(ctx)
-            .Get(http_url)
-            .Header("X-Client", "RESTC_CPP")
-            .Header("X-Client-Purpose", "Testing")
-            .Header("Accept", "*/*")
-            .Execute();
-
-        string body = repl->GetBodyAsString();
-        cout << "Got compressed list: " << body << endl;
-        repl.reset();
-
-        // Use RequestBuilder to fetch a record
-        repl = RequestBuilder(ctx)
-            .Get(http_url)
-            .Header("X-Client", "RESTC_CPP")
-            .Header("X-Client-Purpose", "Testing")
-            .Header("Accept", "*/*")
-            .Argument("id", 1)
-            .Execute();
-
-        cout << "Got: " << repl->GetBodyAsString() << endl;
-        repl.reset();
-
-        // Use RequestBuilder to fetch a record without compression
-        repl = RequestBuilder(ctx)
-            .Get(http_url)
-            .Header("X-Client", "RESTC_CPP")
-            .Header("X-Client-Purpose", "Testing")
-            .Header("Accept", "*/*")
-            .DisableCompression()
-            .Argument("id", 2)
-            .Execute();
-
-        cout << "Got: " << repl->GetBodyAsString() << endl;
-        repl.reset();
-
-        // Use RequestBuilder to post a record
-        Post data_object;
-        data_object.username = "testid";
-        data_object.motto = "Carpe diem";
-        repl = RequestBuilder(ctx)
-            .Post(http_url)
-            .Header("X-Client", "RESTC_CPP")
-            .Data(data_object)
-            .Execute();
-
-        repl.reset();
+    // Asynchronously fetch the entire data-set and return it as a string.
+    auto json = repl->GetBodyAsString();
+    RESTC_CPP_LOG_INFO << "Received POST data: " << json;
 
 
+    // Use RequestBuilder to fetch everything
+    repl = RequestBuilder(ctx)
+        .Get(http_url)
+        .Header("X-Client", "RESTC_CPP")
+        .Header("X-Client-Purpose", "Testing")
+        .Header("Accept", "*/*")
+        .Execute();
 
+    string body = repl->GetBodyAsString();
+    cout << "Got compressed list: " << body << endl;
+    repl.reset();
+
+    // Use RequestBuilder to fetch a record
+    repl = RequestBuilder(ctx)
+        .Get(http_url)
+        .Header("X-Client", "RESTC_CPP")
+        .Header("X-Client-Purpose", "Testing")
+        .Header("Accept", "*/*")
+        .Argument("id", 1)
+        .Execute();
+
+    cout << "Got: " << repl->GetBodyAsString() << endl;
+    repl.reset();
+
+    // Use RequestBuilder to fetch a record without compression
+    repl = RequestBuilder(ctx)
+        .Get(http_url)
+        .Header("X-Client", "RESTC_CPP")
+        .Header("X-Client-Purpose", "Testing")
+        .Header("Accept", "*/*")
+        .DisableCompression()
+        .Argument("id", 2)
+        .Execute();
+
+    cout << "Got: " << repl->GetBodyAsString() << endl;
+    repl.reset();
+
+    // Use RequestBuilder to post a record
+    Post data_object;
+    data_object.username = "testid";
+    data_object.motto = "Carpe diem";
+    repl = RequestBuilder(ctx)
+        .Post(http_url)
+        .Header("X-Client", "RESTC_CPP")
+        .Data(data_object)
+        .Execute();
+
+    repl.reset();
 
 // #ifdef RESTC_CPP_WITH_TLS
 //         // Try with https
@@ -116,10 +113,6 @@ void DoSomethingInteresting(Context& ctx) {
 //         RESTC_CPP_LOG_INFO << "Received https GET data: " << json;
 // #endif // TLS
         RESTC_CPP_LOG_INFO << "Done";
-
-    } catch (const exception& ex) {
-        RESTC_CPP_LOG_INFO << "Process: Caught exception: " << ex.what();
-    }
 }
 
 
@@ -142,14 +135,17 @@ int main(int argc, char *argv[]) {
     }
 
     // Fetch a result trough a future
-    {
-        Post my_post = RestClient::Create()->ProcessWithPromiseT<Post>([&](Context& ctx) {
+    try {
+        auto client = RestClient::Create();
+        Post my_post = client->ProcessWithPromiseT<Post>([&](Context& ctx) {
             Post post;
             SerializeFromJson(post, ctx.Get(http_url + "/1"));
             return post;
         }).get();
 
         cout << "Received post# " << my_post.id << ", username: " << my_post.username;
+    } catch (const exception& ex) {
+        RESTC_CPP_LOG_INFO << "main: Caught exception: " << ex.what();
     }
 
     return 0;

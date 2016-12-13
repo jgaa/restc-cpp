@@ -189,12 +189,12 @@ public:
 private:
     Request::Properties::ptr_t default_connection_properties_;
     boost::asio::io_service io_service_;
-    unique_ptr<boost::asio::io_service::work> work_;
     unique_ptr<ConnectionPool> pool_;
+    unique_ptr<boost::asio::io_service::work> work_;
+    size_t current_tasks_ = 0;
     unique_ptr<std::thread> thread_;
     std::recursive_mutex done_mutex_;
     std::mutex work_mutex_;
-    size_t current_tasks_ = 0;
 };
 
 unique_ptr<RestClient> RestClient::Create(boost::optional<Request::Properties> properties) {

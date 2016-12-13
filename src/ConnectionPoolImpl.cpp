@@ -192,7 +192,7 @@ private:
 
     void OnRelease(const Entry::ptr_t& entry) {
         in_use_.erase(entry->key);
-        if (!entry->connection->GetSocket().GetSocket().is_open()) {
+        if (!entry->connection->GetSocket().IsOpen()) {
             RESTC_CPP_LOG_TRACE << "Discarding " << *entry << " after use";
             return;
         }

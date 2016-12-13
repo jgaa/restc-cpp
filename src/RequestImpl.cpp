@@ -267,7 +267,7 @@ private:
                 endpoint, protocol_type);
 
             // Connect if the connection is new.
-            if (!connection->GetSocket().GetSocket().is_open()) {
+            if (!connection->GetSocket().IsOpen()) {
 
                 RESTC_CPP_LOG_DEBUG << "Connecting to " << endpoint;
 
@@ -284,6 +284,8 @@ private:
                         << " failed with exception type: "
                         << typeid(ex).name()
                         << ", message: " << ex.what();
+
+                    connection->GetSocket().GetSocket().close();
                     continue;
                 }
             }
