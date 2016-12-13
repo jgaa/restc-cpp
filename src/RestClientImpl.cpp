@@ -16,6 +16,32 @@ namespace restc_cpp {
 class  RestClientImpl : public RestClient {
 public:
 
+    /*! Proper shutdown handling
+     * We remove the waiter in CloseWhenReady(), but if we have
+     * a connection pool, the timer there will still keep the
+     * ioservice busy. So we have to manually shut down the
+     * ioservice if the waiter has been removed, and we have
+     * no more coroutines in flight.
+     */
+    struct DoneHandler {
+
+        DoneHandler(RestClientImpl& parent)
+        : parent_{parent} {
+            ++parent_.current_tasks_;
+        }
+
+        ~DoneHandler() {
+            if (--parent_.current_tasks_ == 0) {
+                std::lock_guard<decltype(parent_.work_mutex_)> lock(parent_.work_mutex_);
+                if (!parent_.work_ && !parent_.io_service_.stopped()) {
+                    parent_.io_service_.stop();
+                }
+            }
+        }
+
+        RestClientImpl& parent_;
+    };
+
     class ContextImpl : public Context {
     public:
         ContextImpl(boost::asio::yield_context& yield,
@@ -74,12 +100,14 @@ public:
         std::promise<void> wait;
         auto done = wait.get_future();
 
-        std::thread([&]() {
+        thread_ = make_unique<thread>([&]() {
+            std::lock_guard<decltype(done_mutex_)> lock(done_mutex_);
             pool_ = ConnectionPool::Create(*this);
             work_ = make_unique<boost::asio::io_service::work>(io_service_);
             wait.set_value();
             io_service_.run();
-        }).detach();
+            RESTC_CPP_LOG_DEBUG << "Worker is done.";
+        });
 
         // Wait for the ConnectionPool to be constructed
         done.get();
@@ -87,6 +115,30 @@ public:
 
     const Request::Properties::ptr_t GetConnectionProperties() const override {
         return default_connection_properties_;
+    }
+
+    void CloseWhenReady(bool wait) override {
+        ClearWork();
+        if (wait) {
+            std::lock_guard<decltype(done_mutex_)> lock(done_mutex_);
+        }
+    }
+
+    void ClearWork() {
+        std::lock_guard<decltype(work_mutex_)> lock(work_mutex_);
+        if (work_) {
+            work_.reset();
+        }
+    }
+
+    ~RestClientImpl() {
+        ClearWork();
+        if (!io_service_.stopped()) {
+            io_service_.stop();
+        }
+        if (thread_) {
+            thread_->join();
+        }
     }
 
 
@@ -97,6 +149,7 @@ public:
 
         ContextImpl ctx(yield, *this);
 
+        DoneHandler handler(*this);
         try {
             fn(ctx);
         } catch(std::exception& ex) {
@@ -138,6 +191,10 @@ private:
     boost::asio::io_service io_service_;
     unique_ptr<boost::asio::io_service::work> work_;
     unique_ptr<ConnectionPool> pool_;
+    unique_ptr<std::thread> thread_;
+    std::recursive_mutex done_mutex_;
+    std::mutex work_mutex_;
+    size_t current_tasks_ = 0;
 };
 
 unique_ptr<RestClient> RestClient::Create(boost::optional<Request::Properties> properties) {

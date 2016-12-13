@@ -288,6 +288,7 @@ class RestClient {
 public:
     /*! Get the default connection properties. */
     virtual const Request::Properties::ptr_t GetConnectionProperties() const = 0;
+    virtual ~RestClient() = default;
 
     using prc_fn_t = std::function<void (Context& ctx)>;
 
@@ -329,6 +330,13 @@ public:
 
     virtual ConnectionPool& GetConnectionPool() = 0;
     virtual boost::asio::io_service& GetIoService() = 0;
+
+    /*! Shut down the worker-thread when the work-queue is empty.
+
+        \param wait Wait until the worker thread is shut down if true
+
+     */
+    virtual void CloseWhenReady(bool wait = true) = 0;
 
     /*! Factory */
     static std::unique_ptr<RestClient>

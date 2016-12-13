@@ -85,8 +85,8 @@ void second() {
     // Call DoSomethingInteresting as a co-routine in a worker-thread.
     rest_client->Process(DoSomethingInteresting);
 
-    // Wait for a little while to allow the worker-thread to finish
-    this_thread::sleep_for(chrono::seconds(5));
+    // Wait for the request to finish
+    rest_client->CloseWhenReady(true);
 }
 
 void third() {
@@ -140,17 +140,17 @@ void forth() {
 
 int main() {
     try {
-        cout << "First: " << endl;
-        first();
+//         cout << "First: " << endl;
+//         first();
 
         cout << "Second: " << endl;
         second();
 
-        cout << "Third: " << endl;
-        third();
-
-        cout << "Forth: " << endl;
-        forth();
+//         cout << "Third: " << endl;
+//         third();
+//
+//         cout << "Forth: " << endl;
+//         forth();
 
     } catch(const exception& ex) {
         cerr << "Something threw up: " << ex.what() << endl;
