@@ -286,6 +286,8 @@ public:
  */
 class RestClient {
 public:
+    struct DoneHandler {};
+
     /*! Get the default connection properties. */
     virtual const Request::Properties::ptr_t GetConnectionProperties() const = 0;
     virtual ~RestClient() = default;
@@ -309,6 +311,7 @@ public:
     /*! Same as process, but returns a void future */
     virtual std::future<void> ProcessWithPromise(const prc_fn_t& fn) = 0;
 
+    /*! Process and return a future with a value or the current exception */
     template <typename T>
     std::future<T> ProcessWithPromiseT(const std::function<T (Context& ctx)>& fn) {
 
@@ -317,6 +320,7 @@ public:
         boost::asio::spawn(GetIoService(),
                            [prom,fn,this](boost::asio::yield_context yield) {
             auto ctx = Context::Create(yield, *this);
+            auto done_handler = GetDoneHandler();
             try {
                 prom->set_value(fn(*ctx));
             } catch(...) {
@@ -341,6 +345,9 @@ public:
     /*! Factory */
     static std::unique_ptr<RestClient>
         Create(boost::optional<Request::Properties> properties = {});
+
+    protected:
+        virtual std::unique_ptr<DoneHandler> GetDoneHandler() = 0;
 };
 
 

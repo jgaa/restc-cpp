@@ -23,14 +23,14 @@ public:
      * ioservice if the waiter has been removed, and we have
      * no more coroutines in flight.
      */
-    struct DoneHandler {
+    struct DoneHandlerImpl : public DoneHandler {
 
-        DoneHandler(RestClientImpl& parent)
+        DoneHandlerImpl(RestClientImpl& parent)
         : parent_{parent} {
             ++parent_.current_tasks_;
         }
 
-        ~DoneHandler() {
+        ~DoneHandlerImpl() {
             if (--parent_.current_tasks_ == 0) {
                 std::lock_guard<decltype(parent_.work_mutex_)> lock(parent_.work_mutex_);
                 if (!parent_.work_ && !parent_.io_service_.stopped()) {
@@ -149,7 +149,7 @@ public:
 
         ContextImpl ctx(yield, *this);
 
-        DoneHandler handler(*this);
+        DoneHandlerImpl handler(*this);
         try {
             fn(ctx);
         } catch(std::exception& ex) {
@@ -158,7 +158,14 @@ public:
                 promise->set_exception(std::current_exception());
             }
             return;
+        } catch(...) {
+            RESTC_CPP_LOG_ERROR << "*** Caught unknown exception";
+            if (promise) {
+                promise->set_exception(std::current_exception());
+            }
+            return;
         }
+
 
         if (promise) {
             promise->set_value();
@@ -185,6 +192,11 @@ public:
     ConnectionPool& GetConnectionPool() override { return *pool_; }
 
     boost::asio::io_service& GetIoService() override { return io_service_; }
+
+protected:
+    std::unique_ptr<DoneHandler> GetDoneHandler() override {
+        return make_unique<DoneHandlerImpl>(*this);
+    }
 
 private:
     Request::Properties::ptr_t default_connection_properties_;
