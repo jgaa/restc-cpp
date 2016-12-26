@@ -3,7 +3,9 @@
 docker stop mock-json
 docker rm mock-json
 docker build . -t jgaa/mockjsonserver
-docker run --name mock-json  -v `pwd`/db.json:/data/db.json -d -p 3000:80 jgaa/mockjsonserver
+#docker run --name mock-json  -v "$PWD/db.json":/data/db.json -d -p 3000:80 jgaa/mockjsonserver
+# Volume did not work with docker in Fedora
+docker run --name mock-json -d -p 3000:80 jgaa/mockjsonserver
 docker ps
 
 echo 

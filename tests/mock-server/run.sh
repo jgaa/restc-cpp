@@ -16,4 +16,6 @@ if [ -f $file ]; then
     args="$args file.js"
 fi
 
+echo "Args are: $args"
+
 json-server $args
