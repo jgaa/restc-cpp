@@ -504,6 +504,7 @@ and Windows 10 (it should work with Windows Vista and up).
   - Optional Mapping between C++ property names and Json 'on the wire' names.
   - Option to tag property names as read-only to filter them out when the C++ object is serialized for transfer to the server.
   - Filters out empty C++ properties when the C++ object is serialized for transfer to the server (can be disabled).
+  - Iterator interface to received Json lists of objects
 
 # Supported development platforms:
 - Linux (Debian stable and testing, Ubuntu)
