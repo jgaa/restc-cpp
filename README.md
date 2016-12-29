@@ -308,7 +308,7 @@ library concern itself with the next data object.
 
 ```C++
 int main() {
-     // Fetch a list of records asyncrouesly, one by one.
+    // Fetch a list of records asyncrouesly, one by one.
     // This allows us to process single items in a list
     // and fetching more data as we move forward.
     // This works basically as a database cursor, or 
@@ -321,7 +321,6 @@ int main() {
     rest_client->Process([&](Context& ctx) {
         // This is the co-routine, running in a worker-thread
 
-        
         // Construct a request to the server
         auto reply = RequestBuilder(ctx)
             .Get("http://jsonplaceholder.typicode.com/posts/")
@@ -333,15 +332,6 @@ int main() {
             // Send the request
             .Execute();
             
-        if (reply->GetResponseCode() != 200) {
-            cerr << "Request failed with HTTP error " 
-                << reply->GetHttpResponse().status_code
-                << " " 
-                << reply->GetHttpResponse().reason_phrase
-                << endl;
-                return;
-        }
-         
         // Instatiate a serializer with begin() and end() methods that
         // allows us to work with the reply-data trough a C++
         // input iterator.
