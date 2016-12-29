@@ -2,7 +2,7 @@
 #include "restc-cpp/Connection.h"
 #include "restc-cpp/Socket.h"
 #include "restc-cpp/DataReader.h"
-#include <boost/make_unique.hpp>
+#include "restc-cpp/logging.h"
 
 using namespace std;
 
@@ -21,6 +21,8 @@ public:
     boost::asio::const_buffers_1 ReadSome() override {
         const auto bytes = connection_.GetSocket().AsyncReadSome(
             {buffer_.data(), buffer_.size()}, ctx_.GetYield());
+        
+        RESTC_CPP_LOG_TRACE << "Read #" << bytes << " bytes from " << connection_;
         return {buffer_.data(), bytes};
     }
 

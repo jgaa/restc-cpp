@@ -292,6 +292,73 @@ void DoSomethingInteresting(Context& ctx) {
 
 ```
 
+In the example above, we fetch all the data into the <i>posts_list</i>. If you 
+receive really large lists, this may not be a good ide, as your RAM would fill
+up and eventually your application would hang or die. 
+
+Another, much better approach, is to fetch the list into a C++ input iterator. 
+In this case, we only store one data item in memory at any time (well, two
+if you use the <i>it++</i> operator - something you only do when you really 
+need the data before the increment - right?). The size of the list does not
+matter. The HTTP client will fetch data asynchronously in the beckground
+when it is parsing the json stream to instatiate a data object. When an 
+object is fetched from the stream, you can access it from the iterator. 
+Only when you access one of the increment methods on the iterator will the
+library concern itself with the next data object.
+
+```C++
+int main() {
+     // Fetch a list of records asyncrouesly, one by one.
+    // This allows us to process single items in a list
+    // and fetching more data as we move forward.
+    // This works basically as a database cursor, or 
+    // (literally) as a properly implemented C++ input iterator.
+    
+    // Create the REST clent
+    auto rest_client = RestClient::Create();
+    
+    // Run our example in a lambda co-routine
+    rest_client->Process([&](Context& ctx) {
+        // This is the co-routine, running in a worker-thread
+
+        
+        // Construct a request to the server
+        auto reply = RequestBuilder(ctx)
+            .Get("http://jsonplaceholder.typicode.com/posts/")
+
+            // Add some headers for good taste
+            .Header("X-Client", "RESTC_CPP")
+            .Header("X-Client-Purpose", "Testing")
+
+            // Send the request
+            .Execute();
+            
+        if (reply->GetResponseCode() != 200) {
+            cerr << "Request failed with HTTP error " 
+                << reply->GetHttpResponse().status_code
+                << " " 
+                << reply->GetHttpResponse().reason_phrase
+                << endl;
+                return;
+        }
+         
+        // Instatiate a serializer with begin() and end() methods that
+        // allows us to work with the reply-data trough a C++
+        // input iterator.
+        IteratorJsonSerializer<Post> data{*reply};
+        
+        // Iterate over the data, fetch data asyncrounesly as we go.
+        for(const auto& post : data) {
+            cout << "Item #" << post.id << " Title: " << post.title << endl;
+        }
+    });
+
+ 
+    // Wait for the request to finish
+    rest_client->CloseWhenReady(true);
+}
+```
+
 You can use futures to synchronize the
 requests, and to get exceptions from failed requests.
 In the example below we use a lambda as our coroutine.
@@ -465,8 +532,7 @@ and Windows 10 (it should work with Windows Vista and up).
  - [x] Use finer graded exceptions
  - [x] Test that errors in the lower layers are visible on the API level
 - Implement asynchronous iterators for received data and integrate with json parser.
-  - [ ] For long lists of data items, allow us to iterate over them rather than de-serialize as std:::list
-  - [ ] Implement generic support for 'pages' of data, where we re-query for more data in the background
+  - [x] For long lists of data items, allow us to iterate over them rather than de-serialize as std:::list
 - Functional tests
  - [ ] Test HTTP GET (list), GET (object), POST (create), PUT (update), DELETE
  - [ ] test 1000 simultaneous sessions
@@ -476,6 +542,7 @@ and Windows 10 (it should work with Windows Vista and up).
  - [ ] Windows 10 / Visual Studio
  - [ ] OS/X
  - [ ] Ubuntu LTS
+ - [x] Fedora 25
 
 # Tasks planned for Q1 2017
 - Performance analysis and optimizations for speed and memory footprint
@@ -494,9 +561,10 @@ and Windows 10 (it should work with Windows Vista and up).
 - Portability
  - [ ] Windows 10 / clang
  - [ ] Cent OS
- - [ ] Fedora
  - [ ] FreeBSD
  - [ ] OpenBSD
+- Implement asynchronous iterators for received data and integrate with json parser.
+ - [ ] Implement generic support for 'pages' of data, where we re-query for more data in the background
 
 # Tasks planned for Q2 2017
  - HTTP 2 support

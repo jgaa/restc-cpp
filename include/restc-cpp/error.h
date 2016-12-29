@@ -73,6 +73,19 @@ struct DecompressException : public RestcCppException
     : RestcCppException(cause) {}
 };
 
+struct NoDataException : public RestcCppException
+{
+    NoDataException(const std::string& cause)
+    : RestcCppException(cause) {}
+};
+
+struct CannotIncrementEndException : public RestcCppException
+{
+    CannotIncrementEndException(const std::string& cause)
+    : RestcCppException(cause) {}
+};
+
+
 } // namespace
 #endif // RESTC_CPP_ERROR_H_
 
