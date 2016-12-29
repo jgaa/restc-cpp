@@ -162,15 +162,6 @@ void fifth() {
             // Send the request
             .Execute();
             
-        if (reply->GetResponseCode() != 200) {
-            cerr << "Request failed with HTTP error " 
-                << reply->GetHttpResponse().status_code
-                << " " 
-                << reply->GetHttpResponse().reason_phrase
-                << endl;
-                return;
-        }
-         
         // Instatiate a serializer with begin() and end() methods that
         // allows us to work with the reply-data trough a C++
         // input iterator.
