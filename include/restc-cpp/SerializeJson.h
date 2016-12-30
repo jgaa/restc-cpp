@@ -1092,7 +1092,7 @@ private:
  * ref: http://en.cppreference.com/w/cpp/concept/InputIterator
  */
 template <typename objectT>
-class IteratorJsonSerializer
+class IteratorFromJsonSerializer
 {
 public:
     using data_t = typename std::remove_const<typename std::remove_reference<objectT>::type>::type;
@@ -1123,7 +1123,7 @@ public:
         Iterator(Iterator&& it) 
         : owner_{it.owner_}, data_{move(it.data_)} {}
         
-        Iterator(IteratorJsonSerializer *owner)
+        Iterator(IteratorFromJsonSerializer *owner)
         : owner_{owner} {}
         
         Iterator& operator++() {
@@ -1191,7 +1191,7 @@ public:
             return *data_;
         }
         
-        IteratorJsonSerializer *owner_ = nullptr;
+        IteratorFromJsonSerializer *owner_ = nullptr;
         std::unique_ptr<objectT> data_;
         mutable bool virgin_ = true;
     };
@@ -1199,7 +1199,7 @@ public:
     
     using iterator_t = Iterator;
     
-    IteratorJsonSerializer(
+    IteratorFromJsonSerializer(
         Reply& reply,
         const json_field_mapping *nameMapper = nullptr)
     : reply_stream_{reply}, name_mapper_{nameMapper} {}

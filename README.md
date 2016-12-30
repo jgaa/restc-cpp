@@ -335,7 +335,7 @@ int main() {
         // Instatiate a serializer with begin() and end() methods that
         // allows us to work with the reply-data trough a C++
         // input iterator.
-        IteratorJsonSerializer<Post> data{*reply};
+        IteratorFromJsonSerializer<Post> data{*reply};
         
         // Iterate over the data, fetch data asyncrounesly as we go.
         for(const auto& post : data) {
