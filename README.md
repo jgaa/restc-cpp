@@ -526,7 +526,7 @@ and Windows 10 (it should work with Windows Vista and up).
   - [x] For long lists of data items, allow us to iterate over them rather than de-serialize as std:::list
 - Functional tests
  - [x] Test HTTP GET (list), GET (object), POST (create), PUT (update), DELETE
- - [ ] test 1000 simultaneous sessions
+ - [x] test ~~1000~~ 500 simultaneous connections/coroutines in one thread
  - [ ] Test HTTPS
 - Portability
  - [ ] Debian Stable
