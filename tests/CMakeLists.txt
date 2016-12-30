@@ -71,6 +71,15 @@ target_link_libraries(redirect_tests
 
 add_test(REDIRECT_FUNCTIONAL_TESTS redirect_tests)
 
+add_executable(crud_tests CRUD_test.cpp)
+target_link_libraries(crud_tests
+    restc-cpp
+    ${DEFAULT_LIBRARIES}
+    UnitTest++
+)
+
+add_test(CRUD_FUNCTIONAL_TESTS crud_tests)
+
 
 message(STATUS "UNITTEST_CPP_LIBPATH is ${UNITTEST_CPP_LIBPATH}")
 
