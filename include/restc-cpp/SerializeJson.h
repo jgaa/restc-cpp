@@ -1096,49 +1096,49 @@ class IteratorFromJsonSerializer
 {
 public:
     using data_t = typename std::remove_const<typename std::remove_reference<objectT>::type>::type;
-    
+
     class Iterator : public std::iterator<
         std::input_iterator_tag,
         data_t,
         std::ptrdiff_t,
         const data_t *,
         data_t&> {
-            
+
     public:
         Iterator() {}
-        
+
         /*! Copy constructor
-         * \note This constructor mailnly is supplied to make it++ work. 
-         *      It is not optimized for performance. 
+         * \note This constructor mailnly is supplied to make it++ work.
+         *      It is not optimized for performance.
          *      As always, prefer ++it.
          */
-        Iterator(const Iterator& it) 
+        Iterator(const Iterator& it)
         : owner_{it.owner_}
         {
             if (it.data_) {
                 data_ = std::make_unique<objectT>(*it.data_);
             }
         }
-        
-        Iterator(Iterator&& it) 
+
+        Iterator(Iterator&& it)
         : owner_{it.owner_}, data_{move(it.data_)} {}
-        
+
         Iterator(IteratorFromJsonSerializer *owner)
         : owner_{owner} {}
-        
+
         Iterator& operator++() {
             prepare();
             fetch();
             return *this;
         }
-        
+
         Iterator operator++(int) {
             prepare();
-            Iterator retval = *this; 
+            Iterator retval = *this;
             fetch();
             return retval;
         }
-        
+
         Iterator& operator = (const Iterator& it) {
             owner_ = it.owner_;
             if (it.data_) {
@@ -1146,35 +1146,40 @@ public:
             }
             return *this;
         }
-        
+
         Iterator& operator = (Iterator&& it) {
             owner_ = it.owner_;
             it.data_ = move(it.data_);
         }
-        
+
         bool operator == (const Iterator& other) const {
             prepare();
             return data_.get() == other.data_.get();
         }
-        
+
         bool operator != (const Iterator& other) const {
             return ! operator == (other);
         }
-        
+
         data_t& operator*() const {
             prepare();
             return get();
         }
-        
+
+        data_t *operator -> () const {
+            prepare();
+            return data_.get();
+        }
+
     private:
         void prepare() const {
             if (virgin_) {
                 virgin_ = false;
-                
+
                 const_cast<Iterator *>(this)->fetch();
             }
         }
-        
+
         void fetch() {
             if (owner_) {
                 data_ = owner_->fetch();
@@ -1183,27 +1188,27 @@ public:
                     "this is an end() iterator.");
             }
         }
-        
+
         data_t& get() const {
             if (!data_) {
                 throw NoDataException("data_ is empty");
             }
             return *data_;
         }
-        
+
         IteratorFromJsonSerializer *owner_ = nullptr;
         std::unique_ptr<objectT> data_;
         mutable bool virgin_ = true;
     };
-    
-    
+
+
     using iterator_t = Iterator;
-    
+
     IteratorFromJsonSerializer(
         Reply& reply,
         const json_field_mapping *nameMapper = nullptr)
     : reply_stream_{reply}, name_mapper_{nameMapper} {}
-    
+
     iterator_t begin() {
         return Iterator{this};
     }
@@ -1214,7 +1219,7 @@ public:
 
 private:
     std::unique_ptr<objectT> fetch() {
-        
+
         if(state_ == State::PRE) {
             const auto ch = reply_stream_.Take();
             if (ch != '[') {
@@ -1222,7 +1227,7 @@ private:
             }
             state_ = State::ITERATING;
         }
-        
+
         if (state_ == State::ITERATING) {
             while(true) {
                 const auto ch = reply_stream_.Peek();
@@ -1244,11 +1249,11 @@ private:
                 }
             }
         }
-        
+
         assert(state_ == State::DONE);
         return {};
     }
-    
+
     enum class State { PRE, ITERATING, DONE };
     State state_ = State::PRE;
     RapidJsonReader reply_stream_;
