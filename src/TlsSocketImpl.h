@@ -9,6 +9,11 @@
 
 #include <boost/asio/ssl.hpp>
 #include "restc-cpp/Socket.h"
+#include "restc-cpp/config.h"
+
+#if !defined(RESTC_CPP_WITH_TLS) || !RESTC_CPP_WITH_TLS
+#   error "Do not include when compiling without TLS"
+#endif
 
 namespace restc_cpp {
 
