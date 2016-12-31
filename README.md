@@ -58,12 +58,11 @@ I had once, years before, done a C++ REST Client for an early
 version of Amazon AWS using libcurl - and - well, I had no strong urge to repeat
 that experience. So I decided to spend a week creating my own HTTP Client library
 using boost::asio with Json serialization/deserialization. (Thanks to Microsoft
-persistent contempt for any C++ standards, it took a little longer to finish,
+persistent delay in implementing C++ standards, it took a little longer to finish,
 as the json conversion is based on complex template meta-programming. I had some
 quite beautiful code working with clang and g++, but I had to break it up and
 do ugly work-arounds to make it work with MSVC. I hope I can refactor it into
-boost::hana some day. However, last time I checked, Micro$oft had still not implemented
-proper C++14 support - and hana was yet not working with their compiler).
+boost::hana some day. However, last time I checked, Microsoft had still not implemented proper C++14 support - and hana was yet not working with their compiler).
 
 In the fall / winter of 2016, I threw some more hours into the project and added
 features that was not really required for the problem I started out to solve, but who
