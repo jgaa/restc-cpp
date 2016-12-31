@@ -81,7 +81,6 @@ void ReplyImpl::StartReceiveFromServer(DataReader::ptr_t&& reader) {
     // Check for Connection: close header and tag the connection for close
     const auto conn_hdr = GetHeader(connection_name);
     if (!conn_hdr || !ciEqLibC()(*conn_hdr, keep_alive_name)) {
-        string value = *conn_hdr;
         RESTC_CPP_LOG_TRACE << "No 'Connection: keep-alive' header. "
             << "Tagging " << *connection_ << " for close.";
         do_close_connection_ = true;

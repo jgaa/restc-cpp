@@ -80,7 +80,6 @@ target_link_libraries(crud_tests
 
 add_test(CRUD_FUNCTIONAL_TESTS crud_tests)
 
-
 add_executable(1000c_tests 1000ConnectionsTest.cpp)
 target_link_libraries(1000c_tests
     restc-cpp
@@ -89,6 +88,15 @@ target_link_libraries(1000c_tests
 )
 
 add_test(1000C_FUNCTIONAL_TESTS 1000c_tests)
+
+add_executable(https_tests HttpsTest.cpp)
+target_link_libraries(https_tests
+    restc-cpp
+    ${DEFAULT_LIBRARIES}
+    UnitTest++
+)
+
+add_test(HTTPS_FUNCTIONAL_TESTS https_tests)
 
 
 message(STATUS "UNITTEST_CPP_LIBPATH is ${UNITTEST_CPP_LIBPATH}")

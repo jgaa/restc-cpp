@@ -32,7 +32,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 )
 
 const string http_url = "http://localhost:3001/normal/manyposts";
-const string https_url = "https://localhost:3002/posts";
+const string https_url = "https://lastviking.eu/files/api";
 
 
 void DoSomethingInteresting(Context& ctx) {
@@ -107,12 +107,12 @@ void DoSomethingInteresting(Context& ctx) {
 
     repl.reset();
 
-// #ifdef RESTC_CPP_WITH_TLS
-//         // Try with https
-//         repl = ctx.Get(https_url);
-//         json = repl->GetBodyAsString();
-//         RESTC_CPP_LOG_INFO << "Received https GET data: " << json;
-// #endif // TLS
+#ifdef RESTC_CPP_WITH_TLS
+        // Try with https
+        repl = ctx.Get(https_url);
+        json = repl->GetBodyAsString();
+        RESTC_CPP_LOG_INFO << "Received https GET data: " << json;
+#endif // TLS
         RESTC_CPP_LOG_INFO << "Done";
 }
 

@@ -527,7 +527,7 @@ and Windows 10 (it should work with Windows Vista and up).
 - Functional tests
  - [x] Test HTTP GET (list), GET (object), POST (create), PUT (update), DELETE
  - [x] test ~~1000~~ 500 simultaneous connections/coroutines in one thread
- - [ ] Test HTTPS
+ - [x] Test HTTPS
 - Portability
  - [ ] Debian Stable
  - [ ] Windows 10 / Visual Studio
