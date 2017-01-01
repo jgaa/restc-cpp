@@ -483,10 +483,7 @@ int main()
 The code is still a bit immature and not properly tested, but capable of executing
 REST requests.
 
-The latest code is tested with Debian "testing"
-
-Recent code was tested with Debian "stable" and "testing", Ubuntu "wily"
-and Windows 10 (it should work with Windows Vista and up).
+The latest code is tested with Debian "testing", Debian Jessie and Fedora 25
 
 # Features
 - Raw GET, POST, PUT and DELETE requests with no data conversions
@@ -506,33 +503,8 @@ and Windows 10 (it should work with Windows Vista and up).
   - Iterator interface to received Json lists of objects
 
 # Supported development platforms:
-- Linux (Debian stable and testing, Ubuntu)
+- Linux (Debian stable and testing, Ubuntu, Fedora)
 - Windows 10 (Visual Studio 14 / 2015 update 2)
-
-# Suggested target platforms:
-- Linux
-- OS/X
-- Android (via NDK)
-- Windows Vista and later
-
-# Short Term Tasks (December 2016)
-- [x] Implement Basic Authentication
-- [x] Implement HTTP Proxy support
-- Error handling
- - [x] Use finer graded exceptions
- - [x] Test that errors in the lower layers are visible on the API level
-- Implement asynchronous iterators for received data and integrate with json parser.
-  - [x] For long lists of data items, allow us to iterate over them rather than de-serialize as std:::list
-- Functional tests
- - [x] Test HTTP GET (list), GET (object), POST (create), PUT (update), DELETE
- - [x] test ~~1000~~ 500 simultaneous connections/coroutines in one thread
- - [x] Test HTTPS
-- Portability
- - [ ] Debian Stable
- - [x] Windows 10 / Visual Studio
- - [ ] OS/X
- - [ ] Ubuntu LTS
- - [x] Fedora 25
 
 # Tasks planned for Q1 2017
 - Performance analysis and optimizations for speed and memory footprint
@@ -549,6 +521,9 @@ and Windows 10 (it should work with Windows Vista and up).
  - [ ] Add options to secure TLS connections (avoid weak encryption and verify server certs).
 - Implement Form Data encoding
 - Portability
+ - [ ] Windows 10 / Visual Studio
+ - [ ] OS/X
+ - [ ] Ubuntu LTS
  - [ ] Windows 10 / clang
  - [ ] Cent OS
  - [ ] FreeBSD
