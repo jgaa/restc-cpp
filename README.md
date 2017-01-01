@@ -502,9 +502,15 @@ The latest code is tested with Debian "testing", Debian Jessie and Fedora 25
   - Filters out empty C++ properties when the C++ object is serialized for transfer to the server (can be disabled).
   - Iterator interface to received Json lists of objects
 
-# Supported development platforms:
-- Linux (Debian stable and testing, Ubuntu, Fedora)
-- Windows 10 (Visual Studio 14 / 2015 update 2)
+# Supported operating systems
+These are the operating systems I test with before releasing a new version.
+
+ - Debian Stable (Jessie)
+ - ~~Debian Testing~~ kdevelop package is currently broken in Debian Testing
+ - Windows 10 / Microsoft Visual Studio, comminity version
+ - Fedora 25
+ - Ubuntu LTS
+ - OS/X
 
 # Tasks planned for Q1 2017
 - Performance analysis and optimizations for speed and memory footprint
@@ -521,6 +527,9 @@ The latest code is tested with Debian "testing", Debian Jessie and Fedora 25
  - [ ] Add options to secure TLS connections (avoid weak encryption and verify server certs).
 - Implement Form Data encoding
 - Portability
+ - [x] Fedora 25
+ - [x] Debian Stable (Jessie)
+ - [ ] Debian Testing (latest update)
  - [ ] Windows 10 / Visual Studio
  - [ ] OS/X
  - [ ] Ubuntu LTS
