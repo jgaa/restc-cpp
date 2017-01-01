@@ -26,8 +26,8 @@ ReplyImpl::ReplyImpl(Connection::ptr_t connection,
                      Context& ctx,
                      RestClient& owner)
 : connection_{move(connection)}, ctx_{ctx}, owner_{owner}
-, connection_id_{connection_ ? connection_->GetId()
-    : boost::uuids::random_generator()()}
+, connection_id_(connection_ ? connection_->GetId()
+    : boost::uuids::random_generator()())
 {
 }
 

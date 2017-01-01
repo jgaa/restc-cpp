@@ -529,7 +529,7 @@ and Windows 10 (it should work with Windows Vista and up).
  - [x] Test HTTPS
 - Portability
  - [ ] Debian Stable
- - [ ] Windows 10 / Visual Studio
+ - [x] Windows 10 / Visual Studio
  - [ ] OS/X
  - [ ] Ubuntu LTS
  - [x] Fedora 25

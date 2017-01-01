@@ -8,6 +8,8 @@
 #ifdef RESTC_CPP_WITH_TLS
 
 #include <boost/asio/ssl.hpp>
+#include <boost/version.hpp>
+
 #include "restc-cpp/Socket.h"
 #include "restc-cpp/config.h"
 
@@ -27,7 +29,9 @@ public:
         tls_context_.set_options(boost::asio::ssl::context::default_workarounds
             | boost::asio::ssl::context::no_sslv2
             | boost::asio::ssl::context::no_sslv3
+#if BOOST_VERSION >= 105900
             | boost::asio::ssl::context::no_tlsv1_1
+#endif
             | boost::asio::ssl::context::single_dh_use);
 
         ssl_socket_ = std::make_unique<ssl_socket_t>(io_service, tls_context_);

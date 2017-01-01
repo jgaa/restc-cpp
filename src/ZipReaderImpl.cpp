@@ -2,7 +2,6 @@
 
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/DataReader.h"
-#include <boost/make_unique.hpp>
 
 using namespace std;
 
