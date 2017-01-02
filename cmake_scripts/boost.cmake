@@ -24,7 +24,7 @@ if (WIN32)
     if (EXISTS ${BOOST_ROOT}/boost/type_index.hpp)
         set(HAVE_BOOST_TYPEINDEX 1)
     endif()
-	
+
 	set(Boost_USE_STATIC_LIBS ON)
 	set(Boost_USE_MULTITHREADED ON)
 	unset(Boost_INCLUDE_DIR CACHE)
@@ -69,7 +69,8 @@ if (UNIX)
     set(LIB_BOOST_LOG boost_log)
     set(BOOST_UNIT_TEST_FRAMEWORK boost_unit_test_framework)
 
-    set (BOOST_LIBRARIES ${LIB_BOOST_SYSTEM}
+    set (BOOST_LIBRARIES
+        ${LIB_BOOST_SYSTEM}
         ${LIB_BOOST_PROGRAM_OPTIONS}
         ${LIB_BOOST_SERIALIZATION}
         ${LIB_BOOST_FILESYSTEM}
@@ -80,7 +81,8 @@ if (UNIX)
         ${LIB_BOOST_CONTEXT}
         ${LIB_BOOST_CHRONO}
         ${LIB_BOOST_THREAD}
-        ${LIB_BOOST_LOG})
+        ${LIB_BOOST_LOG}
+        )
 
     set(BOOST_UNIT_TEST_LIBRARIES boost_unit_test_framework)
     if (EXISTS ${Boost_INCLUDE_DIRS}/boost/type_index.hpp)
@@ -96,7 +98,7 @@ elseif(WIN32)
 	set(SSL_LIBS ${OPENSSL_LIBRARIES})
 endif()
 
-set (DEFAULT_LIBRARIES 
+set (DEFAULT_LIBRARIES
 		${DEFAULT_LIBRARIES}
 		${THREADLIBS}
 		${SSL_LIBS}

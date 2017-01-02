@@ -35,34 +35,35 @@ message(STATUS "Using ${CMAKE_CXX_COMPILER}")
 if (NOT EMBEDDED_RESTC_CPP)
 
 	if (NOT CMAKE_PREFIX_PATH AND WIN32 AND RESTC_CPP_USE_WIN32_DEFAULTS)
-		set(CMAKE_PREFIX_PATH 
-			C:/devel/zlib-1.2.9  
+		set(CMAKE_PREFIX_PATH
+			C:/devel/zlib-1.2.9
 			C:/devel/zlib-1.2.9/build/RelWithDebInfo
 		)
 	endif()
-	
+
 	if (NOT OPENSSL_ROOT_DIR AND WIN32 AND RESTC_CPP_USE_WIN32_DEFAULTS)
-		# Cmake's find_package(OpenSSL) is badly broken, and fails to work 
-		# with the default openssl build on windows. 
+		# Cmake's find_package(OpenSSL) is badly broken, and fails to work
+		# with the default openssl build on windows.
 		# In order to resolve the problems, make a 64 (or 32) bit build of
 		# openssl and copy inc32/openssl to ${OPENSSL_ROOT_DIR}/include, and
 		# the content of out32dll to ${OPENSSL_ROOT_DIR}/lib/VC
 		# Make sure to also add ${OPENSSL_ROOT_DIR}/lib/VC to your path
 		# when you run programs compiled with restc_cpp under windows, or
-		# copy the dll's to the directory with your binaries. 
+		# copy the dll's to the directory with your binaries.
 		# (Using 3rd party C libraries under Windows with their own build systems
 		# is a major pain-point. I'm planning to see if I can use Windows crypto
-		# library in sted of openssl, (or somerthing that can be built as a 
-		# submodule to git with cmake)). 
+		# library in sted of openssl, (or somerthing that can be built as a
+		# submodule to git with cmake)).
 		set(OPENSSL_ROOT_DIR C:/devel/openssl)
+		message(STATUS "Setting OPENSSL_ROOT_DIR to ${OPENSSL_ROOT_DIR}")
 	endif()
-	
+
 	find_package(ZLIB REQUIRED)
-	
+
     if (RESTC_CPP_WITH_TLS)
 		find_package(OpenSSL REQUIRED)
     endif()
-	
+
     include(${RESTC_ROOT_DIR}/cmake_scripts/boost.cmake)
     include(cmake_scripts/pch.cmake)
 
