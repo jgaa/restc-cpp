@@ -22,6 +22,9 @@ if (NOT DEFINED RESTC_CPP_LOG_WITH_BOOST_LOG)
     option(RESTC_CPP_LOG_WITH_BOOST_LOG "Use boost::log for logging" ON)
 endif()
 
+if (WIN32 AND NOT DEFINED RESTC_CPP_USE_WIN32_DEFAULTS)
+	option(RESTC_CPP_USE_WIN32_DEFAULTS "Use C:/devel ... for openssl, zlib" ON)
+endif()
 
 # We create a configuration file so that other code that
 # include our header files gets the correct configuration.
@@ -30,31 +33,36 @@ set(CONF_PATH ${RESTC_ROOT_DIR}/include/restc-cpp/config.h)
 message(STATUS "Using ${CMAKE_CXX_COMPILER}")
 
 if (NOT EMBEDDED_RESTC_CPP)
-    find_package(ZLIB REQUIRED )
 
+	if (NOT CMAKE_PREFIX_PATH AND WIN32 AND RESTC_CPP_USE_WIN32_DEFAULTS)
+		set(CMAKE_PREFIX_PATH 
+			C:/devel/zlib-1.2.9  
+			C:/devel/zlib-1.2.9/build/RelWithDebInfo
+		)
+	endif()
+	
+	if (NOT OPENSSL_ROOT_DIR AND WIN32 AND RESTC_CPP_USE_WIN32_DEFAULTS)
+		# Cmake's find_package(OpenSSL) is badly broken, and fails to work 
+		# with the default openssl build on windows. 
+		# In order to resolve the problems, make a 64 (or 32) bit build of
+		# openssl and copy inc32/openssl to ${OPENSSL_ROOT_DIR}/include, and
+		# the content of out32dll to ${OPENSSL_ROOT_DIR}/lib/VC
+		# Make sure to also add ${OPENSSL_ROOT_DIR}/lib/VC to your path
+		# when you run programs compiled with restc_cpp under windows, or
+		# copy the dll's to the directory with your binaries. 
+		# (Using 3rd party C libraries under Windows with their own build systems
+		# is a major pain-point. I'm planning to see if I can use Windows crypto
+		# library in sted of openssl, (or somerthing that can be built as a 
+		# submodule to git with cmake)). 
+		set(OPENSSL_ROOT_DIR C:/devel/openssl)
+	endif()
+	
+	find_package(ZLIB REQUIRED)
+	
     if (RESTC_CPP_WITH_TLS)
-        if (UNIX)
-            find_package(OpenSSL REQUIRED)
-        else()
-        # find_package fails to do anything sane with openssl 1.1 under Windows
-            if (NOT DEFINED OPENSSL_ROOT)
-                SET (OPENSSL_ROOT C:/devel/openssl/lib-386)
-                message(STATUS "Using OpenSSL from ${OPENSSL_ROOT}")
-            endIF()
-
-            if (NOT DEFINED OPENSSL_INCLUDE_DIR)
-                    set(OPENSSL_INCLUDE_DIR ${OPENSSL_ROOT}/include)
-            endif()
-            if (NOT DEFINED OPENSSL_LIB_DIR)
-                    set(OPENSSL_LIB_DIR ${OPENSSL_ROOT}/lib)
-            endif()
-            include_directories(${OPENSSL_INCLUDE_DIR})
-                link_directories(${OPENSSL_LIB_DIR})
-                message(STATUS "Using OpenSSL headers from ${OPENSSL_INCLUDE_DIR}")
-        endif()
-        set(SSL_LIBS libeay32 ssleay32)
+		find_package(OpenSSL REQUIRED)
     endif()
-
+	
     include(${RESTC_ROOT_DIR}/cmake_scripts/boost.cmake)
     include(cmake_scripts/pch.cmake)
 
@@ -80,11 +88,13 @@ if (NOT EMBEDDED_RESTC_CPP)
 
 endif()
 
-set(DEFAULT_LIBRARIES "${DEFAULT_LIBRARIES} ${ZLIB_LIBRARIES}")
+set(DEFAULT_LIBRARIES ${DEFAULT_LIBRARIES} ${ZLIB_LIBRARIES})
 
 include_directories(
     ${RESTC_ROOT_DIR}/include
     ${RESTC_ROOT_DIR}/externals/rapidjson/include/
+	${ZLIB_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR}/build
+	${OPENSSL_INCLUDE_DIR}
     )
 
 add_subdirectory(src)

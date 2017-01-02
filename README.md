@@ -508,6 +508,9 @@ These are the operating systems I test with before releasing a new version.
  - Debian Stable (Jessie)
  - ~~Debian Testing~~ kdevelop package is currently broken in Debian Testing
  - Windows 10 / Microsoft Visual Studio, comminity version
+	(I have not installed docker on Windows yet, so only some tests are run.
+	However, all tests compile and link correctly with Boost 1.63, zlib 1.2.9
+	and openssl 1.0.2k)
  - Fedora 25
  - Ubuntu LTS
  - OS/X
@@ -530,7 +533,7 @@ These are the operating systems I test with before releasing a new version.
  - [x] Fedora 25
  - [x] Debian Stable (Jessie)
  - [ ] Debian Testing (latest update)
- - [ ] Windows 10 / Visual Studio
+ - [x] Windows 10 / Visual Studio
  - [ ] OS/X
  - [ ] Ubuntu LTS
  - [ ] Windows 10 / clang

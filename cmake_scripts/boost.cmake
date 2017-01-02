@@ -7,24 +7,28 @@ if (WIN32)
     # to be set manually.
 
     if (NOT DEFINED BOOST_ROOT)
-            set (BOOST_ROOT C:/devel/boost_1_61_0_b1)
+            set (BOOST_ROOT C:/devel/boost_1_63_0)
             message(STATUS "Warning. No BOOST_ROOT defined. Defaulting to ${BOOST_ROOT}")
     else()
             message(STATUS "Using BOOST from ${BOOST_ROOT}")
     endif()
 
     if (NOT DEFINED BOOST_LIBRARYDIR)
-            set (BOOST_LIBRARYDIR ${BOOST_ROOT}/stage/lib)
+            set (BOOST_LIBRARYDIR ${BOOST_ROOT}/stage/x64/lib)
             message(STATUS "Warning. No BOOST_ROOT defined. Defaulting to ${BOOST_ROOT}")
     endif()
 
     include_directories(${BOOST_ROOT})
     link_directories(${BOOST_LIBRARYDIR})
 
-    # Just ssume a recent boost library
     if (EXISTS ${BOOST_ROOT}/boost/type_index.hpp)
         set(HAVE_BOOST_TYPEINDEX 1)
     endif()
+	
+	set(Boost_USE_STATIC_LIBS ON)
+	set(Boost_USE_MULTITHREADED ON)
+	unset(Boost_INCLUDE_DIR CACHE)
+	unset(Boost_LIBRARY_DIRS CACHE)
 
 # Msvc and possible some other Windows-compilers will link
 # to the correct libraries trough #pragma directives in boost headers.
@@ -65,8 +69,7 @@ if (UNIX)
     set(LIB_BOOST_LOG boost_log)
     set(BOOST_UNIT_TEST_FRAMEWORK boost_unit_test_framework)
 
-    set (BOOST_LIBRARIES
-        ${LIB_BOOST_SYSTEM}
+    set (BOOST_LIBRARIES ${LIB_BOOST_SYSTEM}
         ${LIB_BOOST_PROGRAM_OPTIONS}
         ${LIB_BOOST_SERIALIZATION}
         ${LIB_BOOST_FILESYSTEM}
@@ -77,8 +80,7 @@ if (UNIX)
         ${LIB_BOOST_CONTEXT}
         ${LIB_BOOST_CHRONO}
         ${LIB_BOOST_THREAD}
-        ${LIB_BOOST_LOG}
-    )
+        ${LIB_BOOST_LOG})
 
     set(BOOST_UNIT_TEST_LIBRARIES boost_unit_test_framework)
     if (EXISTS ${Boost_INCLUDE_DIRS}/boost/type_index.hpp)
@@ -90,17 +92,17 @@ endif()
 if (UNIX)
     set(THREADLIBS pthread)
     set(SSL_LIBS ssl crypto)
-else()
-    #set(SSL_LIBS libcrypto libssl)
+elseif(WIN32)
+	set(SSL_LIBS ${OPENSSL_LIBRARIES})
 endif()
 
-set (DEFAULT_LIBRARIES
-    ${DEFAULT_LIBRARIES}
-    ${THREADLIBS}
-    ${SSL_LIBS}
-    ${BOOST_LIBRARIES}
-    )
-
+set (DEFAULT_LIBRARIES 
+		${DEFAULT_LIBRARIES}
+		${THREADLIBS}
+		${SSL_LIBS}
+		${ZLIB_LIBRARIES}
+		${BOOST_LIBRARIES}
+		)
 message(STATUS "Default libraries: ${DEFAULT_LIBRARIES}")
 
 

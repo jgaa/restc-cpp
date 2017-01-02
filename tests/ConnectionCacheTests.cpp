@@ -99,7 +99,7 @@ TEST(TestMaxConnections) {
     auto addr = boost::asio::ip::address_v4::from_string("127.0.0.1").to_ulong();
 
     std::vector<Connection::ptr_t> connections;
-    size_t i = 0;
+    decltype(addr) i = 0;
     for(; i < config->cacheMaxConnections; ++i) {
         connections.push_back(pool.GetConnection(
             boost::asio::ip::tcp::endpoint{

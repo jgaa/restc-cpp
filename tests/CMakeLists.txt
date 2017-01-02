@@ -26,9 +26,7 @@ link_directories(
 
 add_executable(basic_tests BasicTests.cpp)
 target_link_libraries(basic_tests
-    restc-cpp
-    ${DEFAULT_LIBRARIES}
-)
+    restc-cpp ${DEFAULT_LIBRARIES})
 
 add_test(JSON_FUNCTIONAL_TESTS basic_tests)
 
@@ -128,3 +126,5 @@ target_link_libraries(http_reply_tests
 )
 
 add_test(HTTP_REPLY_UNITTESTS http_reply_tests)
+
+
