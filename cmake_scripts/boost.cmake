@@ -6,14 +6,14 @@ if (WIN32)
     # In stead, we will require BOOST_ROOT and BOOST_LIBRARYDIR
     # to be set manually.
 
-    if (NOT DEFINED BOOST_ROOT)
+    if (RESTC_CPP_USE_WIN32_DEFAULTS AND NOT DEFINED BOOST_ROOT)
             set (BOOST_ROOT C:/devel/boost_1_63_0)
             message(STATUS "Warning. No BOOST_ROOT defined. Defaulting to ${BOOST_ROOT}")
     else()
             message(STATUS "Using BOOST from ${BOOST_ROOT}")
     endif()
 
-    if (NOT DEFINED BOOST_LIBRARYDIR)
+    if (RESTC_CPP_USE_WIN32_DEFAULTS AND NOT DEFINED BOOST_LIBRARYDIR)
             set (BOOST_LIBRARYDIR ${BOOST_ROOT}/stage/x64/lib)
             message(STATUS "Warning. No BOOST_ROOT defined. Defaulting to ${BOOST_ROOT}")
     endif()
@@ -33,10 +33,11 @@ if (WIN32)
 # Msvc and possible some other Windows-compilers will link
 # to the correct libraries trough #pragma directives in boost headers.
 #SET(BOOST_UNIT_TEST_FRAMEWORK libboost_test_exec_monitor-vc140-mt-sgd-1_57)
+
 endif()
 
 
-if (UNIX)
+if (UNIX OR (WIN32 AND NOT RESTC_CPP_USE_WIN32_DEFAULTS))
     set(Boost_USE_MULTITHREADED ON)
     find_package(Boost REQUIRED COMPONENTS
         system
@@ -54,7 +55,9 @@ if (UNIX)
         )
 
     include_directories(${Boost_INCLUDE_DIRS})
+endif()
 
+if (UNIX)
     set(LIB_BOOST_PROGRAM_OPTIONS boost_program_options)
     set(LIB_BOOST_SERIALIZATION boost_serialization)
     set(LIB_BOOST_FILESYSTEM boost_filesystem)
