@@ -1,6 +1,6 @@
 #pragma once
-#ifndef RESTC_CPP_SOCKET_H_
-#define RESTC_CPP_SOCKET_H_
+#ifndef RESTC_CPP_REQUEST_BUILDER_H_
+#define RESTC_CPP_REQUEST_BUILDER_H_
 
 #ifndef RESTC_CPP_H_
 #       error "Include restc-cpp.h first"
@@ -228,5 +228,5 @@ private:
 } // restc_cpp
 
 
-#endif // RESTC_CPP_SOCKET_H_
+#endif // RESTC_CPP_REQUEST_BUILDER_H_
 
