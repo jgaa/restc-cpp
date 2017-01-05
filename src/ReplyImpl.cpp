@@ -104,7 +104,7 @@ void ReplyImpl::HandleDecompression() {
 
     boost::tokenizer<> tok(*te_hdr);
     for(auto it = tok.begin(); it != tok.end(); ++it) {
-#ifdef RESTC_CPP_LOG_WITH_ZLIB
+#ifdef RESTC_CPP_WITH_ZLIB
         if (ciEqLibC()(gzip, *it)) {
             RESTC_CPP_LOG_TRACE << "Adding gzip reader to " << *connection_;
             reader_ = DataReader::CreateGzipReader(move(reader_));
@@ -112,7 +112,7 @@ void ReplyImpl::HandleDecompression() {
             RESTC_CPP_LOG_TRACE << "Adding deflate reader to " << *connection_;
             reader_ = DataReader::CreateZipReader(move(reader_));
         } else
-#endif // RESTC_CPP_LOG_WITH_ZLIB
+#endif // RESTC_CPP_WITH_ZLIB
         {
             RESTC_CPP_LOG_ERROR << "Unsupported compression: '" << *it
                 << "' from server on " << *connection_;

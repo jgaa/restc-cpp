@@ -17,7 +17,7 @@ set(HEADERS
     ${RESTC_ROOT_DIR}/include/restc-cpp/restc-cpp.h
     )
 
-if (RESTC_CPP_LOG_WITH_ZLIB)
+if (RESTC_CPP_WITH_ZLIB)
     set(ACTUAL_SOURCES ${ACTUAL_SOURCES} ZipReaderImpl.cpp)
 endif()
 

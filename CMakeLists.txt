@@ -22,8 +22,12 @@ if (NOT DEFINED RESTC_CPP_LOG_WITH_BOOST_LOG)
     option(RESTC_CPP_LOG_WITH_BOOST_LOG "Use boost::log for logging" ON)
 endif()
 
-if (NOT DEFINED RESTC_CPP_LOG_WITH_ZLIB)
-    option(RESTC_CPP_LOG_WITH_ZLIB "Use zlib" ON)
+if (NOT DEFINED RESTC_CPP_LOG_JSON_SERIALIZATION)
+    option(RESTC_CPP_LOG_JSON_SERIALIZATION "Enable trace logging for json serialization debugging")
+endif()
+
+if (NOT DEFINED RESTC_CPP_WITH_ZLIB)
+    option(RESTC_CPP_WITH_ZLIB "Use zlib" ON)
 endif()
 
 if (WIN32 AND NOT DEFINED RESTC_CPP_USE_WIN32_DEFAULTS)
@@ -62,7 +66,7 @@ if (NOT EMBEDDED_RESTC_CPP)
         message(STATUS "Setting OPENSSL_ROOT_DIR to ${OPENSSL_ROOT_DIR}")
     endif()
 
-    if (RESTC_CPP_LOG_WITH_ZLIB)
+    if (RESTC_CPP_WITH_ZLIB)
         find_package(ZLIB REQUIRED)
     endif()
 

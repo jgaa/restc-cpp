@@ -5,6 +5,7 @@
 
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/RequestBuilder.h"
+#include "restc-cpp/IteratorFromJsonSerializer.h"
 
 using namespace std;
 using namespace restc_cpp;
@@ -140,17 +141,17 @@ void fifth() {
     // Fetch a list of records asyncrouesly, one by one.
     // This allows us to process single items in a list
     // and fetching more data as we move forward.
-    // This works basically as a database cursor, or 
+    // This works basically as a database cursor, or
     // (literally) as a properly implemented C++ input iterator.
-    
+
     // Create the REST clent
     auto rest_client = RestClient::Create();
-    
+
     // Run our example in a lambda co-routine
     rest_client->Process([&](Context& ctx) {
         // This is the co-routine, running in a worker-thread
 
-        
+
         // Construct a request to the server
         auto reply = RequestBuilder(ctx)
             .Get("http://jsonplaceholder.typicode.com/posts/")
@@ -161,19 +162,19 @@ void fifth() {
 
             // Send the request
             .Execute();
-            
+
         // Instatiate a serializer with begin() and end() methods that
         // allows us to work with the reply-data trough a C++
         // input iterator.
         IteratorFromJsonSerializer<Post> data{*reply};
-        
+
         // Iterate over the data, fetch data asyncrounesly as we go.
         for(const auto& post : data) {
             cout << "Item #" << post.id << " Title: " << post.title << endl;
         }
     });
 
- 
+
     // Wait for the request to finish
     rest_client->CloseWhenReady(true);
 }
@@ -191,7 +192,7 @@ int main() {
 
         cout << "Forth: " << endl;
         forth();
-        
+
         cout << "Fifth: " << endl;
         fifth();
 

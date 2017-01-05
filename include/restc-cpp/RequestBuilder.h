@@ -190,7 +190,7 @@ public:
         assert(!built_);
         built_ = true;
 #endif
-#if RESTC_CPP_LOG_WITH_ZLIB
+#if RESTC_CPP_WITH_ZLIB
         if (!disable_compression_) {
             if (!headers_ || (headers_->find(accept_encoding) == headers_->end())) {
                 Header(accept_encoding, gzip);
