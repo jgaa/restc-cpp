@@ -4,7 +4,6 @@
 
 #include <string>
 #include <map>
-#include <list>
 #include <deque>
 #include <memory>
 #include <future>
