@@ -1,6 +1,7 @@
 
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/DataReader.h"
+#include "restc-cpp/DataReaderStream.h"
 #include "restc-cpp/error.h"
 
 using namespace std;

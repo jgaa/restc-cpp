@@ -12,7 +12,7 @@ namespace restc_cpp {
 class ConnectionPool {
 public:
     virtual ~ConnectionPool() = default;
-    
+
     virtual Connection::ptr_t GetConnection(
         const boost::asio::ip::tcp::endpoint ep,
         const Connection::Type connectionType,

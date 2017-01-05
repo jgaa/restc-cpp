@@ -4,7 +4,9 @@
 #include "restc-cpp/logging.h"
 #include "restc-cpp/helper.h"
 #include "restc-cpp/error.h"
+#include "restc-cpp/DataReaderStream.h"
 #include "ReplyImpl.h"
+
 
 using namespace std;
 

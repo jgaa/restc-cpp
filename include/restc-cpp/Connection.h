@@ -24,11 +24,11 @@ public:
     virtual boost::uuids::uuid GetId() const = 0;
     virtual Socket& GetSocket() = 0;
     virtual const Socket& GetSocket() const = 0;
-    
+
     friend std::ostream& operator << (std::ostream& o, const Connection& v) {
         return v.Print(o);
     }
-    
+
 private:
     std::ostream& Print(std::ostream& o) const;
 };
