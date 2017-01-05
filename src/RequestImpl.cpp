@@ -309,9 +309,8 @@ private:
 
                 RESTC_CPP_LOG_DEBUG << "Connecting to " << endpoint;
 
-                auto timer = IoTimer::Create(properties_->connectTimeoutMs,
-                                                owner_.GetIoService(),
-                                                connection);
+                auto timer = IoTimer::Create(
+                    properties_->connectTimeoutMs, connection);
 
                 try {
                     connection->GetSocket().AsyncConnect(
@@ -333,9 +332,8 @@ private:
             // Send the request and all data
             while(boost::asio::buffer_size(write_buffer))
             {
-                auto timer = IoTimer::Create(properties_->connectTimeoutMs,
-                                                owner_.GetIoService(),
-                                                connection);
+                auto timer = IoTimer::Create(
+                    properties_->connectTimeoutMs, connection);
 
                 try {
                     connection->GetSocket().AsyncWrite(write_buffer,
