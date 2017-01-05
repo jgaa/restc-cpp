@@ -10,6 +10,6 @@
 #cmakedefine RESTC_CPP_WITH_TLS 1
 #cmakedefine RESTC_CPP_LOG_WITH_BOOST_LOG 1
 #cmakedefine RESTC_CPP_LOG_WITH_ZLIB 1
-#cmakedefine HAVE_BOOST_TYPEINDEX 1
+#cmakedefine RESTC_CPP_HAVE_BOOST_TYPEINDEX 1
 
 #endif // RESTC_CPP_CONFIG_H

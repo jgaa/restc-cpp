@@ -13,8 +13,8 @@ fi
 BASE=`pwd`
 
 echo "JSON mock server"
-cd "$BASE/tests/mock-server"
-./runmockserver
+cd "$BASE/tests/mock-json"
+./build_and_run.sh
 
 echo "nginx mock server"
 cd "$BASE/tests/mock-nginx"

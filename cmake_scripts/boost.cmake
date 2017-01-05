@@ -22,20 +22,17 @@ if (WIN32)
     link_directories(${BOOST_LIBRARYDIR})
 
     if (EXISTS ${BOOST_ROOT}/boost/type_index.hpp)
-        set(HAVE_BOOST_TYPEINDEX 1)
+        set(RESTC_CPP_HAVE_BOOST_TYPEINDEX 1)
     endif()
 
-	set(Boost_USE_STATIC_LIBS ON)
-	set(Boost_USE_MULTITHREADED ON)
-	unset(Boost_INCLUDE_DIR CACHE)
-	unset(Boost_LIBRARY_DIRS CACHE)
+    set(Boost_USE_STATIC_LIBS ON)
+    set(Boost_USE_MULTITHREADED ON)
+    unset(Boost_INCLUDE_DIR CACHE)
+    unset(Boost_LIBRARY_DIRS CACHE)
 
 # Msvc and possible some other Windows-compilers will link
 # to the correct libraries trough #pragma directives in boost headers.
-#SET(BOOST_UNIT_TEST_FRAMEWORK libboost_test_exec_monitor-vc140-mt-sgd-1_57)
-
 endif()
-
 
 if (UNIX OR (WIN32 AND NOT RESTC_CPP_USE_WIN32_DEFAULTS))
     set(Boost_USE_MULTITHREADED ON)
@@ -89,25 +86,18 @@ if (UNIX)
 
     set(BOOST_UNIT_TEST_LIBRARIES boost_unit_test_framework)
     if (EXISTS ${Boost_INCLUDE_DIRS}/boost/type_index.hpp)
-        set(HAVE_BOOST_TYPEINDEX 1)
+        set(RESTC_CPP_HAVE_BOOST_TYPEINDEX 1)
     endif()
-    #CHECK_INCLUDE_FILES(${Boost_INCLUDE_DIRS}/boost/type_index.hpp HAVE_BOOST_TYPEINDEX)
+    CHECK_INCLUDE_FILES(${Boost_INCLUDE_DIRS}/boost/type_index.hpp RESTC_CPP_HAVE_BOOST_TYPEINDEX)
 endif()
 
 if (UNIX)
-    set(THREADLIBS pthread)
-    set(SSL_LIBS ssl crypto)
-elseif(WIN32)
-	set(SSL_LIBS ${OPENSSL_LIBRARIES})
+    set (DEFAULT_LIBRARIES
+        ${DEFAULT_LIBRARIES}
+        ${BOOST_LIBRARIES}
+        )
 endif()
 
-set (DEFAULT_LIBRARIES
-		${DEFAULT_LIBRARIES}
-		${THREADLIBS}
-		${SSL_LIBS}
-		${ZLIB_LIBRARIES}
-		${BOOST_LIBRARIES}
-		)
 message(STATUS "Default libraries: ${DEFAULT_LIBRARIES}")
 
 

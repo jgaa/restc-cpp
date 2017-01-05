@@ -70,6 +70,18 @@ if (NOT EMBEDDED_RESTC_CPP)
         find_package(OpenSSL REQUIRED)
     endif()
 
+    if (UNIX)
+        set(THREADLIBS pthread)
+    endif()
+
+
+    set (DEFAULT_LIBRARIES
+        ${DEFAULT_LIBRARIES}
+        ${THREADLIBS}
+        ${OPENSSL_LIBRARIES}
+        ${ZLIB_LIBRARIES}
+    )
+
     include(${RESTC_ROOT_DIR}/cmake_scripts/boost.cmake)
     include(cmake_scripts/pch.cmake)
 

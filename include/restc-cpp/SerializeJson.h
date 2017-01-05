@@ -9,7 +9,7 @@
 
 #include <boost/iterator/function_input_iterator.hpp>
 
-#ifdef HAVE_BOOST_TYPEINDEX
+#ifdef RESTC_CPP_HAVE_BOOST_TYPEINDEX
     #include <boost/type_index.hpp>
 
     #define RESTC_CPP_TYPENAME(type) \
