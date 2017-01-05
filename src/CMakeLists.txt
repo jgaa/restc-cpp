@@ -4,7 +4,6 @@ set(ACTUAL_SOURCES
     IoReaderImpl.cpp
     PlainReaderImpl.cpp
     NoBodyReaderImpl.cpp
-    ZipReaderImpl.cpp
     DataReaderStream.cpp
     RestClientImpl.cpp
     RequestImpl.cpp
@@ -13,9 +12,14 @@ set(ACTUAL_SOURCES
     Url.cpp
     Body.cpp
     )
+
 set(HEADERS
     ${RESTC_ROOT_DIR}/include/restc-cpp/restc-cpp.h
     )
+
+if (RESTC_CPP_LOG_WITH_ZLIB)
+    set(ACTUAL_SOURCES ${ACTUAL_SOURCES} ZipReaderImpl.cpp)
+endif()
 
 if (WIN32)
     ADD_MSVC_PRECOMPILED_HEADER(restc-cpp/restc-cpp.h pch.cpp ACTUAL_SOURCES)
