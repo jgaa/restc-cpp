@@ -45,7 +45,8 @@ public:
 
     boost::asio::const_buffers_1 GetSomeData() override;
 
-    string GetBodyAsString() override;
+    string GetBodyAsString(size_t maxSize
+        = RESTC_CPP_SANE_DATA_LIMIT) override;
 
     bool MoreDataToRead() override {
         assert(reader_);

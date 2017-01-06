@@ -35,6 +35,12 @@
 #endif
 #endif
 
+/*! Max expected data-payload for one server reply */
+#ifndef RESTC_CPP_SANE_DATA_LIMIT
+    // 16 Megabytes
+#   define RESTC_CPP_SANE_DATA_LIMIT (1024 * 1024 * 16)
+#endif
+
 namespace restc_cpp {
 
 class RestClient;
@@ -212,7 +218,8 @@ public:
      * This is a convenience method when working with relatively
      * small results.
      */
-    virtual std::string GetBodyAsString() = 0;
+    virtual std::string GetBodyAsString(size_t maxSize
+        = RESTC_CPP_SANE_DATA_LIMIT) = 0;
 
     /*! Get some data from the server.
      *

@@ -127,7 +127,7 @@ boost::asio::const_buffers_1 ReplyImpl::GetSomeData()  {
     return rval;
 }
 
-string ReplyImpl::GetBodyAsString() {
+string ReplyImpl::GetBodyAsString(const size_t maxSize) {
     std::string buffer;
     if (content_length_) {
         buffer.reserve(*content_length_);
@@ -135,8 +135,15 @@ string ReplyImpl::GetBodyAsString() {
 
     while(!reader_->IsEof()) {
         auto data = reader_->ReadSome();
+
+        const auto buffer_size = boost::asio::buffer_size(data);
+        if ((buffer.size() + buffer_size) >= maxSize) {
+            throw ConstraintException(
+                "Too much data for the curent buffer limit.");
+        }
+
         buffer.append(boost::asio::buffer_cast<const char*>(data),
-                      boost::asio::buffer_size(data));
+                      buffer_size);
     }
 
     ReleaseConnection();
