@@ -9,14 +9,14 @@
 #include "restc-cpp/Connection.h"
 #include "restc-cpp/ConnectionPool.h"
 #include "restc-cpp/logging.h"
+#include "restc-cpp/error.h"
+
 #include "ConnectionImpl.h"
 #include "SocketImpl.h"
 
 #ifdef RESTC_CPP_WITH_TLS
 #   include "TlsSocketImpl.h"
 #endif
-
-// TODO: Implement timer routine to clean up idle connections.
 
 using namespace std;
 
@@ -77,7 +77,7 @@ public:
 
         const Key key;
         Connection::ptr_t connection;
-        int ttl = 60;
+        const int ttl = 60;
         const time_t created;
         timestamp_t last_used = chrono::steady_clock::now();
     };
@@ -133,12 +133,15 @@ public:
 
         if (!newConnectionPlease) {
             if (auto conn = GetFromCache(ep, connectionType)) {
-                RESTC_CPP_LOG_TRACE << "Reusing connection from cache " << *conn;
+                RESTC_CPP_LOG_TRACE
+                    << "Reusing connection from cache "
+                    << *conn;
                 return conn;
             }
 
             if (!CanCreateNewConnection(ep, connectionType)) {
-                throw runtime_error("Cannot create connection - too many connections");
+                throw ConstraintException(
+                    "Cannot create connection - too many connections");
             }
         }
 
@@ -163,6 +166,7 @@ private:
 
     void OnCacheCleanup(const boost::system::error_code& error) {
         if (error) {
+            RESTC_CPP_LOG_DEBUG << "OnCacheCleanup: " << error;
             return;
         }
 
@@ -179,12 +183,12 @@ private:
             if (expires < now) {
                 RESTC_CPP_LOG_TRACE << "Expiring " << *current->second->connection;
                 idle_.erase(current);
-            } /*else {
+            } else {
                 RESTC_CPP_LOG_TRACE << "Keeping << " << *current->second->connection
                     << " expieres in "
                     << std::chrono::duration_cast<std::chrono::seconds>(expires - now).count()
                     << " seconds ";
-            } */
+            }
         }
 
         ScheduleNextCacheCleanup();
@@ -207,25 +211,48 @@ private:
                                 const Connection::Type connectionType) {
 
         {
-            const size_t all_cnt = idle_.size() + in_use_.size();
-            if (all_cnt >= properties_->cacheMaxConnections) {
-                RESTC_CPP_LOG_DEBUG << "No more available slots (max=" <<
-                    properties_->cacheMaxConnections
-                    << ", used=" << all_cnt << ")";
-                    return false;
-            }
-        }
-
-        {
             const auto key = Key{ep, connectionType};
             const size_t ep_cnt = idle_.count(key) + in_use_.count(key);
             if (ep_cnt >= properties_->cacheMaxConnectionsPerEndpoint) {
-                RESTC_CPP_LOG_DEBUG << "No more available slots for " << key;
+                RESTC_CPP_LOG_DEBUG
+                    << "No more available slots for " << key;
                 return false;
             }
         }
 
+        {
+            const size_t all_cnt = idle_.size() + in_use_.size();
+            if (all_cnt >= properties_->cacheMaxConnections) {
+
+                // See if we can release an idle connection.
+                if (!PurgeOldestIdleEntry()) {
+                    RESTC_CPP_LOG_DEBUG
+                        << "No more available slots (max="
+                        << properties_->cacheMaxConnections
+                        << ", used=" << all_cnt << ")";
+                        return false;
+                }
+            }
+        }
+
         return true;
+    }
+
+    bool PurgeOldestIdleEntry() {
+        auto oldest =  idle_.begin();
+        for (auto it = idle_.begin(); it != idle_.end(); ++it) {
+            if (it->second->last_used < oldest->second->last_used) {
+                oldest = it;
+            }
+        }
+
+        if (oldest != idle_.end()) {
+            RESTC_CPP_LOG_TRACE << "LRU-Purging " << *oldest->second;
+            idle_.erase(oldest);
+            return true;
+        }
+
+        return false;
     }
 
     // Get a connection from the cache if it's there.

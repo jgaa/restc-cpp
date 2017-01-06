@@ -71,7 +71,7 @@ private:
             throw ParseException("Missing chunk-length in new chunk.");
         }
 
-        for(; isxdigit(ch); ch= stream_.Getc()) {
+        for(; isxdigit(ch); ch = stream_.Getc()) {
             chunk_len *= 16;
             if (ch >= 'a') {
                 chunk_len += 10 + (ch - 'a');

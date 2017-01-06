@@ -519,6 +519,11 @@ These are the operating systems I test with before releasing a new version.
 - Performance analysis and optimizations for speed and memory footprint
 - Refactor
  - [ ] split the json serialization and HTTP client into independent sub-projects
+- New features
+ - [ ] Add Context.Sleep() to sleep inside the co-routine
+ - [ ] Add RestClient constructor that use existing ioservice()/thread.
+    Needed if we want to use the library with existing asio based code.
+ - [ ] Add RestClient() constructor for use by the calling (main) thread. (To avoid worker thread in simple cases).
 - Implement Chunked Requests (chained DataWriter interface)
  - [ ] General support In HTTP Requests module
  - [ ] Async from json Serialization

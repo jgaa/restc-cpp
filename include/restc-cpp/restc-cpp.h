@@ -242,7 +242,8 @@ public:
     virtual bool MoreDataToRead() = 0;
 
     /*! Get the value of a header */
-    virtual boost::optional<std::string> GetHeader(const std::string& name) = 0;
+    virtual boost::optional<std::string>
+        GetHeader(const std::string& name) = 0;
 };
 
 /*! The context is used to keep state within a co-routine.
@@ -278,27 +279,28 @@ public:
      */
     virtual std::unique_ptr<Reply> Request(Request& req) = 0;
 
-    static std::unique_ptr<Context> Create(boost::asio::yield_context& yield,
-                                           RestClient& rc);
+    static std::unique_ptr<Context>
+        Create(boost::asio::yield_context& yield,
+               RestClient& rc);
 };
 
 /*! Factory and resource management
  *
  * Each instance of this class has it's own internal worker-thread
- * that will execute the co-routines passed to Process().
+ * that will execute the co-routines passed to Process*().
  *
  * Because REST calls are typically slow at the server end, you can
  * normally pass a large number of requests to one instance.
  */
 class RestClient {
 public:
+    using prc_fn_t = std::function<void (Context& ctx)>;
     struct DoneHandler {};
 
     /*! Get the default connection properties. */
-    virtual const Request::Properties::ptr_t GetConnectionProperties() const = 0;
+    virtual const Request::Properties::ptr_t
+        GetConnectionProperties() const = 0;
     virtual ~RestClient() = default;
-
-    using prc_fn_t = std::function<void (Context& ctx)>;
 
     /*! Create a context and execute fn as a co-routine
      *
@@ -314,12 +316,14 @@ public:
      */
     virtual void Process(const prc_fn_t& fn) = 0;
 
-    /*! Same as process, but returns a void future */
-    virtual std::future<void> ProcessWithPromise(const prc_fn_t& fn) = 0;
+    /*! Process and return a future with a value or the current exception  */
+    virtual std::future<void>
+        ProcessWithPromise(const prc_fn_t& fn) = 0;
 
     /*! Process and return a future with a value or the current exception */
     template <typename T>
-    std::future<T> ProcessWithPromiseT(const std::function<T (Context& ctx)>& fn) {
+    std::future<T>
+        ProcessWithPromiseT(const std::function<T (Context& ctx)>& fn) {
 
         auto prom = std::make_shared<std::promise<T>>();
 
