@@ -41,6 +41,11 @@
 #   define RESTC_CPP_SANE_DATA_LIMIT (1024 * 1024 * 16)
 #endif
 
+/*! Size of fixed size (per connection) IO buffers */
+#ifndef RESTC_CPP_IO_BUFFER_SIZE
+#   define RESTC_CPP_IO_BUFFER_SIZE (1024 * 16)
+#endif
+
 namespace restc_cpp {
 
 class RestClient;

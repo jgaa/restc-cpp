@@ -280,7 +280,8 @@ private:
 #ifdef RESTC_CPP_WITH_TLS
             socket = make_unique<TlsSocketImpl>(owner_.GetIoService());
 #else
-            throw runtime_error("restc_cpp is compiled without TLS support");
+            throw NotImplementedException(
+                "restc_cpp is compiled without TLS support");
 #endif
         }
 

@@ -29,12 +29,12 @@ public:
     }
 
     std::size_t AsyncReadSome(boost::asio::mutable_buffers_1 buffers,
-                              boost::asio::yield_context& yield) override {
+                            boost::asio::yield_context& yield) override {
         return socket_.async_read_some(buffers, yield);
     }
 
     std::size_t AsyncRead(boost::asio::mutable_buffers_1 buffers,
-                          boost::asio::yield_context& yield) override {
+                        boost::asio::yield_context& yield) override {
         return boost::asio::async_read(socket_, buffers, yield);
     }
 
@@ -45,11 +45,11 @@ public:
 
     void AsyncWrite(const write_buffers_t& buffers,
                     boost::asio::yield_context& yield)override {
-         boost::asio::async_write(socket_, buffers, yield);
+        boost::asio::async_write(socket_, buffers, yield);
     }
 
     void AsyncConnect(const boost::asio::ip::tcp::endpoint& ep,
-                      boost::asio::yield_context& yield) override {
+                    boost::asio::yield_context& yield) override {
         socket_.async_connect(ep, yield);
     }
 
@@ -81,7 +81,7 @@ protected:
                     << " <--> " << socket.remote_endpoint() << '}';
             } catch (const std::exception& ex) {
                 o << " {std exception: " << ex.what() << "}}";
-            } 
+            }
         }
 
         return o << "{Socket (unused/closed)}";

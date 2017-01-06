@@ -126,7 +126,7 @@ void forth() {
 
         // Asynchronously connect to a server trough a HTTP proxy and fetch some data.
         auto reply = RequestBuilder(ctx)
-            .Get("http://fwd/normal/posts/1")
+            .Get("http://api.example.com/normal/posts/1")
 
             // Send the request.
             .Execute();
@@ -198,5 +198,6 @@ int main() {
 
     } catch(const exception& ex) {
         cerr << "Something threw up: " << ex.what() << endl;
+        return 1;
     }
 }

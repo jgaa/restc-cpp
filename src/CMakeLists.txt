@@ -11,6 +11,7 @@ set(ACTUAL_SOURCES
     ConnectionPoolImpl.cpp
     Url.cpp
     Body.cpp
+    url_encode.cpp
     )
 
 set(HEADERS

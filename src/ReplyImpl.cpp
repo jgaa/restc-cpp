@@ -5,6 +5,8 @@
 #include "restc-cpp/helper.h"
 #include "restc-cpp/error.h"
 #include "restc-cpp/DataReaderStream.h"
+#include "restc-cpp/url_encode.h"
+
 #include "ReplyImpl.h"
 
 
@@ -13,8 +15,8 @@ using namespace std;
 namespace restc_cpp {
 
 
-boost::optional< string > ReplyImpl::GetHeader(const string& name) {
-    boost::optional< string > rval;
+boost::optional<string> ReplyImpl::GetHeader(const string& name) {
+    boost::optional<string> rval;
 
     auto it = headers_.find(name);
     if (it != headers_.end()) {
@@ -48,12 +50,6 @@ ReplyImpl::~ReplyImpl() {
 }
 
 void ReplyImpl::StartReceiveFromServer(DataReader::ptr_t&& reader) {
-    static const std::string content_len_name{"Content-Length"};
-    static const std::string connection_name{"Connection"};
-    static const std::string keep_alive_name{"keep-alive"};
-    static const std::string transfer_encoding_name{"Transfer-Encoding"};
-    static const std::string chunked_name{"chunked"};
-
     if (reader_) {
         throw RestcCppException("StartReceiveFromServer() is already called.");
     }
@@ -61,17 +57,29 @@ void ReplyImpl::StartReceiveFromServer(DataReader::ptr_t&& reader) {
     assert(reader);
     auto stream = make_unique<DataReaderStream>(move(reader));
     stream->ReadServerResponse(response_);
-    stream->ReadHeaderLines([this](std::string&& name, std::string&& value) {
+    stream->ReadHeaderLines(
+        [this](std::string&& name, std::string&& value) {
         headers_[move(name)] = move(value);
     });
     reader_ = move(stream);
+
+    HandleContentType();
+    HandleConnectionLifetime();
+    HandleDecompression();
+    CheckIfWeAreDone();
+}
+
+void ReplyImpl::HandleContentType() {
+    static const std::string content_len_name{"Content-Length"};
+    static const std::string transfer_encoding_name{"Transfer-Encoding"};
+    static const std::string chunked_name{"chunked"};
 
     if (const auto cl = GetHeader(content_len_name)) {
         content_length_ = stoi(*cl);
         reader_ = DataReader::CreatePlainReader(*content_length_, move(reader_));
     } else {
         auto te = GetHeader(transfer_encoding_name);
-        if (te && boost::iequals(*te, chunked_name)) {
+        if (te && ciEqLibC()(*te, chunked_name)) {
             reader_ = DataReader::CreateChunkedReader([this](string&& name, string&& value) {
                 headers_[move(name)] = move(value);
             },  move(reader_));
@@ -79,17 +87,20 @@ void ReplyImpl::StartReceiveFromServer(DataReader::ptr_t&& reader) {
             reader_ = DataReader::CreateNoBodyReader();
         }
     }
+}
 
-    // Check for Connection: close header and tag the connection for close
+void ReplyImpl::HandleConnectionLifetime() {
+    static const std::string connection_name{"Connection"};
+    static const std::string keep_alive_name{"keep-alive"};
+
+    // Check for Connection: close header and tag the
+    // connection for close
     const auto conn_hdr = GetHeader(connection_name);
     if (!conn_hdr || !ciEqLibC()(*conn_hdr, keep_alive_name)) {
         RESTC_CPP_LOG_TRACE << "No 'Connection: keep-alive' header. "
             << "Tagging " << *connection_ << " for close.";
         do_close_connection_ = true;
     }
-
-    HandleDecompression();
-    CheckIfWeAreDone();
 }
 
 void ReplyImpl::HandleDecompression() {
@@ -114,7 +125,8 @@ void ReplyImpl::HandleDecompression() {
         } else
 #endif // RESTC_CPP_WITH_ZLIB
         {
-            RESTC_CPP_LOG_ERROR << "Unsupported compression: '" << *it
+            RESTC_CPP_LOG_ERROR << "Unsupported compression: '"
+                << url_encode(*it)
                 << "' from server on " << *connection_;
             throw NotSupportedException("Unsupported compression.");
         }

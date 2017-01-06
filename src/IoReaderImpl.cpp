@@ -11,7 +11,7 @@ namespace restc_cpp {
 
 class IoReaderImpl : public DataReader {
 public:
-    using buffer_t = std::array<char, 1024 * 16>;
+    using buffer_t = std::array<char, RESTC_CPP_IO_BUFFER_SIZE>;
 
     IoReaderImpl(Connection& conn, Context& ctx)
     : ctx_{ctx}, connection_{conn}
@@ -21,14 +21,15 @@ public:
     boost::asio::const_buffers_1 ReadSome() override {
         const auto bytes = connection_.GetSocket().AsyncReadSome(
             {buffer_.data(), buffer_.size()}, ctx_.GetYield());
-        
-        RESTC_CPP_LOG_TRACE << "Read #" << bytes << " bytes from " << connection_;
+
+        RESTC_CPP_LOG_TRACE << "Read #" << bytes
+            << " bytes from " << connection_;
         return {buffer_.data(), bytes};
     }
 
-     bool IsEof() const override {
-         return !connection_.GetSocket().IsOpen();
-     }
+    bool IsEof() const override {
+        return !connection_.GetSocket().IsOpen();
+    }
 
 private:
     Context& ctx_;

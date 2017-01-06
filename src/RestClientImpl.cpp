@@ -105,6 +105,7 @@ public:
             pool_ = ConnectionPool::Create(*this);
             work_ = make_unique<boost::asio::io_service::work>(io_service_);
             wait.set_value();
+            RESTC_CPP_LOG_DEBUG << "Worker is starting.";
             io_service_.run();
             RESTC_CPP_LOG_DEBUG << "Worker is done.";
         });

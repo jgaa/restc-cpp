@@ -37,7 +37,7 @@ public:
 
     /*! Get one char
      *
-     * \exception runtime_error on end of stream
+     * \exception ParseException on end of stream
      */
     char Getc() {
         if (eof_) {

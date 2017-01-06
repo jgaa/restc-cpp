@@ -29,6 +29,20 @@ namespace restc_cpp{
 namespace unittests {
 
 
+TEST(TestNoRedirects)
+{
+    Request::Properties properties;
+    properties.maxRedirects = 0;
+
+    auto rest_client = RestClient::Create(properties);
+    rest_client->ProcessWithPromise([&](Context& ctx) {
+
+        CHECK_THROW(
+            ctx.Get(http_redirect_url), ConstraintException);
+
+    }).get();
+}
+
 TEST(TestSingleRedirect)
 {
     auto rest_client = RestClient::Create();
@@ -43,6 +57,7 @@ TEST(TestSingleRedirect)
 
     }).get();
 }
+
 
 TEST(TestDoubleRedirect)
 {
@@ -64,7 +79,8 @@ TEST(TestRedirectLoop)
     auto rest_client = RestClient::Create();
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
-        CHECK_THROW(ctx.Get(http_redirect_loop_url), std::runtime_error);
+        CHECK_THROW(
+            ctx.Get(http_redirect_loop_url), ConstraintException);
 
     }).get();
 }

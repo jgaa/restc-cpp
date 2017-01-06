@@ -18,11 +18,8 @@ using namespace std;
 
 namespace restc_cpp {
 
-#define BYTES_AVAILABLE (read_buffer_->size() - bytes_used)
-
 class ReplyImpl : public Reply {
 public:
-    using buffer_t = std::array<char, 1024 * 16>;
     enum class ChunkedState
         { NOT_CHUNKED, GET_SIZE, IN_SEGMENT, IN_TRAILER, DONE };
 
@@ -31,7 +28,7 @@ public:
 
     ~ReplyImpl();
 
-    boost::optional< string > GetHeader(const string& name) override;
+    boost::optional<string> GetHeader(const string& name) override;
 
     void StartReceiveFromServer(DataReader::ptr_t&& reader);
 
@@ -72,6 +69,8 @@ protected:
     void CheckIfWeAreDone();
     void ReleaseConnection();
     void HandleDecompression();
+    void HandleContentType();
+    void HandleConnectionLifetime();
 
     Connection::ptr_t connection_;
     Context& ctx_;
