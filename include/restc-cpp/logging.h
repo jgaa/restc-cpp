@@ -13,8 +13,6 @@
 
 #ifdef RESTC_CPP_LOG_WITH_BOOST_LOG
 
-#define BOOST_LOG_DYN_LINK 1
-
 #include <boost/log/trivial.hpp>
 
 #define RESTC_CPP_LOG_ERROR     BOOST_LOG_TRIVIAL(error)

@@ -2,6 +2,8 @@
 #ifndef RESTC_CPP_H_
 #define RESTC_CPP_H_
 
+#include "restc-cpp/config.h"
+
 #include <string>
 #include <map>
 #include <deque>
@@ -18,7 +20,6 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
-#include "restc-cpp/config.h"
 #include "restc-cpp/helper.h"
 #include "restc-cpp/Connection.h"
 

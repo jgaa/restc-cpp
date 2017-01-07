@@ -956,7 +956,9 @@ void do_serialize(const dataT& object, serializerT& serializer,
         std::is_same<dataT, std::string>::value
         >::type* = 0) {
 
-    serializer.String(object.c_str(), object.size(), true);
+    serializer.String(object.c_str(), 
+		static_cast<rapidjson::SizeType>(object.size()), 
+		true);
 };
 
 template <typename dataT, typename serializerT>

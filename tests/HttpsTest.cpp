@@ -47,9 +47,9 @@ BOOST_FUSION_ADAPT_STRUCT(
 // library to use (boost::asio only support openssl and compatible
 // libraries out of the box).
 
-//string https_url = "https://jsonplaceholder.typicode.com/posts/1";
+string https_url = "https://jsonplaceholder.typicode.com/posts/1";
 
-string https_url = "https://lastviking.eu/files/api";
+//string https_url = "https://lastviking.eu/files/api";
 
 namespace restc_cpp{
 namespace unittests {
