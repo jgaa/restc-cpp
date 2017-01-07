@@ -516,6 +516,6 @@ These are the operating systems I test with before releasing a new version.
 
 
 # More information
-[Build for Linux](https://github.com/jgaa/restc-cpp/wiki/Building-Restc-cpp-under-Linux)
-[Build for Windows](https://github.com/jgaa/restc-cpp/wiki/Building-restc-cpp-under-Windows)
-[Planned work](https://github.com/jgaa/restc-cpp/wiki)
+- [Build for Linux](https://github.com/jgaa/restc-cpp/wiki/Building-Restc-cpp-under-Linux)
+- [Build for Windows](https://github.com/jgaa/restc-cpp/wiki/Building-restc-cpp-under-Windows)
+- [Planned work](https://github.com/jgaa/restc-cpp/wiki)
