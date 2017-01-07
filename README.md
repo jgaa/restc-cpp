@@ -478,12 +478,6 @@ int main()
     }).get();
 ```
 
-# Current Status
-The project is maturing fast. There are no known bugs.
-Beta status will be announced in the near future.
-
-The latest code is tested with Debian "testing", Debian Jessie Fedora 25 and Windows 10.
-
 # Features
 - Raw GET, POST, PUT and DELETE requests with no data conversions
 - Low level interface to create requests
@@ -501,11 +495,18 @@ The latest code is tested with Debian "testing", Debian Jessie Fedora 25 and Win
   - Filters out empty C++ properties when the C++ object is serialized for transfer to the server (can be disabled).
   - Iterator interface to received Json lists of objects
 
+# Current Status
+The project is maturing fast. There are no known bugs.
+Beta status will be announced in the near future.
+
+The latest code is tested with Debian "testing", Debian Jessie Fedora 25 and Windows 10.
+
+
 # Supported operating systems
 These are the operating systems I test with before releasing a new version.
 
  - Debian Stable (Jessie)
- - ~~Debian Testing~~ kdevelop package is currently broken in Debian Testing
+ - Debian Testing
  - Windows 10 / Microsoft Visual Studio, comminity version
 	(I have not installed docker on Windows yet, so only some tests are run.
 	However, all tests compile and link correctly with Boost 1.63, zlib 1.2.9
