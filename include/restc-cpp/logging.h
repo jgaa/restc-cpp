@@ -13,7 +13,9 @@
 
 #ifdef RESTC_CPP_LOG_WITH_BOOST_LOG
 
-#define BOOST_LOG_DYN_LINK 1
+#ifndef WIN32
+#	define BOOST_LOG_DYN_LINK 1
+#endif
 
 #include <boost/log/trivial.hpp>
 

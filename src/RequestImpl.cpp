@@ -2,7 +2,6 @@
 #include <fstream>
 #include <thread>
 #include <future>
-#include <bitset>
 
 #include <boost/utility/string_ref.hpp>
 
@@ -13,6 +12,7 @@
 #include "restc-cpp/ConnectionPool.h"
 #include "restc-cpp/IoTimer.h"
 #include "restc-cpp/error.h"
+#include "restc-cpp/url_encode.h"
 #include "ReplyImpl.h"
 
 using namespace std;
@@ -86,8 +86,11 @@ public:
 
     void SetAuth(const Auth& auth) {
         static const string authorization{"Authorization"};
+        static const string basic_sp{"Basic "};
+
         std::string pre_base = auth.name + ':' + auth.passwd;
-        properties_->headers[authorization] = "Basic " + Base64Encode(pre_base);
+        properties_->headers[authorization]
+            = basic_sp + Base64Encode(pre_base);
         std::memset(&pre_base[0], 0, pre_base.capacity());
         pre_base.clear();
     }
@@ -118,7 +121,7 @@ public:
             try {
                 return DoExecute((ctx));
             } catch(RedirectException& ex) {
-                if ((redirects >= 0)
+                if ((properties_->maxRedirects >= 0)
                     && (++redirects > properties_->maxRedirects)) {
                     throw ConstraintException("Too many redirects.");
                 }
@@ -141,55 +144,29 @@ private:
         const auto& response = reply.GetHttpResponse();
         if (response.status_code > 299) switch(response.status_code) {
             case 401:
-                throw AuthenticationException(response);
+                throw HttpAuthenticationException(response);
+            case 403:
+                throw HttpForbiddenException(response);
+            case 404:
+                throw HttpNotFoundException(response);
+            case 405:
+                throw HttpMethodNotAllowedException(response);
+            case 406:
+                throw HttpNotAcceptableException(response);
+            case 407:
+                throw HttpProxyAuthenticationRequiredException(response);
+            case 408:
+                throw HttpRequestTimeOutException(response);
             default:
                 throw RequestFailedWithErrorException(response);
         }
-    }
-
-    static std::bitset<255> GetNormalCh() {
-        std::bitset<255> bits;
-
-        for(uint8_t ch = 0; ch < bits.size(); ++ch) {
-            if ((ch >= '0' && ch <= '9')
-                || (ch >= 'a' && ch <= 'z')
-                || (ch >= 'A' && ch <= 'Z')
-                || ch == '-' || ch == '_' || ch == '.'
-                || ch == '!' || ch == '~' || ch == '*'
-                || ch == '\'' || ch == '(' || ch == ')'
-                || ch == '/')
-
-            {
-                bits[ch] = true;
-            }
-        }
-
-        return bits;
-    }
-
-    std::string UrlEncode(const boost::string_ref& src) {
-        static const string hex{"0123456789ABCDEF"};
-        static const std::bitset<255> normal_ch = GetNormalCh();
-        std::string rval;
-        rval.reserve(src.size());
-
-
-        for(auto ch : src) {
-            if (normal_ch[static_cast<uint8_t>(ch)]) {
-                rval += ch;
-            } else {
-                rval += '%';
-                rval += hex[(ch >> 4) & 0x0f];
-                rval += hex[ch & 0x0f];
-            }
-        }
-        return rval;
     }
 
     std::string BuildOutgoingRequest() {
         static const std::string crlf{"\r\n"};
         static const std::string column{": "};
         static const string host{"Host"};
+        static const string content_length{"Content-Length"};
 
         std::ostringstream request_buffer;
 
@@ -200,7 +177,7 @@ private:
             request_buffer << parsed_url_.GetProtocolName() << parsed_url_.GetHost();
         }
 
-        request_buffer << UrlEncode(parsed_url_.GetPath());
+        request_buffer << url_encode(parsed_url_.GetPath());
 
 
         // Add arguments to the path as ?name=value&name=value...
@@ -216,27 +193,28 @@ private:
                 request_buffer << '&';
             }
 
-            request_buffer << UrlEncode(arg.name) << '=' << UrlEncode(arg.value);
+            request_buffer
+                << url_encode(arg.name)
+                << '=' << url_encode(arg.value);
         }
 
         request_buffer << " HTTP/1.1" << crlf;
 
         // Build the header buffers
         const headers_t& headers = properties_->headers;
-        if (headers.find("Host") == headers.end()) {
-            request_buffer << "Host: " << parsed_url_.GetHost().to_string()
-                << crlf;
+        if (headers.find(host) == headers.end()) {
+            request_buffer << host << ": " << parsed_url_.GetHost().to_string() << crlf;
         }
 
 
-        if (headers.find("Content-Length") == headers.end()) {
+        if (headers.find(content_length) == headers.end()) {
 
             size_t length = 0;
             if (body_ && body_->HaveSize()) {
                 length = static_cast<decltype(length)>(body_->GetFizxedSize());
             }
 
-            request_buffer << "Content-Length: " << length << crlf;
+            request_buffer << content_length << ": " << length << crlf;
             fixed_content_lenght_ = length;
         }
 
@@ -292,13 +270,16 @@ private:
         RESTC_CPP_LOG_TRACE << "Resolving " << query.host_name() << ":"
             << query.service_name();
 
-        auto address_it = resolver.async_resolve(query,ctx.GetYield());
-        decltype(address_it) addr_end;
+        auto address_it = resolver.async_resolve(query,
+                                                 ctx.GetYield());
+        const decltype(address_it) addr_end;
         bool connected = false;
 
         for(; address_it != addr_end; ++address_it) {
             assert(!connected);
             const auto endpoint = address_it->endpoint();
+
+            RESTC_CPP_LOG_TRACE << "Trying endpoint " << endpoint;
 
             // Get a connection from the pool
             auto connection = owner_.GetConnectionPool().GetConnection(
@@ -309,9 +290,8 @@ private:
 
                 RESTC_CPP_LOG_DEBUG << "Connecting to " << endpoint;
 
-                auto timer = IoTimer::Create(properties_->connectTimeoutMs,
-                                                owner_.GetIoService(),
-                                                connection);
+                auto timer = IoTimer::Create(
+                    properties_->connectTimeoutMs, connection);
 
                 try {
                     connection->GetSocket().AsyncConnect(
@@ -333,13 +313,12 @@ private:
             // Send the request and all data
             while(boost::asio::buffer_size(write_buffer))
             {
-                auto timer = IoTimer::Create(properties_->connectTimeoutMs,
-                                                owner_.GetIoService(),
-                                                connection);
+                auto timer = IoTimer::Create(
+                    properties_->connectTimeoutMs, connection);
 
                 try {
                     connection->GetSocket().AsyncWrite(write_buffer,
-                                                        ctx.GetYield());
+                                                       ctx.GetYield());
 
                     RESTC_CPP_LOG_TRACE << "--> Sent "
                         <<  boost::asio::buffer_size(write_buffer) << " bytes: "
@@ -348,8 +327,8 @@ private:
                     for(const auto& b : write_buffer) {
 
                         auto bb = boost::string_ref(
-                                boost::asio::buffer_cast<const char*>(b),
-                                boost::asio::buffer_size(b));
+                            boost::asio::buffer_cast<const char*>(b),
+                            boost::asio::buffer_size(b));
 
                         RESTC_CPP_LOG_TRACE << bb;
                     }
@@ -378,16 +357,18 @@ private:
             // Check that we sent whatever was in the content-length header
             if (fixed_content_lenght_) {
                 if (fixed_content_lenght_ != GetContentBytesSent()) {
-                    RESTC_CPP_LOG_ERROR << "I set content-lenght header to "
+                    RESTC_CPP_LOG_ERROR
+                        << "I set content-lenght header to "
                         << *fixed_content_lenght_
                         << " but sent " << GetContentBytesSent()
                         << " content bytes.";
-                    throw ProtocolException("Sent incorrect payload size");
+                    throw ProtocolException(
+                        "Sent incorrect payload size");
                 }
             }
 
             // Pass IO responsibility to the Reply
-            RESTC_CPP_LOG_DEBUG << "Sending request to '" << url_ << "' "
+            RESTC_CPP_LOG_DEBUG << "Sent request to '" << url_ << "' "
                 << *connection;
             auto reply = ReplyImpl::Create(connection, ctx, owner_);
             reply->StartReceiveFromServer(
@@ -397,7 +378,8 @@ private:
             if (http_code == 301 || http_code == 302) {
                 auto redirect_location = reply->GetHeader("Location");
                 if (!redirect_location) {
-                    throw ProtocolException("No Location header in redirect reply");
+                    throw ProtocolException(
+                        "No Location header in redirect reply");
                 }
                 throw RedirectException(http_code, *redirect_location);
             }

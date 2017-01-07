@@ -8,18 +8,6 @@
 #include <deque>
 
 #include <boost/iterator/function_input_iterator.hpp>
-
-#ifdef HAVE_BOOST_TYPEINDEX
-    #include <boost/type_index.hpp>
-
-    #define RESTC_CPP_TYPENAME(type) \
-        boost::typeindex::type_id<type>().pretty_name()
-#else
-    #define RESTC_CPP_TYPENAME(type) \
-        typeid(type).name()
-#endif
-
-
 #include <boost/mpl/range_c.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/contains.hpp>
@@ -40,10 +28,16 @@
 #include "restc-cpp/RapidJsonReader.h"
 #include "restc-cpp/internals/for_each_member.hpp"
 #include "restc-cpp/error.h"
+#include "restc-cpp/typename.h"
 
 namespace restc_cpp {
 
-struct json_field_mapping {
+/*! Mapping between C++ property names and json names.
+*
+* Normally we will use the same, but in some cases we
+* need to appy mapping.
+*/
+struct JsonFieldMapping {
     struct entry {
         std::string native_name;
         std::string json_name;
@@ -68,23 +62,6 @@ struct json_field_mapping {
             }
         }
         return name;
-    }
-};
-
-struct serialize_properties {
-    bool ignore_empty_fileds = false;
-    const std::set<std::string> *excluded_names = nullptr;
-    const json_field_mapping *name_mapping = nullptr;
-
-    bool is_excluded(const std::string& name) const noexcept {
-        return excluded_names
-            && excluded_names->find(name) != excluded_names->end();
-    }
-
-    const std::string& map_name_to_json(const std::string& name) const noexcept {
-        if (name_mapping == nullptr)
-            return name;
-        return name_mapping->to_json_name(name);
     }
 };
 
@@ -153,16 +130,30 @@ private:
 
 namespace {
 
+struct serialize_properties {
+    bool ignore_empty_fileds = false;
+    const std::set<std::string> *excluded_names = nullptr;
+    const JsonFieldMapping *name_mapping = nullptr;
+
+    bool is_excluded(const std::string& name) const noexcept {
+        return excluded_names
+            && excluded_names->find(name) != excluded_names->end();
+    }
+
+    const std::string& map_name_to_json(const std::string& name) const noexcept {
+        if (name_mapping == nullptr)
+            return name;
+        return name_mapping->to_json_name(name);
+    }
+};
+
+
 template <typename T>
 struct type_conv
 {
-	using const_field_type_t = const T;
-	using native_field_type_t = typename std::remove_const<typename std::remove_reference<const_field_type_t>::type>::type;
-	using noconst_ref_type_t = typename std::add_lvalue_reference<native_field_type_t>::type;
-
-	/*static noconst_ref_type_t& to_nc_ref(const T& v) {
-		return  std::const_cast<noconst_ref_type_t>(v);
-	}*/
+    using const_field_type_t = const T;
+    using native_field_type_t = typename std::remove_const<typename std::remove_reference<const_field_type_t>::type>::type;
+    using noconst_ref_type_t = typename std::add_lvalue_reference<native_field_type_t>::type;
 };
 
 template <typename T, typename fnT>
@@ -195,7 +186,7 @@ template <typename varT, typename valT,
         && !std::is_assignable<varT&, const valT&>::value
         >::type* = nullptr>
 void assign_value(varT& var, const valT& val) {
-	static_assert(!std::is_assignable<varT&, valT>::value, "assignable");
+    static_assert(!std::is_assignable<varT&, valT>::value, "assignable");
     var = static_cast<varT>(val);
 }
 
@@ -234,137 +225,137 @@ void assign_value(varT var, valT val) {
 
 template <>
 void assign_value(int& var, const int& val) {
-	var = val;
+    var = val;
 }
 
 template <>
 void assign_value(unsigned int& var, const int& val) {
-	var = static_cast<unsigned int>(val);
+    var = static_cast<unsigned int>(val);
 }
 
 template <>
 void assign_value(unsigned int& var, const unsigned int& val) {
-	var = val;
+    var = val;
 }
 
 template <>
 void assign_value(int& var, const unsigned int& val) {
-	var = static_cast<int>(val);
+    var = static_cast<int>(val);
 }
 
 template <>
 void assign_value(int& var, const bool& val) {
-	var = static_cast<int>(val);
+    var = static_cast<int>(val);
 }
 
 template <>
 void assign_value(unsigned int& var, const bool& val) {
-	var = static_cast<int>(val);
+    var = static_cast<int>(val);
 }
 
 template <>
 void assign_value(std::int64_t& var, const int& val) {
-	var = val;
+    var = val;
 }
 
 template <>
 void assign_value(std::int64_t& var, const unsigned int& val) {
-	var = static_cast<std::int64_t>(val);
+    var = static_cast<std::int64_t>(val);
 }
 
 template <>
 void assign_value(std::int64_t& var, const std::int64_t& val) {
-	var = val;
+    var = val;
 }
 
 template <>
 void assign_value(std::int64_t& var, const std::uint64_t& val) {
-	var = static_cast<std::int64_t>(val);
+    var = static_cast<std::int64_t>(val);
 }
 
 template <>
 void assign_value(std::uint64_t& var, const int& val) {
-	var = static_cast<std::uint64_t>(val);
+    var = static_cast<std::uint64_t>(val);
 }
 
 template <>
 void assign_value(std::uint64_t& var, const unsigned int& val) {
-	var = val;
+    var = val;
 }
 
 template <>
 void assign_value(std::uint64_t& var, const std::int64_t& val) {
-	var = static_cast<std::uint64_t>(val);
+    var = static_cast<std::uint64_t>(val);
 }
 
 template <>
 void assign_value(std::uint64_t& var, const std::uint64_t& val) {
-	var = val;
+    var = val;
 }
 
 template <>
 void assign_value(bool& var, const int& val) {
-	var = val ? true : false;
+    var = val ? true : false;
 }
 
 template <>
 void assign_value(bool& var, const unsigned int& val) {
-	var = val ? true : false;
+    var = val ? true : false;
 }
 
 template <>
 void assign_value(double& var, const double& val) {
-	var = val;
+    var = val;
 }
 
 template <>
 void assign_value(float& var, const double& val) {
-	var = static_cast<float>(val);
+    var = static_cast<float>(val);
 }
 
 template <>
 void assign_value(short& var, const int& val) {
-	var = static_cast<short>(val);
+    var = static_cast<short>(val);
 }
 
 template <>
 void assign_value(short& var, const unsigned int& val) {
-	var = static_cast<short>(val);
+    var = static_cast<short>(val);
 }
 
 template <>
 void assign_value(unsigned short& var, const int& val) {
-	var = static_cast<unsigned short>(val);
+    var = static_cast<unsigned short>(val);
 }
 
 template <>
 void assign_value(unsigned short& var, const unsigned int& val) {
-	var = static_cast<unsigned short>(val);
+    var = static_cast<unsigned short>(val);
 }
 
 template <>
 void assign_value(char& var, const int& val) {
-	var = static_cast<char>(val);
+    var = static_cast<char>(val);
 }
 
 template <>
 void assign_value(char& var, const unsigned int& val) {
-	var = static_cast<char>(val);
+    var = static_cast<char>(val);
 }
 
 template <>
 void assign_value(unsigned char& var, const int& val) {
-	var = static_cast<unsigned char>(val);
+    var = static_cast<unsigned char>(val);
 }
 
 template <>
 void assign_value(unsigned char& var, const unsigned int& val) {
-	var = static_cast<unsigned char>(val);
+    var = static_cast<unsigned char>(val);
 }
 
 template <>
 void assign_value(std::string& var, const std::string& val) {
-	var = val;
+    var = val;
 }
 #endif // Compiler from hell
 
@@ -400,8 +391,8 @@ public:
 
 
     RapidJsonDeserializer(data_t& object,
-                          RapidJsonDeserializerBase *parent = nullptr,
-                          const json_field_mapping *nameMapping = nullptr)
+                        RapidJsonDeserializerBase *parent = nullptr,
+                        const JsonFieldMapping *nameMapping = nullptr)
     : RapidJsonDeserializerBase(parent)
     , object_{object}
     , name_mapping_{nameMapping}
@@ -454,7 +445,7 @@ public:
     bool RawNumber(const char* str, std::size_t length, bool copy) override {
         assert(((state_ == State::RECURSED) && recursed_to_) || !recursed_to_);
         assert(false);
-		return true;
+        return true;
     }
 
     bool StartObject() override {
@@ -568,9 +559,9 @@ private:
                 using native_field_type_t = typename std::remove_const<typename std::remove_reference<const_field_type_t>::type>::type;
 
                 /* Very obscure. g++ 5.3 is unable to resolve the symbol below
-                 * without "this". I don't know if this is according to the
-                 * standard or a bug. It works without in clang 3.6.
-                 */
+                * without "this". I don't know if this is according to the
+                * standard or a bug. It works without in clang 3.6.
+                */
                 this->DoRecurseToMember<native_field_type_t>(val);
                 found = true;
             }
@@ -651,7 +642,7 @@ private:
             && is_container<dataT>::value
             >::type* = 0) {
 
-		object_.push_back({});
+        object_.push_back({});
         assign_value<decltype(object_.back()), decltype(val)>(object_.back(), val);
     }
 
@@ -677,10 +668,10 @@ private:
 
     template<typename argT>
     bool SetValue(argT val) {
-
+#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
         RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
             << " SetValue: " << current_name_;
-
+#endif
         if (state_ == State::IN_OBJECT) {
             return SetValueOnMember<data_t>(val);
         } else if (state_ == State::IN_ARRAY) {
@@ -688,7 +679,7 @@ private:
             return true;
         }
         assert(false && "Invalid state for setting a value");
-		return true;
+        return true;
     }
 
     bool DoNull() {
@@ -729,10 +720,10 @@ private:
     }
 
     bool DoStartObject() {
+#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
         RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
             << " DoStartObject: " << current_name_;
-
-        // TODO: Recurse into nested objects
+#endif
         switch (state_) {
 
             case State::INIT:
@@ -762,17 +753,18 @@ private:
             std::string name{str, length};
             current_name_ = name_mapping_->to_native_name(name);
         }
-
+#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
         RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
             << " DoKey: " << current_name_;
+#endif
         return true;
     }
 
     bool DoEndObject(std::size_t memberCount) {
-
+#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
         RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
             << " DoEndObject: " << current_name_;
-
+#endif
         current_name_.clear();
 
         switch (state_) {
@@ -796,10 +788,10 @@ private:
     }
 
     bool DoStartArray() {
-
+#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
         RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
             << " DoStartArray: " << current_name_;
-
+#endif
         if (state_ == State::INIT) {
             state_ = State::IN_ARRAY;
         } else if (state_ == State::IN_OBJECT) {
@@ -812,9 +804,10 @@ private:
     }
 
     bool DoEndArray(std::size_t elementCount) {
+#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
         RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
             << " DoEndArray: " << current_name_;
-
+#endif
         current_name_.clear();
 
         switch (state_) {
@@ -838,9 +831,10 @@ private:
     }
 
     void OnChildIsDone() override {
+#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
         RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
             << "OnChildIsDone";
-
+#endif
         assert(state_ == State::RECURSED);
         assert(!saved_state_.empty());
 
@@ -851,9 +845,8 @@ private:
 
 private:
     data_t& object_;
-    const json_field_mapping *name_mapping_ = nullptr;
+    const JsonFieldMapping *name_mapping_ = nullptr;
     std::string current_name_;
-    //decltype(with_names(object_)) struct_members_;
     State state_ = State::INIT;
     std::stack<State> saved_state_;
     std::unique_ptr<RapidJsonDeserializerBase> recursed_to_;
@@ -861,191 +854,206 @@ private:
 
 
 namespace {
-    template <typename T>
-    constexpr bool is_empty_field_(const T& value,
-        typename std::enable_if<
-            !std::is_integral<T>::value
-            && !std::is_floating_point<T>::value
-            && !std::is_same<T, std::string>::value
-            && !is_container<T>::value
-            >::type* = 0) {
+template <typename T>
+constexpr bool is_empty_field_(const T& value,
+    typename std::enable_if<
+        !std::is_integral<T>::value
+        && !std::is_floating_point<T>::value
+        && !std::is_same<T, std::string>::value
+        && !is_container<T>::value
+        >::type* = 0) {
 
-        return false;
-    }
-
-    template <typename T>
-    constexpr bool is_empty_field_(const T& value,
-        typename std::enable_if<
-            std::is_integral<T>::value
-            || std::is_floating_point<T>::value
-            >::type* = 0) {
-        return value == T{};
-    }
-
-    template <typename T>
-    constexpr bool is_empty_field_(const T& value,
-        typename std::enable_if<
-            std::is_same<T, std::string>::value || is_container<T>::value
-            >::type* = 0) {
-        return value.empty();
-    }
-
-    template <typename T>
-    constexpr bool is_empty_field(T&& value) {
-        using data_type = typename std::remove_const<typename std::remove_reference<T>::type>::type;
-        return is_empty_field_<data_type>(value);
-    }
-
-    template <typename T, typename S>
-    void do_serialize_integral(const T& v, S& serializer) {
-        assert(false);
-    }
-
-    template <typename S>
-    void do_serialize_integral(const bool& v, S& serializer) {
-        serializer.Bool(v);
-    }
-
-    template <typename S>
-    void do_serialize_integral(const int& v, S& serializer) {
-        serializer.Int(v);
-    }
-
-    template <typename S>
-    void do_serialize_integral(const unsigned int& v, S& serializer) {
-        serializer.Uint(v);
-    }
-
-    template <typename S>
-    void do_serialize_integral(const double& v, S& serializer) {
-        serializer.Double(v);
-    }
-
-    template <typename S>
-    void do_serialize_integral(const std::int64_t& v, S& serializer) {
-        serializer.Int64(v);
-    }
-
-    template <typename S>
-    void do_serialize_integral(const std::uint64_t& v, S& serializer) {
-        serializer.Uint64(v);
-    }
-
-
-    template <typename dataT, typename serializerT>
-    void do_serialize(const dataT& object, serializerT& serializer,
-                      const serialize_properties& properties,
-        typename std::enable_if<
-            !boost::fusion::traits::is_sequence<dataT>::value
-            && !std::is_integral<dataT>::value
-            && !std::is_floating_point<dataT>::value
-            && !std::is_same<dataT, std::string>::value
-            && !is_container<dataT>::value
-            >::type* = 0) {
-        assert(false);
-    };
-
-    template <typename dataT, typename serializerT>
-    void do_serialize(const dataT& object, serializerT& serializer,
-                      const serialize_properties& properties,
-        typename std::enable_if<
-            std::is_integral<dataT>::value
-            || std::is_floating_point<dataT>::value
-            >::type* = 0) {
-
-        do_serialize_integral(object, serializer);
-    };
-
-    template <typename dataT, typename serializerT>
-    void do_serialize(const dataT& object, serializerT& serializer,
-                      const serialize_properties& properties,
-        typename std::enable_if<
-            std::is_same<dataT, std::string>::value
-            >::type* = 0) {
-
-        serializer.String(object.c_str(), object.size(), true);
-    };
-
-    template <typename dataT, typename serializerT>
-    void do_serialize(const dataT& object, serializerT& serializer,
-                      const serialize_properties& properties,
-         typename std::enable_if<
-            boost::fusion::traits::is_sequence<dataT>::value
-            >::type* = 0);
-
-    template <typename dataT, typename serializerT>
-    void do_serialize(const dataT& object, serializerT& serializer,
-                      const serialize_properties& properties,
-        typename std::enable_if<
-            is_container<dataT>::value
-            >::type* = 0) {
-        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
-            << " StartArray: ";
-
-        serializer.StartArray();
-
-        for(const auto& v: object) {
-
-            using native_field_type_t = typename std::remove_const<
-                typename std::remove_reference<decltype(v)>::type>::type;
-
-            do_serialize<native_field_type_t>(v, serializer, properties);
-        }
-        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
-            << " EndArray: ";
-        serializer.EndArray();
-    };
-
-    template <typename dataT, typename serializerT>
-    void do_serialize(const dataT& object, serializerT& serializer,
-                      const serialize_properties& properties,
-         typename std::enable_if<
-            boost::fusion::traits::is_sequence<dataT>::value
-            >::type*) {
-
-        serializer.StartObject();
-        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
-            << " StartObject: ";
-           auto fn = [&](const char *name, auto& val) {
-            RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
-                << " Key: " << name;
-            if (properties.ignore_empty_fileds) {
-                if (is_empty_field(val)) {
-            RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
-                << " ignoring empty field.";
-                    return;
-                }
-            }
-
-            if (properties.excluded_names
-                && properties.is_excluded(name)) {
-                RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
-                    << " ignoring excluded field.";
-                return;
-            }
-
-            serializer.Key(properties.map_name_to_json(name).c_str());
-
-            using const_field_type_t = decltype(val);
-            using native_field_type_t = typename std::remove_const<typename std::remove_reference<const_field_type_t>::type>::type;
-            using field_type_t = typename std::add_lvalue_reference<native_field_type_t>::type;
-
-            auto& const_value = val;
-            auto& value = const_cast<field_type_t&>(const_value);
-
-            do_serialize<native_field_type_t>(value, serializer, properties);
-
-        };
-
-        on_name_and_value<dataT, decltype(fn)> handler(fn);
-        handler.for_each_member(object);
-
-        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
-            << " EndObject: ";
-        serializer.EndObject();
-    };
+    return false;
 }
 
+template <typename T>
+constexpr bool is_empty_field_(const T& value,
+    typename std::enable_if<
+        std::is_integral<T>::value
+        || std::is_floating_point<T>::value
+        >::type* = 0) {
+    return value == T{};
+}
+
+template <typename T>
+constexpr bool is_empty_field_(const T& value,
+    typename std::enable_if<
+        std::is_same<T, std::string>::value || is_container<T>::value
+        >::type* = 0) {
+    return value.empty();
+}
+
+template <typename T>
+constexpr bool is_empty_field(T&& value) {
+    using data_type = typename std::remove_const<typename std::remove_reference<T>::type>::type;
+    return is_empty_field_<data_type>(value);
+}
+
+template <typename T, typename S>
+void do_serialize_integral(const T& v, S& serializer) {
+    assert(false);
+}
+
+template <typename S>
+void do_serialize_integral(const bool& v, S& serializer) {
+    serializer.Bool(v);
+}
+
+template <typename S>
+void do_serialize_integral(const int& v, S& serializer) {
+    serializer.Int(v);
+}
+
+template <typename S>
+void do_serialize_integral(const unsigned int& v, S& serializer) {
+    serializer.Uint(v);
+}
+
+template <typename S>
+void do_serialize_integral(const double& v, S& serializer) {
+    serializer.Double(v);
+}
+
+template <typename S>
+void do_serialize_integral(const std::int64_t& v, S& serializer) {
+    serializer.Int64(v);
+}
+
+template <typename S>
+void do_serialize_integral(const std::uint64_t& v, S& serializer) {
+    serializer.Uint64(v);
+}
+
+
+template <typename dataT, typename serializerT>
+void do_serialize(const dataT& object, serializerT& serializer,
+                const serialize_properties& properties,
+    typename std::enable_if<
+        !boost::fusion::traits::is_sequence<dataT>::value
+        && !std::is_integral<dataT>::value
+        && !std::is_floating_point<dataT>::value
+        && !std::is_same<dataT, std::string>::value
+        && !is_container<dataT>::value
+        >::type* = 0) {
+    assert(false);
+};
+
+template <typename dataT, typename serializerT>
+void do_serialize(const dataT& object, serializerT& serializer,
+                const serialize_properties& properties,
+    typename std::enable_if<
+        std::is_integral<dataT>::value
+        || std::is_floating_point<dataT>::value
+        >::type* = 0) {
+
+    do_serialize_integral(object, serializer);
+};
+
+template <typename dataT, typename serializerT>
+void do_serialize(const dataT& object, serializerT& serializer,
+                const serialize_properties& properties,
+    typename std::enable_if<
+        std::is_same<dataT, std::string>::value
+        >::type* = 0) {
+
+    serializer.String(object.c_str(), 
+		static_cast<rapidjson::SizeType>(object.size()), 
+		true);
+};
+
+template <typename dataT, typename serializerT>
+void do_serialize(const dataT& object, serializerT& serializer,
+                const serialize_properties& properties,
+    typename std::enable_if<
+        boost::fusion::traits::is_sequence<dataT>::value
+        >::type* = 0);
+
+template <typename dataT, typename serializerT>
+void do_serialize(const dataT& object, serializerT& serializer,
+                const serialize_properties& properties,
+    typename std::enable_if<
+        is_container<dataT>::value
+        >::type* = 0) {
+#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
+    RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
+        << " StartArray: ";
+#endif
+    serializer.StartArray();
+
+    for(const auto& v: object) {
+
+        using native_field_type_t = typename std::remove_const<
+            typename std::remove_reference<decltype(v)>::type>::type;
+
+        do_serialize<native_field_type_t>(v, serializer, properties);
+    }
+#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
+    RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
+        << " EndArray: ";
+#endif
+    serializer.EndArray();
+};
+
+template <typename dataT, typename serializerT>
+void do_serialize(const dataT& object, serializerT& serializer,
+                const serialize_properties& properties,
+    typename std::enable_if<
+        boost::fusion::traits::is_sequence<dataT>::value
+        >::type*) {
+
+    serializer.StartObject();
+#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
+    RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
+        << " StartObject: ";
+#endif
+    auto fn = [&](const char *name, auto& val) {
+#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
+        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
+            << " Key: " << name;
+#endif
+        if (properties.ignore_empty_fileds) {
+            if (is_empty_field(val)) {
+#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
+        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
+            << " ignoring empty field.";
+#endif
+                return;
+            }
+        }
+
+        if (properties.excluded_names
+            && properties.is_excluded(name)) {
+#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
+            RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
+                << " ignoring excluded field.";
+#endif
+            return;
+        }
+
+        serializer.Key(properties.map_name_to_json(name).c_str());
+
+        using const_field_type_t = decltype(val);
+        using native_field_type_t = typename std::remove_const<typename std::remove_reference<const_field_type_t>::type>::type;
+        using field_type_t = typename std::add_lvalue_reference<native_field_type_t>::type;
+
+        auto& const_value = val;
+        auto& value = const_cast<field_type_t&>(const_value);
+
+        do_serialize<native_field_type_t>(value, serializer, properties);
+
+    };
+
+    on_name_and_value<dataT, decltype(fn)> handler(fn);
+    handler.for_each_member(object);
+#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
+    RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
+        << " EndObject: ";
+#endif
+    serializer.EndObject();
+};
+} // namespace
+
+/*! Serializer from Json to a C++ class instance */
 template <typename objectT, typename serializerT>
 class RapidJsonSerializer
 {
@@ -1058,9 +1066,9 @@ public:
     }
 
     /*! Recursively serialize the C++ object to the json serializer
-     *
-     * See https://github.com/miloyip/rapidjson/blob/master/doc/sax.md#writer-writer
-     */
+    *
+    * See https://github.com/miloyip/rapidjson/blob/master/doc/sax.md#writer-writer
+    */
     void Serialize() {
         do_serialize<data_t>(object_, serializer_, properties_);
     }
@@ -1074,7 +1082,7 @@ public:
         properties_.excluded_names = names;
     }
 
-    void SetNameMapping(const json_field_mapping *mapping) {
+    void SetNameMapping(const JsonFieldMapping *mapping) {
         properties_.name_mapping = mapping;
     }
 
@@ -1085,197 +1093,25 @@ private:
     serialize_properties properties_;
 };
 
-/*! Serialize as a container
- *
- * Serialize only one list-object at a time. Follow
- * the InputIterator contract.
- * ref: http://en.cppreference.com/w/cpp/concept/InputIterator
- */
-template <typename objectT>
-class IteratorFromJsonSerializer
-{
-public:
-    using data_t = typename std::remove_const<typename std::remove_reference<objectT>::type>::type;
-
-    class Iterator : public std::iterator<
-        std::input_iterator_tag,
-        data_t,
-        std::ptrdiff_t,
-        const data_t *,
-        data_t&> {
-
-    public:
-        Iterator() {}
-
-        /*! Copy constructor
-         * \note This constructor mailnly is supplied to make it++ work.
-         *      It is not optimized for performance.
-         *      As always, prefer ++it.
-         */
-        Iterator(const Iterator& it)
-        : owner_{it.owner_}
-        {
-            if (it.data_) {
-                data_ = std::make_unique<objectT>(*it.data_);
-            }
-        }
-
-        Iterator(Iterator&& it)
-        : owner_{it.owner_}, data_{move(it.data_)} {}
-
-        Iterator(IteratorFromJsonSerializer *owner)
-        : owner_{owner} {}
-
-        Iterator& operator++() {
-            prepare();
-            fetch();
-            return *this;
-        }
-
-        Iterator operator++(int) {
-            prepare();
-            Iterator retval = *this;
-            fetch();
-            return retval;
-        }
-
-        Iterator& operator = (const Iterator& it) {
-            owner_ = it.owner_;
-            if (it.data_) {
-                data_ = std::make_unique<objectT>(*it.data_);
-            }
-            return *this;
-        }
-
-        Iterator& operator = (Iterator&& it) {
-            owner_ = it.owner_;
-            it.data_ = move(it.data_);
-        }
-
-        bool operator == (const Iterator& other) const {
-            prepare();
-            return data_.get() == other.data_.get();
-        }
-
-        bool operator != (const Iterator& other) const {
-            return ! operator == (other);
-        }
-
-        data_t& operator*() const {
-            prepare();
-            return get();
-        }
-
-        data_t *operator -> () const {
-            prepare();
-            return data_.get();
-        }
-
-    private:
-        void prepare() const {
-            if (virgin_) {
-                virgin_ = false;
-
-                const_cast<Iterator *>(this)->fetch();
-            }
-        }
-
-        void fetch() {
-            if (owner_) {
-                data_ = owner_->fetch();
-            } else {
-                throw CannotIncrementEndException(
-                    "this is an end() iterator.");
-            }
-        }
-
-        data_t& get() const {
-            if (!data_) {
-                throw NoDataException("data_ is empty");
-            }
-            return *data_;
-        }
-
-        IteratorFromJsonSerializer *owner_ = nullptr;
-        std::unique_ptr<objectT> data_;
-        mutable bool virgin_ = true;
-    };
-
-
-    using iterator_t = Iterator;
-
-    IteratorFromJsonSerializer(
-        Reply& reply,
-        const json_field_mapping *nameMapper = nullptr)
-    : reply_stream_{reply}, name_mapper_{nameMapper} {}
-
-    iterator_t begin() {
-        return Iterator{this};
-    }
-
-    iterator_t end() {
-        return Iterator{};
-    }
-
-private:
-    std::unique_ptr<objectT> fetch() {
-
-        if(state_ == State::PRE) {
-            const auto ch = reply_stream_.Take();
-            if (ch != '[') {
-                throw ParseException("Expected leading json '{'");
-            }
-            state_ = State::ITERATING;
-        }
-
-        if (state_ == State::ITERATING) {
-            while(true) {
-                const auto ch = reply_stream_.Peek();
-                if ((ch == ' ') || (ch == '\t') || (ch == ',') || (ch == '\n') || (ch == '\r')) {
-                    reply_stream_.Take();
-                    continue;
-                } else if (ch == '{') {
-                    auto data = std::make_unique<objectT>();
-                    RapidJsonDeserializer<objectT> handler(
-                        *data, nullptr, name_mapper_);
-                    json_reader_.Parse(reply_stream_, handler);
-                    return move(data);
-                } else if (ch == ']') {
-                    reply_stream_.Take();
-                    state_ = State::DONE;
-                    break;
-                } else {
-                    throw ParseException("Unexpected character in input stream");
-                }
-            }
-        }
-
-        assert(state_ == State::DONE);
-        return {};
-    }
-
-    enum class State { PRE, ITERATING, DONE };
-    State state_ = State::PRE;
-    RapidJsonReader reply_stream_;
-    rapidjson::Reader json_reader_;
-    const json_field_mapping *name_mapper_;
-};
-
+/*! Serialize a reply to a C++ class instance */
 template <typename dataT>
 void SerializeFromJson(dataT& rootData,
-                       Reply& reply,
-                       const json_field_mapping *nameMapper = nullptr) {
-    RapidJsonDeserializer<dataT> handler(rootData, nullptr, nameMapper);
+    Reply& reply,
+    const JsonFieldMapping *nameMapper = nullptr) {
+
+    RapidJsonDeserializer<dataT> handler(
+        rootData, nullptr, nameMapper);
     RapidJsonReader reply_stream(reply);
     rapidjson::Reader json_reader;
     json_reader.Parse(reply_stream, handler);
 }
 
+/*! Serialize a reply to a C++ class instance */
 template <typename dataT>
 void SerializeFromJson(dataT& rootData,
-                       std::unique_ptr<Reply>&& reply,
-                       const json_field_mapping *nameMapper = nullptr) {
-   SerializeFromJson(rootData, *reply, nameMapper);
+                    std::unique_ptr<Reply>&& reply,
+                    const JsonFieldMapping *nameMapper = nullptr) {
+    SerializeFromJson(rootData, *reply, nameMapper);
 }
 
 } // namespace

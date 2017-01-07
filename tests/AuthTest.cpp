@@ -26,7 +26,7 @@ TEST(TestFailedAuth)
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
         CHECK_THROW(ctx.Get("http://localhost:3001/restricted/posts/1"),
-                    AuthenticationException);
+                    HttpAuthenticationException);
 
     }).get();
 }

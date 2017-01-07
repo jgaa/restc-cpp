@@ -1,6 +1,6 @@
 #pragma once
-#ifndef RESTC_CPP_SOCKET_H_
-#define RESTC_CPP_SOCKET_H_
+#ifndef RESTC_CPP_REQUEST_BUILDER_H_
+#define RESTC_CPP_REQUEST_BUILDER_H_
 
 #ifndef RESTC_CPP_H_
 #       error "Include restc-cpp.h first"
@@ -16,6 +16,7 @@
 
 namespace restc_cpp {
 
+/*! Convenience class for building requests */
 class RequestBuilder
 {
 public:
@@ -23,6 +24,7 @@ public:
     RequestBuilder(Context& ctx)
     : ctx_{ctx} {}
 
+    /*! Make a HTTP GET request */
     RequestBuilder& Get(std::string url) {
         assert(url_.empty());
         url_ = std::move(url);
@@ -30,6 +32,7 @@ public:
         return *this;
     }
 
+    /*! Make a HTTP POST request */
     RequestBuilder& Post(std::string url) {
         assert(url_.empty());
         url_ = std::move(url);
@@ -37,6 +40,7 @@ public:
         return *this;
     }
 
+    /*! Make a HTTP PUT request */
     RequestBuilder& Put(std::string url) {
         assert(url_.empty());
         url_ = std::move(url);
@@ -44,6 +48,7 @@ public:
         return *this;
     }
 
+    /*! Make a HTTP DELETE request */
     RequestBuilder& Delete(std::string url) {
         assert(url_.empty());
         url_ = std::move(url);
@@ -52,6 +57,14 @@ public:
     }
 
 
+    /*! Add a header
+     *
+     * \param name Name of the header
+     * \param value Value of the header
+     *
+     * This method will overwrite any estisting header
+     * wuth the same name
+     */
     RequestBuilder& Header(std::string name,
                            std::string value) {
         if (!headers_) {
@@ -62,10 +75,16 @@ public:
         return *this;
     }
 
-    RequestBuilder& Argument(std::string name, int64_t value) {
-        return Argument(move(name), std::to_string(value));
-    }
-
+    /*! Add a request argument
+     *
+     * This is a URL argument that will be appended to the
+     * url (like http://example.com?name=value
+     * where both the name and the value will be correctly
+     * url encoded.
+     *
+     * \param name Name of the argument
+     * \param value Value of the argument
+     */
     RequestBuilder& Argument(std::string name,
                              std::string value) {
         if (!args_) {
@@ -76,30 +95,64 @@ public:
         return *this;
     }
 
+    /*! Add a request argument
+     *
+     * This is a URL argument that will be appended to the
+     * url (like http://example.com?name=value
+     * where both the name and the value will be correctly
+     * url encoded.
+     *
+     * \param name Name of the argument
+     * \param value Value of the argument
+     */
+    RequestBuilder& Argument(std::string name, int64_t value) {
+        return Argument(move(name), std::to_string(value));
+    }
+
+
     RequestBuilder& Data(const std::string& body) {
         assert(!body_);
         body_ = std::make_unique<Request::Body>(body);
         return *this;
     }
 
+    /*! Body (data) for the request
+     *
+     * \body A text string to send as the body.
+     */
     RequestBuilder& Data(std::string&& body) {
         assert(!body_);
         body_ = std::make_unique<Request::Body>(move(body));
         return *this;
     }
 
+    /*! Body (file) to send as the body
+     *
+     * \param path Path to a file to upload
+     */
     RequestBuilder& File(const boost::filesystem::path& path) {
         assert(!body_);
         body_ = std::make_unique<Request::Body>(path);
         return *this;
     }
 
+    /*! Disable compression */
     RequestBuilder& DisableCompression() {
         assert(!body_);
         disable_compression_ = true;
         return *this;
     }
 
+    /*! Supply credentials for HTTP Basic Authentication
+     *
+     * \param name Name to use
+     * \passwd Password to use
+     *
+     * \Note The credentials are sent unencrypted (That's
+     *      how HTTP Basic Authentication works).
+     *      You should therefore only use this on internal
+     *      networks or when using https:// connections.
+     */
     RequestBuilder& BasicAuthentication(const std::string name,
                                         const std::string passwd) {
         assert(!body_);
@@ -108,7 +161,15 @@ public:
         return *this;
     }
 
-    // Json serialization
+    /*! Serialize a C++ object to Json and send it as the body.
+     *
+     * \param data A C++ object that is declared with
+     *      BOOST_FUSION_ADAPT_STRUCT. The object will be
+     *      serialized to a Json object and sent as the
+     *      body of the request.
+     *
+     * Normally used with POST or PUT requests.
+     */
     template<typename T>
     RequestBuilder& Data(const T& data) {
         rapidjson::StringBuffer s;
@@ -129,15 +190,21 @@ public:
         assert(!built_);
         built_ = true;
 #endif
+#if RESTC_CPP_WITH_ZLIB
         if (!disable_compression_) {
             if (!headers_ || (headers_->find(accept_encoding) == headers_->end())) {
                 Header(accept_encoding, gzip);
             }
         }
+#endif
         return Request::Create(
             url_, type_, ctx_.GetClient(), move(body_), args_, headers_, auth_);
     }
 
+    /*! Exceute the request.
+     *
+     * \returns A unique pointer to a Reply instance.
+     */
     std::unique_ptr<Reply> Execute() {
         auto request = Build();
         return request->Execute(ctx_);
@@ -161,5 +228,5 @@ private:
 } // restc_cpp
 
 
-#endif // RESTC_CPP_SOCKET_H_
+#endif // RESTC_CPP_REQUEST_BUILDER_H_
 

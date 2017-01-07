@@ -467,7 +467,7 @@ int main()
 
         // Asynchronously connect to a server trough a HTTP proxy and fetch some data.
         auto reply = RequestBuilder(ctx)
-            .Get("http://fwd/normal/posts/1")
+            .Get("http://api.example.com/normal/posts/1")
 
             // Send the request.
             .Execute();
@@ -515,10 +515,56 @@ These are the operating systems I test with before releasing a new version.
  - Ubuntu LTS
  - OS/X
 
+# Builing the library
+I use Kdevelop to work on the project under Linux, and Visual Studio
+comminity version under Windows. In all cases, the project is
+built with cmake. So to simply build the project, you need
+cmake, but not any particular IDE or endtors.
+
+## Building under Windows
+ - TBD
+
+## Building under Linux
+```sh
+# Check out the source code and prepare submodules
+git clone https://github.com/jgaa/restc-cpp.git
+cd restc-cpp/
+git submodule init
+git submodule update
+
+# Build the unittest library
+cd externals/unittest-cpp/
+mkdir build
+cd build
+cmake ..
+make
+cd ../../../
+
+# Build the restc-cpp library with default options
+mkdir build
+cd build
+cmake ..
+make
+cd ..
+
+# Create Docker containers for testing.
+# Uses localhost port 3000 - 3003 for mock services
+./create-and-run-containers.sh
+
+# Run unit tests and functional tests
+./tests/run-tests.sh
+```
+
 # Tasks planned for Q1 2017
 - Performance analysis and optimizations for speed and memory footprint
 - Refactor
  - [ ] split the json serialization and HTTP client into independent sub-projects
+- New features
+ - [ ] Cache permanent redirects in a global repository LRU cache
+ - [ ] Add Context.Sleep() to sleep inside the co-routine
+ - [ ] Add RestClient constructor that use existing ioservice()/thread.
+    Needed if we want to use the library with existing asio based code.
+ - [ ] Add RestClient() constructor for use by the calling (main) thread. (To avoid worker thread in simple cases).
 - Implement Chunked Requests (chained DataWriter interface)
  - [ ] General support In HTTP Requests module
  - [ ] Async from json Serialization

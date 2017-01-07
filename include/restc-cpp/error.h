@@ -25,11 +25,50 @@ struct RequestFailedWithErrorException : public RestcCppException {
     const Reply::HttpResponse http_response;
 };
 
-struct AuthenticationException: public RequestFailedWithErrorException {
+struct HttpAuthenticationException: public RequestFailedWithErrorException {
 
-    AuthenticationException(const Reply::HttpResponse& response)
+    HttpAuthenticationException(const Reply::HttpResponse& response)
     : RequestFailedWithErrorException(response) { }
 };
+
+struct HttpForbiddenException: public RequestFailedWithErrorException {
+
+    HttpForbiddenException(const Reply::HttpResponse& response)
+    : RequestFailedWithErrorException(response) { }
+};
+
+struct HttpNotFoundException: public RequestFailedWithErrorException {
+
+    HttpNotFoundException(const Reply::HttpResponse& response)
+    : RequestFailedWithErrorException(response) { }
+};
+
+struct HttpMethodNotAllowedException: public RequestFailedWithErrorException {
+
+    HttpMethodNotAllowedException(const Reply::HttpResponse& response)
+    : RequestFailedWithErrorException(response) { }
+};
+
+struct HttpNotAcceptableException: public RequestFailedWithErrorException {
+
+    HttpNotAcceptableException(const Reply::HttpResponse& response)
+    : RequestFailedWithErrorException(response) { }
+};
+
+struct HttpProxyAuthenticationRequiredException
+: public RequestFailedWithErrorException {
+
+    HttpProxyAuthenticationRequiredException(
+        const Reply::HttpResponse& response)
+    : RequestFailedWithErrorException(response) { }
+};
+
+struct HttpRequestTimeOutException: public RequestFailedWithErrorException {
+
+    HttpRequestTimeOutException(const Reply::HttpResponse& response)
+    : RequestFailedWithErrorException(response) { }
+};
+
 
 struct ParseException : public RestcCppException
 {
@@ -82,6 +121,12 @@ struct NoDataException : public RestcCppException
 struct CannotIncrementEndException : public RestcCppException
 {
     CannotIncrementEndException(const std::string& cause)
+    : RestcCppException(cause) {}
+};
+
+struct NotImplementedException : public RestcCppException
+{
+    NotImplementedException(const std::string& cause)
     : RestcCppException(cause) {}
 };
 

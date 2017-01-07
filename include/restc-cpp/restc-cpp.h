@@ -2,9 +2,10 @@
 #ifndef RESTC_CPP_H_
 #define RESTC_CPP_H_
 
+#include "restc-cpp/config.h"
+
 #include <string>
 #include <map>
-#include <list>
 #include <deque>
 #include <memory>
 #include <future>
@@ -19,7 +20,6 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
-#include "restc-cpp/config.h"
 #include "restc-cpp/helper.h"
 #include "restc-cpp/Connection.h"
 
@@ -34,6 +34,17 @@
 #ifdef DELETE
 #   undef DELETE
 #endif
+#endif
+
+/*! Max expected data-payload for one server reply */
+#ifndef RESTC_CPP_SANE_DATA_LIMIT
+    // 16 Megabytes
+#   define RESTC_CPP_SANE_DATA_LIMIT (1024 * 1024 * 16)
+#endif
+
+/*! Size of fixed size (per connection) IO buffers */
+#ifndef RESTC_CPP_IO_BUFFER_SIZE
+#   define RESTC_CPP_IO_BUFFER_SIZE (1024 * 16)
 #endif
 
 namespace restc_cpp {
@@ -213,7 +224,8 @@ public:
      * This is a convenience method when working with relatively
      * small results.
      */
-    virtual std::string GetBodyAsString() = 0;
+    virtual std::string GetBodyAsString(size_t maxSize
+        = RESTC_CPP_SANE_DATA_LIMIT) = 0;
 
     /*! Get some data from the server.
      *
@@ -236,7 +248,8 @@ public:
     virtual bool MoreDataToRead() = 0;
 
     /*! Get the value of a header */
-    virtual boost::optional<std::string> GetHeader(const std::string& name) = 0;
+    virtual boost::optional<std::string>
+        GetHeader(const std::string& name) = 0;
 };
 
 /*! The context is used to keep state within a co-routine.
@@ -272,27 +285,28 @@ public:
      */
     virtual std::unique_ptr<Reply> Request(Request& req) = 0;
 
-    static std::unique_ptr<Context> Create(boost::asio::yield_context& yield,
-                                           RestClient& rc);
+    static std::unique_ptr<Context>
+        Create(boost::asio::yield_context& yield,
+               RestClient& rc);
 };
 
 /*! Factory and resource management
  *
  * Each instance of this class has it's own internal worker-thread
- * that will execute the co-routines passed to Process().
+ * that will execute the co-routines passed to Process*().
  *
  * Because REST calls are typically slow at the server end, you can
  * normally pass a large number of requests to one instance.
  */
 class RestClient {
 public:
+    using prc_fn_t = std::function<void (Context& ctx)>;
     struct DoneHandler {};
 
     /*! Get the default connection properties. */
-    virtual const Request::Properties::ptr_t GetConnectionProperties() const = 0;
+    virtual const Request::Properties::ptr_t
+        GetConnectionProperties() const = 0;
     virtual ~RestClient() = default;
-
-    using prc_fn_t = std::function<void (Context& ctx)>;
 
     /*! Create a context and execute fn as a co-routine
      *
@@ -308,12 +322,14 @@ public:
      */
     virtual void Process(const prc_fn_t& fn) = 0;
 
-    /*! Same as process, but returns a void future */
-    virtual std::future<void> ProcessWithPromise(const prc_fn_t& fn) = 0;
+    /*! Process and return a future with a value or the current exception  */
+    virtual std::future<void>
+        ProcessWithPromise(const prc_fn_t& fn) = 0;
 
     /*! Process and return a future with a value or the current exception */
     template <typename T>
-    std::future<T> ProcessWithPromiseT(const std::function<T (Context& ctx)>& fn) {
+    std::future<T>
+        ProcessWithPromiseT(const std::function<T (Context& ctx)>& fn) {
 
         auto prom = std::make_shared<std::promise<T>>();
 

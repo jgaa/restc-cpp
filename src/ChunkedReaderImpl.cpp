@@ -1,6 +1,7 @@
 
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/DataReader.h"
+#include "restc-cpp/DataReaderStream.h"
 #include "restc-cpp/error.h"
 
 using namespace std;
@@ -70,7 +71,7 @@ private:
             throw ParseException("Missing chunk-length in new chunk.");
         }
 
-        for(; isxdigit(ch); ch= stream_.Getc()) {
+        for(; isxdigit(ch); ch = stream_.Getc()) {
             chunk_len *= 16;
             if (ch >= 'a') {
                 chunk_len += 10 + (ch - 'a');

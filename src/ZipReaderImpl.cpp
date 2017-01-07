@@ -12,7 +12,7 @@ public:
     enum class Format { DEFLATE, GZIP };
 
     ZipReaderImpl(std::unique_ptr<DataReader>&& source,
-                  const Format format)
+                const Format format)
     : source_{move(source)}
     {
         const auto wsize = (format == Format::GZIP) ? (MAX_WBITS | 16) : MAX_WBITS;
@@ -75,14 +75,14 @@ private:
         if (!HaveMoreBufferedInput()) {
             strm_.next_in = const_cast<Bytef *>(
                 reinterpret_cast<const Bytef *>(src.data()));
-            strm_.avail_in 
-				= static_cast<decltype(strm_.avail_in)>(src.size());
+            strm_.avail_in
+                = static_cast<decltype(strm_.avail_in)>(src.size());
         }
 
         assert(strm_.avail_in > 0);
 
-        strm_.avail_out 
-			= static_cast<decltype(strm_.avail_out)>(dst.size());
+        strm_.avail_out
+            = static_cast<decltype(strm_.avail_out)>(dst.size());
         strm_.next_out = const_cast<Bytef *>(
             reinterpret_cast<const Bytef *>(dst.data()));
 

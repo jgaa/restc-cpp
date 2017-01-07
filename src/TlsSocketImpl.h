@@ -93,12 +93,16 @@ protected:
     std::ostream& Print(std::ostream& o) const override {
         if (IsOpen()) {
             const auto& socket = GetSocket();
-            return o << "{TlsSocket "
+            o << "{TlsSocket "
                 << "socket# "
                 << static_cast<int>(
-                const_cast<boost::asio::ip::tcp::socket&>(socket).native_handle())
-                << " " << socket.local_endpoint()
-                << " <--> " << socket.remote_endpoint() << '}';
+                const_cast<boost::asio::ip::tcp::socket&>(socket).native_handle());
+            try {
+                return o << " " << socket.local_endpoint()
+                    << " <--> " << socket.remote_endpoint() << '}';
+            } catch (const std::exception& ex) {
+                o << " {std exception: " << ex.what() << "}}";
+            }
         }
 
         return o << "{TlsSocket (unused/closed)}";

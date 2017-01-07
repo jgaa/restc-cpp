@@ -5,7 +5,7 @@
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/logging.h"
 #include "restc-cpp/RequestBuilder.h"
-#include "restc-cpp/SerializeJson.h"
+#include "restc-cpp/IteratorFromJsonSerializer.h"
 
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>

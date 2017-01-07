@@ -1,34 +1,34 @@
 #pragma once
 
 /**
- * \brief Allows iteration on member name and values of a Fusion adapted struct.
- *
- *
- * BOOST_FUSION_ADAPT_STRUCT(ns::point,
- * 		(int, x)
- *		(int, y)
- *		(int, z));
- *
- * template<class T>
- * print_name_and_value(const char* name, T& value) const {
- *    std::cout << name << "=" << value << std::endl;
- * }
- *
- *
- * int main(void) {
- *
- *	ns::point mypoint;
- *
- *
- *      boost::boost::fusion::for_each_member(mypoint, &print_name_and_value);
- *
- *
- * }
- *
- * ********
- * Credits to Damien Buhl
- *     https://gist.github.com/daminetreg/6b539973817ed8f4f87d
- */
+* \brief Allows iteration on member name and values of a Fusion adapted struct.
+*
+*
+* BOOST_FUSION_ADAPT_STRUCT(ns::point,
+* 		(int, x)
+*		(int, y)
+*		(int, z));
+*
+* template<class T>
+* print_name_and_value(const char* name, T& value) const {
+*    std::cout << name << "=" << value << std::endl;
+* }
+*
+*
+* int main(void) {
+*
+*	ns::point mypoint;
+*
+*
+*      boost::boost::fusion::for_each_member(mypoint, &print_name_and_value);
+*
+*
+* }
+*
+* ********
+* Credits to Damien Buhl
+*     https://gist.github.com/daminetreg/6b539973817ed8f4f87d
+*/
 #ifndef BOOST_FUSION_FOR_EACH_MEMBER_HPP
 #define BOOST_FUSION_FOR_EACH_MEMBER_HPP
 

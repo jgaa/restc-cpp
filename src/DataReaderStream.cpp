@@ -1,6 +1,7 @@
 
-#include "restc-cpp/DataReader.h"
+#include "restc-cpp/DataReaderStream.h"
 #include "restc-cpp/error.h"
+#include "restc-cpp/url_encode.h"
 
 using namespace std;
 
@@ -65,7 +66,8 @@ void DataReaderStream::ReadServerResponse(Reply::HttpResponse& response)
         ; // Do nothing HTTP 1.1 is the default value
     } else {
         throw ProtocolException(
-            string("ReadHeaders(): unsupported HTTP version: ") + value);
+            string("ReadHeaders(): unsupported HTTP version: ")
+                + url_encode(value));
     }
 
     // Get response code

@@ -21,17 +21,15 @@ public:
     using close_t = std::function<void ()>;
 
     ~IoTimer() {
-        if (is_active_) {
-            is_active_ = false;
-        }
+        Cancel();
     }
 
     void Handler(const boost::system::error_code& error) {
-        
+
         if (error) {
             return;
         }
-        
+
         if (is_active_) {
             is_active_ = false;
             is_expiered_ = true;
@@ -43,20 +41,20 @@ public:
         is_active_ = false;
     }
 
-    bool IsExcpiered() const noexcept { return is_expiered_; }
+    bool IsExpiered() const noexcept { return is_expiered_; }
 
     static ptr_t Create(int milliseconds_timeout,
         boost::asio::io_service& io_service,
         close_t close) {
 
         ptr_t timer;
+        // Private constructor, we cannot use std::make_shared()
         timer.reset(new IoTimer(io_service, close));
         timer->Start(milliseconds_timeout);
         return timer;
     }
 
     static ptr_t Create(int milliseconds_timeout,
-        boost::asio::io_service& io_service,
             const Connection::ptr_t& connection) {
 
         if (!connection) {
@@ -65,11 +63,14 @@ public:
 
         std::weak_ptr<Connection> weak_connection = connection;
 
-        return Create(milliseconds_timeout, io_service,
+        return Create(
+            milliseconds_timeout,
+            connection->GetSocket().GetSocket().get_io_service(),
             [weak_connection]() {
                 if (auto connection = weak_connection.lock()) {
                     if (connection->GetSocket().GetSocket().is_open()) {
-                        RESTC_CPP_LOG_WARN << "Socket timed out.";
+                        RESTC_CPP_LOG_WARN << *connection
+                            << " timed out.";
                         connection->GetSocket().GetSocket().close();
                     }
                 }
