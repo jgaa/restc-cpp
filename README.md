@@ -479,11 +479,10 @@ int main()
 ```
 
 # Current Status
+The project is maturing fast. There are no known bugs.
+Beta status will be announced in the near future.
 
-The code is still a bit immature and not properly tested, but capable of executing
-REST requests.
-
-The latest code is tested with Debian "testing", Debian Jessie and Fedora 25
+The latest code is tested with Debian "testing", Debian Jessie Fedora 25 and Windows 10.
 
 # Features
 - Raw GET, POST, PUT and DELETE requests with no data conversions
@@ -515,93 +514,8 @@ These are the operating systems I test with before releasing a new version.
  - Ubuntu LTS
  - OS/X
 
-# Builing the library
-I use Kdevelop to work on the project under Linux, and Visual Studio
-comminity version under Windows. In all cases, the project is
-built with cmake. So to simply build the project, you need
-cmake, but not any particular IDE or endtors.
 
-## Building under Windows
- - TBD
-
-## Building under Linux
-```sh
-# Check out the source code and prepare submodules
-git clone https://github.com/jgaa/restc-cpp.git
-cd restc-cpp/
-git submodule init
-git submodule update
-
-# Build the unittest library
-cd externals/unittest-cpp/
-mkdir build
-cd build
-cmake ..
-make
-cd ../../../
-
-# Build the restc-cpp library with default options
-mkdir build
-cd build
-cmake ..
-make
-cd ..
-
-# Create Docker containers for testing.
-# Uses localhost port 3000 - 3003 for mock services
-./create-and-run-containers.sh
-
-# Run unit tests and functional tests
-./tests/run-tests.sh
-```
-
-# Tasks planned for Q1 2017
-- Performance analysis and optimizations for speed and memory footprint
-- Refactor
- - [ ] split the json serialization and HTTP client into independent sub-projects
-- New features
- - [ ] Cache permanent redirects in a global repository LRU cache
- - [ ] Add Context.Sleep() to sleep inside the co-routine
- - [ ] Add RestClient constructor that use existing ioservice()/thread.
-    Needed if we want to use the library with existing asio based code.
- - [ ] Add RestClient() constructor for use by the calling (main) thread. (To avoid worker thread in simple cases).
-- Implement Chunked Requests (chained DataWriter interface)
- - [ ] General support In HTTP Requests module
- - [ ] Async from json Serialization
- - [ ] Async from producer callback
- - [ ] Async from producer loop
- - [ ] Implement asynchronous iterators for outgoing data and integrate with json generator.
-- Improve security
- - [ ] Put memory constraints on strings and lists in the json deserialization
- - [ ] Add options to secure TLS connections (avoid weak encryption and verify server certs).
-- Implement Form Data encoding
-- Portability
- - [x] Fedora 25
- - [x] Debian Stable (Jessie)
- - [ ] Debian Testing (latest update)
- - [x] Windows 10 / Visual Studio
- - [ ] OS/X
- - [ ] Ubuntu LTS
- - [ ] Windows 10 / clang
- - [ ] Cent OS
- - [ ] FreeBSD
- - [ ] OpenBSD
-- Implement asynchronous iterators for received data and integrate with json parser.
- - [ ] Implement generic support for 'pages' of data, where we re-query for more data in the background
-
-# Tasks planned for Q2 2017
- - HTTP 2 support
-
-# Future maybe someday features
-- Json
- - std::set
- - True generic container support (any object that support forward iteration and insert/add)
-- Add data-type suitable for representing money (must be able to serialize deserialize like float/ BigDecimal)
-- Mime content in HTTP body
- - Mime multipart Requests
- - Mime multipart Responses
-- Circuit Breaker (Fail fast for hosts that don't work)
-- Bulkheads (Use separate connection pools for different services)
-- Make performance comparisons with similar REST libraries for Java, Python and Ruby
-- Improved Proxy support
- - Socks 5
+# More information
+[Build for Linux](https://github.com/jgaa/restc-cpp/wiki/Building-Restc-cpp-under-Linux)
+[Build for Windows](https://github.com/jgaa/restc-cpp/wiki/Building-restc-cpp-under-Windows)
+[Planned work](https://github.com/jgaa/restc-cpp/wiki)
