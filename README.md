@@ -513,7 +513,7 @@ These are the operating systems I test with before releasing a new version.
 	and openssl 1.0.2k)
  - Fedora 25
  - Ubuntu LTS
- - OS/X
+ - MacOS Sierra (OS X)
 
 
 # More information
