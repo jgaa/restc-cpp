@@ -38,13 +38,9 @@ if (UNIX OR (WIN32 AND NOT RESTC_CPP_USE_WIN32_DEFAULTS))
     set(Boost_USE_MULTITHREADED ON)
     find_package(Boost REQUIRED COMPONENTS
         system
-        thread
         program_options
-        serialization
         filesystem
         date_time
-        iostreams
-        regex
         context
         coroutine
         chrono
@@ -55,33 +51,15 @@ if (UNIX OR (WIN32 AND NOT RESTC_CPP_USE_WIN32_DEFAULTS))
 endif()
 
 if (UNIX)
-    set(LIB_BOOST_PROGRAM_OPTIONS boost_program_options)
-    set(LIB_BOOST_SERIALIZATION boost_serialization)
-    set(LIB_BOOST_FILESYSTEM boost_filesystem)
-    set(LIB_BOOST_DATE_TIME boost_date_time)
-    set(LIB_BOOST_IOSTREAMS boost_iostreams)
-    set(LIB_BOOST_SYSTEM boost_system)
-    set(LIB_BOOST_REGEX boost_regex)
-    set(LIB_BOOST_CONTEXT boost_context)
-    set(LIB_BOOST_COROUTINE boost_coroutine)
-    set(LIB_BOOST_CHRONO boost_chrono)
-    set(LIB_BOOST_THREAD boost_thread)
-    set(LIB_BOOST_LOG boost_log)
-    set(BOOST_UNIT_TEST_FRAMEWORK boost_unit_test_framework)
-
     set (BOOST_LIBRARIES
-        ${LIB_BOOST_SYSTEM}
-        ${LIB_BOOST_PROGRAM_OPTIONS}
-        ${LIB_BOOST_SERIALIZATION}
-        ${LIB_BOOST_FILESYSTEM}
-        ${LIB_BOOST_DATE_TIME}
-        ${LIB_BOOST_IOSTREAMS}
-        ${LIB_BOOST_REGEX}
-        ${LIB_BOOST_COROUTINE}
-        ${LIB_BOOST_CONTEXT}
-        ${LIB_BOOST_CHRONO}
-        ${LIB_BOOST_THREAD}
-        ${LIB_BOOST_LOG}
+        debug ${Boost_SYSTEM_LIBRARY_DEBUG} optimized ${Boost_SYSTEM_LIBRARY_RELEASE}
+        debug ${Boost_PROGRAM_OPTIONS_LIBRARY_DEBUG} optimized ${Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE}
+        debug ${Boost_FILESYSTEM_LIBRARY_DEBUG} optimized ${Boost_FILESYSTEM_LIBRARY_RELEASE}
+        debug ${Boost_DATE_TIME_LIBRARY_DEBUG} optimized ${Boost_DATE_TIME_LIBRARY_RELEASE}
+        debug ${Boost_COROUTINE_LIBRARY_DEBUG} optimized ${Boost_COROUTINE_LIBRARY_RELEASE}
+        debug ${Boost_CONTEXT_LIBRARY_DEBUG} optimized ${Boost_CONTEXT_LIBRARY_RELEASE}
+        debug ${Boost_CHRONO_LIBRARY_DEBUG} optimized ${Boost_CHRONO_LIBRARY_RELEASE}
+        debug ${Boost_LOG_LIBRARY_DEBUG} optimized ${Boost_LOG_LIBRARY_RELEASE}
         )
 
     set(BOOST_UNIT_TEST_LIBRARIES boost_unit_test_framework)

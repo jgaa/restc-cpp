@@ -78,7 +78,6 @@ if (NOT EMBEDDED_RESTC_CPP)
         set(THREADLIBS pthread)
     endif()
 
-
     set (DEFAULT_LIBRARIES
         ${DEFAULT_LIBRARIES}
         ${THREADLIBS}

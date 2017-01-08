@@ -1,8 +1,25 @@
-#!/bin/sh
+#!/bin/bash
 
-TESTBIN_DIR=./dbuild/
+case "$OSTYPE" in
+  darwin*)  
+	echo "OSX"
+	TESTS=`find dbuild/tests -perm +0111 -type f`	
+ 	;;
+  linux*)   
+	echo "LINUX"
+	TESTS=`find dbuild/tests -type f -executable -print`
+	;;
+  bsd*)     
+	echo "BSD"
+	TESTS=`find dbuild/tests -type f -executable -print`
+	;;
+  msys*)    
+	echo "WINDOWS"
+	TESTS=`find dbuild/tests -type f -executable -print`
+	;;
+  *)        echo "unknown: $OSTYPE" ;;
+esac
 
-TESTS=`find dbuild/tests -type f -executable -print`
 for f in $TESTS;
 do
     echo "testing $f"
