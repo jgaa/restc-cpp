@@ -21,7 +21,10 @@ const string http_url = "http://localhost:3000/manyposts";
 
 /* The goal is to test with 1000 connections.
  * However, I am unable to get more than 500 working reliable (with 100
- * connections increment) before I see connection errors.
+ * connections increment) before I see connection errors. On OS X, 
+ * I was unable to get more than 100 connections working reliable.
+ * (I have yet to figure out if the limitation is in the library
+ * or in the test setup / Docker container).
  *
  * I don't know at this time if it is caused by OS limits in the test
  * application, Docker, the container with the mock server or the Linux
@@ -35,7 +38,11 @@ const string http_url = "http://localhost:3000/manyposts";
  * works as expected with many co-routines in parallell.
  */
 
-#define CONNECTIONS 500
+#ifdef __APPLE__
+#   define CONNECTIONS 100
+#else
+#   define CONNECTIONS 500
+#endif
 
 struct Post {
     int id = 0;

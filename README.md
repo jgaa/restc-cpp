@@ -9,7 +9,7 @@ arguments, receives a Json payload, and initializes a C++ object with that data.
 That's it. It does not solve world hunger. It make no attempts to be a C++
 framework.
 
-You can use it's single components, like the C++ HTTP Client to send and
+You can use it's single components, like the C++ HTTP Client to send andenable_testing()
 receive non-Json data as a native C++ replacement for libcurl.
 You can use the template code that transforms data between C++ and Json
 for other purposes - but the library is designed and implemented for the single
@@ -499,8 +499,7 @@ int main()
 The project is maturing fast. There are no known bugs.
 Beta status will be announced in the near future.
 
-The latest code is tested with Debian "testing", Debian Jessie, Fedora 25 and Windows 10.
-
+The latest code is tested with Debian "testing", Debian Jessie, Fedora 25, Mac OS Sierra (OS/X) and Windows 10.
 
 # Supported operating systems
 These are the operating systems I test with before releasing a new version.
@@ -513,10 +512,11 @@ These are the operating systems I test with before releasing a new version.
 	and openssl 1.0.2k)
  - Fedora 25
  - Ubuntu LTS
- - OS/X
+ - MacOS Sierra (OS X)
 
 
 # More information
 - [Build for Linux](https://github.com/jgaa/restc-cpp/wiki/Building-Restc-cpp-under-Linux)
+- [Build for macOS](https://github.com/jgaa/restc-cpp/wiki/Building-under-Mac-OS-X)
 - [Build for Windows](https://github.com/jgaa/restc-cpp/wiki/Building-restc-cpp-under-Windows)
 - [Planned work](https://github.com/jgaa/restc-cpp/wiki)
