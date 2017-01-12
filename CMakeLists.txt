@@ -123,6 +123,7 @@ include_directories(
 add_subdirectory(src)
 
 if (RESTC_CPP_WITH_UNIT_TESTS)
+    enable_testing()
     add_subdirectory(tests)
 endif()
 
