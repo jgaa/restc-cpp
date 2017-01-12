@@ -499,7 +499,7 @@ int main()
 The project is maturing fast. There are no known bugs.
 Beta status will be announced in the near future.
 
-The latest code is tested with Debian "testing", Debian Jessie Fedora 25 and Windows 10.
+The latest code is tested with Debian "testing", Debian Jessie, Fedora 25 and Windows 10.
 
 
 # Supported operating systems
