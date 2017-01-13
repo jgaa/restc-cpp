@@ -11,7 +11,7 @@ arguments, receives a Json payload, and initializes a C++ object with that data.
 That's it. It does not solve world hunger. It make no attempts to be a C++
 framework.
 
-You can use it's single components, like the C++ HTTP Client to send andenable_testing()
+You can use it's single components, like the C++ HTTP Client to send and
 receive non-Json data as a native C++ replacement for libcurl.
 You can use the template code that transforms data between C++ and Json
 for other purposes - but the library is designed and implemented for the single
@@ -32,19 +32,28 @@ This was a strong motivation to write a C++ HTTP Client from scratch. To see how
 this actually works, please see my
  [modern async cpp example](https://github.com/jgaa/modern_async_cpp_example)).
 
+In short; the code executes asyncrounesly, but there are still no
+visible callbacks or completion functions. It looks like crystal clear,
+old fasion, single threaded sequential code (using modern C++ language).
+You don't sacrifice code clearness to achive the high performance. (One of the
+[functional tests](https://github.com/jgaa/restc-cpp/blob/master/tests/1000ConnectionsTest.cpp)
+opens 500 simultaneous client connections to a server, using
+only one C++ std::thread, processing all the request in parallell).
+
 Finally, in a world where the Internet is getting increasingly
 [dangerous](http://www.dailydot.com/layer8/bruce-schneier-internet-of-things/),
 and all kind of malicious parties (from your own government to Russian mafia)
 search for vulnerabilities in your software stack to snoop, ddos, intercept and
 blackmail you and your customers/users - I have a strong emphasis on security in
 all software projects I'm involved in. I have limited the dependencies on third
-party libraries as much as I could (I still use OpenSSL which is a rotten pile of
-shit of yet undiscovered vulnerabilities - but as of now there are no creditable
-alternatives). I have also tried to imagine any possible way a malicious API server
+party libraries as much as I could (I still use OpenSSL which is a snakes nest of
+of yet undisclosed vulnerabilities - but as of now there are no
+alternatives that works out of the box with boost::asio).
+I have also tried to imagine any possible way a malicious API server
 could try to attack you (by exploiting or exceeding local resources - like sending
 a malicious compressed package that expands to a petabyte of zeros) and designed
 to detect any potential problems and break out of it by throwing an exception as
-soon as possible - and to use fixed sized buffers in the communications layers.
+soon as possible.
 
 # Why?
 In the spring of 2016 I was tasked to implement a SDK for a REST API in
@@ -64,7 +73,8 @@ persistent delay in implementing C++ standards, it took a little longer to finis
 as the json conversion is based on complex template meta-programming. I had some
 quite beautiful code working with clang and g++, but I had to break it up and
 do ugly work-arounds to make it work with MSVC. I hope I can refactor it into
-boost::hana some day. However, last time I checked, Microsoft had still not implemented proper C++14 support - and hana was yet not working with their compiler).
+boost::hana some day. However, last time I checked, Microsoft had still not
+implemented proper C++14 support - and hana was yet not working with their compiler).
 
 In the fall / winter of 2016, I threw some more hours into the project and added
 features that was not really required for the problem I started out to solve, but who
@@ -78,6 +88,8 @@ Restc-cpp depends on C++14 with its standard libraries and:
   - unittest-cpp (If compiled with testing enabled)
   - openssl or libressl (If compiled with TLS support)
   - zlib (If compiled with compression support)
+
+rapidjson and unittest-cpp is attached to the project as git sub-modules.
 
 # License
 Usually I use some version of GPL or LGPL for my projects. This
@@ -411,7 +423,7 @@ int main()
     data_object.motto    = "Carpe Diem!";
 
     auto reply = RequestBuilder(ctx)
-        .Post("https://example.com/api/data") // URL
+        .Post("https://example.com/api/data")              // URL
         .Header("X-Client", "RESTC_CPP")                   // Optional header
         .Data(data_object)                                 // Data object to send
         .Execute();                                        // Do it!
@@ -448,7 +460,7 @@ int main()
             // Send the request.
             .Execute();
 
-        // Dump the well protected data
+        // Dump the well guarded data
         cout << "Got: " << reply->GetBodyAsString();
 
     }).get();
