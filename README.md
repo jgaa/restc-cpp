@@ -77,7 +77,7 @@ Restc-cpp depends on C++14 with its standard libraries and:
   - rapidjson (mature, ultrta-fast, json sax, header-only library)
   - unittest-cpp (If compiled with testing enabled)
   - openssl or libressl (If compiled with TLS support)
-  - zlib
+  - zlib (If compiled with compression support)
 
 # License
 Usually I use some version of GPL or LGPL for my projects. This
