@@ -1,4 +1,6 @@
 # restc-cpp
+<i>Takes the pain out of accessing JSON API's from C++ </i>
+
 This is a small and fast REST HTTP[S] client library in C++. It's
 designed in the traditional UNIX philosophy to do one thing only,
 and to do it well.
