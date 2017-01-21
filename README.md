@@ -3,19 +3,23 @@
 
 This is a small and fast REST client library in C++. 
 
-Simply said, it formulates a HTTP reqest to a REST API server, and transforms
-the JSON reply payload into a native C++ class (GET). It can also serialize
-a native C++ object or a container of C++ objects into a JSON payload
-and send it to the REST API server (POST, PUT). And of cource, it can just
-formulate a HTTP request to the REST API without serializing data in either
-direction (typically DELETE). That's it. It does not solve world hunger. 
-It make no attempts to be a C++ framework.
+
+<b>What it does:<b>
+- It formulates a HTTP reqest to a REST API server. Then, it transforms
+  the JSON reply payload into a native C++ class (GET). 
+- It Serialize a native C++ object or a container of C++ objects into a JSON payload
+  and send it to the REST API server (POST, PUT). 
+- It formulates a HTTP request to the REST API without serializing any data in either
+  direction (typically DELETE). That's it. 
+
+It does not solve world hunger. It make no attempts to be a C++ framework.
 
 You can use it's single components, like the powerful C++ HTTP Client to 
-send and receive non-Json data as a native C++ replacement for libcurl.
+send and receive non-JSON data as a native C++ replacement for libcurl.
 You can use the template code that transforms data between C++ and JSON
-for other purposes - but the library is designed and implemented for the single
-purpose of using C++ to interact efficiently and effortless with REST API servers.
+for other purposes (for example in a REST API SERVER) - but the library 
+is designed and implemented for the single purpose of using C++ to 
+interact efficiently and effortless with external REST API servers.
 
 The library is written by Jarle (jgaa) Aase, a senior freelance C++ developer 
 with roughly 30 years of experience in software developemnt.
@@ -24,24 +28,23 @@ with roughly 30 years of experience in software developemnt.
 The design goal of this project is to make external REST API's
 simple and safe to use in C++ projects, but still fast and memory efficient.
 
-I also wanted to use coroutines for the application logic that sends data to or
-pulls data from the REST API servers. This makes the code much easier to write
+Another goal was to use coroutines for the application logic that sends data to or
+pulls data from the REST API servers. This makes the code easy to write
 and understand, and also simplifies debugging and investigation of core dumps.
-This was a strong motivation to write a C++ HTTP Client from scratch. To see how
-this actually works, please see 
- [modern async cpp example](https://github.com/jgaa/modern_async_cpp_example)).
-
 In short; the code executes asyncrounesly, but there are no visible callbacks 
 or completion functions. It looks like crystal clear,
 old fasion, single threaded sequential code (using modern C++ language).
 You don't sacrifice code clearness to achive massive parallelism and 
-high performance.
+high performance. Coroutines was a strong motivation to write a new 
+C++ HTTP Client from scratch. To see how this actually works, please see 
+ [modern async cpp example](https://github.com/jgaa/modern_async_cpp_example)).
+
 
 Finally, in a world where the Internet is getting increasingly
 [dangerous](http://www.dailydot.com/layer8/bruce-schneier-internet-of-things/),
-and all kind of malicious parties (from your own government to Russian mafia 
-(with Putin in Russia and the Clown in the White House, the differences is 
-bluring out)) search for vulnerabilities in your software stack to snoop, ddos, 
+and all kind of malicious parties, from your own government to international Mafia 
+(with Putin in Moscow and the Clown in the White House, the differences is 
+bluring out), search for vulnerabilities in your software stack to snoop, ddos, 
 intercept and blackmail you and your customers/users - I have a strong emphasis 
 on security in all software projects I'm involved in. I have limited the 
 dependencies on third party libraries as much as I could (I still use OpenSSL 
@@ -54,22 +57,22 @@ to detect any potential problems and break out of it by throwing an exception as
 soon as possible.
 
 # Why?
-In the spring of 2016 I was tasked to implement a SDK for a REST API in
+In the spring of 2016 I was asked to implement a SDK for a REST API in
 several languages. For Python, Java and Ruby it was trivial to make a simple
 object oriented implementation. When I started planning the C++ implementation of the
 SDK, I found no suitable, free libraries. I could not even find a proper HTTP Client
-implementation(!). (I could have solved the problem using QT - but i found it
+implementation(!). I could have solved the problem using QT - but i found it
 overkill to use a huge GUI framework for C++ code that are most likely to run
 in high performance servers - and that may end up in projects using some other
-C++ framework that can't coexist with QT).
+C++ framework that can't coexist with QT.
 
-I had once, years before, done a C++ REST Client for an early
+Many years ago I designed and implemented a C++ REST Client for an early
 version of Amazon AWS using libcurl - and - well, I had no strong urge to repeat
-that experience. So I decided to spend a week creating my own HTTP Client library
-using boost::asio with Json serialization/deserialization. (Thanks to Microsoft
-persistent delay in implementing C++ standards, it took a little longer to finish,
-as the json conversion is based on complex template meta-programming. I had some
-quite beautiful code working with clang and g++, but I had to break it up and
+that experience. So I spent a few weeks week creating my own HTTP Client library
+using boost::asio with JSON serialization/deserialization. (Thanks to Microsoft
+persistent lack of commitment to C++ standards, it took a little longer to finish,
+then I planned, as the json conversion is based on complex template meta-programming.
+I had some quite beautiful code working with clang and g++, but I had to break it up and
 do ugly work-arounds to make it work with MSVC. I hope I can refactor it into
 boost::hana some day. However, last time I checked, Microsoft had still not
 implemented proper C++14 support - and hana was yet not working with their compiler).
@@ -96,15 +99,13 @@ using the co-routine support in boost::asio behind the scenes.
 
 ```C++
 #include <iostream>
-#include <chrono>
-#include <thread>
 #include "restc-cpp/restc-cpp.h"
 
 using namespace std;
 using namespace restc_cpp;
 
 void DoSomethingInteresting(Context& ctx) {
-    // Here we are again in a co-routine, running in a worker-thread.
+    // Here we are in a co-routine, running in a worker-thread.
 
     // Asynchronously connect to a server and fetch some data.
     auto reply = ctx.Get("http://jsonplaceholder.typicode.com/posts/1");
@@ -138,7 +139,7 @@ Received data: {
 ```
 
 
-## Fetch a C++ object from a server that serialize to Json
+## Fetch a C++ object from a server that serialize to JSON
 
 Here is a sightly more interesting example, using JSON
 serialization, and some modern C++ features.
@@ -155,7 +156,7 @@ serialization, and some modern C++ features.
 using namespace std;
 using namespace restc_cpp;
 
-// C++ structure that match the Json entries received
+// C++ structure that match the JSON entries received
 // from http://jsonplaceholder.typicode.com/posts/{id}
 struct Post {
     int userId = 0;
@@ -167,7 +168,7 @@ struct Post {
 // Since C++ does not (yet) offer reflection, we need to tell the library how
 // to map json members to a type. We are doing this by declaring the
 // structs/classes with BOOST_FUSION_ADAPT_STRUCT from the boost libraries.
-// This allows us to convert the C++ classes to and from Json.
+// This allows us to convert the C++ classes to and from JSON.
 
 BOOST_FUSION_ADAPT_STRUCT(
     Post,
@@ -189,7 +190,7 @@ int main() {
 
         // Serialize it asynchronously. The asynchronously part does not really matter
         // here, but it may if you receive huge data structures.
-        SerializeFromJson(post,
+        SerializeFromJSON(post,
 
             // Construct a request to the server
             RequestBuilder(ctx)
@@ -223,20 +224,20 @@ Received post# 1, title: sunt aut facere repellat provident occaecati excepturi 
 Please refer to the [tutorial](doc/Tutorial.md) for more examples.
 
 # Features
-- High level Request Builder interface (similar to Java HTTP Clients) for convenience
-- Low level interface to create requests
-- All network IO operations are asynchronous trough boost::asio
-- Uses C++ / boost coroutines for application logic
-- HTTP Redirects
-- HTTP Basic Authentication
-- Logging trough boost::log or trough your own log macros
+- High level Request Builder interface (similar to Java HTTP Clients) for convenience.
+- Low level interface to create requests.
+- All network IO operations are asynchronous trough boost::asio.
+- Uses C++ / boost coroutines for application logic.
+- HTTP Redirects.
+- HTTP Basic Authentication.
+- Logging trough boost::log or trough your own log macros.
 - Connection Pool for fast re-use of existing server connections.
-- Compression (gzip, deflate)
-- Json serialization to and from native C++ objects.
-  - Optional Mapping between C++ property names and Json 'on the wire' names.
+- Compression (gzip, deflate).
+- JSON serialization to and from native C++ objects.
+  - Optional Mapping between C++ property names and JSON 'on the wire' names.
   - Option to tag property names as read-only to filter them out when the C++ object is serialized for transfer to the server.
   - Filters out empty C++ properties when the C++ object is serialized for transfer to the server (can be disabled).
-  - Iterator interface to received Json lists of objects
+  - Iterator interface to received JSON lists of objects.
 
 # Current Status
 The project is maturing fast. There are no known bugs.
