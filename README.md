@@ -36,7 +36,7 @@ or completion functions. It looks like crystal clear,
 old fasion, single threaded sequential code (using modern C++ language).
 You don't sacrifice code clearness to achive massive parallelism and 
 high performance. Coroutines was a strong motivation to write a new 
-C++ HTTP Client from scratch. To see how this actually works, please see 
+C++ HTTP Client from scratch. To see how this actually works, please see the 
  [modern async cpp example](https://github.com/jgaa/modern_async_cpp_example)).
 
 
@@ -68,14 +68,8 @@ C++ framework that can't coexist with QT.
 
 Many years ago I designed and implemented a C++ REST Client for an early
 version of Amazon AWS using libcurl - and - well, I had no strong urge to repeat
-that experience. So I spent a few weeks week creating my own HTTP Client library
-using boost::asio with JSON serialization/deserialization. (Thanks to Microsoft
-persistent lack of commitment to C++ standards, it took a little longer to finish,
-then I planned, as the json conversion is based on complex template meta-programming.
-I had some quite beautiful code working with clang and g++, but I had to break it up and
-do ugly work-arounds to make it work with MSVC. I hope I can refactor it into
-boost::hana some day. However, last time I checked, Microsoft had still not
-implemented proper C++14 support - and hana was yet not working with their compiler).
+that experience. So I spent a few weeks creating my own HTTP Client library
+using boost::asio with JSON serialization/deserialization.
 
 # Dependencies
 Restc-cpp depends on C++14 with its standard libraries and:
