@@ -4,7 +4,7 @@
 This is a small and fast REST client library in C++. 
 
 
-<b>What it does:<b>
+<b>What it does:</b>
 - It formulates a HTTP reqest to a REST API server. Then, it transforms
   the JSON reply payload into a native C++ class (GET). 
 - It Serialize a native C++ object or a container of C++ objects into a JSON payload
