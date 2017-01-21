@@ -1,5 +1,5 @@
 # Introduction to restc-cpp
-<i>Takes the pain out of accessing JSON API's from C++ </i>
+<i>The magic that takes the pain out of accessing JSON API's from C++ </i>
 
 This is a small and fast REST client library in C++. 
 
