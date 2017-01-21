@@ -3,13 +3,16 @@
 
 <b>What it does:</b>
 - It formulates a HTTP reqest to a REST API server. Then, it transforms
-  the JSON reply payload into a native C++ class (GET). 
+  the JSON formatted payload in the reply into a native C++ class (GET). 
 - It Serialize a native C++ object or a container of C++ objects into a JSON payload
   and send it to the REST API server (POST, PUT). 
 - It formulates a HTTP request to the REST API without serializing any data in either
-  direction (typically DELETE). That's it. 
+  direction (typically DELETE).
+- It uploads a stream of data, like a file, the a HTTP server.
+- It downloads a stream of data, like a file or an array of JSON objects from a HTTP server.
 
-It does not solve world hunger. It make no attempts to be a C++ framework.
+That's basically it. It does not solve world hunger. 
+It make no attempts to be a C++ framework.
 
 You can use it's single components, like the powerful C++ HTTP Client to 
 send and receive non-JSON data as a native C++ replacement for libcurl.
