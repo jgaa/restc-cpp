@@ -8,8 +8,8 @@
   and send it to the REST API server (POST, PUT). 
 - It formulates a HTTP request to the REST API without serializing any data in either
   direction (typically DELETE).
-- It uploads a stream of data, like a file, the a HTTP server.
-- It downloads a stream of data, like a file or an array of JSON objects from a HTTP server.
+- It uploads a stream of data, like a file, to a HTTP server.
+- It downloads a stream of data, like a file or an array of JSON objects, from a HTTP server.
 
 That's basically it. It does not solve world hunger. 
 It make no attempts to be a C++ framework.
