@@ -1,7 +1,7 @@
 .kdev4
 build
 ?build
-doc
+generated-doc
 */*.rej
 include/restc-cpp/config.h
 lib
