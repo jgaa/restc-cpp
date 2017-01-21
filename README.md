@@ -3,7 +3,7 @@
 
 <b>What it does:</b>
 - It formulates a HTTP reqest to a REST API server. Then, it transforms
-  the JSON formatted payload in the reply into a native C++ class (GET). 
+  the JSON formatted payload in the reply into a native C++ object (GET). 
 - It Serialize a native C++ object or a container of C++ objects into a JSON payload
   and send it to the REST API server (POST, PUT). 
 - It formulates a HTTP request to the REST API without serializing any data in either
