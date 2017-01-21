@@ -1,8 +1,5 @@
-# Introduction to restc-cpp
+# Introduction to the restc-cpp C++ library
 <i>The magic that takes the pain out of accessing JSON API's from C++ </i>
-
-This is a small and fast REST client library in C++. 
-
 
 <b>What it does:</b>
 - It formulates a HTTP reqest to a REST API server. Then, it transforms
