@@ -83,7 +83,7 @@ public:
         RestClient& rc_;
     };
 
-    RestClientImpl(boost::optional<Request::Properties> properties)
+    RestClientImpl(boost::optional<Request::Properties> properties, bool useMainThread)
     : default_connection_properties_{make_shared<Request::Properties>()}
     {
         static const string content_type{"Content-Type"};
@@ -97,12 +97,17 @@ public:
             default_connection_properties_->headers[content_type] = json_type;
         }
 
+        pool_ = ConnectionPool::Create(*this);
+
+        if (useMainThread) {
+            return;
+        }
+
         std::promise<void> wait;
         auto done = wait.get_future();
 
         thread_ = make_unique<thread>([&]() {
             std::lock_guard<decltype(done_mutex_)> lock(done_mutex_);
-            pool_ = ConnectionPool::Create(*this);
             work_ = make_unique<boost::asio::io_service::work>(io_service_);
             wait.set_value();
             RESTC_CPP_LOG_DEBUG << "Worker is starting.";
@@ -113,6 +118,7 @@ public:
         // Wait for the ConnectionPool to be constructed
         done.get();
     }
+
 
     const Request::Properties::ptr_t GetConnectionProperties() const override {
         return default_connection_properties_;
@@ -210,9 +216,20 @@ private:
     std::mutex work_mutex_;
 };
 
-unique_ptr<RestClient> RestClient::Create(boost::optional<Request::Properties> properties) {
-    return make_unique<RestClientImpl>(properties);
+unique_ptr<RestClient> RestClient::Create() {
+    return make_unique<RestClientImpl>(boost::optional<Request::Properties>{}, false);
 }
+
+
+unique_ptr<RestClient> RestClient::Create(boost::optional<Request::Properties> properties) {
+    return make_unique<RestClientImpl>(properties, false);
+}
+
+unique_ptr<RestClient> RestClient::Create(boost::optional<Request::Properties> properties,
+    bool useMainThread) {
+    return make_unique<RestClientImpl>(properties, useMainThread);
+}
+
 
 std::unique_ptr<Context> Context::Create(boost::asio::yield_context& yield,
                                                 RestClient& rc) {

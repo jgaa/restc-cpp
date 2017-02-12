@@ -359,8 +359,14 @@ public:
     virtual void CloseWhenReady(bool wait = true) = 0;
 
     /*! Factory */
+    static std::unique_ptr<RestClient> Create();
+
     static std::unique_ptr<RestClient>
-        Create(boost::optional<Request::Properties> properties = {});
+        Create(boost::optional<Request::Properties> properties);
+
+    static std::unique_ptr<RestClient>
+        Create(boost::optional<Request::Properties> properties,
+            bool useMainThread);
 
     protected:
         virtual std::unique_ptr<DoneHandler> GetDoneHandler() = 0;

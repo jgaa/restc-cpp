@@ -263,6 +263,47 @@ int main()
     }).get();
 ```
 
+## Use an existing thread in stead of a worker thread
+
+This example is slightly more advanced. Here we take
+responsibility to run the io-service used internally by
+the rest client instance. This allow us to use an existing
+thread, like the applications main thread, to
+
+```C++
+    // Add the proxy information to the properties used by the client
+    Request::Properties properties;
+
+    // Create the client without creating a worker thread
+    auto rest_client = RestClient::Create(properties, true);
+
+    // Add a request to the queue of the io-service in the rest client instance
+    rest_client->Process([&](Context& ctx) {
+        // Here we are again in a co-routine, running in a worker-thread.
+
+        // Asynchronously connect to a server trough a HTTP proxy and fetch some data.
+        auto reply = RequestBuilder(ctx)
+            .Get("http://jsonplaceholder.typicode.com/posts/1")
+
+            // Send the request.
+            .Execute();
+
+        // Dump the data
+        cout << "Got: " << reply->GetBodyAsString();
+
+        // Shut down the io-service. This will cause run() (below) to return.
+        rest_client->CloseWhenReady();
+
+    });
+
+    // Start the io-service, using this thread
+    rest_client->GetIoService().run();
+
+    cout << "Done,. Exiting normally." << endl;
+```
+
+
+
 ## Map between C++ property names and JSON names
 TBD
 
