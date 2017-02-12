@@ -268,10 +268,10 @@ int main()
 This example is slightly more advanced. Here we take
 responsibility to run the io-service used internally by
 the rest client instance. This allow us to use an existing
-thread, like the applications main thread, to
+thread, like the applications main thread, to handle the
+asynchronous requests.
 
 ```C++
-    // Add the proxy information to the properties used by the client
     Request::Properties properties;
 
     // Create the client without creating a worker thread
