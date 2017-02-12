@@ -180,8 +180,6 @@ void fifth() {
 }
 
 void Sixth() {
-
-    // Add the proxy information to the properties used by the client
     Request::Properties properties;
 
     // Create the client without creating a worker thread
@@ -189,7 +187,7 @@ void Sixth() {
 
     // Add a request to the queue of the io-service in the rest client instance
     rest_client->Process([&](Context& ctx) {
-        // Here we are again in a co-routine, running in a worker-thread.
+        // Here we are again in a co-routine, now in our own thread.
 
         // Asynchronously connect to a server trough a HTTP proxy and fetch some data.
         auto reply = RequestBuilder(ctx)
@@ -206,11 +204,10 @@ void Sixth() {
 
     });
 
-    // Start the io-service, using this thread
+    // Start the io-service, using this thread.
     rest_client->GetIoService().run();
 
-    cout << "Done,. Exiting normally." << endl;
-
+    cout << "Done. Exiting normally." << endl;
 }
 
 int main() {

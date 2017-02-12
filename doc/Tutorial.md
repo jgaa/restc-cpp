@@ -299,7 +299,7 @@ asynchronous requests.
     // Start the io-service, using this thread.
     rest_client->GetIoService().run();
 
-    cout << "Done,. Exiting normally." << endl;
+    cout << "Done. Exiting normally." << endl;
 ```
 
 
