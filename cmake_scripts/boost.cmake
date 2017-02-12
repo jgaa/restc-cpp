@@ -25,6 +25,7 @@ if (WIN32)
         set(RESTC_CPP_HAVE_BOOST_TYPEINDEX 1)
     endif()
 
+
     set(Boost_USE_STATIC_LIBS ON)
     set(Boost_USE_MULTITHREADED ON)
     unset(Boost_INCLUDE_DIR CACHE)
@@ -68,6 +69,9 @@ if (UNIX)
     endif()
     CHECK_INCLUDE_FILES(${Boost_INCLUDE_DIRS}/boost/type_index.hpp RESTC_CPP_HAVE_BOOST_TYPEINDEX)
 endif()
+
+# Asio trigger deprecation warnings
+add_definitions(-DBOOST_COROUTINE_NO_DEPRECATION_WARNING=1)
 
 if (UNIX)
     set (DEFAULT_LIBRARIES
