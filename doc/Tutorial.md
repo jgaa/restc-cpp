@@ -263,7 +263,7 @@ int main()
     }).get();
 ```
 
-## Use an existing thread in stead of a worker thread
+## Use an existing thread in stead of a new worker thread
 
 This example is slightly more advanced. Here we take
 responsibility to run the io-service used internally by
