@@ -279,7 +279,7 @@ asynchronous requests.
 
     // Add a request to the queue of the io-service in the rest client instance
     rest_client->Process([&](Context& ctx) {
-        // Here we are again in a co-routine, running in a worker-thread.
+        // Here we are again in a co-routine, now in our own thread.
 
         // Asynchronously connect to a server trough a HTTP proxy and fetch some data.
         auto reply = RequestBuilder(ctx)
@@ -296,7 +296,7 @@ asynchronous requests.
 
     });
 
-    // Start the io-service, using this thread
+    // Start the io-service, using this thread.
     rest_client->GetIoService().run();
 
     cout << "Done,. Exiting normally." << endl;
