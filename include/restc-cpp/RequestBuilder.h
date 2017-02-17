@@ -6,13 +6,13 @@
 #       error "Include restc-cpp.h first"
 #endif
 
-#include "restc-cpp/SerializeJson.h"
-#include "rapidjson/writer.h"
-#include "rapidjson/stringbuffer.h"
-
-
 #include <string>
 #include <assert.h>
+
+#include "restc-cpp/SerializeJson.h"
+#include "restc-cpp/DataWriter.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
 
 namespace restc_cpp {
 

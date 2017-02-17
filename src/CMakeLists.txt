@@ -10,7 +10,7 @@ set(ACTUAL_SOURCES
     ReplyImpl.cpp
     ConnectionPoolImpl.cpp
     Url.cpp
-    Body.cpp
+    RequestBodyStringImpl.cpp
     url_encode.cpp
     )
 

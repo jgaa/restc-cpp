@@ -37,7 +37,7 @@ public:
     RequestImpl(const std::string& url,
                 const Type requestType,
                 RestClient& owner,
-                std::unique_ptr<Body> body,
+                std::unique_ptr<RequestBody> body,
                 const boost::optional<args_t>& args,
                 const boost::optional<headers_t>& headers,
                 const boost::optional<auth_t>& auth = {})
@@ -400,7 +400,7 @@ private:
     std::string url_;
     Url parsed_url_;
     const Type request_type_;
-    std::unique_ptr<Body> body_;
+    std::unique_ptr<RequestBody> body_;
     Properties::ptr_t properties_;
     RestClient &owner_;
     size_t header_size_ = 0;

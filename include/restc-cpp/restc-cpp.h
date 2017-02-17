@@ -52,12 +52,14 @@ namespace restc_cpp {
 class RestClient;
 class Reply;
 class Request;
+class RequestBody;
 class Connection;
 class ConnectionPool;
 class Socket;
 class Request;
 class Reply;
 class Context;
+class DataWriter;
 
 using write_buffers_t = std::vector<boost::asio::const_buffer>;
 
@@ -131,54 +133,57 @@ public:
         Proxy proxy;
     };
 
-    // TODO: Switch to interface and may be specialized implementations
-    struct Body {
-        enum class Type {
-            NONE,
-            STRING,
-            FILE
-        };
 
-        Body() : eof_{true} {}
-        Body(const std::string& body) : body_str_(body), type_{Type::STRING} {}
-        Body(std::string&& body) : body_str_(move(body)), type_{Type::STRING} {}
-        Body(const boost::filesystem::path& path) : path_(path), type_{Type::FILE} {}
 
-        bool HaveSize() const noexcept {
-            return true;
-        }
 
-        bool HaveAllDataReadyInBuffers() const noexcept {
-            return type_ == Type::STRING;
-        }
-
-        bool IsEof() const noexcept {
-            return eof_;
-        }
-
-        // Return true if we added data
-        bool GetData(write_buffers_t& buffers);
-
-        // Typically the value of the content-length header
-        std::uint64_t GetFizxedSize() const;
-
-        /*! Set the body up for a new run.
-         *
-         * This is typically done if request fails and the client wants
-         * to re-try.
-         */
-        void Reset();
-
-    private:
-        boost::optional<std::string> body_str_;
-        boost::optional<boost::filesystem::path> path_;
-        const Type type_ = Type::NONE;
-        bool eof_ = false;
-        std::unique_ptr<std::ifstream> file_;
-        std::unique_ptr<std::array<char, 1024 * 8>> buffer_;
-        std::uint64_t bytes_read_ = 0;
-        mutable boost::optional<std::uint64_t> size_;
-    };
+//     // TODO: Switch to interface and may be specialized implementations
+//     struct Body {
+//         enum class Type {
+//             NONE,
+//             STRING,
+//             FILE
+//         };
+//
+//         Body() : eof_{true} {}
+//         Body(const std::string& body) : body_str_(body), type_{Type::STRING} {}
+//         Body(std::string&& body) : body_str_(move(body)), type_{Type::STRING} {}
+//         Body(const boost::filesystem::path& path) : path_(path), type_{Type::FILE} {}
+//
+//         bool HaveSize() const noexcept {
+//             return true;
+//         }
+//
+//         bool HaveAllDataReadyInBuffers() const noexcept {
+//             return type_ == Type::STRING;
+//         }
+//
+//         bool IsEof() const noexcept {
+//             return eof_;
+//         }
+//
+//         // Return true if we added data
+//         bool GetData(write_buffers_t& buffers);
+//
+//         // Typically the value of the content-length header
+//         std::uint64_t GetFizxedSize() const;
+//
+//         /*! Set the body up for a new run.
+//          *
+//          * This is typically done if request fails and the client wants
+//          * to re-try.
+//          */
+//         void Reset();
+//
+//     private:
+//         boost::optional<std::string> body_str_;
+//         boost::optional<boost::filesystem::path> path_;
+//         const Type type_ = Type::NONE;
+//         bool eof_ = false;
+//         std::unique_ptr<std::ifstream> file_;
+//         std::unique_ptr<std::array<char, 1024 * 8>> buffer_;
+//         std::uint64_t bytes_read_ = 0;
+//         mutable boost::optional<std::uint64_t> size_;
+//     };
 
     virtual const Properties& GetProperties() const = 0;
     virtual void SetProperties(Properties::ptr_t propreties) = 0;
@@ -190,7 +195,7 @@ public:
     Create(const std::string& url,
            const Type requestType,
            RestClient& owner,
-           std::unique_ptr<Body> body = nullptr,
+           std::unique_ptr<RequestBody> body = nullptr,
            const boost::optional<args_t>& args = {},
            const boost::optional<headers_t>& headers = {},
            const boost::optional<auth_t>& auth = {});
