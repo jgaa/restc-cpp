@@ -44,8 +44,6 @@ DataReader::CreateIoReader(Connection& conn, Context& ctx) {
     return make_unique<IoReaderImpl>(conn, ctx);
 }
 
-
-
 } // namespace
 
 

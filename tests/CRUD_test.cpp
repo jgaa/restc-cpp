@@ -19,7 +19,7 @@ using namespace restc_cpp;
  * a jsonserver docker container with mock data.
  * The scripts to build and run these containers are in the ./tests directory.
  */
-const string http_url = "http://localhost:3001/redirect/posts";
+const string http_url = "http://localhost:3000/posts";
 
 struct Post {
     int id = 0;

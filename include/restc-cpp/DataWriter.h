@@ -32,7 +32,9 @@ class Context;
 class DataWriter {
 public:
     using ptr_t = std::unique_ptr<DataWriter>;
-    using add_header_fn_t = std::function<void(std::string&& name, std::string&& value)>;
+
+    /*! Allows the user to set the headers in the chunked trailer if required */
+    using add_header_fn_t = std::function<std::string()>;
 
     DataWriter() = default;
     virtual ~DataWriter() = default;
@@ -40,11 +42,14 @@ public:
     /*! Write some data */
     virtual void Write(boost::asio::const_buffers_1 buffers) = 0;
 
+    /*! Write without altering the data (headers) */
+    virtual void WriteDirect(boost::asio::const_buffers_1 buffers) = 0;
+
     /*! Write some data */
     virtual void Write(const write_buffers_t& buffers) = 0;
 
     /*! Called when all data is written to flush the buffers */
-    virtual void Finish();
+    virtual void Finish() = 0;
 
     /*! Set the headers required by the writer.
      *
@@ -52,7 +57,7 @@ public:
      * while the chunked writer will set the header for chunked
      * data.
      */
-    virtual void SetHeaders(Request::headers_t& headers);
+    virtual void SetHeaders(Request::headers_t& headers) = 0;
 
     static ptr_t CreateIoWriter(Connection& conn, Context& ctx);
     static ptr_t CreateGzipWriter(std::unique_ptr<DataWriter>&& source);

@@ -17,6 +17,10 @@ public:
     {
     }
 
+    void WriteDirect(boost::asio::const_buffers_1 buffers) override {
+        Write(buffers);
+    }
+
     void Write(boost::asio::const_buffers_1 buffers) override {
 
         connection_.GetSocket().AsyncWrite(buffers, ctx_.GetYield());

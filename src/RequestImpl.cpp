@@ -13,6 +13,7 @@
 #include "restc-cpp/IoTimer.h"
 #include "restc-cpp/error.h"
 #include "restc-cpp/url_encode.h"
+#include "restc-cpp/RequestBody.h"
 #include "ReplyImpl.h"
 
 using namespace std;
@@ -166,7 +167,6 @@ private:
         static const std::string crlf{"\r\n"};
         static const std::string column{": "};
         static const string host{"Host"};
-        static const string content_length{"Content-Length"};
 
         std::ostringstream request_buffer;
 
@@ -178,7 +178,6 @@ private:
         }
 
         request_buffer << url_encode(parsed_url_.GetPath());
-
 
         // Add arguments to the path as ?name=value&name=value...
         bool first_arg = true;
@@ -201,21 +200,14 @@ private:
         request_buffer << " HTTP/1.1" << crlf;
 
         // Build the header buffers
-        const headers_t& headers = properties_->headers;
+        headers_t headers = properties_->headers;
+        assert(writer_);
+
+        // Let the writers set their individual headers.
+        writer_->SetHeaders(headers);
+
         if (headers.find(host) == headers.end()) {
             request_buffer << host << ": " << parsed_url_.GetHost().to_string() << crlf;
-        }
-
-
-        if (headers.find(content_length) == headers.end()) {
-
-            size_t length = 0;
-            if (body_ && body_->HaveSize()) {
-                length = static_cast<decltype(length)>(body_->GetFizxedSize());
-            }
-
-            request_buffer << content_length << ": " << length << crlf;
-            fixed_content_lenght_ = length;
         }
 
         for(const auto& it : headers) {
@@ -243,26 +235,25 @@ private:
             parsed_url_.GetPort().to_string()};
     }
 
-    unique_ptr<Reply> DoExecute(Context& ctx) {
+    /* If we are redirected, we need to reset the body
+     * Some body implementations may not support that and throw in Reset()
+     */
+    void PrepareBody() {
+        if (body_) {
+            if (dirty_) {
+                body_->Reset();
+            }
+        }
+        dirty_ = true;
+    }
+
+    Connection::ptr_t Connect(Context& ctx) {
+
         const Connection::Type protocol_type =
             (parsed_url_.GetProtocol() == Url::Protocol::HTTPS)
             ? Connection::Type::HTTPS
             : Connection::Type::HTTP;
 
-        bytes_sent_ = 0;
-        write_buffers_t write_buffer;
-        ToBuffer headers(BuildOutgoingRequest());
-        write_buffer.push_back(headers);
-        header_size_ = boost::asio::buffer_size(write_buffer);
-        std::string request_data = BuildOutgoingRequest();
-        if (body_) {
-            if (dirty_) {
-                body_->Reset();
-            }
-            body_->GetData(write_buffer);
-        }
-
-        dirty_ = true;
         boost::asio::ip::tcp::resolver resolver(owner_.GetIoService());
         // Resolve the hostname
         const auto query = GetRequestEndpoint();
@@ -273,10 +264,8 @@ private:
         auto address_it = resolver.async_resolve(query,
                                                  ctx.GetYield());
         const decltype(address_it) addr_end;
-        bool connected = false;
 
         for(; address_it != addr_end; ++address_it) {
-            assert(!connected);
             const auto endpoint = address_it->endpoint();
 
             RESTC_CPP_LOG_TRACE << "Trying endpoint " << endpoint;
@@ -308,104 +297,163 @@ private:
                 }
             }
 
-            connected = true;
-
-            // Send the request and all data
-            while(boost::asio::buffer_size(write_buffer))
-            {
-                auto timer = IoTimer::Create(
-                    properties_->connectTimeoutMs, connection);
-
-                try {
-                    connection->GetSocket().AsyncWrite(write_buffer,
-                                                       ctx.GetYield());
-
-                    RESTC_CPP_LOG_TRACE << "--> Sent "
-                        <<  boost::asio::buffer_size(write_buffer) << " bytes: "
-                        << "\r\n--------------- WRITE START --------------\r\n";
-
-                    for(const auto& b : write_buffer) {
-
-                        auto bb = boost::string_ref(
-                            boost::asio::buffer_cast<const char*>(b),
-                            boost::asio::buffer_size(b));
-
-                        RESTC_CPP_LOG_TRACE << bb;
-                    }
-
-                    RESTC_CPP_LOG_TRACE
-                        << "\r\n--------------- WRITE END --------------";
-
-                    bytes_sent_ += boost::asio::buffer_size(write_buffer);
-
-                } catch(const exception& ex) {
-                    RESTC_CPP_LOG_WARN << "Write failed with exception type: "
-                        << typeid(ex).name()
-                        << ", message: " << ex.what();
-                    throw;
-                }
-
-                if (body_ && !body_->IsEof()) {
-                    write_buffer.clear();
-                    if (!body_->GetData(write_buffer))
-                        break; // No more data
-                } else {
-                    break; //No more data to send
-                }
-            }
-
-            // Check that we sent whatever was in the content-length header
-            if (fixed_content_lenght_) {
-                if (fixed_content_lenght_ != GetContentBytesSent()) {
-                    RESTC_CPP_LOG_ERROR
-                        << "I set content-lenght header to "
-                        << *fixed_content_lenght_
-                        << " but sent " << GetContentBytesSent()
-                        << " content bytes.";
-                    throw ProtocolException(
-                        "Sent incorrect payload size");
-                }
-            }
-
-            // Pass IO responsibility to the Reply
-            RESTC_CPP_LOG_DEBUG << "Sent request to '" << url_ << "' "
-                << *connection;
-            auto reply = ReplyImpl::Create(connection, ctx, owner_);
-            reply->StartReceiveFromServer(
-                DataReader::CreateIoReader(*connection, ctx));
-
-            const auto http_code = reply->GetResponseCode();
-            if (http_code == 301 || http_code == 302) {
-                auto redirect_location = reply->GetHeader("Location");
-                if (!redirect_location) {
-                    throw ProtocolException(
-                        "No Location header in redirect reply");
-                }
-                throw RedirectException(http_code, *redirect_location);
-            }
-
-            ValidateReply(*reply);
-
-            /* Return the reply. At this time the reply headers and body
-             * is returned. However, the body may or may not be
-             * received.
-             */
-
-            return move(reply);
+            return connection;
         }
 
         throw FailedToConnectException("Failed to connect");
+    }
+
+    void SendRequestPayload(Context& ctx,
+                      write_buffers_t write_buffer) {
+
+        bool have_sent_headers = false;
+
+        while(boost::asio::buffer_size(write_buffer))
+        {
+            auto timer = IoTimer::Create(
+                properties_->connectTimeoutMs, connection_);
+
+            try {
+
+                if (!have_sent_headers) {
+
+                    auto b = write_buffer[0];
+
+                    writer_->WriteDirect(
+                        {boost::asio::buffer_cast<const char *>(b),
+                        boost::asio::buffer_size(b)});
+
+                    have_sent_headers = true;
+
+                    if (write_buffer.size() > 1) {
+                        write_buffers_t body_buffer = write_buffer;
+                        body_buffer.pop_back();
+                        writer_->Write(body_buffer);
+                    }
+
+                } else {
+                    writer_->Write(write_buffer);
+                }
+
+                RESTC_CPP_LOG_TRACE << "--> Sent "
+                    <<  boost::asio::buffer_size(write_buffer) << " bytes: "
+                    << "\r\n--------------- WRITE START --------------\r\n";
+
+                for(const auto& b : write_buffer) {
+
+                    auto bb = boost::string_ref(
+                        boost::asio::buffer_cast<const char*>(b),
+                        boost::asio::buffer_size(b));
+
+                    RESTC_CPP_LOG_TRACE << bb;
+                }
+
+                RESTC_CPP_LOG_TRACE
+                    << "\r\n--------------- WRITE END --------------";
+
+                bytes_sent_ += boost::asio::buffer_size(write_buffer);
+
+            } catch(const exception& ex) {
+                RESTC_CPP_LOG_WARN << "Write failed with exception type: "
+                    << typeid(ex).name()
+                    << ", message: " << ex.what();
+                throw;
+            }
+
+            if (body_) {
+                write_buffer.clear();
+                if (!body_->GetData(write_buffer))
+                    break; // No more data
+            } else {
+                break; //No more data to send
+            }
+        }
+    }
+
+    DataWriter& SendRequest(Context& ctx) {
+        bytes_sent_ = 0;
+
+        connection_ = Connect(ctx);
+        writer_ = DataWriter::CreateIoWriter(*connection_, ctx);
+
+        if (body_) {
+            if (body_->GetType() == RequestBody::Type::FIXED_SIZE) {
+                writer_ = DataWriter::CreatePlainWriter(body_->GetFixedSize(), move(writer_));
+            } else {
+                writer_ = DataWriter::CreateChunkedWriter(nullptr, move(writer_));
+            }
+        } else {
+            writer_ = DataWriter::CreatePlainWriter(0, move(writer_));
+        }
+
+        // TODO: Add compression
+
+        write_buffers_t write_buffer;
+        ToBuffer headers(BuildOutgoingRequest());
+        write_buffer.push_back(headers);
+        header_size_ = boost::asio::buffer_size(write_buffer);
+
+        PrepareBody();
+
+        if (body_
+            && ((body_->GetType() == RequestBody::Type::FIXED_SIZE)
+                || (body_->GetType() == RequestBody::Type::CHUNKED_LAZY_PULL))) {
+        }
+
+        SendRequestPayload(ctx, write_buffer);
+
+        RESTC_CPP_LOG_DEBUG << "Sent request to '" << url_ << "' "
+            << *connection_;
+
+        assert(writer_);
+        return *writer_;
+    }
+
+    unique_ptr<Reply> FinishRequestStage(Context& ctx) {
+
+        // We will not send more data regarding the current request
+        writer_->Finish();
+        writer_.reset();
+
+        auto reply = ReplyImpl::Create(connection_, ctx, owner_);
+        reply->StartReceiveFromServer(
+            DataReader::CreateIoReader(*connection_, ctx));
+
+        const auto http_code = reply->GetResponseCode();
+        if (http_code == 301 || http_code == 302) {
+            auto redirect_location = reply->GetHeader("Location");
+            if (!redirect_location) {
+                throw ProtocolException(
+                    "No Location header in redirect reply");
+            }
+            throw RedirectException(http_code, *redirect_location);
+        }
+
+        ValidateReply(*reply);
+
+        /* Return the reply. At this time the reply headers and body
+            * is returned. However, the body may or may not be
+            * received.
+            */
+
+        return move(reply);
+    }
+
+    unique_ptr<Reply> DoExecute(Context& ctx) {
+        SendRequest(ctx);
+        return FinishRequestStage(ctx);
     }
 
     std::string url_;
     Url parsed_url_;
     const Type request_type_;
     std::unique_ptr<RequestBody> body_;
+    Connection::ptr_t connection_;
+    std::unique_ptr<DataWriter> writer_;
     Properties::ptr_t properties_;
     RestClient &owner_;
     size_t header_size_ = 0;
     std::uint64_t bytes_sent_ = 0;
-    boost::optional<uint64_t> fixed_content_lenght_;
     bool dirty_ = false;
 };
 
@@ -414,7 +462,7 @@ std::unique_ptr<Request>
 Request::Create(const std::string& url,
                 const Type requestType,
                 RestClient& owner,
-                std::unique_ptr<Body> body,
+                std::unique_ptr<RequestBody> body,
                 const boost::optional<args_t>& args,
                 const boost::optional<headers_t>& headers,
                 const boost::optional<auth_t>& auth) {

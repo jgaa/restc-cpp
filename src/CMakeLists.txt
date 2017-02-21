@@ -1,8 +1,11 @@
 
 set(ACTUAL_SOURCES
     ChunkedReaderImpl.cpp
+    ChunkedWriterImpl.cpp
     IoReaderImpl.cpp
+    IoWriterImpl.cpp
     PlainReaderImpl.cpp
+    PlainWriterImpl.cpp
     NoBodyReaderImpl.cpp
     DataReaderStream.cpp
     RestClientImpl.cpp

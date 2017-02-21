@@ -10,7 +10,8 @@
 #include <assert.h>
 
 #include "restc-cpp/SerializeJson.h"
-#include "restc-cpp/DataWriter.h"
+//#include "restc-cpp/DataWriter.h"
+#include "restc-cpp/RequestBody.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 
@@ -112,7 +113,7 @@ public:
 
     RequestBuilder& Data(const std::string& body) {
         assert(!body_);
-        body_ = std::make_unique<Request::Body>(body);
+        body_ = RequestBody::CreateStringBody(body);
         return *this;
     }
 
@@ -122,7 +123,7 @@ public:
      */
     RequestBuilder& Data(std::string&& body) {
         assert(!body_);
-        body_ = std::make_unique<Request::Body>(move(body));
+        body_ = RequestBody::CreateStringBody(move(body));
         return *this;
     }
 
@@ -132,7 +133,7 @@ public:
      */
     RequestBuilder& File(const boost::filesystem::path& path) {
         assert(!body_);
-        body_ = std::make_unique<Request::Body>(path);
+        body_ = RequestBody::CreateFileBody(path);
         return *this;
     }
 
@@ -217,7 +218,7 @@ private:
     boost::optional<Request::headers_t> headers_;
     boost::optional<Request::args_t> args_;
     boost::optional<Request::auth_t> auth_;
-    std::unique_ptr<Request::Body> body_;
+    std::unique_ptr<RequestBody> body_;
     bool disable_compression_ = false;
 #ifdef DEBUG
     bool built_ = false;
