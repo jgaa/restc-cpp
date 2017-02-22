@@ -3,6 +3,7 @@
 
 #include <boost/utility/string_ref.hpp>
 #include "restc-cpp/restc-cpp.h"
+#include "restc-cpp/logging.h"
 #include "restc-cpp/RequestBody.h"
 #include "restc-cpp/DataWriter.h"
 
@@ -37,6 +38,9 @@ public:
         if (bytes_left == 0) {
             eof_ = true;
             file_.reset();
+            RESTC_CPP_LOG_DEBUG << "Successfully uploaded file "
+                << path_
+                << " of size " << size_ << " bytes.";
             return false;
         }
 
