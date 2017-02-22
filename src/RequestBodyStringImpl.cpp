@@ -38,11 +38,6 @@ public:
         return true;
     }
 
-    DataWriter& GetDataWriter() override {
-        assert(data_writer_);
-        return *data_writer_;
-    }
-
     void Reset() override {
         eof_ = false;
     }
@@ -51,7 +46,6 @@ public:
 private:
     string body_;
     bool eof_ = false;
-    unique_ptr<DataWriter> data_writer_;
 };
 
 

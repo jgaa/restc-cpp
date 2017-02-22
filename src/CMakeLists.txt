@@ -14,6 +14,7 @@ set(ACTUAL_SOURCES
     ConnectionPoolImpl.cpp
     Url.cpp
     RequestBodyStringImpl.cpp
+    RequestBodyFileImpl.cpp
     url_encode.cpp
     )
 

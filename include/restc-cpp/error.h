@@ -130,6 +130,12 @@ struct NotImplementedException : public RestcCppException
     : RestcCppException(cause) {}
 };
 
+struct IoException : public RestcCppException
+{
+    IoException(const std::string& cause)
+    : RestcCppException(cause) {}
+};
+
 
 } // namespace
 #endif // RESTC_CPP_ERROR_H_

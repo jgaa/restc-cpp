@@ -38,14 +38,12 @@ public:
         */
     virtual void Reset() = 0;
 
-    virtual DataWriter& GetDataWriter() = 0;
-
     /*! Create a body with a string in it */
     static std::unique_ptr<RequestBody> CreateStringBody(std::string body);
 
     /*! Create a body from a file
      *
-     * This will effectively upload the file.\
+     * This will effectively upload the file.
      */
     static std::unique_ptr<RequestBody> CreateFileBody(
         boost::filesystem::path path);
