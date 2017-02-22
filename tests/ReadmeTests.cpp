@@ -288,24 +288,24 @@ void Seventh() {
 
 int main() {
     try {
-//         cout << "First: " << endl;
-//         first();
-//
-//         cout << "Second: " << endl;
-//         second();
-//
-//         cout << "Third: " << endl;
-//         third();
-//
-//         cout << "Forth: " << endl;
-//         forth();
-//
-//         cout << "Fifth: " << endl;
-//         fifth();
-//
-//         cout << "Sixth: " << endl;
-//         Sixth();
-//
+        cout << "First: " << endl;
+        first();
+
+        cout << "Second: " << endl;
+        second();
+
+        cout << "Third: " << endl;
+        third();
+
+        cout << "Forth: " << endl;
+        forth();
+
+        cout << "Fifth: " << endl;
+        fifth();
+
+        cout << "Sixth: " << endl;
+        Sixth();
+
         cout << "Seventh: " << endl;
         Seventh();
 
