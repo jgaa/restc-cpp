@@ -302,6 +302,80 @@ asynchronous requests.
     cout << "Done. Exiting normally." << endl;
 ```
 
+## Use your own data provider to feed data into a POST request
+```C++
+    // Our own implementation of the raw data provider
+    class MyBody : public RequestBody
+    {
+    public:
+        MyBody() = default;
+
+        Type GetType() const noexcept override {
+
+            // This mode causes the request to use chunked data,
+            // allowing us to send data without knowing the exact
+            // size of the payload when we start.
+            return Type::CHUNKED_LAZY_PULL;
+        }
+
+        std::uint64_t GetFixedSize() const override {
+            throw runtime_error("Not implemented");
+        }
+
+        // This will be called until we return false to indicate
+        // that we have no further data
+        bool GetData(write_buffers_t& buffers) override {
+
+            if (++count_ > 10) {
+
+                // We are done.
+                return false;
+            }
+
+            ostringstream data;
+            data << "This is line #" << count_ << " of the payload.\r\n";
+
+            // The buffer need to persist until we are called again, or the
+            // instance is destroyed.
+            data_buffer_ = data.str();
+
+            buffers.emplace_back(data_buffer_.c_str(), data_buffer_.size());
+
+            // We added data to buffers, so return true
+            return true;
+        }
+
+        // Called if we get a HTTP redirect and need to start over again.
+        void Reset() override {
+            count_ = 0;
+        }
+
+    private:
+        int count_ = 0;
+        string data_buffer_;
+    };
+
+
+    // Create the REST clent
+    auto rest_client = RestClient::Create();
+
+    // Run our example in a lambda co-routine
+    rest_client->Process([&](Context& ctx) {
+        // This is the co-routine, running in a worker-thread
+
+        // Construct a POST request to the server
+        RequestBuilder(ctx)
+            .Post("http://localhost:3001/upload_raw/")
+            .Header("Content-Type", "text/text")
+            .Body(make_unique<MyBody>())
+            .Execute();
+    });
+
+
+    // Wait for the request to finish
+    rest_client->CloseWhenReady(true);
+
+```
 
 
 ## Map between C++ property names and JSON names

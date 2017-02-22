@@ -110,7 +110,18 @@ public:
         return Argument(move(name), std::to_string(value));
     }
 
+    /*! Supply your own RequestBody to the request
+     */
+    RequestBuilder& Body(std::unique_ptr<RequestBody> body) {
+        assert(!body_);
+        body_ = move(body);
+        return *this;
+    }
 
+     /*! Body (data) for the request
+     *
+     * \body A text string to send as the body.
+     */
     RequestBuilder& Data(const std::string& body) {
         assert(!body_);
         body_ = RequestBody::CreateStringBody(body);
@@ -128,6 +139,10 @@ public:
     }
 
     /*! Body (file) to send as the body
+     *
+     * This will read the content of the file in binary mode
+     * and use that as the body of the request, with no conversions
+     * and no mime/field encoding.
      *
      * \param path Path to a file to upload
      */
