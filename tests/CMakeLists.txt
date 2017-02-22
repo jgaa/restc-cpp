@@ -48,6 +48,16 @@ target_link_libraries(auth_tests
 add_test(AUTH_TESTS auth_tests)
 
 
+add_executable(upload_tests UploadTests.cpp)
+target_link_libraries(upload_tests
+    restc-cpp
+    ${DEFAULT_LIBRARIES}
+    UnitTest++
+)
+
+add_test(UPLOAD_TESTS upload_tests)
+
+
 add_executable(ccache_tests ConnectionCacheTests.cpp)
 target_link_libraries(ccache_tests
     restc-cpp
