@@ -58,6 +58,16 @@ target_link_libraries(upload_tests
 add_test(UPLOAD_TESTS upload_tests)
 
 
+add_executable(inserter_serializer_tests InsertSerializerTest.cpp)
+target_link_libraries(inserter_serializer_tests
+    restc-cpp
+    ${DEFAULT_LIBRARIES}
+    UnitTest++
+)
+
+add_test(INSERTER_SERIALIZER_TESTS inserter_serializer_tests)
+
+
 add_executable(ccache_tests ConnectionCacheTests.cpp)
 target_link_libraries(ccache_tests
     restc-cpp

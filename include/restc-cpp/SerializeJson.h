@@ -29,6 +29,7 @@
 #include "restc-cpp/internals/for_each_member.hpp"
 #include "restc-cpp/error.h"
 #include "restc-cpp/typename.h"
+#include "restc-cpp/RapidJsonWriter.h"
 
 namespace restc_cpp {
 
@@ -956,8 +957,8 @@ void do_serialize(const dataT& object, serializerT& serializer,
         std::is_same<dataT, std::string>::value
         >::type* = 0) {
 
-    serializer.String(object.c_str(), 
-		static_cast<rapidjson::SizeType>(object.size()), 
+    serializer.String(object.c_str(),
+		static_cast<rapidjson::SizeType>(object.size()),
 		true);
 };
 
@@ -1090,6 +1091,64 @@ private:
 
     const data_t& object_;
     serializerT& serializer_;
+    serialize_properties properties_;
+};
+
+/*! Serialize a list of objects of type T to the wire
+*/
+template <typename T>
+class RapidJsonInserter
+{
+public:
+    using writer_t = RapidJsonWriter<>;
+
+    RapidJsonInserter(writer_t& writer)
+    : writer_{writer} {}
+
+    ~RapidJsonInserter() {
+        Done();
+    }
+
+    T& Add(const T& v) {
+        if (state_ == State::DONE) {
+            throw RestcCppException("Object is DONE. Cannot Add more data.");
+        }
+
+        if (state_ == State::PRE) {
+            writer_.Put('[');
+            state_ == State::ITERATING;
+        }
+
+        do_serialize<T>(v, writer_, properties_);
+
+        return v;
+    }
+
+    void Done() {
+        if (state_ == State::ITERATING) {
+            writer_.Put(']');
+        }
+        state_ = State::DONE;
+    }
+
+    void IgnoreEmptyMembers(bool ignore = true) {
+        properties_.ignore_empty_fileds = ignore;
+    }
+
+    // Set to nullptr to disable lookup
+    void ExcludeNames(const std::set<std::string> *names) {
+        properties_.excluded_names = names;
+    }
+
+    void SetNameMapping(const JsonFieldMapping *mapping) {
+        properties_.name_mapping = mapping;
+    }
+
+private:
+    enum class State { PRE, ITERATING, DONE };
+
+    State state_ = State::PRE;
+    writer_t& writer_;
     serialize_properties properties_;
 };
 
