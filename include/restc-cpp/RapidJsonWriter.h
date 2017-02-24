@@ -8,9 +8,11 @@ namespace restc_cpp {
 /*! Wrapper from rapidjson (output) Stream concept to our DataWriter
  */
 
-template <typename Ch = char, size_t bufferSizeT = 124 * 16>
+template <typename chT = char, size_t bufferSizeT = 1024 * 16>
 class RapidJsonWriter {
 public:
+    using Ch = chT;
+
     RapidJsonWriter(DataWriter& writer)
     : writer_{writer} {}
 
@@ -28,6 +30,7 @@ public:
             Flush();
         }
     }
+
     void Flush() {
         if (bytes_ == 0) {
             return;

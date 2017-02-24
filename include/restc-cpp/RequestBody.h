@@ -3,6 +3,7 @@
 #ifndef RESTC_CPP_BODY_H_
 #define RESTC_CPP_BODY_H_
 
+#include "restc-cpp/error.h"
 #include "restc-cpp/DataWriter.h"
 
 namespace restc_cpp {
@@ -26,17 +27,27 @@ public:
     virtual Type GetType() const noexcept = 0;
 
     /*! Typically the value of the content-length header */
-    virtual std::uint64_t GetFixedSize() const = 0;
+    virtual std::uint64_t GetFixedSize() const {
+        throw NotImplementedException("GetFixedSize()");
+    }
 
     /*! Returns true if we added data */
-    virtual bool GetData(write_buffers_t& buffers) = 0;
+    virtual bool GetData(write_buffers_t& buffers) {
+        throw NotImplementedException("GetFixedSize()");
+    }
+
+    virtual void PushData(DataWriter& writer) {
+        throw NotImplementedException("GetFixedSize()");
+    }
 
     /*! Set the body up for a new run.
         *
         * This is typically done if request fails and the client wants
         * to re-try.
         */
-    virtual void Reset() = 0;
+    virtual void Reset() {
+        ;
+    }
 
     /*! Create a body with a string in it */
     static std::unique_ptr<RequestBody> CreateStringBody(std::string body);

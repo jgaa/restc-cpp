@@ -135,6 +135,28 @@ public:
 
     virtual const Properties& GetProperties() const = 0;
     virtual void SetProperties(Properties::ptr_t propreties) = 0;
+
+    /*! Manually send the request */
+    virtual DataWriter& SendRequest(Context& ctx) = 0;
+
+    /*! Call after SendRequest
+     *
+     * This completes the request stage, and fetches the reply
+     * from the server.
+     *
+     * \Note if you call SendRequest() and GetReply() manually,
+     *      you have to deal with redirects yourself.
+     *
+     * \See RedirectException
+     */
+    virtual std::unique_ptr<Reply> GetReply(Context& ctx) = 0;
+
+    /*! Execute the request
+     *
+     * This method calls SendRequest() and GetReply() and
+     * deals with redirects, according to the settings
+     * in the properties.
+     */
     virtual std::unique_ptr<Reply> Execute(Context& ctx) = 0;
 
     virtual ~Request() = default;

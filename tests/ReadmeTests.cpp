@@ -179,7 +179,7 @@ void fifth() {
     rest_client->CloseWhenReady(true);
 }
 
-void Sixth() {
+void sixth() {
     Request::Properties properties;
 
     // Create the client without creating a worker thread
@@ -212,7 +212,7 @@ void Sixth() {
 
 // Use our own RequestBody implementation to supply
 // data to a POST request
-void Seventh() {
+void seventh() {
     // Our own implementation of the raw data provider
     class MyBody : public RequestBody
     {
@@ -285,6 +285,130 @@ void Seventh() {
     rest_client->CloseWhenReady(true);
 }
 
+struct DataItem {
+    DataItem() = default;
+    DataItem(string u, string m)
+    : username{u}, motto{m} {}
+
+    int id = 0;
+    string username;
+    string motto;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(
+    DataItem,
+    (int, id)
+    (string, username)
+    (string, motto)
+)
+
+void eight() {
+
+    // Create the REST clent
+    auto rest_client = RestClient::Create();
+
+    // Run our example in a lambda co-routine that returns a future
+    rest_client->ProcessWithPromise([&](Context& ctx) {
+
+        // Make a container for data
+        std::vector<DataItem> data;
+
+        // Add some data
+        data.emplace_back("jgaa", "Carpe Diem!");
+        data.emplace_back("trump", "Endorse greed!");
+        data.emplace_back("anonymous", "We are great!");
+
+        // Create a request
+        auto reply = RequestBuilder(ctx)
+            .Post("http://localhost:3001/upload_raw/") // URL
+
+            // Provide data from a lambda
+            .DataProvider([&](DataWriter& writer) {
+                // Here we are called from Execute() below to provide data
+
+                // Create a json serializer that can write data asynchronously
+                RapidJsonInserter<DataItem> inserter(writer, true);
+
+                // Serialize the items from our data container
+                for(const auto& d : data) {
+
+                    // Serialize one data item.
+                    // If the buffers in the writer fills up, we will
+                    // write data to the net asynchronously.
+                    inserter.Add(d);
+                }
+
+                // Tell the inserter that we have no further data.
+                inserter.Done();
+
+            })
+
+            // Execute the request
+            .Execute();
+
+    })
+
+    // Wait for the request to finish.
+    .get();
+}
+
+
+void ninth() {
+
+    // Create the REST clent
+    auto rest_client = RestClient::Create();
+
+    // Run our example in a lambda co-routine that returns a future
+    rest_client->ProcessWithPromise([&](Context& ctx) {
+
+        // Make a container for data
+        std::vector<DataItem> data;
+
+        // Add some data
+        data.emplace_back("jgaa", "Carpe Diem!");
+        data.emplace_back("trump", "Endorse greed!");
+        data.emplace_back("anonymous", "We are great!");
+
+        // Prepare the request
+        auto request = RequestBuilder(ctx)
+            .Post("http://localhost:3001/upload_raw/") // URL
+
+            // Make sure we get a DataWriter for chunked data
+            // This is required when we add data after the request-
+            // headers are sent.
+            .Chunked()
+
+            // Just create the request. Send nothing to the server.
+            .Build();
+
+        // Send the request to the server. This will send the
+        // request line and the request headers.
+        auto& writer = request->SendRequest(ctx);
+
+        {
+            // Create a json list serializer for our data object.
+            RapidJsonInserter<DataItem> inserter(writer, true);
+
+            // Write each item to the server
+            for(const auto& d : data) {
+                inserter.Add(d);
+            }
+        }
+
+        // Finish the request and fetch the reply asynchronously
+        // This function returns when we have the reply headers.
+        // If we expect data in the reply, we can read it asynchronously
+        // as shown in previous examples.
+        auto reply = request->GetReply(ctx);
+
+        cout << "The server replied with code: " << reply->GetResponseCode();
+
+    })
+
+    // Wait for the request to finish.
+    .get();
+}
+
 
 int main() {
     try {
@@ -304,10 +428,16 @@ int main() {
         fifth();
 
         cout << "Sixth: " << endl;
-        Sixth();
+        sixth();
 
         cout << "Seventh: " << endl;
-        Seventh();
+        seventh();
+
+        cout << "Eight: " << endl;
+        eight();
+
+        cout << "Ninth: " << endl;
+        ninth();
 
     } catch(const exception& ex) {
         cerr << "Something threw up: " << ex.what() << endl;

@@ -12,6 +12,7 @@
 #include "restc-cpp/SerializeJson.h"
 //#include "restc-cpp/DataWriter.h"
 #include "restc-cpp/RequestBody.h"
+#include "restc-cpp/RequestBodyWriter.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 
@@ -138,6 +139,16 @@ public:
         return *this;
     }
 
+    /*! Use a functor to supply the data
+     *
+     */
+    template <typename fnT>
+    RequestBuilder& DataProvider(const fnT& fn) {
+        assert(!body_);
+        body_ = std::make_unique<RequestBodyWriter<fnT>>(fn);
+        return *this;
+    }
+
     /*! Body (file) to send as the body
      *
      * This will read the content of the file in binary mode
@@ -188,15 +199,23 @@ public:
      */
     template<typename T>
     RequestBuilder& Data(const T& data) {
-        rapidjson::StringBuffer s;
-        rapidjson::Writer<rapidjson::StringBuffer> writer(s);
-        restc_cpp::RapidJsonSerializer<T, decltype(writer)>
-            serializer(data, writer);
-        serializer.IgnoreEmptyMembers();
-        serializer.Serialize();
-        // TODO: See if we can use the buffer without copying it
-        std::string json = s.GetString();
-        return Data(std::move(json));
+        assert(!body_);
+
+        auto fn = [&data](DataWriter& writer) {
+            RapidJsonInserter<T> inserter(writer);
+            inserter.Add(data);
+            inserter.Done();
+        };
+
+        body_ = std::make_unique<RequestBodyWriter<decltype(fn)>>(fn);
+        return *this;
+    }
+
+    /*! We will use a Chunked request body */
+    RequestBuilder& Chunked() {
+        static const std::string transfer_encoding{"Transfer-Encoding"};
+        static const std::string chunked{"chunked"};
+        return Header(transfer_encoding, chunked);
     }
 
     std::unique_ptr<Request> Build() {
@@ -225,6 +244,7 @@ public:
         auto request = Build();
         return request->Execute(ctx_);
     }
+
 
 private:
     Context& ctx_;

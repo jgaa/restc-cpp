@@ -31,6 +31,8 @@
 #include "restc-cpp/typename.h"
 #include "restc-cpp/RapidJsonWriter.h"
 
+#include "rapidjson/writer.h"
+
 namespace restc_cpp {
 
 /*! Mapping between C++ property names and json names.
@@ -1094,39 +1096,55 @@ private:
     serialize_properties properties_;
 };
 
-/*! Serialize a list of objects of type T to the wire
+/*! Serialize an object or a list of objects of type T to the wire
+ *
 */
 template <typename T>
 class RapidJsonInserter
 {
 public:
-    using writer_t = RapidJsonWriter<>;
+    using stream_t = RapidJsonWriter<char>;
+    using writer_t = rapidjson::Writer<stream_t>;
 
-    RapidJsonInserter(writer_t& writer)
-    : writer_{writer} {}
+    /*! Constructor
+     *
+     * \param writer Output DataWriter
+     * \param isList True if we want to serialize a Json list of objects.
+     *      If false, we can only Add() one object.
+     */
+    RapidJsonInserter(DataWriter& writer, bool isList = false)
+    : is_list_{isList}, stream_{writer}, writer_{stream_} {}
 
     ~RapidJsonInserter() {
         Done();
     }
 
-    T& Add(const T& v) {
+    /*! Serialize one object
+     *
+     * If the constructor was called with isList = false,
+     * it can only be called once.
+     */
+    void Add(const T& v) {
         if (state_ == State::DONE) {
             throw RestcCppException("Object is DONE. Cannot Add more data.");
         }
 
         if (state_ == State::PRE) {
-            writer_.Put('[');
-            state_ == State::ITERATING;
+            if (is_list_) {
+                writer_.StartArray();
+            }
+            state_ = State::ITERATING;
         }
 
         do_serialize<T>(v, writer_, properties_);
-
-        return v;
     }
 
+    /*! Mark the serialization as complete */
     void Done() {
         if (state_ == State::ITERATING) {
-            writer_.Put(']');
+            if (is_list_) {
+                writer_.EndArray();
+            }
         }
         state_ = State::DONE;
     }
@@ -1148,7 +1166,9 @@ private:
     enum class State { PRE, ITERATING, DONE };
 
     State state_ = State::PRE;
-    writer_t& writer_;
+    const bool is_list_;
+    stream_t stream_;
+    writer_t writer_;
     serialize_properties properties_;
 };
 

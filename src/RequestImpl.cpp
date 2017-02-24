@@ -326,30 +326,13 @@ private:
                     have_sent_headers = true;
 
                     if (write_buffer.size() > 1) {
-                        write_buffers_t body_buffer = write_buffer;
-                        body_buffer.pop_back();
-                        writer_->Write(body_buffer);
+                        write_buffer.erase(write_buffer.begin());
+                        writer_->Write(write_buffer);
                     }
 
                 } else {
                     writer_->Write(write_buffer);
                 }
-
-                RESTC_CPP_LOG_TRACE << "--> Sent "
-                    <<  boost::asio::buffer_size(write_buffer) << " bytes: "
-                    << "\r\n--------------- WRITE START --------------\r\n";
-
-                for(const auto& b : write_buffer) {
-
-                    auto bb = boost::string_ref(
-                        boost::asio::buffer_cast<const char*>(b),
-                        boost::asio::buffer_size(b));
-
-                    RESTC_CPP_LOG_TRACE << bb;
-                }
-
-                RESTC_CPP_LOG_TRACE
-                    << "\r\n--------------- WRITE END --------------";
 
                 bytes_sent_ += boost::asio::buffer_size(write_buffer);
 
@@ -360,17 +343,26 @@ private:
                 throw;
             }
 
+            write_buffer.clear();
+
             if (body_) {
-                write_buffer.clear();
-                if (!body_->GetData(write_buffer))
-                    break; // No more data
+                switch(body_->GetType()) {
+                    case RequestBody::Type::FIXED_SIZE:
+                    case RequestBody::Type::CHUNKED_LAZY_PULL:
+                        if (!body_->GetData(write_buffer)) {
+                            return;
+                        }
+                        break;
+                    case RequestBody::Type::CHUNKED_LAZY_PUSH:
+                        body_->PushData(*writer_);
+                }
             } else {
-                break; //No more data to send
+                return; // No more data to send
             }
         }
     }
 
-    DataWriter& SendRequest(Context& ctx) {
+    DataWriter& SendRequest(Context& ctx) override {
         bytes_sent_ = 0;
 
         connection_ = Connect(ctx);
@@ -378,12 +370,20 @@ private:
 
         if (body_) {
             if (body_->GetType() == RequestBody::Type::FIXED_SIZE) {
-                writer_ = DataWriter::CreatePlainWriter(body_->GetFixedSize(), move(writer_));
+                writer_ = DataWriter::CreatePlainWriter(
+                    body_->GetFixedSize(), move(writer_));
             } else {
                 writer_ = DataWriter::CreateChunkedWriter(nullptr, move(writer_));
             }
         } else {
-            writer_ = DataWriter::CreatePlainWriter(0, move(writer_));
+            static const string transfer_encoding{"Transfer-Encoding"};
+            static const string chunked{"chunked"};
+            auto h = properties_->headers.find(transfer_encoding);
+            if ((h != properties_->headers.end()) && ciEqLibC()(h->second, chunked)) {
+                writer_ = DataWriter::CreateChunkedWriter(nullptr, move(writer_));
+            } else {
+                writer_ = DataWriter::CreatePlainWriter(0, move(writer_));
+            }
         }
 
         // TODO: Add compression
@@ -394,12 +394,6 @@ private:
         header_size_ = boost::asio::buffer_size(write_buffer);
 
         PrepareBody();
-
-        if (body_
-            && ((body_->GetType() == RequestBody::Type::FIXED_SIZE)
-                || (body_->GetType() == RequestBody::Type::CHUNKED_LAZY_PULL))) {
-        }
-
         SendRequestPayload(ctx, write_buffer);
 
         RESTC_CPP_LOG_DEBUG << "Sent request to '" << url_ << "' "
@@ -409,7 +403,7 @@ private:
         return *writer_;
     }
 
-    unique_ptr<Reply> FinishRequestStage(Context& ctx) {
+    unique_ptr<Reply> GetReply(Context& ctx) override {
 
         // We will not send more data regarding the current request
         writer_->Finish();
@@ -439,9 +433,11 @@ private:
         return move(reply);
     }
 
+
+
     unique_ptr<Reply> DoExecute(Context& ctx) {
         SendRequest(ctx);
-        return FinishRequestStage(ctx);
+        return GetReply(ctx);
     }
 
     std::string url_;
