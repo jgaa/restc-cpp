@@ -45,6 +45,7 @@ public:
 
     void AsyncWrite(const write_buffers_t& buffers,
                     boost::asio::yield_context& yield)override {
+
         boost::asio::async_write(socket_, buffers, yield);
     }
 

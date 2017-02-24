@@ -7,6 +7,7 @@
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/logging.h"
 #include "restc-cpp/ConnectionPool.h"
+#include "restc-cpp/RequestBody.h"
 
 using namespace std;
 
@@ -60,13 +61,13 @@ public:
 
         unique_ptr< Reply > Post(string url, string body) override {
             auto req = Request::Create(url, restc_cpp::Request::Type::POST, rc_,
-                                       {make_unique<Request::Body>(move(body))});
+                                       {RequestBody::CreateStringBody(move(body))});
             return Request(*req);
         }
 
         unique_ptr< Reply > Put(string url, string body) override {
             auto req = Request::Create(url, restc_cpp::Request::Type::PUT, rc_,
-                                       {make_unique<Request::Body>(move(body))});
+                                       {RequestBody::CreateStringBody(move(body))});
             return Request(*req);
         }
 

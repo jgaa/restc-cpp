@@ -6,13 +6,15 @@
 #       error "Include restc-cpp.h first"
 #endif
 
-#include "restc-cpp/SerializeJson.h"
-#include "rapidjson/writer.h"
-#include "rapidjson/stringbuffer.h"
-
-
 #include <string>
 #include <assert.h>
+
+#include "restc-cpp/SerializeJson.h"
+//#include "restc-cpp/DataWriter.h"
+#include "restc-cpp/RequestBody.h"
+#include "restc-cpp/RequestBodyWriter.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
 
 namespace restc_cpp {
 
@@ -109,10 +111,21 @@ public:
         return Argument(move(name), std::to_string(value));
     }
 
+    /*! Supply your own RequestBody to the request
+     */
+    RequestBuilder& Body(std::unique_ptr<RequestBody> body) {
+        assert(!body_);
+        body_ = move(body);
+        return *this;
+    }
 
+     /*! Body (data) for the request
+     *
+     * \body A text string to send as the body.
+     */
     RequestBuilder& Data(const std::string& body) {
         assert(!body_);
-        body_ = std::make_unique<Request::Body>(body);
+        body_ = RequestBody::CreateStringBody(body);
         return *this;
     }
 
@@ -122,17 +135,31 @@ public:
      */
     RequestBuilder& Data(std::string&& body) {
         assert(!body_);
-        body_ = std::make_unique<Request::Body>(move(body));
+        body_ = RequestBody::CreateStringBody(move(body));
+        return *this;
+    }
+
+    /*! Use a functor to supply the data
+     *
+     */
+    template <typename fnT>
+    RequestBuilder& DataProvider(const fnT& fn) {
+        assert(!body_);
+        body_ = std::make_unique<RequestBodyWriter<fnT>>(fn);
         return *this;
     }
 
     /*! Body (file) to send as the body
      *
+     * This will read the content of the file in binary mode
+     * and use that as the body of the request, with no conversions
+     * and no mime/field encoding.
+     *
      * \param path Path to a file to upload
      */
     RequestBuilder& File(const boost::filesystem::path& path) {
         assert(!body_);
-        body_ = std::make_unique<Request::Body>(path);
+        body_ = RequestBody::CreateFileBody(path);
         return *this;
     }
 
@@ -172,15 +199,23 @@ public:
      */
     template<typename T>
     RequestBuilder& Data(const T& data) {
-        rapidjson::StringBuffer s;
-        rapidjson::Writer<rapidjson::StringBuffer> writer(s);
-        restc_cpp::RapidJsonSerializer<T, decltype(writer)>
-            serializer(data, writer);
-        serializer.IgnoreEmptyMembers();
-        serializer.Serialize();
-        // TODO: See if we can use the buffer without copying it
-        std::string json = s.GetString();
-        return Data(std::move(json));
+        assert(!body_);
+
+        auto fn = [&data](DataWriter& writer) {
+            RapidJsonInserter<T> inserter(writer);
+            inserter.Add(data);
+            inserter.Done();
+        };
+
+        body_ = std::make_unique<RequestBodyWriter<decltype(fn)>>(fn);
+        return *this;
+    }
+
+    /*! We will use a Chunked request body */
+    RequestBuilder& Chunked() {
+        static const std::string transfer_encoding{"Transfer-Encoding"};
+        static const std::string chunked{"chunked"};
+        return Header(transfer_encoding, chunked);
     }
 
     std::unique_ptr<Request> Build() {
@@ -210,6 +245,7 @@ public:
         return request->Execute(ctx_);
     }
 
+
 private:
     Context& ctx_;
     std::string url_;
@@ -217,7 +253,7 @@ private:
     boost::optional<Request::headers_t> headers_;
     boost::optional<Request::args_t> args_;
     boost::optional<Request::auth_t> auth_;
-    std::unique_ptr<Request::Body> body_;
+    std::unique_ptr<RequestBody> body_;
     bool disable_compression_ = false;
 #ifdef DEBUG
     bool built_ = false;

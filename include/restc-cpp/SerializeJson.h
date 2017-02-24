@@ -29,6 +29,9 @@
 #include "restc-cpp/internals/for_each_member.hpp"
 #include "restc-cpp/error.h"
 #include "restc-cpp/typename.h"
+#include "restc-cpp/RapidJsonWriter.h"
+
+#include "rapidjson/writer.h"
 
 namespace restc_cpp {
 
@@ -956,8 +959,8 @@ void do_serialize(const dataT& object, serializerT& serializer,
         std::is_same<dataT, std::string>::value
         >::type* = 0) {
 
-    serializer.String(object.c_str(), 
-		static_cast<rapidjson::SizeType>(object.size()), 
+    serializer.String(object.c_str(),
+		static_cast<rapidjson::SizeType>(object.size()),
 		true);
 };
 
@@ -1090,6 +1093,82 @@ private:
 
     const data_t& object_;
     serializerT& serializer_;
+    serialize_properties properties_;
+};
+
+/*! Serialize an object or a list of objects of type T to the wire
+ *
+*/
+template <typename T>
+class RapidJsonInserter
+{
+public:
+    using stream_t = RapidJsonWriter<char>;
+    using writer_t = rapidjson::Writer<stream_t>;
+
+    /*! Constructor
+     *
+     * \param writer Output DataWriter
+     * \param isList True if we want to serialize a Json list of objects.
+     *      If false, we can only Add() one object.
+     */
+    RapidJsonInserter(DataWriter& writer, bool isList = false)
+    : is_list_{isList}, stream_{writer}, writer_{stream_} {}
+
+    ~RapidJsonInserter() {
+        Done();
+    }
+
+    /*! Serialize one object
+     *
+     * If the constructor was called with isList = false,
+     * it can only be called once.
+     */
+    void Add(const T& v) {
+        if (state_ == State::DONE) {
+            throw RestcCppException("Object is DONE. Cannot Add more data.");
+        }
+
+        if (state_ == State::PRE) {
+            if (is_list_) {
+                writer_.StartArray();
+            }
+            state_ = State::ITERATING;
+        }
+
+        do_serialize<T>(v, writer_, properties_);
+    }
+
+    /*! Mark the serialization as complete */
+    void Done() {
+        if (state_ == State::ITERATING) {
+            if (is_list_) {
+                writer_.EndArray();
+            }
+        }
+        state_ = State::DONE;
+    }
+
+    void IgnoreEmptyMembers(bool ignore = true) {
+        properties_.ignore_empty_fileds = ignore;
+    }
+
+    // Set to nullptr to disable lookup
+    void ExcludeNames(const std::set<std::string> *names) {
+        properties_.excluded_names = names;
+    }
+
+    void SetNameMapping(const JsonFieldMapping *mapping) {
+        properties_.name_mapping = mapping;
+    }
+
+private:
+    enum class State { PRE, ITERATING, DONE };
+
+    State state_ = State::PRE;
+    const bool is_list_;
+    stream_t stream_;
+    writer_t writer_;
     serialize_properties properties_;
 };
 

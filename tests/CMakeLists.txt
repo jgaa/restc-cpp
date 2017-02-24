@@ -28,7 +28,7 @@ add_executable(basic_tests BasicTests.cpp)
 target_link_libraries(basic_tests
     restc-cpp ${DEFAULT_LIBRARIES})
 
-add_test(JSON_FUNCTIONAL_TESTS basic_tests)
+add_test(BASIC_TESTS basic_tests)
 
 add_executable(readme_tests ReadmeTests.cpp)
 target_link_libraries(readme_tests
@@ -45,7 +45,27 @@ target_link_libraries(auth_tests
     UnitTest++
 )
 
-add_test(JSON_FUNCTIONAL_TESTS auth_tests)
+add_test(AUTH_TESTS auth_tests)
+
+
+add_executable(upload_tests UploadTests.cpp)
+target_link_libraries(upload_tests
+    restc-cpp
+    ${DEFAULT_LIBRARIES}
+    UnitTest++
+)
+
+add_test(UPLOAD_TESTS upload_tests)
+
+
+add_executable(inserter_serializer_tests InsertSerializerTest.cpp)
+target_link_libraries(inserter_serializer_tests
+    restc-cpp
+    ${DEFAULT_LIBRARIES}
+    UnitTest++
+)
+
+add_test(INSERTER_SERIALIZER_TESTS inserter_serializer_tests)
 
 
 add_executable(ccache_tests ConnectionCacheTests.cpp)

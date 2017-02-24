@@ -1,8 +1,11 @@
 
 set(ACTUAL_SOURCES
     ChunkedReaderImpl.cpp
+    ChunkedWriterImpl.cpp
     IoReaderImpl.cpp
+    IoWriterImpl.cpp
     PlainReaderImpl.cpp
+    PlainWriterImpl.cpp
     NoBodyReaderImpl.cpp
     DataReaderStream.cpp
     RestClientImpl.cpp
@@ -10,7 +13,8 @@ set(ACTUAL_SOURCES
     ReplyImpl.cpp
     ConnectionPoolImpl.cpp
     Url.cpp
-    Body.cpp
+    RequestBodyStringImpl.cpp
+    RequestBodyFileImpl.cpp
     url_encode.cpp
     )
 
