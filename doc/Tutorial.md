@@ -272,10 +272,8 @@ thread, like the applications main thread, to handle the
 asynchronous requests.
 
 ```C++
-    Request::Properties properties;
-
-    // Create the client without creating a worker thread
-    auto rest_client = RestClient::Create(properties, true);
+   // Create the client without creating a worker thread
+    auto rest_client = RestClient::CreateUseOwnThread();
 
     // Add a request to the queue of the io-service in the rest client instance
     rest_client->Process([&](Context& ctx) {
@@ -300,6 +298,69 @@ asynchronous requests.
     rest_client->GetIoService().run();
 
     cout << "Done. Exiting normally." << endl;
+```
+
+## Use an existing asio io-service
+
+If you use this library in a server, you may already use boost::asio for
+network IO. If you want to avoid adding more threads (for example by
+limiting the number of threads to the number of cores on the machine - a
+strategy that can give an extreme performance), you can use your existing
+io-services.
+
+Note that currently, restc-cpp require that it's io-service use only one
+thread. (With asio, you can use two strategies, one io-servive and
+several threads, or several io-services, each using only one thread.
+I have favored the one-thread approach as it makes the code simpler, and
+theoretically, it should make less CPU cache misses, something that
+should further improve the performance).
+
+```C++
+    // Construct our own ioservice.
+    boost::asio::io_service ioservice;
+
+    // Give it some work so it don't end prematurely
+    boost::asio::io_service::work work(ioservice);
+
+    // Start it in a worker-thread
+    thread worker([&ioservice]() {
+        cout << "ioservice is running" << endl;
+        ioservice.run();
+        cout << "ioservice is done" << endl;
+    });
+
+    // Now we have our own io-service running in a worker thread.
+    // Create a RestClient instance that uses it.
+
+    auto rest_client = RestClient::Create(ioservice);
+
+    // Make a HTTP request
+    rest_client->ProcessWithPromise([&](Context& ctx) {
+        // Here we are in a co-routine, spawned from our io-service, running
+        // in our worker thread.
+
+        // Asynchronously connect to a server and fetch some data.
+        auto reply = ctx.Get("http://jsonplaceholder.typicode.com/posts/1");
+
+        // Asynchronously fetch the entire data-set and return it as a string.
+        auto json = reply->GetBodyAsString();
+
+        // Just dump the data.
+        cout << "Received data: " << json << endl;
+    })
+    // Wait for the co-routine to end
+    .get();
+
+    // Stop the io-service
+    // (We can not just remove 'work', as the rest client may have
+    // timers pending in the io-service, keeping it running even after
+    // work is gone).
+    ioservice.stop();
+
+    // Wait for the worker thread to end
+    worker.join();
+
+    cout << "Done." << endl;
 ```
 
 ## Use your own data provider to feed data into a POST request

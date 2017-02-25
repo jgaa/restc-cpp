@@ -146,3 +146,12 @@ target_link_libraries(http_reply_tests
 add_test(HTTP_REPLY_UNITTESTS http_reply_tests)
 
 
+add_executable(own_ioservice_tests OwnIoserviceTests.cpp)
+target_link_libraries(own_ioservice_tests
+    restc-cpp
+    ${DEFAULT_LIBRARIES}
+    UnitTest++
+)
+
+add_test(OWN_IOSERVICE_TESTS own_ioservice_tests)
+

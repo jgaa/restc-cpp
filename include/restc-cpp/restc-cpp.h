@@ -339,9 +339,17 @@ public:
     static std::unique_ptr<RestClient>
         Create(boost::optional<Request::Properties> properties);
 
+    static std::unique_ptr<RestClient> CreateUseOwnThread();
+
+    static std::unique_ptr<RestClient>
+        CreateUseOwnThread(boost::optional<Request::Properties> properties);
+
     static std::unique_ptr<RestClient>
         Create(boost::optional<Request::Properties> properties,
-            bool useMainThread);
+               boost::asio::io_service& ioservice);
+
+    static std::unique_ptr<RestClient>
+        Create(boost::asio::io_service& ioservice);
 
     protected:
         virtual std::unique_ptr<DoneHandler> GetDoneHandler() = 0;

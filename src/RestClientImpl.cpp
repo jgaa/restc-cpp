@@ -33,10 +33,7 @@ public:
 
         ~DoneHandlerImpl() {
             if (--parent_.current_tasks_ == 0) {
-                std::lock_guard<decltype(parent_.work_mutex_)> lock(parent_.work_mutex_);
-                if (!parent_.work_ && !parent_.io_service_.stopped()) {
-                    parent_.io_service_.stop();
-                }
+                parent_.OnNoMoreWork();
             }
         }
 
@@ -54,7 +51,7 @@ public:
         RestClient& GetClient() override { return rc_; }
         boost::asio::yield_context& GetYield() override { return yield_; }
 
-        std::unique_ptr<Reply> Get(string url) override {
+        unique_ptr<Reply> Get(string url) override {
             auto req = Request::Create(url, restc_cpp::Request::Type::GET, rc_);
             return Request(*req);
         }
@@ -76,7 +73,7 @@ public:
             return Request(*req);
         }
 
-        std::unique_ptr<Reply> Request(restc_cpp::Request& req) override {
+        unique_ptr<Reply> Request(restc_cpp::Request& req) override {
             return req.Execute(*this);
         }
 
@@ -84,9 +81,24 @@ public:
         RestClient& rc_;
     };
 
-    RestClientImpl(boost::optional<Request::Properties> properties, bool useMainThread)
-    : default_connection_properties_{make_shared<Request::Properties>()}
+    RestClientImpl(boost::optional<Request::Properties> properties,
+                   bool useMainThread)
+    : ioservice_instance_{make_unique<boost::asio::io_service>()}
     {
+        io_service_ = ioservice_instance_.get();
+        Init(properties, useMainThread);
+    }
+
+    RestClientImpl(boost::optional<Request::Properties> properties,
+                   boost::asio::io_service& ioservice)
+    : io_service_{&ioservice}
+    {
+        Init(properties, true);
+    }
+
+    void Init(boost::optional<Request::Properties>& properties,
+              bool useMainThread) {
+
         static const string content_type{"Content-Type"};
         static const string json_type{"application/json; charset=utf-8"};
 
@@ -104,15 +116,15 @@ public:
             return;
         }
 
-        std::promise<void> wait;
+        promise<void> wait;
         auto done = wait.get_future();
 
         thread_ = make_unique<thread>([&]() {
-            std::lock_guard<decltype(done_mutex_)> lock(done_mutex_);
-            work_ = make_unique<boost::asio::io_service::work>(io_service_);
+            lock_guard<decltype(done_mutex_)> lock(done_mutex_);
+            work_ = make_unique<boost::asio::io_service::work>(*io_service_);
             wait.set_value();
             RESTC_CPP_LOG_DEBUG << "Worker is starting.";
-            io_service_.run();
+            io_service_->run();
             RESTC_CPP_LOG_DEBUG << "Worker is done.";
         });
 
@@ -128,12 +140,12 @@ public:
     void CloseWhenReady(bool wait) override {
         ClearWork();
         if (wait) {
-            std::lock_guard<decltype(done_mutex_)> lock(done_mutex_);
+            lock_guard<decltype(done_mutex_)> lock(done_mutex_);
         }
     }
 
     void ClearWork() {
-        std::lock_guard<decltype(work_mutex_)> lock(work_mutex_);
+        lock_guard<decltype(work_mutex_)> lock(work_mutex_);
         if (work_) {
             work_.reset();
         }
@@ -141,8 +153,8 @@ public:
 
     ~RestClientImpl() {
         ClearWork();
-        if (!io_service_.stopped()) {
-            io_service_.stop();
+        if (!io_service_->stopped()) {
+            io_service_->stop();
         }
         if (thread_) {
             thread_->join();
@@ -153,23 +165,23 @@ public:
     const void
     ProcessInWorker(boost::asio::yield_context yield,
                     const prc_fn_t& fn,
-                    const std::shared_ptr<std::promise<void>>& promise) {
+                    const shared_ptr<promise<void>>& promise) {
 
         ContextImpl ctx(yield, *this);
 
         DoneHandlerImpl handler(*this);
         try {
             fn(ctx);
-        } catch(std::exception& ex) {
+        } catch(exception& ex) {
             RESTC_CPP_LOG_ERROR << "Caught exception: " << ex.what();
             if (promise) {
-                promise->set_exception(std::current_exception());
+                promise->set_exception(current_exception());
             }
             return;
         } catch(...) {
             RESTC_CPP_LOG_ERROR << "*** Caught unknown exception";
             if (promise) {
-                promise->set_exception(std::current_exception());
+                promise->set_exception(current_exception());
             }
             return;
         }
@@ -181,58 +193,86 @@ public:
     }
 
     void Process(const prc_fn_t& fn) override {
-        boost::asio::spawn(io_service_,
+        boost::asio::spawn(*io_service_,
                            bind(&RestClientImpl::ProcessInWorker, this,
-                                std::placeholders::_1, fn, nullptr));
+                                placeholders::_1, fn, nullptr));
     }
 
-    std::future< void > ProcessWithPromise(const prc_fn_t& fn) override {
+    future< void > ProcessWithPromise(const prc_fn_t& fn) override {
         auto promise = make_shared<std::promise<void>>();
         auto future = promise->get_future();
 
-        boost::asio::spawn(io_service_,
+        boost::asio::spawn(*io_service_,
                            bind(&RestClientImpl::ProcessInWorker, this,
-                                std::placeholders::_1, fn, promise));
+                                placeholders::_1, fn, promise));
 
         return future;
     }
 
     ConnectionPool& GetConnectionPool() override { return *pool_; }
 
-    boost::asio::io_service& GetIoService() override { return io_service_; }
+    boost::asio::io_service& GetIoService() override { return *io_service_; }
+
+    void OnNoMoreWork() {
+        if (ioservice_instance_) {
+            lock_guard<decltype(work_mutex_)> lock(work_mutex_);
+            if (!work_ && !io_service_->stopped()) {
+                io_service_->stop();
+            }
+        }
+    }
 
 protected:
-    std::unique_ptr<DoneHandler> GetDoneHandler() override {
+    unique_ptr<DoneHandler> GetDoneHandler() override {
         return make_unique<DoneHandlerImpl>(*this);
     }
 
 private:
-    Request::Properties::ptr_t default_connection_properties_;
-    boost::asio::io_service io_service_;
+    Request::Properties::ptr_t default_connection_properties_ = make_shared<Request::Properties>();
+    boost::asio::io_service *io_service_ = nullptr;
     unique_ptr<ConnectionPool> pool_;
     unique_ptr<boost::asio::io_service::work> work_;
     size_t current_tasks_ = 0;
-    unique_ptr<std::thread> thread_;
-    std::recursive_mutex done_mutex_;
-    std::mutex work_mutex_;
+    unique_ptr<thread> thread_;
+    recursive_mutex done_mutex_;
+    mutex work_mutex_;
+    unique_ptr<boost::asio::io_service> ioservice_instance_;
+
 };
 
 unique_ptr<RestClient> RestClient::Create() {
-    return make_unique<RestClientImpl>(boost::optional<Request::Properties>{}, false);
+    return make_unique<RestClientImpl>(boost::optional<Request::Properties>{},
+                                       false);
 }
 
 
-unique_ptr<RestClient> RestClient::Create(boost::optional<Request::Properties> properties) {
+unique_ptr<RestClient> RestClient::Create(
+    boost::optional<Request::Properties> properties) {
     return make_unique<RestClientImpl>(properties, false);
 }
 
-unique_ptr<RestClient> RestClient::Create(boost::optional<Request::Properties> properties,
-    bool useMainThread) {
-    return make_unique<RestClientImpl>(properties, useMainThread);
+unique_ptr<RestClient> RestClient::CreateUseOwnThread(boost::optional<Request::Properties> properties) {
+    return make_unique<RestClientImpl>(properties, true);
 }
 
+unique_ptr<RestClient> RestClient::CreateUseOwnThread() {
+    return make_unique<RestClientImpl>(boost::optional<Request::Properties>{},
+                                       true);
+}
 
-std::unique_ptr<Context> Context::Create(boost::asio::yield_context& yield,
+std::unique_ptr<RestClient>
+RestClient::Create(boost::optional<Request::Properties> properties,
+       boost::asio::io_service& ioservice) {
+    return make_unique<RestClientImpl>(properties, ioservice);
+}
+
+std::unique_ptr<RestClient>
+RestClient::Create(boost::asio::io_service& ioservice) {
+    return make_unique<RestClientImpl>(boost::optional<Request::Properties>{},
+                                       ioservice);
+}
+
+unique_ptr<Context> Context::Create(boost::asio::yield_context& yield,
                                                 RestClient& rc) {
     return make_unique<RestClientImpl::ContextImpl>(yield, rc);
 }

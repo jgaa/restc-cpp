@@ -180,10 +180,8 @@ void fifth() {
 }
 
 void sixth() {
-    Request::Properties properties;
-
     // Create the client without creating a worker thread
-    auto rest_client = RestClient::Create(properties, true);
+    auto rest_client = RestClient::CreateUseOwnThread();
 
     // Add a request to the queue of the io-service in the rest client instance
     rest_client->Process([&](Context& ctx) {
@@ -409,6 +407,53 @@ void ninth() {
     .get();
 }
 
+void tenth() {
+    // Construct our own ioservice.
+    boost::asio::io_service ioservice;
+
+    // Give it some work so it don't end prematurely
+    boost::asio::io_service::work work(ioservice);
+
+    // Start it in a worker-thread
+    thread worker([&ioservice]() {
+        cout << "ioservice is running" << endl;
+        ioservice.run();
+        cout << "ioservice is done" << endl;
+    });
+
+    // Now we have our own io-service running in a worker thread.
+    // Create a RestClient instance that uses it.
+
+    auto rest_client = RestClient::Create(ioservice);
+
+    // Make a HTTP request
+    rest_client->ProcessWithPromise([&](Context& ctx) {
+        // Here we are in a co-routine, spawned from our io-service, running
+        // in our worker thread.
+
+        // Asynchronously connect to a server and fetch some data.
+        auto reply = ctx.Get("http://jsonplaceholder.typicode.com/posts/1");
+
+        // Asynchronously fetch the entire data-set and return it as a string.
+        auto json = reply->GetBodyAsString();
+
+        // Just dump the data.
+        cout << "Received data: " << json << endl;
+    })
+    // Wait for the co-routine to end
+    .get();
+
+    // Stop the io-service
+    // (We can not just remove 'work', as the rest client may have
+    // timers pending in the io-service, keeping it running even after
+    // work is gone).
+    ioservice.stop();
+
+    // Wait for the worker thread to end
+    worker.join();
+
+    cout << "Done." << endl;
+}
 
 int main() {
     try {
@@ -438,6 +483,9 @@ int main() {
 
         cout << "Ninth: " << endl;
         ninth();
+
+        cout << "Tenth: " << endl;
+        tenth();
 
     } catch(const exception& ex) {
         cerr << "Something threw up: " << ex.what() << endl;
