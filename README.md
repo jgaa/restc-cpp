@@ -3,25 +3,25 @@
 
 <b>What it does:</b>
 - It formulates a HTTP reqest to a REST API server. Then, it transforms
-  the JSON formatted payload in the reply into a native C++ object (GET). 
+  the JSON formatted payload in the reply into a native C++ object (GET).
 - It Serialize a native C++ object or a container of C++ objects into a JSON payload
-  and send it to the REST API server (POST, PUT). 
+  and send it to the REST API server (POST, PUT).
 - It formulates a HTTP request to the REST API without serializing any data in either
   direction (typically DELETE).
 - It uploads a stream of data, like a file, to a HTTP server.
 - It downloads a stream of data, like a file or an array of JSON objects, from a HTTP server.
 
-That's basically it. It does not solve world hunger. 
+That's basically it. It does not solve world hunger.
 It make no attempts to be a C++ framework.
 
-You can use it's single components, like the powerful C++ HTTP Client to 
+You can use it's single components, like the powerful C++ HTTP Client to
 send and receive non-JSON data as a native C++ replacement for libcurl.
 You can use the template code that transforms data between C++ and JSON
-for other purposes (for example in a REST API SERVER) - but the library 
-is designed and implemented for the single purpose of using C++ to 
+for other purposes (for example in a REST API SERVER) - but the library
+is designed and implemented for the single purpose of using C++ to
 interact efficiently and effortless with external REST API servers.
 
-The library is written by Jarle (jgaa) Aase, a senior freelance C++ developer 
+The library is written by Jarle (jgaa) Aase, a senior freelance C++ developer
 with roughly 30 years of experience in software developemnt.
 
 # Design Goals
@@ -31,24 +31,24 @@ simple and safe to use in C++ projects, but still fast and memory efficient.
 Another goal was to use coroutines for the application logic that sends data to or
 pulls data from the REST API servers. This makes the code easy to write
 and understand, and also simplifies debugging and investigation of core dumps.
-In short; the code executes asyncrounesly, but there are no visible callbacks 
+In short; the code executes asyncrounesly, but there are no visible callbacks
 or completion functions. It looks like crystal clear,
 old fasion, single threaded sequential code (using modern C++ language).
-You don't sacrifice code clearness to achive massive parallelism and 
-high performance. Coroutines was a strong motivation to write a new 
-C++ HTTP Client from scratch. To see how this actually works, please see the 
+You don't sacrifice code clearness to achive massive parallelism and
+high performance. Coroutines was a strong motivation to write a new
+C++ HTTP Client from scratch. To see how this actually works, please see the
  [modern async cpp example](https://github.com/jgaa/modern_async_cpp_example)).
 
 
 Finally, in a world where the Internet is getting increasingly
 [dangerous](http://www.dailydot.com/layer8/bruce-schneier-internet-of-things/),
-and all kind of malicious parties, from your own government to international Mafia 
-(with Putin in Moscow and the Clown in the White House, the differences is 
-bluring out), search for vulnerabilities in your software stack to snoop, ddos, 
-intercept and blackmail you and your customers/users - I have a strong emphasis 
-on security in all software projects I'm involved in. I have limited the 
-dependencies on third party libraries as much as I could (I still use OpenSSL 
-which is a snakes nest of of yet undisclosed vulnerabilities - but as of now 
+and all kind of malicious parties, from your own government to international Mafia
+(with Putin in Moscow and the Clown in the White House, the differences is
+bluring out), search for vulnerabilities in your software stack to snoop, ddos,
+intercept and blackmail you and your customers/users - I have a strong emphasis
+on security in all software projects I'm involved in. I have limited the
+dependencies on third party libraries as much as I could (I still use OpenSSL
+which is a snakes nest of of yet undisclosed vulnerabilities - but as of now
 there are no alternatives that works out of the box with boost::asio).
 I have also tried to imagine any possible way a malicious API server
 could try to attack you (by exploiting or exceeding local resources - like sending
@@ -221,6 +221,10 @@ Please refer to the [tutorial](doc/Tutorial.md) for more examples.
 - High level Request Builder interface (similar to Java HTTP Clients) for convenience.
 - Low level interface to create requests.
 - All network IO operations are asynchronous trough boost::asio.
+  - Use your own asio io-services
+  - Let the library create and deal with the asio io-services
+  - Use your own worker threads
+  - Let the library create and deal with worker-threads
 - Uses C++ / boost coroutines for application logic.
 - HTTP Redirects.
 - HTTP Basic Authentication.
@@ -232,6 +236,11 @@ Please refer to the [tutorial](doc/Tutorial.md) for more examples.
   - Option to tag property names as read-only to filter them out when the C++ object is serialized for transfer to the server.
   - Filters out empty C++ properties when the C++ object is serialized for transfer to the server (can be disabled).
   - Iterator interface to received JSON lists of objects.
+- Plain or chunked outgoing HTTP payloads.
+- Several strategies for lazy data fetching in outgoing requests.
+  - Override RequestBody to let the library pull for data when required.
+  - Write directly to the outgoing DataWriter when data is required.
+  - Just provide a C++ object and let the library serialize it directly to the wire.
 
 # Current Status
 The project is maturing fast. There are no known bugs.
