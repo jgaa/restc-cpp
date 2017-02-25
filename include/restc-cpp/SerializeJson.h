@@ -35,6 +35,8 @@
 
 namespace restc_cpp {
 
+using excluded_names_t = std::set<std::string>;
+
 /*! Mapping between C++ property names and json names.
 *
 * Normally we will use the same, but in some cases we
@@ -42,6 +44,10 @@ namespace restc_cpp {
 */
 struct JsonFieldMapping {
     struct entry {
+        entry() = default;
+        entry(const std::string& native, const std::string& json)
+        : native_name{native}, json_name{json} {}
+
         std::string native_name;
         std::string json_name;
     };
@@ -134,7 +140,7 @@ private:
 namespace {
 
 struct serialize_properties {
-    bool ignore_empty_fileds = false;
+    bool ignore_empty_fileds = true;
     const std::set<std::string> *excluded_names = nullptr;
     const JsonFieldMapping *name_mapping = nullptr;
 
@@ -1056,7 +1062,7 @@ void do_serialize(const dataT& object, serializerT& serializer,
 };
 } // namespace
 
-/*! Serializer from Json to a C++ class instance */
+/*! Recursively serialize the C++ object to the json serializer */
 template <typename objectT, typename serializerT>
 class RapidJsonSerializer
 {
@@ -1068,10 +1074,7 @@ public:
     {
     }
 
-    /*! Recursively serialize the C++ object to the json serializer
-    *
-    * See https://github.com/miloyip/rapidjson/blob/master/doc/sax.md#writer-writer
-    */
+    // See https://github.com/miloyip/rapidjson/blob/master/doc/sax.md#writer-writer
     void Serialize() {
         do_serialize<data_t>(object_, serializer_, properties_);
     }
@@ -1081,7 +1084,7 @@ public:
     }
 
     // Set to nullptr to disable lookup
-    void ExcludeNames(const std::set<std::string> *names) {
+    void ExcludeNames(excluded_names_t *names) {
         properties_.excluded_names = names;
     }
 
@@ -1154,7 +1157,7 @@ public:
     }
 
     // Set to nullptr to disable lookup
-    void ExcludeNames(const std::set<std::string> *names) {
+    void ExcludeNames(const excluded_names_t *names) {
         properties_.excluded_names = names;
     }
 

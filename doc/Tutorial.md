@@ -587,13 +587,102 @@ then wait for the reply.
 ```
 
 ## Map between C++ property names and JSON names
-TBD
+Some times you may have different field names in C++ and Json.
+
+```C++
+struct User {
+    string user_id;
+    string user_name;
+    int age;
+};
+```
+
+```json
+{
+    "userId": ...,
+    "userName": ...,
+    "age": ...
+}
+
+```
+
+In such cases, you can map the names. The mapping applies during
+serialization, and must therefore be applied to the serializer you
+use.
+
+If you use the RequestBuilder to serialize an outgoing C++ object,
+you can do like this:
+
+```C++
+    JsonFieldMapping mapping;
+    mapping.entries.emplace_back("user_id", "userId");
+    mapping.entries.emplace_back("user_name", "userName");
+
+    auto reply = RequestBuilder(ctx)
+        .Post("https://example.com/api/data")              // URL
+        .Header("X-Client", "RESTC_CPP")                   // Optional header
+
+        // Apply the mapper for name mapping
+        .Data(data_object, &mapper)                        // Data object to send
+        .Execute();
+```
+
+You can apply the same mapping (via member functions) to
+- RapidJsonInserter
+- RapidJsonSerializer
+- SerializeFromJson
+
+
+```C++
+    auto reply = RequestBuilder(ctx)
+        .Post("http://localhost:3001/upload_raw/") // URL
+
+        .DataProvider([&](DataWriter& writer) {
+            RapidJsonInserter<DataItem> inserter(writer, true);
+
+            // Apply name mapping
+            inserter.SetNameMapping(&mapping)
+
+            for(const auto& d : data) {
+                inserter.Add(d);
+            }
+            inserter.Done();
+
+        })
+        .Execute();
+```
 
 ## Mark properties as read-only
 
 This is required with some REST API servers to avoid sending
-properties in POST/ PUT requests that are flaghged as read-only
+properties in POST/ PUT requests that are flagged as read-only
 on the server side. (The servers will often reject such requests)
 
-TBD
+Simply supply a list of censored property-names.
+
+```C++
+    auto rest_client = RestClient::Create();
+    rest_client->ProcessWithPromise([&](Context& ctx) {
+
+        Post data;
+        data.id = 10;
+        data.userId = 14;
+        data.title = "Hi there";
+        data.body = "This is the body.";
+
+        // list of censored property-names.
+        excluded_names_t exclusions{"id", "userId"};
+
+        auto reply = RequestBuilder(ctx)
+            .Post("http://localhost:3000/posts")
+
+            // Suppress sending 'id' and 'userId' properties
+            .Data(data, nullptr, &exclusions)
+
+            .Execute();
+    }).get();
+```
+You can apply the same restriction (via method calls) to
+- RapidJsonInserter
+- RapidJsonSerializer
 

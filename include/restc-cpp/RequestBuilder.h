@@ -194,15 +194,27 @@ public:
      *      BOOST_FUSION_ADAPT_STRUCT. The object will be
      *      serialized to a Json object and sent as the
      *      body of the request.
+     * \param mapping Mapping between native C++ and Json property names
+     * \param excludedNames Properties to ignore during serialization
+     *      (typically read-only properties that will be rejected by the
+     *      server).
      *
      * Normally used with POST or PUT requests.
      */
     template<typename T>
-    RequestBuilder& Data(const T& data) {
+    RequestBuilder& Data(const T& data,
+                         JsonFieldMapping *mapping = nullptr,
+                         excluded_names_t *excludedNames = nullptr) {
         assert(!body_);
 
-        auto fn = [&data](DataWriter& writer) {
+        auto fn = [&data, mapping, excludedNames](DataWriter& writer) {
             RapidJsonInserter<T> inserter(writer);
+            if (!mapping) {
+                inserter.SetNameMapping(mapping);
+            }
+            if (excludedNames) {
+                inserter.ExcludeNames(excludedNames);
+            }
             inserter.Add(data);
             inserter.Done();
         };

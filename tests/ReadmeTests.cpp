@@ -455,6 +455,29 @@ void tenth() {
     cout << "Done." << endl;
 }
 
+void eleventh() {
+    // Create the REST clent
+    auto rest_client = RestClient::Create();
+    rest_client->ProcessWithPromise([&](Context& ctx) {
+
+        Post data;
+        data.id = 10;
+        data.userId = 14;
+        data.title = "Hi there";
+        data.body = "This is the body.";
+
+        excluded_names_t exclusions{"id", "userId"};
+
+        auto reply = RequestBuilder(ctx)
+            .Post("http://localhost:3000/posts")
+
+            // Suppress sending 'id' and 'userId' properties
+            .Data(data, nullptr, &exclusions)
+
+            .Execute();
+    }).get();
+}
+
 int main() {
     try {
         cout << "First: " << endl;
@@ -486,6 +509,9 @@ int main() {
 
         cout << "Tenth: " << endl;
         tenth();
+
+        cout << "Eleventh: " << endl;
+        eleventh();
 
     } catch(const exception& ex) {
         cerr << "Something threw up: " << ex.what() << endl;
