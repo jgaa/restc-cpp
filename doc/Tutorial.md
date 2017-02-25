@@ -309,7 +309,7 @@ strategy that can give an extreme performance), you can use your existing
 io-services.
 
 Note that currently, restc-cpp require that it's io-service use only one
-thread. (With asio, you can use two strategies, one io-servive and
+thread. (With asio, you can use two strategies, one io-service and
 several threads, or several io-services, each using only one thread.
 I have favored the one-thread approach as it makes the code simpler, and
 theoretically, it should make less CPU cache misses, something that
