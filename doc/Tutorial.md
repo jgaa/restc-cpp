@@ -685,3 +685,42 @@ You can apply the same restriction (via method calls) to
 - RapidJsonInserter
 - RapidJsonSerializer
 
+## Setting a memory limit on incoming objects
+
+It is possible for a rouge REST server to attack connected clients
+by sending a never-ending stream of valid json data (for example a
+list that never ends, or a string of unlimited size). To prevent such
+attacks, restc-cpp has a default limit on 1 megabyte for objects
+that are serialized from json. (The limit is based on an approximate
+memory usage, not the exact memory allocated by the operation).
+
+This feature can be fine tuned (for example by setting the limit to
+2 kilobytes for a object that is expected to be small, or disabled
+if you are running it on a supercomputer, or if you trust the REST
+server 100%.
+
+Example on how to use it:
+```C++
+    auto rest_client = RestClient::Create();
+    RestClient::Create()->ProcessWithPromise([&](Context& ctx) {
+        Post post;
+
+        // Serialize with a limit of 2 kilobytes of memory usage by the post;
+        SerializeFromJson(post,
+            RequestBuilder(ctx)
+                .Get("http://jsonplaceholder.typicode.com/posts/1")
+
+                // Notice the limit of 2048 bytes
+                .Execute(), nullptr, 2048);
+
+        // Serialize with no limit;
+        SerializeFromJson(post,
+            RequestBuilder(ctx)
+                .Get("http://jsonplaceholder.typicode.com/posts/1")
+
+                // Notice how we disable the constraint by defining zero
+                .Execute(), nullptr, 0);
+    })
+    .get();
+```
+

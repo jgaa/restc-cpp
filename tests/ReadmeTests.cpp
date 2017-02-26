@@ -477,40 +477,67 @@ void eleventh() {
     }).get();
 }
 
+void twelfth() {
+    auto rest_client = RestClient::Create();
+    RestClient::Create()->ProcessWithPromise([&](Context& ctx) {
+        Post post;
+
+        // Serialize with a limit of 2 kilobytes of memory usage by the post;
+        SerializeFromJson(post,
+            RequestBuilder(ctx)
+                .Get("http://jsonplaceholder.typicode.com/posts/1")
+
+                // Notice the limit of 2048 bytes
+                .Execute(), nullptr, 2048);
+
+        // Serialize with no limit;
+        SerializeFromJson(post,
+            RequestBuilder(ctx)
+                .Get("http://jsonplaceholder.typicode.com/posts/1")
+
+                // Notice how we disable the constraint by defining zero
+                .Execute(), nullptr, 0);
+    })
+    .get();
+}
+
 int main() {
     try {
-        cout << "First: " << endl;
-        first();
+//         cout << "First: " << endl;
+//         first();
+//
+//         cout << "Second: " << endl;
+//         second();
+//
+//         cout << "Third: " << endl;
+//         third();
+//
+//         cout << "Forth: " << endl;
+//         forth();
+//
+//         cout << "Fifth: " << endl;
+//         fifth();
+//
+//         cout << "Sixth: " << endl;
+//         sixth();
+//
+//         cout << "Seventh: " << endl;
+//         seventh();
+//
+//         cout << "Eight: " << endl;
+//         eight();
+//
+//         cout << "Ninth: " << endl;
+//         ninth();
+//
+//         cout << "Tenth: " << endl;
+//         tenth();
+//
+//         cout << "Eleventh: " << endl;
+//         eleventh();
 
-        cout << "Second: " << endl;
-        second();
-
-        cout << "Third: " << endl;
-        third();
-
-        cout << "Forth: " << endl;
-        forth();
-
-        cout << "Fifth: " << endl;
-        fifth();
-
-        cout << "Sixth: " << endl;
-        sixth();
-
-        cout << "Seventh: " << endl;
-        seventh();
-
-        cout << "Eight: " << endl;
-        eight();
-
-        cout << "Ninth: " << endl;
-        ninth();
-
-        cout << "Tenth: " << endl;
-        tenth();
-
-        cout << "Eleventh: " << endl;
-        eleventh();
+        cout << "Twelfth: " << endl;
+        twelfth();
 
     } catch(const exception& ex) {
         cerr << "Something threw up: " << ex.what() << endl;
