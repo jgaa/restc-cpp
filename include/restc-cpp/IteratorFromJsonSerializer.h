@@ -158,7 +158,7 @@ private:
                 } else if (ch == '{') {
                     auto data = std::make_unique<objectT>();
                     RapidJsonDeserializer<objectT> handler(
-                        *data, nullptr, name_mapper_);
+                        *data, name_mapper_);
                     json_reader_.Parse(reply_stream_, handler);
                     return move(data);
                 } else if (ch == ']') {

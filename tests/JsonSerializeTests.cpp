@@ -41,6 +41,21 @@ BOOST_FUSION_ADAPT_STRUCT(
     (double, balance)
 )
 
+struct Quotes {
+    int id;
+    string origin;
+    string quote;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(
+    Quotes,
+    (int, id)
+    (std::string, origin)
+    (std::string, quote)
+)
+
+
+
 struct Group {
 
     Group(std::string name_, int gid_, Person leader_,
@@ -102,6 +117,7 @@ TEST(SerializeNestedObject)
     RapidJsonSerializer<decltype(group), decltype(writer)>
         serializer(group, writer);
 
+    serializer.IgnoreEmptyMembers(false);
     serializer.Serialize();
 
     CHECK_EQUAL(R"({"name":"Group name","gid":99,"leader":{"id":100,"name":"John Doe","balance":123.45},"members":[],"more_members":[],"even_more_members":[]})",
@@ -146,7 +162,7 @@ TEST(SerializeList)
 TEST(DeserializeSimpleObject)
 {
     Person person;
-    std::string json = R"({ "id" : 100, "name" : "John Doe", "balance" : 123.45 })";
+    std::string json = R"({ "id" : 100, "name" : "John Longdue Doe", "balance" : 123.45 })";
 
     RapidJsonDeserializer<Person> handler(person);
     Reader reader;
@@ -154,7 +170,7 @@ TEST(DeserializeSimpleObject)
     reader.Parse(ss, handler);
 
     CHECK_EQUAL(person.id, 100);
-    CHECK_EQUAL(person.name, "John Doe");
+    CHECK_EQUAL(person.name, "John Longdue Doe");
     CHECK_EQUAL(person.balance, 123.45);
 }
 
@@ -221,12 +237,43 @@ TEST(DeserializeIntVector)
     }
 }
 
+TEST(DeserializeMemoryLimit)
+{
+
+    Quotes q;
+    q.origin = "HGG";
+    q.quote = "For instance, on the planet Earth, man had always assumed that he was" "more intelligent than dolphins because he had achieved so much—the wheel, New " "York, wars and so on—whilst all the dolphins had ever done was muck about in the " "water having a good time. But conversely, the dolphins had always believed that " "they were far more intelligent than man—for precisely the same reasons.";
+
+    std::list<Quotes> quotes;
+    for(int i = 0; i < 100; ++i) {
+        q.id = i;
+        quotes.push_back(q);
+    }
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(quotes), decltype(writer)> serializer(quotes, writer);
+    serializer.Serialize();
+
+    std::string json = s.GetString();
+
+    quotes.clear();
+
+    // Add a limit of approx 4000 bytes to the handler
+    RapidJsonDeserializer<decltype(quotes)> handler(quotes, 4000);
+    Reader reader;
+    StringStream ss(json.c_str());
+
+    CHECK_THROW(reader.Parse(ss, handler), ConstraintException);
+}
+
 int main(int, const char *[])
 {
     namespace logging = boost::log;
     logging::core::get()->set_filter
     (
-        logging::trivial::severity >= logging::trivial::debug
+        logging::trivial::severity >= logging::trivial::trace
     );
     return UnitTest::RunAllTests();
 }

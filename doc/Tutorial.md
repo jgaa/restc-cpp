@@ -670,7 +670,6 @@ Simply supply a list of censored property-names.
         data.title = "Hi there";
         data.body = "This is the body.";
 
-        // list of censored property-names.
         excluded_names_t exclusions{"id", "userId"};
 
         auto reply = RequestBuilder(ctx)

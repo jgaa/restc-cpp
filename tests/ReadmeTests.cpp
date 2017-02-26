@@ -456,7 +456,6 @@ void tenth() {
 }
 
 void eleventh() {
-    // Create the REST clent
     auto rest_client = RestClient::Create();
     rest_client->ProcessWithPromise([&](Context& ctx) {
 

@@ -143,6 +143,7 @@ struct serialize_properties {
     bool ignore_empty_fileds = true;
     const std::set<std::string> *excluded_names = nullptr;
     const JsonFieldMapping *name_mapping = nullptr;
+    size_t max_memory_consumption_ = 1024 * 1024;
 
     bool is_excluded(const std::string& name) const noexcept {
         return excluded_names
@@ -185,6 +186,34 @@ struct on_name_and_value
 private:
     fnT fn_;
 };
+
+template <typename T>
+struct get_len {
+    size_t operator()(const T& v) const {
+        return sizeof(v);
+    }
+};
+
+template <>
+struct get_len<const std::string&> {
+    size_t operator()(const std::string& v) const {
+        const auto ptrlen = sizeof(const char *);
+        size_t b = sizeof(v);
+        if (v.size() > (sizeof(std::string) + ptrlen)) {
+            b += v.size() - ptrlen;
+        }
+        return b;
+    }
+};
+
+template <>
+struct get_len<std::string&> {
+    size_t operator()(const std::string& v) const {
+        assert(false); //oops!
+        return get_len<const std::string&>()(v);
+    }
+};
+
 
 #ifndef _MSC_VER // g++, clang
 
@@ -397,17 +426,42 @@ class RapidJsonDeserializer : public RapidJsonDeserializerBase {
 public:
     using data_t = typename std::remove_const<typename std::remove_reference<T>::type>::type;
     enum class State { INIT, IN_OBJECT, IN_ARRAY, RECURSED, DONE };
-
+    static constexpr int const default_mem_limit = 1024 * 1024 * 1024;
 
     RapidJsonDeserializer(data_t& object,
-                        RapidJsonDeserializerBase *parent = nullptr,
-                        const JsonFieldMapping *nameMapping = nullptr)
+                        RapidJsonDeserializerBase *parent,
+                        const JsonFieldMapping *nameMapping,
+                        std::int64_t *maxBytes)
     : RapidJsonDeserializerBase(parent)
     , object_{object}
+    , bytes_{maxBytes}
     , name_mapping_{nameMapping}
     {
-
+        assert(parent != nullptr);
     }
+
+    RapidJsonDeserializer(data_t& object,
+                        RapidJsonDeserializerBase *parent,
+                        std::int64_t *maxBytes)
+    : RapidJsonDeserializerBase(parent)
+    , object_{object}
+    , bytes_{maxBytes}
+    {
+        assert(parent != nullptr);
+    }
+
+    RapidJsonDeserializer(data_t& object,
+                        const JsonFieldMapping *nameMapping = nullptr,
+                        std::int64_t maxBytes = default_mem_limit)
+    : RapidJsonDeserializerBase(nullptr)
+    , object_{object}
+    , bytes_buffer_{maxBytes}, bytes_{maxBytes ? &bytes_buffer_ : nullptr}
+    , name_mapping_{nameMapping} {}
+
+    RapidJsonDeserializer(data_t& object, std::int64_t maxBytes)
+    : RapidJsonDeserializerBase(nullptr)
+    , object_{object}
+    , bytes_buffer_{maxBytes}, bytes_{maxBytes ? &bytes_buffer_ : nullptr} {}
 
     bool Null() override {
         assert(((state_ == State::RECURSED) && recursed_to_) || !recursed_to_);
@@ -505,7 +559,7 @@ private:
         auto& value = const_cast<field_type_t&>(item);
 
         recursed_to_ = std::make_unique<RapidJsonDeserializer<field_type_t>>(
-            value, this, name_mapping_);
+            value, this, name_mapping_, bytes_);
     }
 
     template <typename classT, typename itemT>
@@ -528,7 +582,8 @@ private:
 
         using native_type_t = typename std::remove_const<
             typename std::remove_reference<typename dataT::value_type>::type>::type;
-        recursed_to_ = std::make_unique<RapidJsonDeserializer<native_type_t>>(object_.back(), this);
+        recursed_to_ = std::make_unique<RapidJsonDeserializer<native_type_t>>(
+            object_.back(), this, bytes_);
         saved_state_.push(state_);
         state_ = State::RECURSED;
     }
@@ -619,6 +674,7 @@ private:
 
                 auto& value = const_cast<field_type_t&>(val);
 
+                this->AddBytes(get_len<decltype(new_value)>()(new_value));
                 assign_value<decltype(value), decltype(new_value_)>(value, new_value_);
                 found = true;
             }
@@ -650,6 +706,12 @@ private:
             !boost::fusion::traits::is_sequence<typename dataT::value_type>::value
             && is_container<dataT>::value
             >::type* = 0) {
+
+
+        AddBytes(
+            get_len<argT>()(val)
+            + sizeof(size_t) * 3 // Approximate average overhead for container
+        );
 
         object_.push_back({});
         assign_value<decltype(object_.back()), decltype(val)>(object_.back(), val);
@@ -852,8 +914,25 @@ private:
         recursed_to_.reset();
     }
 
+    void AddBytes(size_t bytes) {
+        if (!bytes_) {
+            return;
+        }
+        static const std::string oom{"Exceed memory usage constraint"};
+        *bytes_ -= bytes;
+        if (*bytes_ <= 0) {
+            throw ConstraintException(oom);
+        }
+    }
+
 private:
     data_t& object_;
+
+    // The root objects owns the counter.
+    // Child objects gets the bytes_ pointer in the constructor.
+    std::int64_t bytes_buffer_ = default_mem_limit;
+    std::int64_t *bytes_ = &bytes_buffer_;
+
     const JsonFieldMapping *name_mapping_ = nullptr;
     std::string current_name_;
     State state_ = State::INIT;
@@ -1179,10 +1258,11 @@ private:
 template <typename dataT>
 void SerializeFromJson(dataT& rootData,
     Reply& reply,
-    const JsonFieldMapping *nameMapper = nullptr) {
+    const JsonFieldMapping *nameMapper = nullptr,
+    std::int64_t maxBytes = RapidJsonDeserializer<dataT>::default_mem_limit) {
 
     RapidJsonDeserializer<dataT> handler(
-        rootData, nullptr, nameMapper);
+        rootData, nameMapper, maxBytes);
     RapidJsonReader reply_stream(reply);
     rapidjson::Reader json_reader;
     json_reader.Parse(reply_stream, handler);
@@ -1192,8 +1272,9 @@ void SerializeFromJson(dataT& rootData,
 template <typename dataT>
 void SerializeFromJson(dataT& rootData,
                     std::unique_ptr<Reply>&& reply,
-                    const JsonFieldMapping *nameMapper = nullptr) {
-    SerializeFromJson(rootData, *reply, nameMapper);
+                    const JsonFieldMapping *nameMapper = nullptr,
+                    std::int64_t maxBytes = RapidJsonDeserializer<dataT>::default_mem_limit) {
+    SerializeFromJson(rootData, *reply, nameMapper, maxBytes);
 }
 
 } // namespace
