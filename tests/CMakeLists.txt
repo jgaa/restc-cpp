@@ -155,3 +155,12 @@ target_link_libraries(own_ioservice_tests
 
 add_test(OWN_IOSERVICE_TESTS own_ioservice_tests)
 
+add_executable(async_sleep_tests AsyncSleepTests.cpp)
+target_link_libraries(async_sleep_tests
+    restc-cpp
+    ${DEFAULT_LIBRARIES}
+    UnitTest++
+)
+
+add_test(ASYNC_SLEEP_TESTS async_sleep_tests)
+

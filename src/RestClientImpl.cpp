@@ -77,6 +77,15 @@ public:
             return req.Execute(*this);
         }
 
+        void Sleep(const boost::posix_time::microseconds& ms) override {
+            boost::asio::deadline_timer timer(
+                GetClient().GetIoService(),
+                boost::posix_time::microseconds(ms));
+
+            timer.async_wait(GetYield());
+        }
+
+    private:
         boost::asio::yield_context& yield_;
         RestClient& rc_;
     };

@@ -260,6 +260,19 @@ public:
      */
     virtual std::unique_ptr<Reply> Request(Request& req) = 0;
 
+    /*! Asynchronously sleep for a period */
+    template<class Rep, class Period>
+    void Sleep(const std::chrono::duration<Rep, Period>& duration) {
+        const auto microseconds =
+            std::chrono::duration_cast<std::chrono::microseconds>(
+                duration).count();
+        boost::posix_time::microseconds ms(microseconds);
+        Sleep(ms);
+    }
+
+    /*! Asynchronously sleep for a period */
+    virtual void Sleep(const boost::posix_time::microseconds& ms) = 0;
+
     static std::unique_ptr<Context>
         Create(boost::asio::yield_context& yield,
                RestClient& rc);
