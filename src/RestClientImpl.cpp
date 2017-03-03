@@ -107,6 +107,13 @@ public:
         Init(properties, true);
     }
 
+    ~RestClientImpl() {
+        CloseWhenReady(false);
+        if (thread_) {
+            thread_->join();
+        }
+    }
+
     void Init(boost::optional<Request::Properties>& properties,
               bool useMainThread) {
 
@@ -184,19 +191,6 @@ public:
             promise->get_future().get();
         }
     }
-
-    ~RestClientImpl() {
-        ClearWork();
-        if (ioservice_instance_) {
-            if (!io_service_->stopped()) {
-                io_service_->stop();
-            }
-            if (thread_) {
-                thread_->join();
-            }
-        }
-    }
-
 
     const void
     ProcessInWorker(boost::asio::yield_context yield,
