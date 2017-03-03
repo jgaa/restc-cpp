@@ -66,8 +66,6 @@ void first() {
 
     // Print the result for everyone to see.
     cout << "Received post# " << my_post.id << ", title: " << my_post.title;
-
-    rest_client->CloseWhenReady(true);
 }
 
 
@@ -89,15 +87,11 @@ void second() {
 
     // Call DoSomethingInteresting as a co-routine in a worker-thread.
     rest_client->Process(DoSomethingInteresting);
-
-    // Wait for the request to finish
-    rest_client->CloseWhenReady(true);
 }
 
 void third() {
 
-    auto rest_client = RestClient::Create();
-    auto result = rest_client->ProcessWithPromise([&](Context& ctx) {
+    RestClient::Create()->ProcessWithPromise([&](Context& ctx) {
         // Here we are again in a co-routine, running in a worker-thread.
 
         // Asynchronously connect to a server and fetch some data.
@@ -113,16 +107,7 @@ void third() {
         // Dump the well protected data
         cout << "Got: " << reply->GetBodyAsString();
 
-    });
-
-    try {
-        result.get();
-    } catch (const exception& ex) {
-        cerr <<  "Caught exception: " << ex.what() << endl;
-    }
-
-
-    rest_client->CloseWhenReady(true);
+    }).get();
 }
 
 void forth() {
@@ -186,10 +171,6 @@ void fifth() {
             cout << "Item #" << post.id << " Title: " << post.title << endl;
         }
     });
-
-
-    // Wait for the request to finish
-    rest_client->CloseWhenReady(true);
 }
 
 void sixth() {
