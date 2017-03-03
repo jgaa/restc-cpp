@@ -165,19 +165,24 @@ public:
     }
 
     void ClearWork() {
-        if (!work_ || !ioservice_instance_) {
+        if (closed_) {
             return;
         }
-        auto promise = make_shared<std::promise<void>>();
-        io_service_->dispatch([this, promise]() {
-            if (work_) {
-                work_.reset();
-            }
-            promise->set_value();
-        });
 
-        // Wait for the lambda to finish;
-        promise->get_future().get();
+        if (!io_service_->stopped()) {
+            auto promise = make_shared<std::promise<void>>();
+
+            io_service_->dispatch([this, promise]() {
+                if (work_) {
+                    work_.reset();
+                }
+                closed_ = true;
+                promise->set_value();
+            });
+
+            // Wait for the lambda to finish;
+            promise->get_future().get();
+        }
     }
 
     ~RestClientImpl() {
@@ -245,11 +250,11 @@ public:
     boost::asio::io_service& GetIoService() override { return *io_service_; }
 
     void OnNoMoreWork() {
-        if (pool_) {
+        if (closed_ && pool_) {
             pool_->Close();
             pool_.reset();
         }
-        if (ioservice_instance_) {
+        if (closed_ && ioservice_instance_) {
             if (!work_ && !io_service_->stopped()) {
                 io_service_->stop();
             }
@@ -267,6 +272,7 @@ private:
     unique_ptr<ConnectionPool> pool_;
     unique_ptr<boost::asio::io_service::work> work_;
     size_t current_tasks_ = 0;
+    bool closed_ = false;
     unique_ptr<thread> thread_;
     recursive_mutex done_mutex_;
     unique_ptr<boost::asio::io_service> ioservice_instance_;
