@@ -28,10 +28,12 @@ public:
 
         DoneHandlerImpl(RestClientImpl& parent)
         : parent_{parent} {
+            RESTC_CPP_LOG_TRACE << "Done-handler is created";
             ++parent_.current_tasks_;
         }
 
         ~DoneHandlerImpl() {
+            RESTC_CPP_LOG_TRACE << "Done-handler is destroyed";
             if (--parent_.current_tasks_ == 0) {
                 parent_.OnNoMoreWork();
             }
@@ -148,25 +150,45 @@ public:
 
     void CloseWhenReady(bool wait) override {
         ClearWork();
+        if (!io_service_->stopped()) {
+            io_service_->dispatch([this](){
+                if (current_tasks_ == 0) {
+                    OnNoMoreWork();
+                }
+            });
+        }
         if (wait) {
+            RESTC_CPP_LOG_TRACE << "CloseWhenReady: Waiting for work to end.";
             lock_guard<decltype(done_mutex_)> lock(done_mutex_);
+            RESTC_CPP_LOG_TRACE << "CloseWhenReady: Done waiting for work to end.";
         }
     }
 
     void ClearWork() {
-        lock_guard<decltype(work_mutex_)> lock(work_mutex_);
-        if (work_) {
-            work_.reset();
+        if (!work_ || !ioservice_instance_) {
+            return;
         }
+        auto promise = make_shared<std::promise<void>>();
+        io_service_->dispatch([this, promise]() {
+            if (work_) {
+                work_.reset();
+            }
+            promise->set_value();
+        });
+
+        // Wait for the lambda to finish;
+        promise->get_future().get();
     }
 
     ~RestClientImpl() {
         ClearWork();
-        if (!io_service_->stopped()) {
-            io_service_->stop();
-        }
-        if (thread_) {
-            thread_->join();
+        if (ioservice_instance_) {
+            if (!io_service_->stopped()) {
+                io_service_->stop();
+            }
+            if (thread_) {
+                thread_->join();
+            }
         }
     }
 
@@ -223,8 +245,11 @@ public:
     boost::asio::io_service& GetIoService() override { return *io_service_; }
 
     void OnNoMoreWork() {
+        if (pool_) {
+            pool_->Close();
+            pool_.reset();
+        }
         if (ioservice_instance_) {
-            lock_guard<decltype(work_mutex_)> lock(work_mutex_);
             if (!work_ && !io_service_->stopped()) {
                 io_service_->stop();
             }
@@ -244,14 +269,13 @@ private:
     size_t current_tasks_ = 0;
     unique_ptr<thread> thread_;
     recursive_mutex done_mutex_;
-    mutex work_mutex_;
     unique_ptr<boost::asio::io_service> ioservice_instance_;
 
 };
 
 unique_ptr<RestClient> RestClient::Create() {
-    return make_unique<RestClientImpl>(boost::optional<Request::Properties>{},
-                                       false);
+    boost::optional<Request::Properties> properties;
+    return make_unique<RestClientImpl>(properties, false);
 }
 
 

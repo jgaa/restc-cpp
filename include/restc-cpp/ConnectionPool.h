@@ -20,6 +20,7 @@ public:
 
     virtual std::future<std::size_t> GetIdleConnections() const = 0;
     static std::unique_ptr<ConnectionPool> Create(RestClient& owner);
+    virtual void Close() = 0;
 };
 
 } // restc_cpp

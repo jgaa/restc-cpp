@@ -32,8 +32,10 @@ BOOST_FUSION_ADAPT_STRUCT(
 // The C++ main function - the place where any adventure starts
 void first() {
 
+    auto rest_client = RestClient::Create();
+
     // Create and instantiate a Post from data received from the server.
-    Post my_post = RestClient::Create()->ProcessWithPromiseT<Post>([&](Context& ctx) {
+    Post my_post = rest_client->ProcessWithPromiseT<Post>([&](Context& ctx) {
         // This is a co-routine, running in a worker-thread
 
         // Instantiate a Post structure.
@@ -64,6 +66,8 @@ void first() {
 
     // Print the result for everyone to see.
     cout << "Received post# " << my_post.id << ", title: " << my_post.title;
+
+    rest_client->CloseWhenReady(true);
 }
 
 
@@ -93,7 +97,7 @@ void second() {
 void third() {
 
     auto rest_client = RestClient::Create();
-    rest_client->ProcessWithPromise([&](Context& ctx) {
+    auto result = rest_client->ProcessWithPromise([&](Context& ctx) {
         // Here we are again in a co-routine, running in a worker-thread.
 
         // Asynchronously connect to a server and fetch some data.
@@ -109,7 +113,16 @@ void third() {
         // Dump the well protected data
         cout << "Got: " << reply->GetBodyAsString();
 
-    }).get();
+    });
+
+    try {
+        result.get();
+    } catch (const exception& ex) {
+        cerr <<  "Caught exception: " << ex.what() << endl;
+    }
+
+
+    rest_client->CloseWhenReady(true);
 }
 
 void forth() {

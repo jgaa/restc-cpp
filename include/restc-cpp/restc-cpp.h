@@ -289,7 +289,12 @@ public:
 class RestClient {
 public:
     using prc_fn_t = std::function<void (Context& ctx)>;
-    struct DoneHandler {};
+    class DoneHandler
+    {
+    public:
+        DoneHandler() = default;
+        virtual ~DoneHandler() = default;
+    };
 
     /*! Get the default connection properties. */
     virtual const Request::Properties::ptr_t
@@ -320,9 +325,11 @@ public:
         ProcessWithPromiseT(const std::function<T (Context& ctx)>& fn) {
 
         auto prom = std::make_shared<std::promise<T>>();
+        auto future = prom->get_future();
 
         boost::asio::spawn(GetIoService(),
                            [prom,fn,this](boost::asio::yield_context yield) {
+            std::cerr << "coroutine starting. " << std::endl;
             auto ctx = Context::Create(yield, *this);
             auto done_handler = GetDoneHandler();
             try {
@@ -330,9 +337,11 @@ public:
             } catch(...) {
                 prom->set_exception(std::current_exception());
             }
+            done_handler.reset();
+            std::cerr << "coroutine done. " << std::endl;
         });
 
-        return prom->get_future();
+        return move(future);
     }
 
 

@@ -136,6 +136,11 @@ struct IoException : public RestcCppException
     : RestcCppException(cause) {}
 };
 
+struct ObjectExpiredException : public RestcCppException
+{
+    ObjectExpiredException(const std::string& cause)
+    : RestcCppException(cause) {}
+};
 
 } // namespace
 #endif // RESTC_CPP_ERROR_H_

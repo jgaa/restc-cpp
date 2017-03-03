@@ -156,6 +156,14 @@ public:
         return my_promise->get_future();
     }
 
+    void Close() override {
+        if (!closed_) {
+            closed_ = true;
+            cache_cleanup_timer_.cancel();
+            idle_.clear();
+        }
+    }
+
 private:
     void ScheduleNextCacheCleanup() {
         cache_cleanup_timer_.expires_from_now(
@@ -165,6 +173,10 @@ private:
     }
 
     void OnCacheCleanup(const boost::system::error_code& error) {
+        if (closed_) {
+            return;
+        }
+
         if (error) {
             RESTC_CPP_LOG_DEBUG << "OnCacheCleanup: " << error;
             return;
@@ -196,7 +208,7 @@ private:
 
     void OnRelease(const Entry::ptr_t& entry) {
         in_use_.erase(entry->key);
-        if (!entry->connection->GetSocket().IsOpen()) {
+        if (closed_ || !entry->connection->GetSocket().IsOpen()) {
             RESTC_CPP_LOG_TRACE << "Discarding " << *entry << " after use";
             return;
         }
@@ -209,6 +221,9 @@ private:
     // Check the constraints to see if we can create a new connection
     bool CanCreateNewConnection(const boost::asio::ip::tcp::endpoint ep,
                                 const Connection::Type connectionType) {
+        if (closed_) {
+            throw ObjectExpiredException("The connection-pool is closed.");
+        }
 
         {
             const auto key = Key{ep, connectionType};
@@ -258,6 +273,9 @@ private:
     // Get a connection from the cache if it's there.
     Connection::ptr_t GetFromCache(const boost::asio::ip::tcp::endpoint ep,
                                    const Connection::Type connectionType) {
+        if (closed_) {
+            throw ObjectExpiredException("The connection-pool is closed.");
+        }
         const auto key = Key{ep, connectionType};
         auto it = idle_.find(key);
         if (it != idle_.end()) {
@@ -294,6 +312,7 @@ private:
         return make_unique<ConnectionWrapper>(entry, on_release_);
     }
 
+    bool closed_ = false;
     RestClient& owner_;
     multimap<Key, Entry::ptr_t> idle_;
     multimap<Key, std::weak_ptr<Entry>> in_use_;
