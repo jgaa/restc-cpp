@@ -503,38 +503,38 @@ void twelfth() {
 
 int main() {
     try {
-//         cout << "First: " << endl;
-//         first();
-//
-//         cout << "Second: " << endl;
-//         second();
-//
-//         cout << "Third: " << endl;
-//         third();
-//
-//         cout << "Forth: " << endl;
-//         forth();
-//
-//         cout << "Fifth: " << endl;
-//         fifth();
-//
-//         cout << "Sixth: " << endl;
-//         sixth();
-//
-//         cout << "Seventh: " << endl;
-//         seventh();
-//
-//         cout << "Eight: " << endl;
-//         eight();
-//
-//         cout << "Ninth: " << endl;
-//         ninth();
-//
-//         cout << "Tenth: " << endl;
-//         tenth();
-//
-//         cout << "Eleventh: " << endl;
-//         eleventh();
+        cout << "First: " << endl;
+        first();
+
+        cout << "Second: " << endl;
+        second();
+
+        cout << "Third: " << endl;
+        third();
+
+        cout << "Forth: " << endl;
+        forth();
+
+        cout << "Fifth: " << endl;
+        fifth();
+
+        cout << "Sixth: " << endl;
+        sixth();
+
+        cout << "Seventh: " << endl;
+        seventh();
+
+        cout << "Eight: " << endl;
+        eight();
+
+        cout << "Ninth: " << endl;
+        ninth();
+
+        cout << "Tenth: " << endl;
+        tenth();
+
+        cout << "Eleventh: " << endl;
+        eleventh();
 
         cout << "Twelfth: " << endl;
         twelfth();
