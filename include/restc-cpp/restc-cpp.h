@@ -165,7 +165,7 @@ public:
     Create(const std::string& url,
            const Type requestType,
            RestClient& owner,
-           std::unique_ptr<RequestBody> body = nullptr,
+           std::unique_ptr<RequestBody> body = {},
            const boost::optional<args_t>& args = {},
            const boost::optional<headers_t>& headers = {},
            const boost::optional<auth_t>& auth = {});

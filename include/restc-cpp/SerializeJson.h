@@ -674,7 +674,7 @@ private:
 
                 auto& value = const_cast<field_type_t&>(val);
 
-                this->AddBytes(get_len<decltype(new_value)>()(new_value));
+                this->AddBytes(get_len<decltype(new_value_)>()(new_value_));
                 assign_value<decltype(value), decltype(new_value_)>(value, new_value_);
                 found = true;
             }
