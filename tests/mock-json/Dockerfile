@@ -8,9 +8,9 @@ RUN npm install -g json-server
 WORKDIR /data
 VOLUME /data
 
-COPY db.json /data
+COPY db.json.bin /data/db.json
 
 EXPOSE 80
-ADD run.sh /run.sh
+ADD run.sh.bin /run.sh
 ENTRYPOINT ["bash", "/run.sh"]
 CMD []
