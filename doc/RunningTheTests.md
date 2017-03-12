@@ -24,6 +24,21 @@ Run the tests.
 ./tests/run-tests.sh
 ```
 
+## Under Windows
+The scripts that create and use the docker containers are modified
+to work 'out of the box'under Windows. I use the cygwin shell that
+comes with the windows version of git to run the scripts.
+
+```sh
+./create-and-run-containers.sh
+```
+
+Run the tests.
+
+```sh
+./tests/run-tests.sh
+```
+
 ## Under MacOS
 
 MacOS will make it’s best effort to hinder you from doing what you want.
