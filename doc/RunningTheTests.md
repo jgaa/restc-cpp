@@ -26,8 +26,8 @@ Run the tests.
 
 ## Under Windows
 The scripts that create and use the docker containers are modified
-to work 'out of the box'under Windows. I use the cygwin shell that
-comes with the windows version of git to run the scripts.
+to work 'out of the box' under Windows. I use the cygwin shell that
+comes with the windows version of git to run these scripts.
 
 ```sh
 ./create-and-run-containers.sh
