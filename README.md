@@ -247,19 +247,14 @@ Please refer to the [tutorial](doc/Tutorial.md) for more examples.
 The project is maturing fast. There are no known bugs.
 Beta status will be announced in the near future.
 
-The latest code is tested with Debian "testing", Debian Jessie, Fedora 25, Mac OS Sierra (OS/X) and Windows 10.
-
 # Supported operating systems
 These are the operating systems I test with before releasing a new version.
 
  - Debian Stable (Jessie)
  - Debian Testing
- - Windows 10 / Microsoft Visual Studio, comminity version
-      (I have not installed docker on Windows yet, so only some tests are run.
-      However, all tests compile and link correctly with Boost 1.63, zlib 1.2.9
-      and openssl 1.0.2k)
+ - Windows 10 / Microsoft Visual Studio 2015, comminity version (All tests now passes with the latest release version of Docker for Windows)
  - Fedora 25
- - Ubuntu LTS
+ - Ubuntu Server LTS
  - macOS Sierra (OS X)
 
 # More information
