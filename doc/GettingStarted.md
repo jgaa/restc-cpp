@@ -2,7 +2,7 @@
 
 Note that the restc-cpp wiki on github contains up to date
 build instructions for different platforms. The instructions
-below is generic.
+below are generic.
 
 Clone the repository
 
@@ -42,5 +42,5 @@ You need to specify to your project the paths to where you have the
 and the library itself (<i>./lib/librestc-cpp[D]</i>. The 'D' is present in the
 library name if it is compiled for debugging.
 
-# Embedding restc-spp's cmake file in your cmake project
+# Embedding restc-cpp's cmake file in your cmake project
 TBD
