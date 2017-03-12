@@ -280,8 +280,8 @@ private:
         auto it = idle_.find(key);
         if (it != idle_.end()) {
             auto wrapper = make_unique<ConnectionWrapper>(it->second, on_release_);
+			in_use_.insert(*it);
             idle_.erase(it);
-            in_use_.insert(*it);
             return move(wrapper);
         }
 
