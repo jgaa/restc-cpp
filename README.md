@@ -252,7 +252,7 @@ These are the operating systems I test with before releasing a new version.
 
  - Debian Stable (Jessie)
  - Debian Testing
- - Windows 10 / Microsoft Visual Studio 2015, comminity version (All tests now passes with the latest release version of Docker for Windows)
+ - Windows 10 / Microsoft Visual Studio 2015, community version (All tests now passes with the latest release version of Docker for Windows)
  - Fedora 25
  - Ubuntu Server LTS
  - macOS Sierra (OS X)
@@ -260,9 +260,9 @@ These are the operating systems I test with before releasing a new version.
 # More information
 - [Getting started](doc/GettingStarted.md)
 - [Tutorial](doc/Tutorial.md)
-- [Build for Linux](https://github.com/jgaa/restc-cpp/wiki/Building-Restc-cpp-under-Linux)
-- [Build for macOS](https://github.com/jgaa/restc-cpp/wiki/Building-under-Mac-OS-X)
-- [Build for Windows](https://github.com/jgaa/restc-cpp/wiki/Building-restc-cpp-under-Windows)
+- [Build for Linux](https://github.com/jgaa/restc-cpp/wiki/Building-under-Linux)
+- [Build for macOS](https://github.com/jgaa/restc-cpp/wiki/Building-under-macOS)
+- [Build for Windows](https://github.com/jgaa/restc-cpp/wiki/Building-under-Windows)
 - [Running the tests](doc/RunningTheTests.md)
 - [Planned work](https://github.com/jgaa/restc-cpp/wiki)
 
