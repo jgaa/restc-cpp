@@ -10,7 +10,7 @@ docker run --name restc-cpp-squid --link restc-cpp-nginx:api.example.com -d -p 3
 sleep 2
 
 case "$OSTYPE" in
-  msys*)    
+  msys*)
 	echo "WINDOWS"
 	winpty docker exec -it restc-cpp-squid service squid3 restart
 	;;
