@@ -7,14 +7,14 @@ if (WIN32)
     # to be set manually.
 
     if (RESTC_CPP_USE_WIN32_DEFAULTS AND NOT DEFINED BOOST_ROOT)
-            set (BOOST_ROOT C:/devel/boost_1_63_0)
+            set (BOOST_ROOT C:/devel/boost_1_64_0)
             message(STATUS "Warning. No BOOST_ROOT defined. Defaulting to ${BOOST_ROOT}")
     else()
             message(STATUS "Using BOOST from ${BOOST_ROOT}")
     endif()
 
     if (RESTC_CPP_USE_WIN32_DEFAULTS AND NOT DEFINED BOOST_LIBRARYDIR)
-            set (BOOST_LIBRARYDIR ${BOOST_ROOT}/stage/x64/lib)
+            set (BOOST_LIBRARYDIR ${BOOST_ROOT}/stage/lib)
             message(STATUS "Warning. No BOOST_ROOT defined. Defaulting to ${BOOST_ROOT}")
     endif()
 

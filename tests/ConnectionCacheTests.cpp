@@ -12,6 +12,7 @@
 
 #include "UnitTest++/UnitTest++.h"
 
+#include "restc_cpp_testing.h"
 
 /* These url's points to a local Docker container with nginx, linked to
  * a jsonserver docker container with mock data.
@@ -33,7 +34,7 @@ TEST(TestConnectionRecycling)
     auto rest_client = RestClient::Create();
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
-        auto repl_one = ctx.Get(http_url);
+        auto repl_one = ctx.Get(GetDockerUrl(http_url));
         auto first_conn_id = repl_one->GetConnectionId();
         CHECK_EQUAL(200, repl_one->GetResponseCode());
         // Discard all data
@@ -41,7 +42,7 @@ TEST(TestConnectionRecycling)
             repl_one->GetSomeData();
         }
 
-        auto repl_two = ctx.Get(http_url);
+        auto repl_two = ctx.Get(GetDockerUrl(http_url));
         auto second_conn_id = repl_two->GetConnectionId();
         CHECK_EQUAL(200, repl_two->GetResponseCode());
         // Discard all data
@@ -60,7 +61,7 @@ TEST(TestConnectionClose)
     auto rest_client = RestClient::Create();
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
-        auto repl_one = ctx.Get(http_connection_close_url);
+        auto repl_one = ctx.Get(GetDockerUrl(http_connection_close_url));
 
         CHECK_EQUAL(200, repl_one->GetResponseCode());
 
@@ -122,7 +123,7 @@ TEST(TestCleanupTimer) {
     config->cacheCleanupIntervalSeconds = 1;
 
     rest_client->ProcessWithPromise([&](Context& ctx) {
-        auto repl = ctx.Get(http_url);
+        auto repl = ctx.Get(GetDockerUrl(http_url));
         CHECK_EQUAL(200, repl->GetResponseCode());
 
         // Discard all data
@@ -144,7 +145,7 @@ TEST(TestPrematureCloseNotRecycled)
     auto rest_client = RestClient::Create();
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
-        auto repl_one = ctx.Get(http_url_many);
+        auto repl_one = ctx.Get(GetDockerUrl(http_url_many));
 
         CHECK_EQUAL(200, repl_one->GetResponseCode());
 

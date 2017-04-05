@@ -14,6 +14,8 @@
 
 #include "UnitTest++/UnitTest++.h"
 
+#include "restc_cpp_testing.h"
+
 using namespace std;
 using namespace restc_cpp;
 
@@ -64,7 +66,7 @@ TEST(TestOwnIoservice)
         rest_client->Process([i, &promises, &rest_client, &mutex](Context& ctx) {
 
             auto reply = RequestBuilder(ctx)
-                .Get(http_url)
+                .Get(GetDockerUrl(http_url))
                 .Execute();
 
             // Use an iterator to make it simple to fetch some data and

@@ -13,6 +13,8 @@
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/RequestBuilder.h"
 
+#include "restc_cpp_testing.h"
+
 using namespace std;
 using namespace restc_cpp;
 
@@ -42,7 +44,7 @@ void DoSomethingInteresting(Context& ctx) {
     // to C++ objects was we go.
     // We expcet a list of Post objects
     list<Post> posts_list;
-    SerializeFromJson(posts_list, ctx.Get(http_url));
+    SerializeFromJson(posts_list, ctx.Get(GetDockerUrl(http_url)));
 
     // Just dump the data.
     for(const auto& post : posts_list) {
@@ -50,7 +52,7 @@ void DoSomethingInteresting(Context& ctx) {
     }
 
     // Asynchronously connect to server and POST data.
-    auto repl = ctx.Post(http_url, "{\"test\":\"teste\"}");
+    auto repl = ctx.Post(GetDockerUrl(http_url), "{\"test\":\"teste\"}");
 
     // Asynchronously fetch the entire data-set and return it as a string.
     auto json = repl->GetBodyAsString();
@@ -59,7 +61,7 @@ void DoSomethingInteresting(Context& ctx) {
 
     // Use RequestBuilder to fetch everything
     repl = RequestBuilder(ctx)
-        .Get(http_url)
+        .Get(GetDockerUrl(http_url))
         .Header("X-Client", "RESTC_CPP")
         .Header("X-Client-Purpose", "Testing")
         .Header("Accept", "*/*")
@@ -71,7 +73,7 @@ void DoSomethingInteresting(Context& ctx) {
 
     // Use RequestBuilder to fetch a record
     repl = RequestBuilder(ctx)
-        .Get(http_url)
+        .Get(GetDockerUrl(http_url))
         .Header("X-Client", "RESTC_CPP")
         .Header("X-Client-Purpose", "Testing")
         .Header("Accept", "*/*")
@@ -84,7 +86,7 @@ void DoSomethingInteresting(Context& ctx) {
 
     // Use RequestBuilder to fetch a record without compression
     repl = RequestBuilder(ctx)
-        .Get(http_url)
+        .Get(GetDockerUrl(http_url))
         .Header("X-Client", "RESTC_CPP")
         .Header("X-Client-Purpose", "Testing")
         .Header("Accept", "*/*")
@@ -100,7 +102,7 @@ void DoSomethingInteresting(Context& ctx) {
     data_object.username = "testid";
     data_object.motto = "Carpe diem";
     repl = RequestBuilder(ctx)
-        .Post(http_url)
+        .Post(GetDockerUrl(http_url))
         .Header("X-Client", "RESTC_CPP")
         .Data(data_object)
         .Execute();
@@ -140,7 +142,7 @@ int main(int argc, char *argv[]) {
         auto client = RestClient::Create();
         Post my_post = client->ProcessWithPromiseT<Post>([&](Context& ctx) {
             Post post;
-            SerializeFromJson(post, ctx.Get(http_url + "/1"));
+            SerializeFromJson(post, ctx.Get(GetDockerUrl(http_url) + "/1"));
             return post;
         }).get();
 

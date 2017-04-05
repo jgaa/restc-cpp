@@ -13,6 +13,7 @@
 
 #include "UnitTest++/UnitTest++.h"
 
+#include "restc_cpp_testing.h"
 
 /* These url's points to a local Docker container with nginx, linked to
  * a jsonserver docker container with mock data.
@@ -38,7 +39,7 @@ TEST(TestNoRedirects)
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
         CHECK_THROW(
-            ctx.Get(http_redirect_url), ConstraintException);
+            ctx.Get(GetDockerUrl(http_redirect_url)), ConstraintException);
 
     }).get();
 }
@@ -48,7 +49,7 @@ TEST(TestSingleRedirect)
     auto rest_client = RestClient::Create();
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
-        auto repl = ctx.Get(http_redirect_url);
+        auto repl = ctx.Get(GetDockerUrl(http_redirect_url));
         CHECK_EQUAL(200, repl->GetResponseCode());
         // Discard all data
         while(repl->MoreDataToRead()) {
@@ -64,7 +65,7 @@ TEST(TestDoubleRedirect)
     auto rest_client = RestClient::Create();
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
-        auto repl = ctx.Get(http_reredirect_url);
+        auto repl = ctx.Get(GetDockerUrl(http_reredirect_url));
         CHECK_EQUAL(200, repl->GetResponseCode());
         // Discard all data
         while(repl->MoreDataToRead()) {
@@ -80,7 +81,7 @@ TEST(TestRedirectLoop)
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
         CHECK_THROW(
-            ctx.Get(http_redirect_loop_url), ConstraintException);
+            ctx.Get(GetDockerUrl(http_redirect_loop_url)), ConstraintException);
 
     }).get();
 }

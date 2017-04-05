@@ -11,6 +11,8 @@
 
 #include "UnitTest++/UnitTest++.h"
 
+#include "restc_cpp_testing.h"
+
 using namespace std;
 using namespace restc_cpp;
 
@@ -51,7 +53,7 @@ TEST(TestCRUD)
     CHECK_EQUAL(0, post.id);
 
     auto reply = RequestBuilder(ctx)
-        .Post(http_url) // URL
+        .Post(GetDockerUrl(http_url)) // URL
         .Data(post)                                 // Data object to send
         .Execute();                                 // Do it!
 
@@ -68,26 +70,26 @@ TEST(TestCRUD)
     post = svr_post;
     post.motto = "Change!";
     reply = RequestBuilder(ctx)
-        .Put(http_url + "/" + to_string(post.id)) // URL
+        .Put(GetDockerUrl(http_url) + "/" + to_string(post.id)) // URL
         .Data(post)                                 // Data object to update
         .Execute();
 
     // Fetch again
     reply = RequestBuilder(ctx)
-        .Get(http_url + "/" + to_string(post.id)) // URL
+        .Get(GetDockerUrl(http_url) + "/" + to_string(post.id)) // URL
         .Execute();
     SerializeFromJson(svr_post, *reply);
     CHECK_EQUAL(post.motto, svr_post.motto);
 
     // Delete
     reply = RequestBuilder(ctx)
-        .Delete(http_url + "/" + to_string(post.id)) // URL
+        .Delete(GetDockerUrl(http_url) + "/" + to_string(post.id)) // URL
         .Execute();
 
     // Verify that it's gone
     CHECK_THROW(
         RequestBuilder(ctx)
-            .Get(http_url + "/" + to_string(post.id)) // URL
+            .Get(GetDockerUrl(http_url) + "/" + to_string(post.id)) // URL
             .Execute(), RequestFailedWithErrorException);
 
 

@@ -329,7 +329,6 @@ public:
 
         boost::asio::spawn(GetIoService(),
                            [prom,fn,this](boost::asio::yield_context yield) {
-            std::cerr << "coroutine starting. " << std::endl;
             auto ctx = Context::Create(yield, *this);
             auto done_handler = GetDoneHandler();
             try {
@@ -338,7 +337,6 @@ public:
                 prom->set_exception(std::current_exception());
             }
             done_handler.reset();
-            std::cerr << "coroutine done. " << std::endl;
         });
 
         return move(future);

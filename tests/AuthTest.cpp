@@ -16,6 +16,8 @@
 
 #include "UnitTest++/UnitTest++.h"
 
+#include "restc_cpp_testing.h"
+
 using namespace std;
 using namespace restc_cpp;
 
@@ -25,7 +27,7 @@ TEST(TestFailedAuth)
     auto rest_client = RestClient::Create();
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
-        CHECK_THROW(ctx.Get("http://localhost:3001/restricted/posts/1"),
+        CHECK_THROW(ctx.Get(GetDockerUrl("http://localhost:3001/restricted/posts/1")),
                     HttpAuthenticationException);
 
     }).get();
@@ -37,7 +39,7 @@ TEST(TestSuccessfulAuth)
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
         auto reply = RequestBuilder(ctx)
-            .Get("http://localhost:3001/restricted/posts/1")
+            .Get(GetDockerUrl("http://localhost:3001/restricted/posts/1"))
             .BasicAuthentication("alice", "12345")
             .Execute();
 

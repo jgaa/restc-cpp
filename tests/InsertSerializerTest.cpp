@@ -13,6 +13,8 @@
 
 #include "UnitTest++/UnitTest++.h"
 
+#include "restc_cpp_testing.h"
+
 using namespace std;
 using namespace restc_cpp;
 
@@ -48,7 +50,7 @@ TEST(TestInserter)
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
     auto reply = RequestBuilder(ctx)
-        .Post("http://localhost:3000/posts") // URL
+        .Post(GetDockerUrl("http://localhost:3000/posts")) // URL
         .Data(post)                                 // Data object to send
         .Execute();                                 // Do it!
 
@@ -68,7 +70,7 @@ TEST(TestFunctorWriter)
         posts.emplace_back("The answer is 42", "Really?");
 
         auto reply = RequestBuilder(ctx)
-            .Post("http://localhost:3001/upload_raw/") // URL
+            .Post(GetDockerUrl("http://localhost:3001/upload_raw/")) // URL
             .DataProvider([&](DataWriter& writer) {
 
                 RapidJsonInserter<Post> inserter(writer, true);
@@ -99,7 +101,7 @@ TEST(TestManualWriter)
         posts.emplace_back("The answer is 42", "Really?");
 
         auto request = RequestBuilder(ctx)
-            .Post("http://localhost:3001/upload_raw/") // URL
+            .Post(GetDockerUrl("http://localhost:3001/upload_raw/")) // URL
             .Chunked()
             .Build();
 

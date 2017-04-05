@@ -115,7 +115,7 @@ void forth() {
     // Add the proxy information to the properties used by the client
     Request::Properties properties;
     properties.proxy.type = Request::Proxy::Type::HTTP;
-    properties.proxy.address = "http://127.0.0.1:3003";
+    properties.proxy.address = "http://localhost:3003";
 
     // Create the client with our configuration
     auto rest_client = RestClient::Create(properties);

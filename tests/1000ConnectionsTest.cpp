@@ -12,6 +12,7 @@
 #include <boost/log/expressions.hpp>
 
 #include "UnitTest++/UnitTest++.h"
+#include "restc_cpp_testing.h"
 
 using namespace std;
 using namespace restc_cpp;
@@ -38,7 +39,8 @@ const string http_url = "http://localhost:3000/manyposts";
  * works as expected with many co-routines in parallell.
  */
 
-#ifdef __APPLE__
+// On macos the system fails to open 500 connections. We have to test with a lower number
+#if defined(__APPLE__) 
 #   define CONNECTIONS 100
 #else
 #   define CONNECTIONS 500
@@ -86,7 +88,7 @@ TEST(TestCRUD)
         rest_client->Process([i, &promises, &rest_client, &mutex](Context& ctx) {
 
             auto reply = RequestBuilder(ctx)
-                .Get(http_url)
+                .Get(GetDockerUrl(http_url))
                 .Execute();
 
             // Use an iterator to make it simple to fetch some data and

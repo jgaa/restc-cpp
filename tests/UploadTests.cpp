@@ -15,6 +15,8 @@
 
 #include "UnitTest++/UnitTest++.h"
 
+#include "restc_cpp_testing.h"
+
 using namespace std;
 using namespace restc_cpp;
 
@@ -27,7 +29,7 @@ TEST(TestRawUpload)
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
         auto reply = RequestBuilder(ctx)
-            .Post("http://localhost:3001/upload_raw/")
+            .Post(GetDockerUrl("http://localhost:3001/upload_raw/"))
             .Header("Content-Type", "application/octet-stream")
             .File(temp_path)
             .Execute();
