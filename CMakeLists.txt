@@ -30,9 +30,6 @@ if (NOT DEFINED RESTC_CPP_WITH_ZLIB)
     option(RESTC_CPP_WITH_ZLIB "Use zlib" ON)
 endif()
 
-if (WIN32 AND NOT DEFINED RESTC_CPP_USE_WIN32_DEFAULTS)
-    option(RESTC_CPP_USE_WIN32_DEFAULTS "Use C:/devel ... for openssl, zlib" ON)
-endif()
 
 # We create a configuration file so that other code that
 # include our header files gets the correct configuration.
@@ -41,25 +38,6 @@ set(CONF_PATH ${RESTC_ROOT_DIR}/include/restc-cpp/config.h)
 message(STATUS "Using ${CMAKE_CXX_COMPILER}")
 
 if (NOT EMBEDDED_RESTC_CPP)
-
-    if (NOT CMAKE_PREFIX_PATH AND WIN32 AND RESTC_CPP_USE_WIN32_DEFAULTS)
-        set(CMAKE_PREFIX_PATH
-            C:/devel/zlib-1.2.11
-            C:/devel/zlib-1.2.11/build/RelWithDebInfo
-        )
-    endif()
-
-    if (NOT OPENSSL_ROOT_DIR AND WIN32 AND RESTC_CPP_USE_WIN32_DEFAULTS)
-        # Cmake's find_package(OpenSSL) is badly broken, and fails to work
-        # with the default openssl build on windows.
-		# Build 
-        # (Using 3rd party C libraries under Windows with their own build systems
-        # is a major pain-point. I'm planning to see if I can use Windows crypto
-        # library in sted of openssl, (or somerthing that can be built as a
-        # submodule to git with cmake)).
-        set(OPENSSL_ROOT_DIR C:/devel/openssl/lib-x64)
-        message(STATUS "Setting OPENSSL_ROOT_DIR to ${OPENSSL_ROOT_DIR}")
-    endif()
 
     if (RESTC_CPP_WITH_ZLIB)
         find_package(ZLIB REQUIRED)
@@ -73,14 +51,32 @@ if (NOT EMBEDDED_RESTC_CPP)
         set(THREADLIBS pthread)
     endif()
 
+    set(Boost_USE_MULTITHREADED ON)
+    find_package(Boost REQUIRED COMPONENTS
+        system
+        program_options
+        filesystem
+        date_time
+        context
+        coroutine
+        chrono
+        log
+    )
+
+    include_directories(${Boost_INCLUDE_DIRS})
+
+    # Asio trigger deprecation warnings
+    add_definitions(-DBOOST_COROUTINE_NO_DEPRECATION_WARNING=1)
+
+
     set (DEFAULT_LIBRARIES
         ${DEFAULT_LIBRARIES}
         ${THREADLIBS}
         ${OPENSSL_LIBRARIES}
         ${ZLIB_LIBRARIES}
+        ${Boost_LIBRARIES}
     )
 
-    include(${RESTC_ROOT_DIR}/cmake_scripts/boost.cmake)
     include(cmake_scripts/pch.cmake)
 
     if (UNIX)
@@ -103,16 +99,17 @@ if (NOT EMBEDDED_RESTC_CPP)
 
     include(cmake_scripts/doxygen.cmake)
 
-endif()
+    include_directories(
+        ${ZLIB_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR}/build
+        ${OPENSSL_INCLUDE_DIR}
+    )
 
-set(DEFAULT_LIBRARIES ${DEFAULT_LIBRARIES} ${ZLIB_LIBRARIES})
+endif()
 
 include_directories(
     ${RESTC_ROOT_DIR}/include
     ${RESTC_ROOT_DIR}/externals/rapidjson/include/
-    ${ZLIB_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR}/build
-    ${OPENSSL_INCLUDE_DIR}
-    )
+)
 
 add_subdirectory(src)
 
@@ -120,7 +117,6 @@ if (RESTC_CPP_WITH_UNIT_TESTS)
     enable_testing()
     add_subdirectory(tests)
 endif()
-
 
 message(STATUS "Writing the current configuration to ${CONF_PATH}")
 CONFIGURE_FILE(config.h.template ${CONF_PATH})
