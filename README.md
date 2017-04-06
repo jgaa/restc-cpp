@@ -252,7 +252,7 @@ These are the operating systems I test with before releasing a new version.
 
  - Debian Stable (Jessie)
  - Debian Testing
- - Windows 10 / Microsoft Visual Studio 2015, community version (All tests now passes with the latest release version of Docker for Windows)
+ - Windows 10 / Microsoft Visual Studio 2017, Community version / Professional version (All tests now passes with the latest release version of Docker for Windows)
  - Fedora 25
  - Ubuntu Server LTS
  - macOS Sierra (OS X)

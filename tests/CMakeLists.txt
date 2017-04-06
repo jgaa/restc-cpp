@@ -13,10 +13,17 @@ project(tests)
 set(UNITTEST_CPP_PATH ${RESTC_ROOT_DIR}/externals/unittest-cpp)
 set(UNITTEST_CPP_INCLUDE_PATH ${UNITTEST_CPP_PATH})
 if (UNIX)
-    set(UNITTEST_CPP_LIBPATH ${UNITTEST_CPP_PATH}/build)
+    set(UNITTEST_CPP_LIBPATH_DEBUG ${UNITTEST_CPP_PATH}/build)
+	set(UNITTEST_CPP_LIBPATH_RELEASE ${UNITTEST_CPP_PATH}/build)
 else()
-    set(UNITTEST_CPP_LIBPATH ${UNITTEST_CPP_PATH}/build/Debug)
+    set(UNITTEST_CPP_LIBPATH_DEBUG ${UNITTEST_CPP_PATH}/build/Debug)
+	set(UNITTEST_CPP_LIBPATH_RELEASE ${UNITTEST_CPP_PATH}/build/Release)
 endif()
+
+set (UNITTEST_LIB 
+	debug ${UNITTEST_CPP_LIBPATH_DEBUG}/UnitTest++${CMAKE_STATIC_LIBRARY_SUFFIX}
+	optimized ${UNITTEST_CPP_LIBPATH_RELEASE}/UnitTest++${CMAKE_STATIC_LIBRARY_SUFFIX}
+	)
 
 include_directories(${UNITTEST_CPP_INCLUDE_PATH})
 link_directories(
@@ -42,7 +49,7 @@ add_executable(auth_tests AuthTest.cpp)
 target_link_libraries(auth_tests
     restc-cpp
     ${DEFAULT_LIBRARIES}
-    UnitTest++
+    ${UNITTEST_LIB}
 )
 
 add_test(AUTH_TESTS auth_tests)
@@ -52,7 +59,7 @@ add_executable(upload_tests UploadTests.cpp)
 target_link_libraries(upload_tests
     restc-cpp
     ${DEFAULT_LIBRARIES}
-    UnitTest++
+    ${UNITTEST_LIB}
 )
 
 add_test(UPLOAD_TESTS upload_tests)
@@ -62,7 +69,7 @@ add_executable(inserter_serializer_tests InsertSerializerTest.cpp)
 target_link_libraries(inserter_serializer_tests
     restc-cpp
     ${DEFAULT_LIBRARIES}
-    UnitTest++
+    ${UNITTEST_LIB}
 )
 
 add_test(INSERTER_SERIALIZER_TESTS inserter_serializer_tests)
@@ -72,7 +79,7 @@ add_executable(ccache_tests ConnectionCacheTests.cpp)
 target_link_libraries(ccache_tests
     restc-cpp
     ${DEFAULT_LIBRARIES}
-    UnitTest++
+    ${UNITTEST_LIB}
 )
 
 add_test(CCACHE_FUNCTIONAL_TESTS ccache_tests)
@@ -82,7 +89,7 @@ add_executable(redirect_tests RedirectTests.cpp)
 target_link_libraries(redirect_tests
     restc-cpp
     ${DEFAULT_LIBRARIES}
-    UnitTest++
+    ${UNITTEST_LIB}
 )
 
 add_test(REDIRECT_FUNCTIONAL_TESTS redirect_tests)
@@ -91,7 +98,7 @@ add_executable(crud_tests CRUD_test.cpp)
 target_link_libraries(crud_tests
     restc-cpp
     ${DEFAULT_LIBRARIES}
-    UnitTest++
+    ${UNITTEST_LIB}
 )
 
 add_test(CRUD_FUNCTIONAL_TESTS crud_tests)
@@ -100,7 +107,7 @@ add_executable(1000c_tests 1000ConnectionsTest.cpp)
 target_link_libraries(1000c_tests
     restc-cpp
     ${DEFAULT_LIBRARIES}
-    UnitTest++
+    ${UNITTEST_LIB}
 )
 
 add_test(1000C_FUNCTIONAL_TESTS 1000c_tests)
@@ -110,7 +117,7 @@ if (RESTC_CPP_WITH_TLS)
     target_link_libraries(https_tests
         restc-cpp
         ${DEFAULT_LIBRARIES}
-        UnitTest++
+        ${UNITTEST_LIB}
     )
 
     add_test(HTTPS_FUNCTIONAL_TESTS https_tests)
@@ -122,7 +129,7 @@ add_executable(url_tests UrlTests.cpp)
 target_link_libraries(url_tests
     restc-cpp
     ${DEFAULT_LIBRARIES}
-    UnitTest++
+    ${UNITTEST_LIB}
 )
 
 add_test(URL_UNITTESTS url_tests)
@@ -131,7 +138,7 @@ add_executable(json_serialize_tests JsonSerializeTests.cpp)
 target_link_libraries(json_serialize_tests
     restc-cpp
     ${DEFAULT_LIBRARIES}
-    UnitTest++
+    ${UNITTEST_LIB}
 )
 
 add_test(JSON_UNITTESTS json_serialize_tests)
@@ -140,7 +147,7 @@ add_executable(http_reply_tests HttpReplyTests.cpp)
 target_link_libraries(http_reply_tests
     restc-cpp
     ${DEFAULT_LIBRARIES}
-    UnitTest++
+    ${UNITTEST_LIB}
 )
 
 add_test(HTTP_REPLY_UNITTESTS http_reply_tests)
@@ -150,7 +157,7 @@ add_executable(own_ioservice_tests OwnIoserviceTests.cpp)
 target_link_libraries(own_ioservice_tests
     restc-cpp
     ${DEFAULT_LIBRARIES}
-    UnitTest++
+    ${UNITTEST_LIB}
 )
 
 add_test(OWN_IOSERVICE_TESTS own_ioservice_tests)
@@ -159,7 +166,7 @@ add_executable(async_sleep_tests AsyncSleepTests.cpp)
 target_link_libraries(async_sleep_tests
     restc-cpp
     ${DEFAULT_LIBRARIES}
-    UnitTest++
+    ${UNITTEST_LIB}
 )
 
 add_test(ASYNC_SLEEP_TESTS async_sleep_tests)
