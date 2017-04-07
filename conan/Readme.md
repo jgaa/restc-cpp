@@ -1,17 +1,17 @@
 # Experimental support for the conan package manager
 
-Please see the [Conan home page](https://conan.io/) for information regharding conan.
+Please see the [Conan home page](https://conan.io/) for information regarding conan.
 
 ## Status
-Currentlty, I am only experimenting with Conan under Windows 10 with Visual Studio 2015 Community edition
+Currently, I am only experimenting with Conan under Windows 10 with Visual Studio 2015 Community edition
 
-I have successfuylly built restc-cpp in release mode with conan.
+I have successfully built restc-cpp in release mode with conan.
 Debug builds links, but most tests segfaults when boost is linked dynamically.
 
 Note: The readme_tests.exe will only work if you run Docker locally.
 
 The conan build can be used to play with restc-cpp, but as it does not yet handle debug builds,
-and does show some unstability in the test programs in release build, I don't reccommend it yet for
+and does show some instability in the test programs in release build, I don't recommend it yet for
 actual development or production.
 
 ## How to build restc-cpp with conan
@@ -57,7 +57,7 @@ create-and-run-containers.sh
 
 ## Testing with docker somewhere else
 
-Start the containers on your Docker host. 
+Start the containers on your Docker host.
 For example, if you run Windows in a Virtual Box under Linux, and you have
 Docker installed on the host machine, then you can run the containers there and
 then issue the following commands in the git bash shell in Windows:
@@ -68,7 +68,7 @@ export RESTC_CPP_TEST_DOCKER_ADDRESS=10.0.2.2
 
 ```
 
-The RESTC_CPP_TEST_DOCKER_ADDRESS environment variable specifies the IP address or 
+The RESTC_CPP_TEST_DOCKER_ADDRESS environment variable specifies the IP address or
 hostname to your Docker host, where the containers are available
 
 
