@@ -2,6 +2,12 @@
 cmake_minimum_required(VERSION 3.0)
 project (restc-cpp)
 
+if (EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+	message(STATUS "Using conan configuration: ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
+	include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+	conan_basic_setup()
+endif()
+
 if (NOT DEFINED RESTC_ROOT_DIR)
     set(RESTC_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
@@ -51,7 +57,7 @@ if (NOT EMBEDDED_RESTC_CPP)
         set(THREADLIBS pthread)
     endif()
 
-    set(Boost_USE_MULTITHREADED ON)
+    #set(Boost_USE_MULTITHREADED ON)
     find_package(Boost REQUIRED COMPONENTS
         system
         program_options
