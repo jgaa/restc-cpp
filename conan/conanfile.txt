@@ -1,5 +1,5 @@
 [requires]
-Boost/1.63.0@windoze/stable
+Boost/1.60.0@lasote/stable
 OpenSSL/1.0.2k@lasote/stable
 zlib/1.2.11@lasote/stable
 
@@ -7,7 +7,9 @@ zlib/1.2.11@lasote/stable
 cmake
 
 [options]
-# Boost:shared=False
+# Boost:shared=True
+# OpenSSL:shared=True
+# zlib:shared=True
 
 [imports]
 bin, *.dll -> ./bin

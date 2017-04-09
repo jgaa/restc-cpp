@@ -5,14 +5,9 @@ Please see the [Conan home page](https://conan.io/) for information regarding co
 ## Status
 Currently, I am only experimenting with Conan under Windows 10 with Visual Studio 2015 Community edition
 
-I have successfully built restc-cpp in release mode with conan.
-Debug builds links, but most tests segfaults when boost is linked dynamically.
-
-Note: The readme_tests.exe will only work if you run Docker locally.
-
-The conan build can be used to play with restc-cpp, but as it does not yet handle debug builds,
-and does show some instability in the test programs in release build, I don't recommend it yet for
-actual development or production.
+Conan is not as mature as I hoped (or at least not the packages), so it took a while
+to find a combination of openssl, zlib and boost that worked in all build
+combinations (debugh/releazse/static/dynamc). The current mis seems to work.
 
 ## How to build restc-cpp with conan
 
@@ -31,7 +26,7 @@ To install conan
 pip install conan
 ```
 
-Clone restc_cpp from github.
+Clone restc-cpp from github.
 
 Build dependencies and restc-cpp
 
@@ -43,7 +38,7 @@ git submodule update
 
 From the Visual Studio command prompt
 ```sh
-build_vc2015.bat
+build_externals_vc2015.bat
 .\conan\build_with_conan_vc2015.bat
 ```
 
