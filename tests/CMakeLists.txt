@@ -1,14 +1,17 @@
 project(tests)
 
-# For now, build the unittest lib manually
-#
-#  $ cd <project root dir>
-#  $ git submodule init
-#  $ cd externals/unittest-cpp
-#  $ mkdir build
-#  $ cd build
-#  $ cmake ..
-#  $ make
+
+add_definitions(-Wno-missing-braces)
+include_directories(${RESTC_ROOT_DIR}/externals/lest/include)
+
+if (RESTC_CPP_WITH_UNIT_TESTS)
+    add_subdirectory(unit)
+endif()
+
+if (RESTC_CPP_WITH_FUNCTIONALT_TESTS)
+    add_subdirectory(functional)
+endif()
+
 
 set(UNITTEST_CPP_PATH ${RESTC_ROOT_DIR}/externals/unittest-cpp)
 set(UNITTEST_CPP_INCLUDE_PATH ${UNITTEST_CPP_PATH})
@@ -125,32 +128,6 @@ endif()
 
 message(STATUS "UNITTEST_CPP_LIBPATH is ${UNITTEST_CPP_LIBPATH}")
 
-add_executable(url_tests UrlTests.cpp)
-target_link_libraries(url_tests
-    restc-cpp
-    ${DEFAULT_LIBRARIES}
-    ${UNITTEST_LIB}
-)
-
-add_test(URL_UNITTESTS url_tests)
-
-add_executable(json_serialize_tests JsonSerializeTests.cpp)
-target_link_libraries(json_serialize_tests
-    restc-cpp
-    ${DEFAULT_LIBRARIES}
-    ${UNITTEST_LIB}
-)
-
-add_test(JSON_UNITTESTS json_serialize_tests)
-
-add_executable(http_reply_tests HttpReplyTests.cpp)
-target_link_libraries(http_reply_tests
-    restc-cpp
-    ${DEFAULT_LIBRARIES}
-    ${UNITTEST_LIB}
-)
-
-add_test(HTTP_REPLY_UNITTESTS http_reply_tests)
 
 
 add_executable(own_ioservice_tests OwnIoserviceTests.cpp)

@@ -4,3 +4,6 @@
 [submodule "externals/rapidjson"]
 	path = externals/rapidjson
 	url = https://github.com/miloyip/rapidjson.git
+[submodule "externals/lest"]
+	path = externals/lest
+	url = https://github.com/martinmoene/lest.git

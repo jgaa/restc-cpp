@@ -20,6 +20,14 @@ if (NOT DEFINED RESTC_CPP_WITH_UNIT_TESTS)
     option(RESTC_CPP_WITH_UNIT_TESTS "Enable Unit Testing" ON)
 endif()
 
+if (NOT DEFINED RESTC_CPP_AUTORUN_UNIT_TESTS)
+    option(RESTC_CPP_AUTORUN_UNIT_TESTS "Run Unit Tests automatically after build" ON)
+endif()
+
+if (NOT DEFINED RESTC_CPP_WITH_FUNCTIONALT_TESTS)
+    option(RESTC_CPP_WITH_FUNCTIONALT_TESTS "Enable Functional Testing" ON)
+endif()
+
 if (NOT DEFINED RESTC_CPP_WITH_TLS)
         option(RESTC_CPP_WITH_TLS "Enable TLS (Trough OpenSSL)" ON)
 endif()
@@ -74,10 +82,10 @@ if (NOT EMBEDDED_RESTC_CPP)
     # Asio trigger deprecation warnings
     add_definitions(-DBOOST_COROUTINE_NO_DEPRECATION_WARNING=1)
 
-	if (WIN32) 
+	if (WIN32)
 		link_directories(${Boost_LIBRARY_DIRS})
 	endif()
-	
+
     set (DEFAULT_LIBRARIES
         ${DEFAULT_LIBRARIES}
         ${THREADLIBS}
@@ -122,7 +130,7 @@ include_directories(
 
 add_subdirectory(src)
 
-if (RESTC_CPP_WITH_UNIT_TESTS)
+if (RESTC_CPP_WITH_UNIT_TESTS OR RESTC_CPP_WITH_FUNCTIONALT_TESTS)
     enable_testing()
     add_subdirectory(tests)
 endif()
