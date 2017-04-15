@@ -11,9 +11,9 @@
 
 #include "../src/ReplyImpl.h"
 
-#include "UnitTest++/UnitTest++.h"
+#include "restc-cpp/test_helper.h"
+#include "lest/lest.hpp"
 
-#include "restc_cpp_testing.h"
 
 /* These url's points to a local Docker container with nginx, linked to
  * a jsonserver docker container with mock data.
@@ -26,9 +26,7 @@ const string http_redirect_loop_url = "http://localhost:3001/loop/posts";
 using namespace std;
 using namespace restc_cpp;
 
-namespace restc_cpp{
-namespace unittests {
-
+const lest::test specification[] = {
 
 TEST(TestNoRedirects)
 {
@@ -38,11 +36,11 @@ TEST(TestNoRedirects)
     auto rest_client = RestClient::Create(properties);
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
-        CHECK_THROW(
+        EXPECT_THROWS_AS(
             ctx.Get(GetDockerUrl(http_redirect_url)), ConstraintException);
 
     }).get();
-}
+},
 
 TEST(TestSingleRedirect)
 {
@@ -57,8 +55,7 @@ TEST(TestSingleRedirect)
         }
 
     }).get();
-}
-
+},
 
 TEST(TestDoubleRedirect)
 {
@@ -73,30 +70,28 @@ TEST(TestDoubleRedirect)
         }
 
     }).get();
-}
+},
 
 TEST(TestRedirectLoop)
 {
     auto rest_client = RestClient::Create();
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
-        CHECK_THROW(
+        EXPECT_THROWS_AS(
             ctx.Get(GetDockerUrl(http_redirect_loop_url)), ConstraintException);
 
     }).get();
 }
 
+}; //lest
 
-}} // namespaces
-
-int main(int, const char *[])
+int main( int argc, char * argv[] )
 {
     namespace logging = boost::log;
     logging::core::get()->set_filter
     (
-        logging::trivial::severity >= logging::trivial::debug
+        logging::trivial::severity >= logging::trivial::trace
     );
-
-    return UnitTest::RunAllTests();
+    return lest::run( specification, argc, argv );
 }
 

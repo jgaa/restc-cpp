@@ -9,9 +9,8 @@
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
 
-#include "UnitTest++/UnitTest++.h"
-
-#include "restc_cpp_testing.h"
+#include "restc-cpp/test_helper.h"
+#include "lest/lest.hpp"
 
 using namespace std;
 using namespace restc_cpp;
@@ -37,9 +36,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 )
 
 
-namespace restc_cpp{
-namespace unittests {
-
+const lest::test specification[] = {
 
 TEST(TestCRUD)
 {
@@ -64,7 +61,7 @@ TEST(TestCRUD)
 
     CHECK_EQUAL(post.username, svr_post.username);
     CHECK_EQUAL(post.motto, svr_post.motto);
-    CHECK(svr_post.id > 0);
+    EXPECT(svr_post.id > 0);
 
     // Change the data
     post = svr_post;
@@ -87,7 +84,7 @@ TEST(TestCRUD)
         .Execute();
 
     // Verify that it's gone
-    CHECK_THROW(
+    EXPECT_THROWS_AS(
         RequestBuilder(ctx)
             .Get(GetDockerUrl(http_url) + "/" + to_string(post.id)) // URL
             .Execute(), RequestFailedWithErrorException);
@@ -97,17 +94,14 @@ TEST(TestCRUD)
     }).get();
 }
 
+}; //lest
 
-}} // namespaces
-
-int main(int, const char *[])
+int main( int argc, char * argv[] )
 {
     namespace logging = boost::log;
     logging::core::get()->set_filter
     (
-        logging::trivial::severity >= logging::trivial::debug
+        logging::trivial::severity >= logging::trivial::trace
     );
-
-    return UnitTest::RunAllTests();
+    return lest::run( specification, argc, argv );
 }
-

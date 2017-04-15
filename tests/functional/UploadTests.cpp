@@ -13,14 +13,16 @@
 #include "restc-cpp/error.h"
 #include "restc-cpp/RequestBuilder.h"
 
-#include "UnitTest++/UnitTest++.h"
+#include "restc-cpp/test_helper.h"
+#include "lest/lest.hpp"
 
-#include "restc_cpp_testing.h"
 
 using namespace std;
 using namespace restc_cpp;
 
 boost::filesystem::path temp_path;
+
+const lest::test specification[] = {
 
 // The content is send un-encoded in the body
 TEST(TestRawUpload)
@@ -40,9 +42,10 @@ TEST(TestRawUpload)
 }
 
 
-int main(int, const char *[])
-{
+}; //lest
 
+int main( int argc, char * argv[] )
+{
     temp_path = boost::filesystem::unique_path();
     {
         ofstream file(temp_path.string());
@@ -54,10 +57,11 @@ int main(int, const char *[])
     namespace logging = boost::log;
     logging::core::get()->set_filter
     (
-        logging::trivial::severity >= logging::trivial::debug
+        logging::trivial::severity >= logging::trivial::trace
     );
 
-    auto rval = UnitTest::RunAllTests();
+
+    const auto rval = lest::run( specification, argc, argv );
 
     boost::filesystem::remove(temp_path);
 

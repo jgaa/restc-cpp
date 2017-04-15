@@ -10,9 +10,8 @@
 
 #include "../src/ReplyImpl.h"
 
-#include "UnitTest++/UnitTest++.h"
-
-#include "restc_cpp_testing.h"
+#include "restc-cpp/test_helper.h"
+#include "lest/lest.hpp"
 
 /* These url's points to a local Docker container with nginx, linked to
  * a jsonserver docker container with mock data.
@@ -25,9 +24,7 @@ const string http_connection_close_url = "http://localhost:3001/close/posts";
 using namespace std;
 using namespace restc_cpp;
 
-namespace restc_cpp{
-namespace unittests {
-
+const lest::test specification[] = {
 
 TEST(TestConnectionRecycling)
 {
@@ -53,7 +50,7 @@ TEST(TestConnectionRecycling)
         CHECK_EQUAL(first_conn_id, second_conn_id);
 
     }).get();
-}
+},
 
 // Test that we honor 'Connection: close' server header
 TEST(TestConnectionClose)
@@ -74,7 +71,7 @@ TEST(TestConnectionClose)
             rest_client->GetConnectionPool().GetIdleConnections().get()));
 
     }).get();
-}
+},
 
 TEST(TestMaxConnectionsToEndpoint) {
     auto rest_client = RestClient::Create();
@@ -88,9 +85,9 @@ TEST(TestMaxConnectionsToEndpoint) {
         connections.push_back(pool.GetConnection(ep, restc_cpp::Connection::Type::HTTP));
     }
 
-    CHECK_THROW(pool.GetConnection(ep,
+    EXPECT_THROWS_AS(pool.GetConnection(ep,
             restc_cpp::Connection::Type::HTTP), std::runtime_error);
-}
+},
 
 TEST(TestMaxConnections) {
     auto rest_client = RestClient::Create();
@@ -108,11 +105,11 @@ TEST(TestMaxConnections) {
             restc_cpp::Connection::Type::HTTP));
     }
 
-    CHECK_THROW(pool.GetConnection(
+    EXPECT_THROWS_AS(pool.GetConnection(
             boost::asio::ip::tcp::endpoint{
                     boost::asio::ip::address_v4{addr + i}, 80},
             restc_cpp::Connection::Type::HTTP), std::runtime_error);
-}
+},
 
 TEST(TestCleanupTimer) {
     auto rest_client = RestClient::Create();
@@ -138,7 +135,7 @@ TEST(TestCleanupTimer) {
     std::this_thread::sleep_for(std::chrono::seconds(4));
 
     CHECK_EQUAL(0, static_cast<int>(pool.GetIdleConnections().get()));
-}
+},
 
 TEST(TestPrematureCloseNotRecycled)
 {
@@ -155,7 +152,7 @@ TEST(TestPrematureCloseNotRecycled)
             rest_client->GetConnectionPool().GetIdleConnections().get()));
 
     }).get();
-}
+},
 
 TEST(TestOverrideMaxConnectionsToEndpoint) {
     auto rest_client = RestClient::Create();
@@ -172,16 +169,14 @@ TEST(TestOverrideMaxConnectionsToEndpoint) {
     connections.push_back(pool.GetConnection(ep, restc_cpp::Connection::Type::HTTP, true));
 }
 
-}} // namespaces
+}; //lest
 
-int main(int, const char *[])
+int main( int argc, char * argv[] )
 {
     namespace logging = boost::log;
     logging::core::get()->set_filter
     (
-        logging::trivial::severity >= logging::trivial::debug
+        logging::trivial::severity >= logging::trivial::trace
     );
-
-    return UnitTest::RunAllTests();
+    return lest::run( specification, argc, argv );
 }
-

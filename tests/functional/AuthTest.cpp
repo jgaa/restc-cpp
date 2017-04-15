@@ -14,24 +14,25 @@
 #include "restc-cpp/error.h"
 #include "restc-cpp/RequestBuilder.h"
 
-#include "UnitTest++/UnitTest++.h"
+#include "restc-cpp/test_helper.h"
+#include "lest/lest.hpp"
 
-#include "restc_cpp_testing.h"
 
 using namespace std;
 using namespace restc_cpp;
 
+const lest::test specification[] = {
 
 TEST(TestFailedAuth)
 {
     auto rest_client = RestClient::Create();
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
-        CHECK_THROW(ctx.Get(GetDockerUrl("http://localhost:3001/restricted/posts/1")),
+        EXPECT_THROWS_AS(ctx.Get(GetDockerUrl("http://localhost:3001/restricted/posts/1")),
                     HttpAuthenticationException);
 
     }).get();
-}
+},
 
 TEST(TestSuccessfulAuth)
 {
@@ -48,14 +49,14 @@ TEST(TestSuccessfulAuth)
     }).get();
 }
 
+}; //lest
 
-int main(int, const char *[])
+int main( int argc, char * argv[] )
 {
     namespace logging = boost::log;
     logging::core::get()->set_filter
     (
         logging::trivial::severity >= logging::trivial::trace
     );
-
-    return UnitTest::RunAllTests();
+    return lest::run( specification, argc, argv );
 }

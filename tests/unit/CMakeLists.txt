@@ -41,3 +41,15 @@ target_link_libraries(http_reply_tests
     ${UNITTEST_LIB}
 )
 ADD_AND_RUN_UNITTEST(HTTP_REPLY_UNITTESTS http_reply_tests)
+
+
+# ======================================
+
+add_executable(async_sleep_tests AsyncSleepTests.cpp)
+target_link_libraries(async_sleep_tests
+    restc-cpp
+    ${DEFAULT_LIBRARIES}
+    ${UNITTEST_LIB}
+)
+
+ADD_AND_RUN_UNITTEST(ASYNC_SLEEP_TESTS async_sleep_tests)

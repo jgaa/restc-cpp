@@ -12,7 +12,8 @@
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/RequestBuilder.h"
 
-#include "UnitTest++/UnitTest++.h"
+#include "restc-cpp/test_helper.h"
+#include "lest/lest.hpp"
 
 using namespace std;
 using namespace restc_cpp;
@@ -51,9 +52,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 string https_url = "https://lastviking.eu/files/api";
 
-namespace restc_cpp{
-namespace unittests {
-
+const lest::test specification[] = {
 
 TEST(TestHTTPS)
 {
@@ -73,15 +72,15 @@ TEST(TestHTTPS)
     }).get();
 }
 
-}} // namespaces
 
-int main(int, const char *[])
+}; //lest
+
+int main( int argc, char * argv[] )
 {
     namespace logging = boost::log;
     logging::core::get()->set_filter
     (
-        logging::trivial::severity >= logging::trivial::debug
+        logging::trivial::severity >= logging::trivial::trace
     );
-
-    return UnitTest::RunAllTests();
+    return lest::run( specification, argc, argv );
 }
