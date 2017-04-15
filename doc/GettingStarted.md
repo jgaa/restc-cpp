@@ -13,18 +13,8 @@ git clone https://github.com/jgaa/restc-cpp.git
 Initialize the submodules
 ```sh
 cd restc-cpp
-git submodule init 
+git submodule init
 git submodule update
-```
-
-Compile the unit test library
-```sh
-cd externals/unittest-cpp/
-mkdir build
-cd build
-cmake ..
-make
-cd ../../..
 ```
 
 Compile the library and tests
