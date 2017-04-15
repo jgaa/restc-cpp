@@ -19,7 +19,6 @@ target_link_libraries(url_tests
     restc-cpp
     ${DEFAULT_LIBRARIES}
 )
-#add_test(NAME URL_UNITTESTS COMMAND url_tests)
 ADD_AND_RUN_UNITTEST(URL_UNITTESTS url_tests)
 
 
@@ -30,7 +29,6 @@ target_link_libraries(json_serialize_tests
     restc-cpp
     ${DEFAULT_LIBRARIES}
 )
-#add_test(NAME JSON_UNITTESTS COMMAND json_serialize_tests)
 ADD_AND_RUN_UNITTEST(JSON_UNITTESTS json_serialize_tests)
 
 
@@ -42,5 +40,4 @@ target_link_libraries(http_reply_tests
     ${DEFAULT_LIBRARIES}
     ${UNITTEST_LIB}
 )
-#add_test(HTTP_REPLY_UNITTESTS http_reply_tests)
 ADD_AND_RUN_UNITTEST(HTTP_REPLY_UNITTESTS http_reply_tests)

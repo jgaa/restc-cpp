@@ -21,7 +21,7 @@ if (NOT DEFINED RESTC_CPP_WITH_UNIT_TESTS)
 endif()
 
 if (NOT DEFINED RESTC_CPP_AUTORUN_UNIT_TESTS)
-    option(RESTC_CPP_AUTORUN_UNIT_TESTS "Run Unit Tests automatically after build" ON)
+    option(RESTC_CPP_AUTORUN_UNIT_TESTS "Run Unit Tests automatically after build" OFF)
 endif()
 
 if (NOT DEFINED RESTC_CPP_WITH_FUNCTIONALT_TESTS)

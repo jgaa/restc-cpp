@@ -1,7 +1,8 @@
 project(tests)
 
-
-add_definitions(-Wno-missing-braces)
+if (NOT WIN32)
+	add_definitions(-Wno-missing-braces)
+endif()
 include_directories(${RESTC_ROOT_DIR}/externals/lest/include)
 
 if (RESTC_CPP_WITH_UNIT_TESTS)
