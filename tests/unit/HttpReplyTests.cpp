@@ -8,7 +8,8 @@
 
 #include "../src/ReplyImpl.h"
 
-#include "UnitTest++/UnitTest++.h"
+#include "restc-cpp/test_helper.h"
+#include "lest/lest.hpp"
 
 
 using namespace std;
@@ -67,6 +68,7 @@ private:
 } // restc_cpp
 
 
+const lest::test specification[] = {
 TEST(TestSimpleHeader)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
@@ -103,7 +105,7 @@ TEST(TestSimpleHeader)
          CHECK_EQUAL("0", *reply.GetHeader("Content-Length"));
 
      }).get();
-}
+},
 
 TEST(TestSimpleSegmentedHeader)
 {
@@ -133,7 +135,7 @@ TEST(TestSimpleSegmentedHeader)
          CHECK_EQUAL("0", *reply.GetHeader("Content-Length"));
 
      }).get();
-}
+},
 
 TEST(TestSimpleVerySegmentedHeader)
 {
@@ -166,7 +168,7 @@ TEST(TestSimpleVerySegmentedHeader)
          CHECK_EQUAL("0", *reply.GetHeader("Content-Length"));
 
      }).get();
-}
+},
 
 TEST(TestSimpleBody)
 {
@@ -195,7 +197,7 @@ TEST(TestSimpleBody)
          CHECK_EQUAL(10, (int)body.size());
 
      }).get();
-}
+},
 
 TEST(TestSimpleBody2)
 {
@@ -224,7 +226,7 @@ TEST(TestSimpleBody2)
          CHECK_EQUAL(10, (int)body.size());
 
      }).get();
-}
+},
 
 TEST(TestSimpleBody3)
 {
@@ -254,7 +256,7 @@ TEST(TestSimpleBody3)
          CHECK_EQUAL(10, (int)body.size());
 
      }).get();
-}
+},
 
 TEST(TestSimpleBody4)
 {
@@ -284,7 +286,7 @@ TEST(TestSimpleBody4)
          CHECK_EQUAL(10, (int)body.size());
 
      }).get();
-}
+},
 
 TEST(TestChunkedBody)
 {
@@ -314,7 +316,7 @@ TEST(TestChunkedBody)
          CHECK_EQUAL((0x4 + 0x5 + 0xE), (int)body.size());
 
      }).get();
-}
+},
 
 TEST(TestChunkedBody2)
 {
@@ -346,7 +348,7 @@ TEST(TestChunkedBody2)
          CHECK_EQUAL((0x4 + 0x5 + 0xE), (int)body.size());
 
      }).get();
-}
+},
 
 TEST(TestChunkedBody4)
 {
@@ -383,7 +385,7 @@ TEST(TestChunkedBody4)
          CHECK_EQUAL((0x4 + 0x5 + 0xE), (int)body.size());
 
      }).get();
-}
+},
 
 
 
@@ -426,7 +428,7 @@ TEST(TestChunkedTrailer)
          CHECK_EQUAL((0x4 + 0x5 + 0xE), (int)body.size());
 
      }).get();
-}
+},
 
 TEST(TestChunkedParameterAndTrailer)
 {
@@ -468,15 +470,14 @@ TEST(TestChunkedParameterAndTrailer)
 
      }).get();
 }
+}; //lest
 
-int main(int, const char *[])
+int main( int argc, char * argv[] )
 {
     namespace logging = boost::log;
     logging::core::get()->set_filter
     (
-        logging::trivial::severity >= logging::trivial::debug
+        logging::trivial::severity >= logging::trivial::trace
     );
-
-    return UnitTest::RunAllTests();
+    return lest::run( specification, argc, argv );
 }
-

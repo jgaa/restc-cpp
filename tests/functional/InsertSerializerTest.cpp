@@ -1,6 +1,4 @@
 
-
-
 // Include before boost::log headers
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/logging.h"
@@ -11,9 +9,9 @@
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
 
-#include "UnitTest++/UnitTest++.h"
+#include "restc-cpp/test_helper.h"
+#include "lest/lest.hpp"
 
-#include "restc_cpp_testing.h"
 
 using namespace std;
 using namespace restc_cpp;
@@ -36,9 +34,8 @@ BOOST_FUSION_ADAPT_STRUCT(
 )
 
 
-namespace restc_cpp{
-namespace unittests {
 
+const lest::test specification[] = {
 
 TEST(TestInserter)
 {
@@ -57,7 +54,7 @@ TEST(TestInserter)
         CHECK_EQUAL(201, reply->GetResponseCode());
 
     }).get();
-}
+},
 
 TEST(TestFunctorWriter)
 {
@@ -88,7 +85,7 @@ TEST(TestFunctorWriter)
 
     }).get();
 
-}
+},
 
 TEST(TestManualWriter)
 {
@@ -120,18 +117,14 @@ TEST(TestManualWriter)
     }).get();
 }
 
+}; //lest
 
-
-}} // namespaces
-
-int main(int, const char *[])
+int main( int argc, char * argv[] )
 {
     namespace logging = boost::log;
     logging::core::get()->set_filter
     (
-        logging::trivial::severity >= logging::trivial::debug
+        logging::trivial::severity >= logging::trivial::trace
     );
-
-    return UnitTest::RunAllTests();
+    return lest::run( specification, argc, argv );
 }
-

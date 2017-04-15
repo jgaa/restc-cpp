@@ -12,9 +12,8 @@
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
 
-#include "UnitTest++/UnitTest++.h"
-
-#include "restc_cpp_testing.h"
+#include "restc-cpp/test_helper.h"
+#include "lest/lest.hpp"
 
 using namespace std;
 using namespace restc_cpp;
@@ -34,10 +33,9 @@ BOOST_FUSION_ADAPT_STRUCT(
     (string, motto)
 )
 
-namespace restc_cpp{
-namespace unittests {
-
 const string http_url = "http://localhost:3000/manyposts";
+
+const lest::test specification[] = {
 
 TEST(TestOwnIoservice)
 {
@@ -124,16 +122,15 @@ TEST(TestOwnIoservice)
 }
 
 
-}} // namespaces
 
-int main(int, const char *[])
+}; //lest
+
+int main( int argc, char * argv[] )
 {
     namespace logging = boost::log;
     logging::core::get()->set_filter
     (
         logging::trivial::severity >= logging::trivial::trace
     );
-
-    return UnitTest::RunAllTests();
+    return lest::run( specification, argc, argv );
 }
-

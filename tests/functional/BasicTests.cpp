@@ -13,7 +13,7 @@
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/RequestBuilder.h"
 
-#include "restc_cpp_testing.h"
+#include "restc-cpp/test_helper.h"
 
 using namespace std;
 using namespace restc_cpp;

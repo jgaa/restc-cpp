@@ -11,8 +11,9 @@
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
 
-#include "UnitTest++/UnitTest++.h"
-#include "restc_cpp_testing.h"
+#include "restc-cpp/test_helper.h"
+#include "lest/lest.hpp"
+
 
 using namespace std;
 using namespace restc_cpp;
@@ -22,7 +23,7 @@ const string http_url = "http://localhost:3000/manyposts";
 
 /* The goal is to test with 1000 connections.
  * However, I am unable to get more than 500 working reliable (with 100
- * connections increment) before I see connection errors. On OS X, 
+ * connections increment) before I see connection errors. On OS X,
  * I was unable to get more than 100 connections working reliable.
  * (I have yet to figure out if the limitation is in the library
  * or in the test setup / Docker container).
@@ -40,7 +41,7 @@ const string http_url = "http://localhost:3000/manyposts";
  */
 
 // On macos the system fails to open 500 connections. We have to test with a lower number
-#if defined(__APPLE__) 
+#if defined(__APPLE__)
 #   define CONNECTIONS 100
 #else
 #   define CONNECTIONS 500
@@ -60,9 +61,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 )
 
 
-namespace restc_cpp{
-namespace unittests {
-
+const lest::test specification[] = {
 
 TEST(TestCRUD)
 {
@@ -139,10 +138,9 @@ TEST(TestCRUD)
     rest_client->CloseWhenReady();
 }
 
+}; //lest
 
-}} // namespaces
-
-int main(int, const char *[])
+int main( int argc, char * argv[] )
 {
     namespace logging = boost::log;
     logging::core::get()->set_filter
@@ -150,6 +148,5 @@ int main(int, const char *[])
         logging::trivial::severity >= logging::trivial::debug
     );
 
-    return UnitTest::RunAllTests();
+    return lest::run( specification, argc, argv );
 }
-

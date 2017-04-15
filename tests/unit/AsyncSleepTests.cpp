@@ -14,12 +14,16 @@
 #include "restc-cpp/error.h"
 #include "restc-cpp/RequestBuilder.h"
 
-#include "UnitTest++/UnitTest++.h"
+#include "restc-cpp/test_helper.h"
+#include "lest/lest.hpp"
+
 
 using namespace std;
 using namespace restc_cpp;
 
 using namespace std::literals::chrono_literals;
+
+const lest::test specification[] = {
 
 TEST(TestSleepMilliseconds)
 {
@@ -30,10 +34,10 @@ TEST(TestSleepMilliseconds)
         ctx.Sleep(200ms);
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>
                         (std::chrono::steady_clock::now() - start).count();
-        CHECK_CLOSE(200, duration, 50);
+        CHECK_CLOSE<int64_t>(200, duration, 50);
 
     }).get();
-}
+},
 
 TEST(TestSleepSeconds)
 {
@@ -44,20 +48,21 @@ TEST(TestSleepSeconds)
         ctx.Sleep(1s);
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>
                         (std::chrono::steady_clock::now() - start).count();
-        CHECK_CLOSE(1000, duration, 50);
+        CHECK_CLOSE<int64_t>(1000, duration, 50);
 
     }).get();
 }
 
 
-int main(int, const char *[])
+}; // lest
+
+
+int main( int argc, char * argv[] )
 {
     namespace logging = boost::log;
     logging::core::get()->set_filter
     (
         logging::trivial::severity >= logging::trivial::trace
     );
-
-    return UnitTest::RunAllTests();
+    return lest::run( specification, argc, argv );
 }
-
