@@ -36,5 +36,6 @@ inline std::string GetDockerUrl(std::string url) {
 
 
 #define CHECK_EQUAL(a,b) EXPECT(compare(a,b))
+#define CHECK_EQUAL_ENUM(a,b) EXPECT(compare(static_cast<int>(a), static_cast<int>(b)))
 #define TEST(name) CASE(#name)
 
