@@ -22,7 +22,7 @@ is designed and implemented for the single purpose of using C++ to
 interact efficiently and effortless with external REST API servers.
 
 The library is written by Jarle (jgaa) Aase, a senior freelance C++ developer
-with roughly 30 years of experience in software developemnt.
+with roughly 30 years of experience in software development.
 
 # Design Goals
 The design goal of this project is to make external REST API's
@@ -31,10 +31,10 @@ simple and safe to use in C++ projects, but still fast and memory efficient.
 Another goal was to use coroutines for the application logic that sends data to or
 pulls data from the REST API servers. This makes the code easy to write
 and understand, and also simplifies debugging and investigation of core dumps.
-In short; the code executes asyncrounesly, but there are no visible callbacks
+In short; the code executes asynchronously, but there are no visible callbacks
 or completion functions. It looks like crystal clear,
-old fasion, single threaded sequential code (using modern C++ language).
-You don't sacrifice code clearness to achive massive parallelism and
+old fashion, single threaded sequential code (using modern C++ language).
+You don't sacrifice code clearness to achieve massive parallelism and
 high performance. Coroutines was a strong motivation to write a new
 C++ HTTP Client from scratch. To see how this actually works, please see the
  [modern async cpp example](https://github.com/jgaa/modern_async_cpp_example)).
@@ -44,7 +44,7 @@ Finally, in a world where the Internet is getting increasingly
 [dangerous](http://www.dailydot.com/layer8/bruce-schneier-internet-of-things/),
 and all kind of malicious parties, from your own government to international Mafia
 (with Putin in Moscow and the Clown in the White House, the differences is
-bluring out), search for vulnerabilities in your software stack to snoop, ddos,
+blurring out), search for vulnerabilities in your software stack to snoop, ddos,
 intercept and blackmail you and your customers/users - I have a strong emphasis
 on security in all software projects I'm involved in. I have limited the
 dependencies on third party libraries as much as I could (I still use OpenSSL
@@ -74,7 +74,7 @@ using boost::asio with JSON serialization/deserialization.
 # Dependencies
 Restc-cpp depends on C++14 with its standard libraries and:
   - boost
-  - rapidjson (mature, ultrta-fast, json sax, header-only library)
+  - rapidjson (mature, ultra-fast, json sax, header-only library)
   - lest (Unit test header only library) (If compiled with testing enabled)
   - openssl or libressl (If compiled with TLS support)
   - zlib (If compiled with compression support)
@@ -252,7 +252,7 @@ These are the operating systems I test with before releasing a new version.
 
  - Debian Stable (Jessie)
  - Debian Testing
- - Windows 10 / Microsoft Visual Studio 2017, Community version / Professional version (All tests now passes with the latest release version of Docker for Windows)
+ - Windows 10 / Microsoft Visual Studio 2015 and 2017, Community version / Professional version (All tests now passes with the latest release version of Docker for Windows)
  - Fedora 25
  - Ubuntu Server LTS
  - macOS Sierra (OS X)
