@@ -2,7 +2,7 @@
 <i>The magic that takes the pain out of accessing JSON API's from C++ </i>
 
 <b>What it does:</b>
-- It formulates a HTTP reqest to a REST API server. Then, it transforms
+- It formulates a HTTP request to a REST API server. Then, it transforms
   the JSON formatted payload in the reply into a native C++ object (GET).
 - It Serialize a native C++ object or a container of C++ objects into a JSON payload
   and send it to the REST API server (POST, PUT).
