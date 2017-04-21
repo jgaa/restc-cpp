@@ -77,15 +77,15 @@ void DoSomethingInteresting(Context& ctx) {
 ```
 
 In the example above, we fetch all the data into the <i>posts_list</i>. If you
-receive really large lists, this may not be a good ide, as your RAM would fill
+receive really large lists, this may not be a good idea, as your RAM would fill
 up and eventually your application would hang or die.
 
 Another, much better approach, is to fetch the list into a C++ input iterator.
 In this case, we only store one data item in memory at any time (well, two
 if you use the <i>it++</i> operator - something you only do when you really
 need the data before the increment - right?). The size of the list does not
-matter. The HTTP client will fetch data asynchronously in the beckground
-when it is parsing the json stream to instatiate a data object. When an
+matter. The HTTP client will fetch data asynchronously in the background
+when it is parsing the json stream to instantiate a data object. When an
 object is fetched from the stream, you can access it from the iterator.
 Only when you access one of the increment methods on the iterator will the
 library concern itself with the next data object.
