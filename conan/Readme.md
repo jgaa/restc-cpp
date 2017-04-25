@@ -7,7 +7,7 @@ Currently, I am only experimenting with Conan under Windows 10 with Visual Studi
 
 Conan is not as mature as I hoped (or at least not the packages), so it took a while
 to find a combination of openssl, zlib and boost that worked in all build
-combinations (debugh/releazse/static/dynamc). The current mis seems to work.
+combinations (debug/release/static/dynamic). The current mix seems to work.
 
 ## How to build restc-cpp with conan
 
