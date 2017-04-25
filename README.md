@@ -245,7 +245,9 @@ Please refer to the [tutorial](doc/Tutorial.md) for more examples.
 
 # Current Status
 The project is maturing fast. There are no known bugs.
-Beta status will be announced in the near future.
+
+The project has been in public BETA since April 11th 2017.
+
 
 # Supported operating systems
 These are the operating systems I test with before releasing a new version.
