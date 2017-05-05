@@ -1,7 +1,7 @@
 project(tests)
 
 if (NOT WIN32)
-	add_definitions(-Wno-missing-braces)
+    add_definitions(-Wno-missing-braces)
 endif()
 
 include_directories(${RESTC_ROOT_DIR}/externals/lest/include)

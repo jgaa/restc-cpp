@@ -724,3 +724,60 @@ Example on how to use it:
     .get();
 ```
 
+## Serializing a file with json data to a C++ object
+
+I tend to use json more and more for configuration files.
+Boost.ProgramOptions is great for this (and it supports several
+other input formats). However, it's not exactly easy to use.
+Some times, for simple configurations, it can be easier to
+just serialize directly to a C++ object.
+
+This is one of many use-cases for istream2json serialization.
+
+```C++
+#include <cstdio>
+#include <boost/fusion/adapted.hpp>
+#include "restc-cpp/restc-cpp.h"
+#include "restc-cpp/SerializeJson.h"
+
+using namespace std;
+using namespace restc_cpp;
+
+// Our configuration object
+struct Config {
+    int max_something = {};
+    string name;
+    string url;
+};
+
+// Declare Config to boost::fusion, so we can serialize it
+BOOST_FUSION_ADAPT_STRUCT(
+    Config,
+    (int, max_something)
+    (string, name)
+    (string, url)
+)
+
+main() {
+
+    // Create a istream for the json file
+    ifstream ifs("config.json");
+
+    // Instatiate the config object
+    Config config;
+
+    // Read the ;config file into the config object.
+    SerializeFromJson(config, ifs);
+
+    // Do something with config...
+}
+
+```
+
+Note that serializing from std::iostream does not give
+the absolutely best performance rapidjson and restc-cpp can
+achieve. It is however the most flexible implementation.
+
+Please file a ticket on github if you require a native file reader
+with optimal performance. (Don't worry - I won't charge you - I just
+focus on the most useful features that people actually need).

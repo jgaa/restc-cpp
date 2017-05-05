@@ -34,6 +34,17 @@ ADD_AND_RUN_UNITTEST(JSON_UNITTESTS json_serialize_tests)
 
 # ======================================
 
+add_executable(json_iostream_tests Iostream2JsonTests.cpp)
+target_link_libraries(json_iostream_tests
+    restc-cpp
+    ${DEFAULT_LIBRARIES}
+)
+ADD_AND_RUN_UNITTEST(JSON_IOSTREAM_UNITTESTS json_iostream_tests)
+
+
+
+# ======================================
+
 add_executable(http_reply_tests HttpReplyTests.cpp)
 target_link_libraries(http_reply_tests
     restc-cpp

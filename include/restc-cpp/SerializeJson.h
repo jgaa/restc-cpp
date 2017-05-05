@@ -32,6 +32,7 @@
 #include "restc-cpp/RapidJsonWriter.h"
 
 #include "rapidjson/writer.h"
+#include "rapidjson/istreamwrapper.h"
 
 namespace restc_cpp {
 
@@ -1253,6 +1254,20 @@ private:
     writer_t writer_;
     serialize_properties properties_;
 };
+
+/*! Serialize a std::istream to a C++ class instance */
+template <typename dataT>
+void SerializeFromJson(dataT& rootData,
+    std::istream& stream,
+    const JsonFieldMapping *nameMapper = nullptr,
+    std::int64_t maxBytes = RapidJsonDeserializer<dataT>::default_mem_limit) {
+
+    RapidJsonDeserializer<dataT> handler(
+        rootData, nameMapper, maxBytes);
+    rapidjson::IStreamWrapper input_stream_reader(stream);
+    rapidjson::Reader json_reader;
+    json_reader.Parse(input_stream_reader, handler);
+}
 
 /*! Serialize a reply to a C++ class instance */
 template <typename dataT>

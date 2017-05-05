@@ -237,6 +237,7 @@ Please refer to the [tutorial](doc/Tutorial.md) for more examples.
   - Filters out empty C++ properties when the C++ object is serialized for transfer to the server (can be disabled).
   - Iterator interface to received JSON lists of objects.
   - Memory constraint on incoming objects (to limit damages from rouge or buggy REST servers).
+  - Serialization directly from std::istream to C++ object.
 - Plain or chunked outgoing HTTP payloads.
 - Several strategies for lazy data fetching in outgoing requests.
   - Override RequestBody to let the library pull for data when required.
