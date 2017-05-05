@@ -1,4 +1,4 @@
-# Tutiorial
+# Tutorial
 
 Here are some more examples about common use-cases.
 
