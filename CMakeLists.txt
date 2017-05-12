@@ -82,9 +82,13 @@ if (NOT EMBEDDED_RESTC_CPP)
     # Asio trigger deprecation warnings
     add_definitions(-DBOOST_COROUTINE_NO_DEPRECATION_WARNING=1)
 
-	if (WIN32)
-		link_directories(${Boost_LIBRARY_DIRS})
-	endif()
+    if (EXISTS ${Boost_INCLUDE_DIRS}/boost/type_index.hpp)
+        set(RESTC_CPP_HAVE_BOOST_TYPEINDEX 1)
+    endif()
+
+    if (WIN32)
+        link_directories(${Boost_LIBRARY_DIRS})
+    endif()
 
     set (DEFAULT_LIBRARIES
         ${DEFAULT_LIBRARIES}

@@ -69,7 +69,7 @@ protected:
     void CheckIfWeAreDone();
     void ReleaseConnection();
     void HandleDecompression();
-    void HandleContentType();
+    void HandleContentType(std::unique_ptr<DataReaderStream>&& stream);
     void HandleConnectionLifetime();
 
     Connection::ptr_t connection_;

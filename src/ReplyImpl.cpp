@@ -1,4 +1,6 @@
 
+#include <assert.h>
+
 #include<boost/tokenizer.hpp>
 
 #include "restc-cpp/logging.h"
@@ -61,28 +63,27 @@ void ReplyImpl::StartReceiveFromServer(DataReader::ptr_t&& reader) {
         [this](std::string&& name, std::string&& value) {
         headers_[move(name)] = move(value);
     });
-    reader_ = move(stream);
 
-    HandleContentType();
+    HandleContentType(move(stream));
     HandleConnectionLifetime();
     HandleDecompression();
     CheckIfWeAreDone();
 }
 
-void ReplyImpl::HandleContentType() {
+void ReplyImpl::HandleContentType(unique_ptr<DataReaderStream>&& stream) {
     static const std::string content_len_name{"Content-Length"};
     static const std::string transfer_encoding_name{"Transfer-Encoding"};
     static const std::string chunked_name{"chunked"};
 
     if (const auto cl = GetHeader(content_len_name)) {
         content_length_ = stoi(*cl);
-        reader_ = DataReader::CreatePlainReader(*content_length_, move(reader_));
+        reader_ = DataReader::CreatePlainReader(*content_length_, move(stream));
     } else {
         auto te = GetHeader(transfer_encoding_name);
         if (te && ciEqLibC()(*te, chunked_name)) {
             reader_ = DataReader::CreateChunkedReader([this](string&& name, string&& value) {
                 headers_[move(name)] = move(value);
-            },  move(reader_));
+            },  move(stream));
         } else {
             reader_ = DataReader::CreateNoBodyReader();
         }
@@ -91,14 +92,16 @@ void ReplyImpl::HandleContentType() {
 
 void ReplyImpl::HandleConnectionLifetime() {
     static const std::string connection_name{"Connection"};
-    static const std::string keep_alive_name{"keep-alive"};
+    static const std::string close_name{"keep-alive"};
 
     // Check for Connection: close header and tag the
     // connection for close
     const auto conn_hdr = GetHeader(connection_name);
-    if (!conn_hdr || !ciEqLibC()(*conn_hdr, keep_alive_name)) {
-        RESTC_CPP_LOG_TRACE << "No 'Connection: keep-alive' header. "
-            << "Tagging " << *connection_ << " for close.";
+    if (conn_hdr && ciEqLibC()(*conn_hdr, close_name)) {
+        if (connection_) {
+            RESTC_CPP_LOG_TRACE << "'Connection: close' header. "
+                << "Tagging " << *connection_ << " for close.";
+        }
         do_close_connection_ = true;
     }
 }
