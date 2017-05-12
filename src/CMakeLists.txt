@@ -36,4 +36,4 @@ endif()
 
 add_library(restc-cpp ${SOURCES})
 set_target_properties(restc-cpp PROPERTIES DEBUG_OUTPUT_NAME restc-cppD)
-target_link_libraries(restc-cpp ${BOOST_LIBRARIES})
+target_link_libraries(restc-cpp ${DEFAULT_LIBRARIES})
