@@ -22,8 +22,7 @@ namespace restc_cpp {
 class DataReaderStream : public DataReader {
 public:
 
-    DataReaderStream(std::unique_ptr<DataReader>&& source)
-    : source_{move(source)} {}
+    DataReaderStream(std::unique_ptr<DataReader>&& source);
 
      bool IsEof() const override {
          return eof_;
@@ -46,12 +45,14 @@ public:
 
         Fetch();
 
+        ++getc_bytes_;
         return *curr_;
     }
 
     void Ungetc() {
         assert(curr_ != nullptr);
         --curr_;
+        --getc_bytes_;
     }
 
     void SetEof() {
@@ -78,6 +79,7 @@ private:
     bool eof_ = false;
     const char *curr_ = nullptr;
     const char *end_ = nullptr;
+    size_t getc_bytes_ = 0;
     DataReader::ptr_t source_;
     size_t num_headers_ = 0;
 };

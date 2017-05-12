@@ -16,7 +16,7 @@ namespace restc_cpp {
 
 class Connection;
 class Context;
-
+class DataReaderStream;
 
 /*! Generic IO interface to read data from the server.
  *
@@ -44,7 +44,7 @@ public:
     static ptr_t CreateGzipReader(std::unique_ptr<DataReader>&& source);
     static ptr_t CreateZipReader(std::unique_ptr<DataReader>&& source);
     static ptr_t CreatePlainReader(size_t contentLength, ptr_t&& source);
-    static ptr_t CreateChunkedReader(add_header_fn_t, ptr_t&& source);
+    static ptr_t CreateChunkedReader(add_header_fn_t, std::unique_ptr<DataReaderStream>&& source);
     static ptr_t CreateNoBodyReader();
 };
 

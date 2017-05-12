@@ -393,10 +393,13 @@ private:
         write_buffer.push_back(headers);
         header_size_ = boost::asio::buffer_size(write_buffer);
 
+        RESTC_CPP_LOG_TRACE << "Request: " << (const boost::string_ref)headers
+            << ' ' << *connection_;
+
         PrepareBody();
         SendRequestPayload(ctx, write_buffer);
 
-        RESTC_CPP_LOG_DEBUG << "Sent request to '" << url_ << "' "
+        RESTC_CPP_LOG_DEBUG << "Sent " << Verb(request_type_) << " request to '" << url_ << "' "
             << *connection_;
 
         assert(writer_);

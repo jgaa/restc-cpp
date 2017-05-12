@@ -2,18 +2,31 @@
 #include "restc-cpp/DataReaderStream.h"
 #include "restc-cpp/error.h"
 #include "restc-cpp/url_encode.h"
+#include "restc-cpp/logging.h"
+#include <restc-cpp/typename.h>
 
 using namespace std;
 
 namespace restc_cpp {
 
+DataReaderStream::DataReaderStream(std::unique_ptr<DataReader>&& source)
+: source_{move(source)} {
+    RESTC_CPP_LOG_TRACE << "DataReaderStream: Chained to "
+        << RESTC_CPP_TYPENAME(decltype(*source_));
+}
+
 void DataReaderStream::Fetch() {
     if (++curr_ >= end_) {
         auto buf = source_->ReadSome();
+
+        RESTC_CPP_LOG_TRACE << "DataReaderStream::Fetch: Fetched buffer with "
+            << boost::asio::buffer_size(buf) << " bytes.";
+
         curr_ = boost::asio::buffer_cast<const char *>(buf);
         end_ = curr_ + boost::asio::buffer_size(buf);
         eof_ = curr_ == end_;
         if (eof_) {
+            RESTC_CPP_LOG_TRACE << "DataReaderStream::Fetch: EOF";
             throw ProtocolException("Fetch(): EOF");
         }
     }
@@ -25,6 +38,8 @@ DataReaderStream::ReadSome() {
     boost::asio::const_buffers_1 rval = {curr_,
         static_cast<size_t>(end_ - curr_)};
     curr_ = end_;
+    RESTC_CPP_LOG_TRACE << "DataReaderStream::ReadSome: Returning buffer with "
+        << boost::asio::buffer_size(rval) << " bytes.";
     return rval;
 }
 
@@ -39,6 +54,10 @@ DataReaderStream::GetData(size_t maxBytes) {
     if (seg_len > 0) {
         curr_ += seg_len - 1;
     }
+
+    RESTC_CPP_LOG_TRACE << "DataReaderStream::GetData(" << maxBytes << "): Returning buffer with "
+        << boost::asio::buffer_size(rval) << " bytes.";
+
     return rval;
 }
 
@@ -47,6 +66,7 @@ void DataReaderStream::ReadServerResponse(Reply::HttpResponse& response)
 {
     string http_1_1{"HTTP/1.1"};
     char ch = {};
+    getc_bytes_ = 0;
 
     // Get HTTP version
     std::string value;
@@ -107,6 +127,7 @@ void DataReaderStream::ReadServerResponse(Reply::HttpResponse& response)
     }
 
     response.reason_phrase = move(value);
+    RESTC_CPP_LOG_TRACE << "ReadServerResponse: getc_bytes is " <<  getc_bytes_;
 }
 
 void DataReaderStream::ReadHeaderLines(const add_header_fn_t& addHeader) {
@@ -140,6 +161,8 @@ void DataReaderStream::ReadHeaderLines(const add_header_fn_t& addHeader) {
             if (!value.empty()) {
                 throw ProtocolException("Chunk Trailer: Header value without name!");
             }
+            RESTC_CPP_LOG_TRACE << "ReadHeaderLines: getc_bytes is " <<  getc_bytes_;
+            getc_bytes_ = 0;
             return; // An empty line marks the end of the trailer
         }
 
