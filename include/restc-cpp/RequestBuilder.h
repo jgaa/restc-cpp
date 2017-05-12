@@ -76,6 +76,26 @@ public:
         headers_->insert({std::move(name), std::move(value)});
         return *this;
     }
+    
+    RequestBuilder& AddHeaders(const Request::headers_t& headers) {
+        if (!headers_) {
+            headers_ = Request::headers_t();
+        }
+
+        for(const auto& hdr: headers) {
+            headers_->insert(hdr);
+        }
+        return *this;
+    }
+    
+    RequestBuilder& AddHeaders(
+        boost::optional<Request::headers_t> headers) {
+        if (headers) {
+            return AddHeaders(*headers);
+        }
+        return *this;
+    }
+    
 
     /*! Add a request argument
      *
@@ -203,13 +223,13 @@ public:
      */
     template<typename T>
     RequestBuilder& Data(const T& data,
-                         JsonFieldMapping *mapping = nullptr,
-                         excluded_names_t *excludedNames = nullptr) {
+                         const JsonFieldMapping *mapping = nullptr,
+                         const excluded_names_t *excludedNames = nullptr) {
         assert(!body_);
 
         auto fn = [&data, mapping, excludedNames](DataWriter& writer) {
             RapidJsonInserter<T> inserter(writer);
-            if (!mapping) {
+            if (mapping) {
                 inserter.SetNameMapping(mapping);
             }
             if (excludedNames) {
