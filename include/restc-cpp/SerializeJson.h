@@ -6,6 +6,7 @@
 #include <stack>
 #include <set>
 #include <deque>
+#include <map>
 
 #include <boost/iterator/function_input_iterator.hpp>
 #include <boost/mpl/range_c.hpp>
@@ -78,10 +79,16 @@ struct JsonFieldMapping {
 /*! Base class that satisfies the requirements from rapidjson */
 class RapidJsonDeserializerBase {
 public:
-    RapidJsonDeserializerBase(RapidJsonDeserializerBase *parent)
-    : parent_{parent}
-    {
+    enum class State { INIT, IN_OBJECT, IN_ARRAY, RECURSED, DONE };
+
+    static std::string to_string(const State& state) {
+        const static std::array<std::string, 5> states =
+            {"INIT", "IN_OBJECT", "IN_ARRAY", "RECURSED", "DONE"};
+        return states.at(static_cast<int>(state));
     }
+
+    RapidJsonDeserializerBase(RapidJsonDeserializerBase *parent)
+    : parent_{parent} {}
 
     virtual ~RapidJsonDeserializerBase()
     {
@@ -138,9 +145,11 @@ private:
 };
 
 
-namespace {
-
 struct serialize_properties {
+    serialize_properties() = default;
+    serialize_properties(const bool ignoreEmptyFields)
+    : ignore_empty_fileds{ignoreEmptyFields} {}
+
     bool ignore_empty_fileds = true;
     const std::set<std::string> *excluded_names = nullptr;
     const JsonFieldMapping *name_mapping = nullptr;
@@ -158,6 +167,8 @@ struct serialize_properties {
     }
 };
 
+
+namespace {
 
 template <typename T>
 struct type_conv
@@ -399,6 +410,17 @@ void assign_value(std::string& var, const std::string& val) {
 #endif // Compiler from hell
 
 template <typename T>
+struct is_map {
+    constexpr static const bool value = false;
+};
+
+template <typename T, typename CompareT, typename AllocT>
+struct is_map<std::map<std::string, T, CompareT, AllocT> > {
+    constexpr static const bool value = true;
+};
+
+
+template <typename T>
 struct is_container {
     constexpr static const bool value = false;
 };
@@ -426,7 +448,6 @@ template <typename T>
 class RapidJsonDeserializer : public RapidJsonDeserializerBase {
 public:
     using data_t = typename std::remove_const<typename std::remove_reference<T>::type>::type;
-    enum class State { INIT, IN_OBJECT, IN_ARRAY, RECURSED, DONE };
     static constexpr int const default_mem_limit = 1024 * 1024 * 1024;
 
     RapidJsonDeserializer(data_t& object,
@@ -550,7 +571,7 @@ private:
     void DoRecurseToMember(itemT& item,
         typename std::enable_if<
             boost::fusion::traits::is_sequence<classT>::value
-            || is_container<classT>::value
+            || is_container<classT>::value || is_map<classT>::value
             >::type* = 0) {
 
         using const_field_type_t = decltype(item);
@@ -568,6 +589,7 @@ private:
         typename std::enable_if<
             !boost::fusion::traits::is_sequence<classT>::value
             && !is_container<classT>::value
+            && !is_map<classT>::value
             >::type* = 0) {
         assert(false);
     }
@@ -636,10 +658,22 @@ private:
         on_name_and_value<dataT, decltype(fn)> handler(fn);
         handler.for_each_member(object_);
 
-        assert(recursed_to_);
-        assert(found);
-        saved_state_.push(state_);
-        state_ = State::RECURSED;
+        if (!recursed_to_) {
+            assert(!found);
+            RESTC_CPP_LOG_ERROR << "RecurseToMember(): Failed to find property-name '"
+                << current_name_
+                << "' in C++ class " << RESTC_CPP_TYPENAME(dataT)
+                << " when serializing from JSON.";
+
+            // TODO: Implement skipping of unrecognized json properties.
+            assert(false);
+
+        } else {
+            assert(recursed_to_);
+            assert(found);
+            saved_state_.push(state_);
+            state_ = State::RECURSED;
+        }
         current_name_.clear();
     }
 
@@ -688,10 +722,32 @@ private:
         return true;
     }
 
+    // std::map / the key must be a string.
+    template<typename dataT, typename argT>
+    bool SetValueOnMember(const argT& val,
+        typename std::enable_if<
+            is_map<dataT>::value
+            >::type* = 0) {
+        assert(!current_name_.empty());
+
+        AddBytes(
+            get_len<argT>()(val)
+            + sizeof(std::string)
+            + current_name_.size()
+            + sizeof(size_t) * 6 // FIXME: Find approximate average overhead for map
+        );
+
+        object_[current_name_] = val;
+
+        current_name_.clear();
+        return true;
+    }
+
     template<typename dataT, typename argT>
     bool SetValueOnMember(argT val,
         typename std::enable_if<
             !boost::fusion::traits::is_sequence<dataT>::value
+            && !is_map<dataT>::value
             >::type* = 0) {
 
         RESTC_CPP_LOG_ERROR << RESTC_CPP_TYPENAME(dataT)
@@ -742,7 +798,8 @@ private:
     bool SetValue(argT val) {
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
         RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
-            << " SetValue: " << current_name_;
+            << " SetValue: " << current_name_
+            << " State: " << to_string(state_);
 #endif
         if (state_ == State::IN_OBJECT) {
             return SetValueOnMember<data_t>(val);
@@ -750,6 +807,11 @@ private:
             SetValueInArray<data_t>(val);
             return true;
         }
+        RESTC_CPP_LOG_ERROR << RESTC_CPP_TYPENAME(data_t)
+            << " SetValue: " << current_name_
+            << " State: " << to_string(state_)
+            << " Value type" << RESTC_CPP_TYPENAME(argT);
+
         assert(false && "Invalid state for setting a value");
         return true;
     }
@@ -789,12 +851,15 @@ private:
 
     bool DoRawNumber(const char* str, std::size_t length, bool copy) {
         assert(false);
+        return false;
     }
 
     bool DoStartObject() {
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
+        const bool i_am_a_map = is_map<data_t>::value;
         RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
-            << " DoStartObject: " << current_name_;
+            << " DoStartObject: " << current_name_
+            << " i_am_a_map: " << i_am_a_map;
 #endif
         switch (state_) {
 
@@ -1023,6 +1088,7 @@ void do_serialize(const dataT& object, serializerT& serializer,
         && !std::is_floating_point<dataT>::value
         && !std::is_same<dataT, std::string>::value
         && !is_container<dataT>::value
+        && !is_map<dataT>::value
         >::type* = 0) {
     assert(false);
 };
@@ -1081,6 +1147,36 @@ void do_serialize(const dataT& object, serializerT& serializer,
         << " EndArray: ";
 #endif
     serializer.EndArray();
+};
+
+template <typename dataT, typename serializerT>
+void do_serialize(const dataT& object, serializerT& serializer,
+                const serialize_properties& properties,
+     typename std::enable_if<
+        is_map<dataT>::value
+        >::type* = 0) {
+
+    static const serialize_properties map_name_properties{false};
+
+#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
+    RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
+        << " StartMap: ";
+#endif
+    serializer.StartObject();
+
+    for(const auto& v: object) {
+
+        using native_field_type_t = typename std::remove_const<
+            typename std::remove_reference<typename dataT::mapped_type>::type>::type;
+
+        do_serialize<std::string>(v.first, serializer, map_name_properties);
+        do_serialize<native_field_type_t>(v.second, serializer, properties);
+    }
+#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
+    RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
+        << " EndMap: ";
+#endif
+    serializer.EndObject();
 };
 
 template <typename dataT, typename serializerT>
