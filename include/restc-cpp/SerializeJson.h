@@ -227,7 +227,7 @@ struct get_len<std::string&> {
 };
 
 
-#ifndef _MSC_VER // g++, clang
+#if !defined(_MSC_VER) || (_MSC_VER >= 1910) // g++, clang, Visual Studio from 2017
 
 template <typename varT, typename valT,
     typename std::enable_if<
@@ -269,8 +269,10 @@ void assign_value(varT& var, const valT& val) {
 
 template <typename varT, typename valT>
 void assign_value(varT var, valT val) {
+	RESTC_CPP_LOG_ERROR << "assign_value: Invalid data conversion from "
+		<< RESTC_CPP_TYPENAME(varT) << " to " << RESTC_CPP_TYPENAME(valT);
     assert(false);
-    throw ParseException("assign_value: Invalid data conversion");
+	throw ParseException("assign_value: Invalid data conversion from ");
 }
 
 template <>
@@ -737,8 +739,7 @@ private:
             + sizeof(size_t) * 6 // FIXME: Find approximate average overhead for map
         );
 
-        object_[current_name_] = val;
-
+		assign_value(object_[current_name_], val);
         current_name_.clear();
         return true;
     }
