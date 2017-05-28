@@ -16,6 +16,11 @@ if (NOT DEFINED WITH_APIDOC)
     option(WITH_APIDOC "Generate Doxygen documentation")
 endif()
 
+if (NOT DEFINED WITH_EXAMPLES)
+    option(RESTC_CPP_WITH_EXAMPLES "Compile examples" ON)
+endif()
+
+
 if (NOT DEFINED RESTC_CPP_WITH_UNIT_TESTS)
     option(RESTC_CPP_WITH_UNIT_TESTS "Enable Unit Testing" ON)
 endif()
@@ -137,6 +142,10 @@ add_subdirectory(src)
 if (RESTC_CPP_WITH_UNIT_TESTS OR RESTC_CPP_WITH_FUNCTIONALT_TESTS)
     enable_testing()
     add_subdirectory(tests)
+endif()
+
+if (RESTC_CPP_WITH_EXAMPLES)
+    add_subdirectory(examples)
 endif()
 
 message(STATUS "Writing the current configuration to ${CONF_PATH}")
