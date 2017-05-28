@@ -1383,6 +1383,17 @@ void SerializeFromJson(dataT& rootData,
 /*! Serialize a reply to a C++ class instance */
 template <typename dataT>
 void SerializeFromJson(dataT& rootData,
+    std::unique_ptr<Reply>&& reply,
+    const JsonFieldMapping *nameMapper = nullptr,
+    std::int64_t maxBytes = RapidJsonDeserializer<dataT>::default_mem_limit) {
+
+    SerializeFromJson(rootData, *reply, nameMapper, maxBytes);
+}
+
+
+/*! Serialize a reply to a C++ class instance */
+template <typename dataT>
+void current_ip(dataT& rootData,
                     std::unique_ptr<Reply>&& reply,
                     const JsonFieldMapping *nameMapper = nullptr,
                     std::int64_t maxBytes = RapidJsonDeserializer<dataT>::default_mem_limit) {
