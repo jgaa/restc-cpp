@@ -1,3 +1,14 @@
+/* Program to log external IP-changes on NAT networks
+ *
+ * I have an ISP from Hell, and one problem I have noticed recently is that
+ * my external IP address change a lot. To monitor this problem, I wrote this little
+ * example program who checks the external IP every 5 minutes, and log changes.
+ *
+ * The program can be run in the background:
+ *
+ *      logip >> /var/tmp/ip.log 2>&1 &
+ */
+
 
 #include <ctime>
 #include "restc-cpp/logging.h"
@@ -13,6 +24,7 @@
 using namespace restc_cpp;
 using namespace std;
 
+// Data structure returned from api.ipify.org
 struct Data {
     string ip;
 };
@@ -30,7 +42,7 @@ int main(int argc, char *argv[]) {
         logging::trivial::severity >= logging::trivial::info
     );
 
-    string url = "https://api.ipify.org";
+    const string url = "https://api.ipify.org";
 
     auto client = RestClient::Create();
     client->Process([&](Context& ctx) {
