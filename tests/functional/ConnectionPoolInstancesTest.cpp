@@ -27,21 +27,22 @@ const lest::test specification[] = {
 
 STARTCASE(UseAfterDelete) {
 
-    auto rest_client = RestClient::Create();
-    rest_client->Process([&](Context& ctx) {
-        auto repl = ctx.Get(GetDockerUrl(http_url));
-        repl->GetBodyAsString();
-    });
+    for(auto i = 0; i < 100000; ++i) {
 
-    for(auto i = 0; i < 50000; ++i) {
-
-        rest_client = RestClient::Create();
-        rest_client->Process([&](Context& ctx) {
+        RestClient::Create()->ProcessWithPromiseT<int>([&](Context& ctx) {
             auto repl = ctx.Get(GetDockerUrl(http_url));
             repl->GetBodyAsString();
+            return 0;
         });
 
-        if ((i % 100) == 0) {
+        RestClient::Create()->ProcessWithPromiseT<int>([&](Context& ctx) {
+            auto repl = ctx.Get(GetDockerUrl(http_url));
+            repl->GetBodyAsString();
+            return 0;
+        }).get();
+
+
+        if ((i % 1000) == 0) {
             clog << '#' << (i +1) << endl;
         }
     }
