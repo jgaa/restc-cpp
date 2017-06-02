@@ -34,6 +34,13 @@ BOOST_FUSION_ADAPT_STRUCT(
     (string, ip)
 )
 
+string now() {
+    char date[32] = {};
+    auto now = time(NULL);
+    strftime(date, sizeof(date), "%Y-%m-%d %H:%M", localtime(&now));
+    return date;
+}
+
 int main(int argc, char *argv[]) {
 
     namespace logging = boost::log;
@@ -49,20 +56,30 @@ int main(int argc, char *argv[]) {
 
         string current_ip;
         Data data;
-        char date[32] = {};
 
         while(true) {
-            SerializeFromJson(data, RequestBuilder(ctx)
-                .Get(url)
-                .Argument("format", "json")
-                .Header("X-Client", "RESTC_CPP")
-                .Execute());
+            bool valid = false;
+            try {
+                SerializeFromJson(data, RequestBuilder(ctx)
+                    .Get(url)
+                    .Argument("format", "json")
+                    .Header("X-Client", "RESTC_CPP")
+                    .Execute());
+                valid = true;
+            } catch (const boost::exception& ex) {
+                clog << now()
+                    << "Caught boost exception: "
+                    << boost::diagnostic_information(ex)
+                    << endl;
+            } catch (const exception& ex) {
+                clog << now()
+                    << "Caught exception: "
+                    << ex.what()
+                    << endl;
+            }
 
-            if (current_ip != data.ip) {
-                auto now = time(NULL);
-                strftime(date, sizeof(date), "%Y-%m-%d %H:%M", localtime(&now));
-
-                clog << date
+            if (valid && (current_ip != data.ip)) {
+                clog << now()
                     << ' '
                     << data.ip
                     << endl;
