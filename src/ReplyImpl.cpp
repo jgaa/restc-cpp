@@ -92,7 +92,7 @@ void ReplyImpl::HandleContentType(unique_ptr<DataReaderStream>&& stream) {
 
 void ReplyImpl::HandleConnectionLifetime() {
     static const std::string connection_name{"Connection"};
-    static const std::string close_name{"keep-alive"};
+    static const std::string close_name{"close"};
 
     // Check for Connection: close header and tag the
     // connection for close
