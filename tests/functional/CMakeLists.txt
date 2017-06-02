@@ -130,3 +130,15 @@ add_test(OWN_IOSERVICE_TESTS own_ioservice_tests)
 
 
 
+# ======================================
+
+add_executable(connection_pool_instances_test ConnectionPoolInstancesTest.cpp)
+target_link_libraries(connection_pool_instances_test
+    restc-cpp
+    ${DEFAULT_LIBRARIES}
+    ${UNITTEST_LIB}
+)
+
+add_test(CONNECTION_POOL_INSTANCES_TEST connection_pool_instances_test)
+
+
