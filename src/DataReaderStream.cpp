@@ -128,6 +128,12 @@ void DataReaderStream::ReadServerResponse(Reply::HttpResponse& response)
 
     response.reason_phrase = move(value);
     RESTC_CPP_LOG_TRACE << "ReadServerResponse: getc_bytes is " <<  getc_bytes_;
+
+    RESTC_CPP_LOG_TRACE << "HTTP Response: "
+        << (response.http_version == Reply::HttpResponse::HttpVersion::HTTP_1_1
+            ? "HTTP/1.1" : "???")
+        << ' ' << response.status_code
+        << ' ' << response.reason_phrase;
 }
 
 void DataReaderStream::ReadHeaderLines(const add_header_fn_t& addHeader) {
@@ -169,6 +175,8 @@ void DataReaderStream::ReadHeaderLines(const add_header_fn_t& addHeader) {
         if (++num_headers_ > 256) {
             throw ConstraintException("Chunk Trailer: Too many lines in header!");
         }
+
+        RESTC_CPP_LOG_TRACE << name << ": " << value;
         addHeader(move(name), move(value));
         name.clear();
         value.clear();
