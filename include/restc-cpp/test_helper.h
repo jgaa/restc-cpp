@@ -6,6 +6,9 @@
 namespace restc_cpp {
 namespace {
 
+#define STARTCASE(name) { CASE(#name)
+#define ENDCASE },
+
 template<typename T1, typename T2>
 bool compare(const T1& left, const T2& right) {
     const auto state = (left == right);
