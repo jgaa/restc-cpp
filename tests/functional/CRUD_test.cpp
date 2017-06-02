@@ -38,8 +38,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 const lest::test specification[] = {
 
-TEST(TestCRUD)
-{
+STARTCASE(TestCRUD) {
     auto rest_client = RestClient::Create();
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
@@ -92,7 +91,8 @@ TEST(TestCRUD)
 
 
     }).get();
-}
+
+} ENDCASE
 
 }; //lest
 

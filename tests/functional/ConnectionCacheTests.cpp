@@ -26,8 +26,7 @@ using namespace restc_cpp;
 
 const lest::test specification[] = {
 
-TEST(TestConnectionRecycling)
-{
+STARTCASE(TestConnectionRecycling) {
     auto rest_client = RestClient::Create();
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
@@ -50,11 +49,10 @@ TEST(TestConnectionRecycling)
         CHECK_EQUAL(first_conn_id, second_conn_id);
 
     }).get();
-},
+} ENDCASE
 
 // Test that we honor 'Connection: close' server header
-TEST(TestConnectionClose)
-{
+STARTCASE(TestConnectionClose) {
     auto rest_client = RestClient::Create();
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
@@ -71,9 +69,9 @@ TEST(TestConnectionClose)
             rest_client->GetConnectionPool().GetIdleConnections().get()));
 
     }).get();
-},
+} ENDCASE
 
-TEST(TestMaxConnectionsToEndpoint) {
+STARTCASE(TestMaxConnectionsToEndpoint) {
     auto rest_client = RestClient::Create();
     auto& pool = rest_client->GetConnectionPool();
     auto config = rest_client->GetConnectionProperties();
@@ -87,9 +85,9 @@ TEST(TestMaxConnectionsToEndpoint) {
 
     EXPECT_THROWS_AS(pool.GetConnection(ep,
             restc_cpp::Connection::Type::HTTP), std::runtime_error);
-},
+} ENDCASE
 
-TEST(TestMaxConnections) {
+STARTCASE(TestMaxConnections) {
     auto rest_client = RestClient::Create();
     auto& pool = rest_client->GetConnectionPool();
     auto config = rest_client->GetConnectionProperties();
@@ -109,9 +107,9 @@ TEST(TestMaxConnections) {
             boost::asio::ip::tcp::endpoint{
                     boost::asio::ip::address_v4{addr + i}, 80},
             restc_cpp::Connection::Type::HTTP), std::runtime_error);
-},
+} ENDCASE
 
-TEST(TestCleanupTimer) {
+STARTCASE(TestCleanupTimer) {
     auto rest_client = RestClient::Create();
     auto& pool = rest_client->GetConnectionPool();
     auto config = rest_client->GetConnectionProperties();
@@ -135,10 +133,9 @@ TEST(TestCleanupTimer) {
     std::this_thread::sleep_for(std::chrono::seconds(4));
 
     CHECK_EQUAL(0, static_cast<int>(pool.GetIdleConnections().get()));
-},
+} ENDCASE
 
-TEST(TestPrematureCloseNotRecycled)
-{
+STARTCASE(TestPrematureCloseNotRecycled) {
     auto rest_client = RestClient::Create();
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
@@ -152,9 +149,9 @@ TEST(TestPrematureCloseNotRecycled)
             rest_client->GetConnectionPool().GetIdleConnections().get()));
 
     }).get();
-},
+} ENDCASE
 
-TEST(TestOverrideMaxConnectionsToEndpoint) {
+STARTCASE(TestOverrideMaxConnectionsToEndpoint) {
     auto rest_client = RestClient::Create();
     auto& pool = rest_client->GetConnectionPool();
     auto config = rest_client->GetConnectionProperties();
@@ -167,7 +164,7 @@ TEST(TestOverrideMaxConnectionsToEndpoint) {
     }
 
     connections.push_back(pool.GetConnection(ep, restc_cpp::Connection::Type::HTTP, true));
-}
+} ENDCASE
 
 }; //lest
 
@@ -176,7 +173,7 @@ int main( int argc, char * argv[] )
     namespace logging = boost::log;
     logging::core::get()->set_filter
     (
-        logging::trivial::severity >= logging::trivial::trace
+        logging::trivial::severity >= logging::trivial::info
     );
     return lest::run( specification, argc, argv );
 }
