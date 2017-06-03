@@ -239,7 +239,10 @@ public:
         return future;
     }
 
-    ConnectionPool& GetConnectionPool() override { return *pool_; }
+    std::shared_ptr<ConnectionPool> GetConnectionPool() override {
+        assert(pool_);
+        return pool_;
+    }
 
     boost::asio::io_service& GetIoService() override { return *io_service_; }
 
@@ -263,7 +266,7 @@ protected:
 private:
     Request::Properties::ptr_t default_connection_properties_ = make_shared<Request::Properties>();
     boost::asio::io_service *io_service_ = nullptr;
-    unique_ptr<ConnectionPool> pool_;
+    ConnectionPool::ptr_t pool_;
     unique_ptr<boost::asio::io_service::work> work_;
     size_t current_tasks_ = 0;
     bool closed_ = false;

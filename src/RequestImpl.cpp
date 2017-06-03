@@ -271,7 +271,7 @@ private:
             RESTC_CPP_LOG_TRACE << "Trying endpoint " << endpoint;
 
             // Get a connection from the pool
-            auto connection = owner_.GetConnectionPool().GetConnection(
+            auto connection = owner_.GetConnectionPool()->GetConnection(
                 endpoint, protocol_type);
 
             // Connect if the connection is new.

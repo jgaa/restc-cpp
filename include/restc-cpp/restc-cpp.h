@@ -343,7 +343,7 @@ public:
     }
 
 
-    virtual ConnectionPool& GetConnectionPool() = 0;
+    virtual std::shared_ptr<ConnectionPool> GetConnectionPool() = 0;
     virtual boost::asio::io_service& GetIoService() = 0;
 
     /*! Shut down the worker-thread when the work-queue is empty.

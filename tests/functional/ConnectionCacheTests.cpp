@@ -66,30 +66,30 @@ STARTCASE(TestConnectionClose) {
         }
 
         CHECK_EQUAL(0, static_cast<int>(
-            rest_client->GetConnectionPool().GetIdleConnections().get()));
+            rest_client->GetConnectionPool()->GetIdleConnections().get()));
 
     }).get();
 } ENDCASE
 
 STARTCASE(TestMaxConnectionsToEndpoint) {
     auto rest_client = RestClient::Create();
-    auto& pool = rest_client->GetConnectionPool();
+    auto pool = rest_client->GetConnectionPool();
     auto config = rest_client->GetConnectionProperties();
 
     std::vector<Connection::ptr_t> connections;
     boost::asio::ip::tcp::endpoint ep{
         boost::asio::ip::address::from_string("127.0.0.1"), 80};
     for(size_t i = 0; i < config->cacheMaxConnectionsPerEndpoint; ++i) {
-        connections.push_back(pool.GetConnection(ep, restc_cpp::Connection::Type::HTTP));
+        connections.push_back(pool->GetConnection(ep, restc_cpp::Connection::Type::HTTP));
     }
 
-    EXPECT_THROWS_AS(pool.GetConnection(ep,
+    EXPECT_THROWS_AS(pool->GetConnection(ep,
             restc_cpp::Connection::Type::HTTP), std::runtime_error);
 } ENDCASE
 
 STARTCASE(TestMaxConnections) {
     auto rest_client = RestClient::Create();
-    auto& pool = rest_client->GetConnectionPool();
+    auto pool = rest_client->GetConnectionPool();
     auto config = rest_client->GetConnectionProperties();
 
     auto addr = boost::asio::ip::address_v4::from_string("127.0.0.1").to_ulong();
@@ -97,13 +97,13 @@ STARTCASE(TestMaxConnections) {
     std::vector<Connection::ptr_t> connections;
     decltype(addr) i = 0;
     for(; i < config->cacheMaxConnections; ++i) {
-        connections.push_back(pool.GetConnection(
+        connections.push_back(pool->GetConnection(
             boost::asio::ip::tcp::endpoint{
                     boost::asio::ip::address_v4{addr + i}, 80},
             restc_cpp::Connection::Type::HTTP));
     }
 
-    EXPECT_THROWS_AS(pool.GetConnection(
+    EXPECT_THROWS_AS(pool->GetConnection(
             boost::asio::ip::tcp::endpoint{
                     boost::asio::ip::address_v4{addr + i}, 80},
             restc_cpp::Connection::Type::HTTP), std::runtime_error);
@@ -111,7 +111,7 @@ STARTCASE(TestMaxConnections) {
 
 STARTCASE(TestCleanupTimer) {
     auto rest_client = RestClient::Create();
-    auto& pool = rest_client->GetConnectionPool();
+    auto pool = rest_client->GetConnectionPool();
     auto config = rest_client->GetConnectionProperties();
 
     config->cacheTtlSeconds = 2;
@@ -128,11 +128,11 @@ STARTCASE(TestCleanupTimer) {
 
     }).get();
 
-    CHECK_EQUAL(1, static_cast<int>(pool.GetIdleConnections().get()));
+    CHECK_EQUAL(1, static_cast<int>(pool->GetIdleConnections().get()));
 
     std::this_thread::sleep_for(std::chrono::seconds(4));
 
-    CHECK_EQUAL(0, static_cast<int>(pool.GetIdleConnections().get()));
+    CHECK_EQUAL(0, static_cast<int>(pool->GetIdleConnections().get()));
 } ENDCASE
 
 STARTCASE(TestPrematureCloseNotRecycled) {
@@ -146,24 +146,24 @@ STARTCASE(TestPrematureCloseNotRecycled) {
         repl_one.reset();
 
         CHECK_EQUAL(0, static_cast<int>(
-            rest_client->GetConnectionPool().GetIdleConnections().get()));
+            rest_client->GetConnectionPool()->GetIdleConnections().get()));
 
     }).get();
 } ENDCASE
 
 STARTCASE(TestOverrideMaxConnectionsToEndpoint) {
     auto rest_client = RestClient::Create();
-    auto& pool = rest_client->GetConnectionPool();
+    auto pool = rest_client->GetConnectionPool();
     auto config = rest_client->GetConnectionProperties();
 
     std::vector<Connection::ptr_t> connections;
     boost::asio::ip::tcp::endpoint ep{
         boost::asio::ip::address::from_string("127.0.0.1"), 80};
     for(size_t i = 0; i < config->cacheMaxConnectionsPerEndpoint; ++i) {
-        connections.push_back(pool.GetConnection(ep, restc_cpp::Connection::Type::HTTP));
+        connections.push_back(pool->GetConnection(ep, restc_cpp::Connection::Type::HTTP));
     }
 
-    connections.push_back(pool.GetConnection(ep, restc_cpp::Connection::Type::HTTP, true));
+    connections.push_back(pool->GetConnection(ep, restc_cpp::Connection::Type::HTTP, true));
 } ENDCASE
 
 }; //lest

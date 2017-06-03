@@ -22,7 +22,9 @@ using namespace std;
 
 namespace restc_cpp {
 
-class ConnectionPoolImpl : public ConnectionPool {
+class ConnectionPoolImpl
+    : public ConnectionPool
+    , public std::enable_shared_from_this<ConnectionPoolImpl> {
 public:
 
     struct Key {
@@ -123,7 +125,6 @@ public:
 
     {
         on_release_ = [this](const Entry::ptr_t& entry) { OnRelease(entry); };
-        ScheduleNextCacheCleanup();
     }
 
     Connection::ptr_t
@@ -164,12 +165,16 @@ public:
         }
     }
 
+    void StartTimer() {
+        ScheduleNextCacheCleanup();
+    }
+
 private:
     void ScheduleNextCacheCleanup() {
         cache_cleanup_timer_.expires_from_now(
             boost::posix_time::seconds(properties_->cacheCleanupIntervalSeconds));
         cache_cleanup_timer_.async_wait(std::bind(&ConnectionPoolImpl::OnCacheCleanup,
-                                                  this, std::placeholders::_1));
+                                                  shared_from_this(), std::placeholders::_1));
     }
 
     void OnCacheCleanup(const boost::system::error_code& error) {
@@ -323,9 +328,11 @@ private:
 }; // ConnectionPoolImpl
 
 
-std::unique_ptr<ConnectionPool>
+ConnectionPool::ptr_t
 ConnectionPool::Create(RestClient& owner) {
-    return make_unique<ConnectionPoolImpl>(owner);
+    auto instance = make_shared<ConnectionPoolImpl>(owner);
+    instance->StartTimer();
+    return instance;
 }
 
 
