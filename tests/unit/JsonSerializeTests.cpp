@@ -93,8 +93,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 const lest::test specification[] = {
 
-TEST(SerializeSimpleObject)
-{
+STARTCASE(SerializeSimpleObject) {
     Person person = { 100, "John Doe"s, 123.45 };
 
     StringBuffer s;
@@ -108,10 +107,9 @@ TEST(SerializeSimpleObject)
     CHECK_EQUAL(R"({"id":100,"name":"John Doe","balance":123.45})"s,
                 s.GetString());
 
-},
+} ENDCASE
 
-TEST(SerializeNestedObject)
-{
+STARTCASE(SerializeNestedObject) {
     Group group = Group(string("Group name"), 99, Person( 100, string("John Doe"), 123.45 ));
 
     StringBuffer s;
@@ -126,9 +124,9 @@ TEST(SerializeNestedObject)
     CHECK_EQUAL(R"({"name":"Group name","gid":99,"leader":{"id":100,"name":"John Doe","balance":123.45},"members":[],"more_members":[],"even_more_members":[]})"s,
                 s.GetString());
 
-},
+} ENDCASE
 
-TEST(SerializeVector)
+STARTCASE(SerializeVector)
 {
     std::vector<int> ints = {-1,2,3,4,5,6,7,8,9,-10};
 
@@ -143,10 +141,9 @@ TEST(SerializeVector)
     CHECK_EQUAL(R"([-1,2,3,4,5,6,7,8,9,-10])"s,
                 s.GetString());
 
-},
+} ENDCASE
 
-TEST(SerializeList)
-{
+STARTCASE(SerializeList) {
     std::list<unsigned int> ints = {1,2,3,4,5,6,7,8,9,10};
 
     StringBuffer s;
@@ -160,10 +157,9 @@ TEST(SerializeList)
     CHECK_EQUAL(R"([1,2,3,4,5,6,7,8,9,10])"s,
                 s.GetString());
 
-},
+} ENDCASE
 
-TEST(DeserializeSimpleObject)
-{
+STARTCASE(DeserializeSimpleObject) {
     Person person;
     std::string json = R"({ "id" : 100, "name" : "John Longdue Doe", "balance" : 123.45 })";
 
@@ -175,10 +171,9 @@ TEST(DeserializeSimpleObject)
     CHECK_EQUAL(person.id, 100);
     CHECK_EQUAL(person.name, "John Longdue Doe");
     CHECK_EQUAL(person.balance, 123.45);
-},
+} ENDCASE
 
-TEST(DeserializeNestedObject)
-{
+STARTCASE(DeserializeNestedObject) {
     assert(boost::fusion::traits::is_sequence<Group>::value);
     assert(boost::fusion::traits::is_sequence<Person>::value);
 
@@ -220,10 +215,9 @@ TEST(DeserializeNestedObject)
     CHECK_EQUAL(322, group.even_more_members.back().id);
     CHECK_EQUAL("m11"s, group.even_more_members.back().name);
     CHECK_EQUAL(22.0, group.even_more_members.back().balance);
-},
+} ENDCASE
 
-TEST(DeserializeIntVector)
-{
+STARTCASE(DeserializeIntVector) {
     std::string json = R"([1,2,3,4,5,6,7,8,9,10])";
 
     std::vector<int> ints;
@@ -238,9 +232,9 @@ TEST(DeserializeIntVector)
     for(auto v : ints) {
         CHECK_EQUAL(++val, v);
     }
-},
+} ENDCASE
 
-TEST(DeserializeMemoryLimit)
+STARTCASE(DeserializeMemoryLimit)
 {
 
     Quotes q;
@@ -269,7 +263,29 @@ TEST(DeserializeMemoryLimit)
     StringStream ss(json.c_str());
 
     EXPECT_THROWS_AS(reader.Parse(ss, handler), ConstraintException);
-}
+} ENDCASE
+
+STARTCASE(MissingObjectName) {
+    Person person;
+    std::string json = R"({ "id" : 100, "name" : "John Longdue Doe", "balance" : 123.45, "foofoo":{} })";
+
+    RapidJsonDeserializer<Person> handler(person);
+    Reader reader;
+    StringStream ss(json.c_str());
+    EXPECT_THROWS_AS(reader.Parse(ss, handler), UnknownPropertyException);
+} ENDCASE
+
+STARTCASE(MissingPropertyName) {
+    Person person;
+    std::string json = R"({ "id" : 100, "name" : "John Longdue Doe", "balance" : 123.45, "foofoo":"foo", "oofoof":"oof" })";
+
+    RapidJsonDeserializer<Person> handler(person);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+} ENDCASE
+
+
 }; // lest
 
 

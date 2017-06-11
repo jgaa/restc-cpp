@@ -662,13 +662,13 @@ private:
 
         if (!recursed_to_) {
             assert(!found);
-            RESTC_CPP_LOG_ERROR << "RecurseToMember(): Failed to find property-name '"
+            RESTC_CPP_LOG_DEBUG << "RecurseToMember(): Failed to find property-name '"
                 << current_name_
-                << "' in C++ class " << RESTC_CPP_TYPENAME(dataT)
-                << " when serializing from JSON.";
+                << "' in C++ class '" << RESTC_CPP_TYPENAME(dataT)
+                << "' when serializing from JSON.";
 
             // TODO: Implement skipping of unrecognized json properties.
-            assert(false);
+            throw UnknownPropertyException(current_name_);
 
         } else {
             assert(recursed_to_);

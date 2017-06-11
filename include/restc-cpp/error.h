@@ -76,6 +76,13 @@ struct ParseException : public RestcCppException
     : RestcCppException(cause) {}
 };
 
+struct UnknownPropertyException : public RestcCppException
+{
+    UnknownPropertyException(const std::string& cause)
+    : RestcCppException(cause) {}
+};
+
+
 struct ProtocolException : public RestcCppException
 {
     ProtocolException(const std::string& cause)
