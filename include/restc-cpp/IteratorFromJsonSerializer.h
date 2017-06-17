@@ -127,8 +127,14 @@ public:
 
     IteratorFromJsonSerializer(
         Reply& reply,
-        const JsonFieldMapping *nameMapper = nullptr)
-    : reply_stream_{reply}, name_mapper_{nameMapper} {}
+        const serialize_properties_t *properties = nullptr)
+    : reply_stream_{reply}, properties_{properties}
+    {
+        if (!properties_) {
+            pbuf = std::make_unique<serialize_properties_t>();
+            properties_ = pbuf.get();
+        }
+    }
 
     iterator_t begin() {
         return Iterator{this};
@@ -158,7 +164,7 @@ private:
                 } else if (ch == '{') {
                     auto data = std::make_unique<objectT>();
                     RapidJsonDeserializer<objectT> handler(
-                        *data, name_mapper_);
+                        *data, *properties_);
                     json_reader_.Parse(reply_stream_, handler);
                     return move(data);
                 } else if (ch == ']') {
@@ -179,7 +185,8 @@ private:
     State state_ = State::PRE;
     RapidJsonReader reply_stream_;
     rapidjson::Reader json_reader_;
-    const JsonFieldMapping *name_mapper_;
+    std::unique_ptr<serialize_properties_t> pbuf;
+    const serialize_properties_t *properties_ = nullptr;
 };
 
 } // namespace

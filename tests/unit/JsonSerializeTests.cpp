@@ -258,7 +258,9 @@ STARTCASE(DeserializeMemoryLimit)
     quotes.clear();
 
     // Add a limit of approx 4000 bytes to the handler
-    RapidJsonDeserializer<decltype(quotes)> handler(quotes, 4000);
+    serialize_properties_t properties;
+    properties.max_memory_consumption = 4000;
+    RapidJsonDeserializer<decltype(quotes)> handler(quotes, properties);
     Reader reader;
     StringStream ss(json.c_str());
 
@@ -267,12 +269,54 @@ STARTCASE(DeserializeMemoryLimit)
 
 STARTCASE(MissingObjectName) {
     Person person;
-    std::string json = R"({ "id" : 100, "name" : "John Longdue Doe", "balance" : 123.45, "foofoo":{} })";
-
     RapidJsonDeserializer<Person> handler(person);
     Reader reader;
-    StringStream ss(json.c_str());
-    EXPECT_THROWS_AS(reader.Parse(ss, handler), UnknownPropertyException);
+
+    {
+        StringStream ss( R"({ "id" : 100, "name" : "John Longdue Doe", "balance" : 123.45, "foofoo":{} })");
+        reader.Parse(ss, handler);
+    }
+
+    {
+        StringStream ss( R"({ "id" : 100, "name" : "John Longdue Doe", "balance" : 123.45, "foofoo":{"first":false, "second":12345}})");
+        reader.Parse(ss, handler);
+    }
+
+    {
+        StringStream ss( R"({ "id" : 100, "name" : "John Longdue Doe", "balance" : 123.45, "foofoo":{"sub":{"sub2":{}, "teste":"yes"}}})");
+        reader.Parse(ss, handler);
+    }
+
+    {
+        StringStream ss( R"({"foofoo":{"sub":{"sub2":{}, "teste":"yes"}}})");
+        reader.Parse(ss, handler);
+    }
+
+    {
+        StringStream ss( R"({"foofoo":{"sub":{"sub2":{}, "teste":"yes"}}, "meemee":"hi"})");
+        reader.Parse(ss, handler);
+    }
+
+    {
+        StringStream ss( R"({"foofoo":{"sub":{"sub2":{}, "teste":"yes", "data":["teste":"gaa"]}}, "meemee":"hi"})");
+        reader.Parse(ss, handler);
+    }
+
+    {
+        StringStream ss( R"({"foofoo":{}, "offoff":{"data":[]}})");
+        reader.Parse(ss, handler);
+    }
+
+    {
+        StringStream ss( R"({"f":{})");
+        reader.Parse(ss, handler);
+    }
+
+    {
+        StringStream ss( R"({"a":{"b":{"c":{"d":}}}})");
+        reader.Parse(ss, handler);
+    }
+
 } ENDCASE
 
 STARTCASE(MissingPropertyName) {
@@ -283,6 +327,41 @@ STARTCASE(MissingPropertyName) {
     Reader reader;
     StringStream ss(json.c_str());
     reader.Parse(ss, handler);
+} ENDCASE
+
+STARTCASE(SkipMissingObjectNameNotAllowed) {
+    Person person;
+    serialize_properties_t sprop;
+    sprop.ignore_unknown_properties = false;
+    RapidJsonDeserializer<Person> handler(person, sprop);
+    Reader reader;
+
+    {
+        StringStream ss( R"({ "id" : 100, "name" : "John Longdue Doe", "balance" : 123.45, "foofoo":{} })");
+        EXPECT_THROWS_AS(reader.Parse(ss, handler), UnknownPropertyException);
+    }
+
+    {
+        StringStream ss( R"({ "id" : 100, "name" : "John Longdue Doe", "balance" : 123.45, "foofoo":{"first":false, "second":12345}})");
+        EXPECT_THROWS_AS(reader.Parse(ss, handler), UnknownPropertyException);
+    }
+
+    {
+        StringStream ss( R"({ "id" : 100, "name" : "John Longdue Doe", "balance" : 123.45, "foofoo":{"sub":{"sub2":{}, "teste":"yes"}}})");
+        EXPECT_THROWS_AS(reader.Parse(ss, handler), UnknownPropertyException);
+    }
+} ENDCASE
+
+STARTCASE(MissingPropertyNameNotAllowed) {
+    Person person;
+    std::string json = R"({ "id" : 100, "name" : "John Longdue Doe", "balance" : 123.45, "foofoo":"foo", "oofoof":"oof" })";
+
+    serialize_properties_t sprop;
+    sprop.ignore_unknown_properties = false;
+    RapidJsonDeserializer<Person> handler(person, sprop);
+    Reader reader;
+    StringStream ss(json.c_str());
+    EXPECT_THROWS_AS(reader.Parse(ss, handler), UnknownPropertyException);
 } ENDCASE
 
 
