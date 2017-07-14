@@ -475,9 +475,14 @@ TEST(TestChunkedParameterAndTrailer)
 int main( int argc, char * argv[] )
 {
     namespace logging = boost::log;
+
     logging::core::get()->set_filter
     (
+#ifdef _DEBUG
         logging::trivial::severity >= logging::trivial::trace
+#else
+        logging::trivial::severity >= logging::trivial::fatal
+#endif
     );
     return lest::run( specification, argc, argv );
 }
