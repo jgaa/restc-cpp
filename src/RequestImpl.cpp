@@ -17,6 +17,7 @@
 #include "ReplyImpl.h"
 
 using namespace std;
+using namespace std::string_literals;
 
 namespace restc_cpp {
 
@@ -249,6 +250,8 @@ private:
 
     Connection::ptr_t Connect(Context& ctx) {
 
+        static const auto timer_name = "Connect"s;
+
         const Connection::Type protocol_type =
             (parsed_url_.GetProtocol() == Url::Protocol::HTTPS)
             ? Connection::Type::HTTPS
@@ -279,7 +282,7 @@ private:
 
                 RESTC_CPP_LOG_DEBUG << "Connecting to " << endpoint;
 
-                auto timer = IoTimer::Create(
+                auto timer = IoTimer::Create(timer_name,
                     properties_->connectTimeoutMs, connection);
 
                 try {
@@ -306,12 +309,13 @@ private:
     void SendRequestPayload(Context& ctx,
                       write_buffers_t write_buffer) {
 
+        static const auto timer_name = "SendRequestPayload"s;
         bool have_sent_headers = false;
 
         while(boost::asio::buffer_size(write_buffer))
         {
-            auto timer = IoTimer::Create(
-                properties_->connectTimeoutMs, connection_);
+            auto timer = IoTimer::Create(timer_name,
+                properties_->sendTimeoutMs, connection_);
 
             try {
 
@@ -412,7 +416,7 @@ private:
         writer_->Finish();
         writer_.reset();
 
-        auto reply = ReplyImpl::Create(connection_, ctx, owner_);
+        auto reply = ReplyImpl::Create(connection_, ctx, owner_, properties_);
         reply->StartReceiveFromServer(
             DataReader::CreateIoReader(*connection_, ctx));
 

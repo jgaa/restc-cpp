@@ -20,8 +20,25 @@ public:
     using ptr_t = std::shared_ptr<IoTimer>;
     using close_t = std::function<void ()>;
 
+    class Wrapper
+    {
+        public:
+            Wrapper(ptr_t&& timer)
+            : timer_{std::move(timer)} {}
+
+        ~Wrapper() {
+            if (timer_) {
+                timer_->Cancel();
+            }
+        }
+
+        private:
+            ptr_t timer_;
+    };
+
+    using wrapper_t = std::unique_ptr<Wrapper>;
+
     ~IoTimer() {
-        Cancel();
     }
 
     void Handler(const boost::system::error_code& error) {
@@ -38,24 +55,39 @@ public:
     }
 
     void Cancel() {
-        is_active_ = false;
+        if (is_active_) {
+            is_active_ = false;
+            RESTC_CPP_LOG_TRACE << "Canceled timer " << timer_name_;
+        }
     }
 
     bool IsExpiered() const noexcept { return is_expiered_; }
 
-    static ptr_t Create(int milliseconds_timeout,
+    static ptr_t Create(
+        const std::string& timerName,
+        int milliseconds_timeout,
         boost::asio::io_service& io_service,
         close_t close) {
 
         ptr_t timer;
         // Private constructor, we cannot use std::make_shared()
-        timer.reset(new IoTimer(io_service, close));
+        timer.reset(new IoTimer(timerName, io_service, close));
         timer->Start(milliseconds_timeout);
         return timer;
     }
 
-    static ptr_t Create(int milliseconds_timeout,
-            const Connection::ptr_t& connection) {
+    /*! Convenience factory.
+     *
+     * Creates an instance of a timer, wrapped in unique_ptr
+     * that will cancel the timer when the wrapper goes
+     * out of scope.
+     *
+     * \param connection Connection to watch. If the timer expires
+     *      before cancel is called, the connection is closed.
+     */
+    static wrapper_t Create(const std::string& timerName,
+                        int milliseconds_timeout,
+                        const Connection::ptr_t& connection) {
 
         if (!connection) {
             return nullptr;
@@ -63,25 +95,31 @@ public:
 
         std::weak_ptr<Connection> weak_connection = connection;
 
-        return Create(
+        RESTC_CPP_LOG_TRACE << "Created timer " << timerName
+            << " for " << *connection;
+
+        return std::make_unique<Wrapper>(Create(
+            timerName,
             milliseconds_timeout,
             connection->GetSocket().GetSocket().get_io_service(),
-            [weak_connection]() {
+            [weak_connection, timerName]() {
                 if (auto connection = weak_connection.lock()) {
                     if (connection->GetSocket().GetSocket().is_open()) {
-                        RESTC_CPP_LOG_WARN << *connection
+                        RESTC_CPP_LOG_WARN
+                            << "Timer " << timerName << ": "
+                            << *connection
                             << " timed out.";
                         connection->GetSocket().GetSocket().close();
                     }
                 }
-            });
+            }));
     }
 
 
 private:
-    IoTimer(boost::asio::io_service& io_service,
+    IoTimer(const std::string& timerName, boost::asio::io_service& io_service,
             close_t close)
-    : close_{close}, timer_{io_service}
+    : close_{close}, timer_{io_service}, timer_name_{timerName}
     {}
 
     void Start(int millisecondsTimeOut)
@@ -104,6 +142,7 @@ private:
     bool is_expiered_ = false;
     close_t close_;
     boost::asio::deadline_timer timer_;
+    const std::string timer_name_;
 };
 
 } // restc_cpp

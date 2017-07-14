@@ -24,6 +24,9 @@ public:
         { NOT_CHUNKED, GET_SIZE, IN_SEGMENT, IN_TRAILER, DONE };
 
     ReplyImpl(Connection::ptr_t connection, Context& ctx,
+              RestClient& owner, Request::Properties::ptr_t& properties);
+
+    ReplyImpl(Connection::ptr_t connection, Context& ctx,
               RestClient& owner);
 
     ~ReplyImpl();
@@ -57,7 +60,8 @@ public:
     static std::unique_ptr<ReplyImpl>
     Create(Connection::ptr_t connection,
            Context& ctx,
-           RestClient& owner);
+           RestClient& owner,
+           Request::Properties::ptr_t& properties);
 
     static boost::string_ref b2sr(boost::asio::const_buffers_1 buffer) {
         return { boost::asio::buffer_cast<const char*>(buffer),
@@ -74,6 +78,7 @@ protected:
 
     Connection::ptr_t connection_;
     Context& ctx_;
+    Request::Properties::ptr_t properties_;
     RestClient& owner_;
     Reply::HttpResponse response_;
     map<string, string, ciLessLibC> headers_;

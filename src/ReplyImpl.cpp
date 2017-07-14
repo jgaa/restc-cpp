@@ -30,12 +30,27 @@ boost::optional<string> ReplyImpl::GetHeader(const string& name) {
 
 ReplyImpl::ReplyImpl(Connection::ptr_t connection,
                      Context& ctx,
-                     RestClient& owner)
-: connection_{move(connection)}, ctx_{ctx}, owner_{owner}
+                     RestClient& owner,
+                     Request::Properties::ptr_t& properties)
+: connection_{move(connection)}, ctx_{ctx}
+, properties_{properties}
+, owner_{owner}
 , connection_id_(connection_ ? connection_->GetId()
     : boost::uuids::random_generator()())
 {
 }
+
+ReplyImpl::ReplyImpl(Connection::ptr_t connection,
+                     Context& ctx,
+                     RestClient& owner)
+: connection_{move(connection)}, ctx_{ctx}
+, properties_{owner.GetConnectionProperties()}
+, owner_{owner}
+, connection_id_(connection_ ? connection_->GetId()
+    : boost::uuids::random_generator()())
+{
+}
+
 
 ReplyImpl::~ReplyImpl() {
     if (connection_ && connection_->GetSocket().IsOpen()) {
@@ -55,6 +70,12 @@ void ReplyImpl::StartReceiveFromServer(DataReader::ptr_t&& reader) {
     if (reader_) {
         throw RestcCppException("StartReceiveFromServer() is already called.");
     }
+
+    static const auto timer_name = "StartReceiveFromServer"s;
+
+    auto timer = IoTimer::Create(timer_name,
+                                     properties_->replyTimeoutMs,
+                                     connection_);
 
     assert(reader);
     auto stream = make_unique<DataReaderStream>(move(reader));
@@ -186,9 +207,10 @@ void ReplyImpl::ReleaseConnection() {
 std::unique_ptr<ReplyImpl>
 ReplyImpl::Create(Connection::ptr_t connection,
        Context& ctx,
-       RestClient& owner) {
+       RestClient& owner,
+       Request::Properties::ptr_t& properties) {
 
-    return make_unique<ReplyImpl>(move(connection), ctx, owner);
+    return make_unique<ReplyImpl>(move(connection), ctx, owner, properties);
 }
 
 } // restc_cpp
