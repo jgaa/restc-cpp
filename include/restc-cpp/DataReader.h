@@ -31,6 +31,12 @@ class DataReaderStream;
  */
 class DataReader {
 public:
+
+    struct ReadConfig {
+        int msReadTimeout = 0;
+    };
+
+
     using ptr_t = std::unique_ptr<DataReader>;
     using add_header_fn_t = std::function<void(std::string&& name, std::string&& value)>;
 
@@ -40,7 +46,8 @@ public:
     virtual bool IsEof() const = 0;
     virtual boost::asio::const_buffers_1 ReadSome() = 0;
 
-    static ptr_t CreateIoReader(Connection& conn, Context& ctx);
+    static ptr_t CreateIoReader(const Connection::ptr_t& conn,
+                                Context& ctx, const ReadConfig& cfg);
     static ptr_t CreateGzipReader(std::unique_ptr<DataReader>&& source);
     static ptr_t CreateZipReader(std::unique_ptr<DataReader>&& source);
     static ptr_t CreatePlainReader(size_t contentLength, ptr_t&& source);

@@ -123,7 +123,8 @@ public:
         int maxRedirects = 3;
         int connectTimeoutMs = (1000 * 12);
         int sendTimeoutMs = (1000 * 12); // For each IO operation
-        int replyTimeoutMs =  (1000 * 21); // For each IO operation
+        int replyTimeoutMs =  (1000 * 21); // For the reply header
+        int recvTimeout = (1000 * 21); // For each IO operation
         std::size_t cacheMaxConnectionsPerEndpoint = 16;
         std::size_t cacheMaxConnections = 128;
         int cacheTtlSeconds = 60;

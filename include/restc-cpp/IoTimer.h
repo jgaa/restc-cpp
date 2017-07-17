@@ -26,14 +26,22 @@ public:
             Wrapper(ptr_t&& timer)
             : timer_{std::move(timer)} {}
 
+            Wrapper() {}
+
         ~Wrapper() {
             if (timer_) {
                 timer_->Cancel();
             }
         }
 
+        void Cancel() {
+            if (timer_) {
+                timer_->Cancel();
+            }
+        }
+
         private:
-            ptr_t timer_;
+            ptr_t timer_ = nullptr;
     };
 
     using wrapper_t = std::unique_ptr<Wrapper>;
@@ -89,8 +97,8 @@ public:
                         int milliseconds_timeout,
                         const Connection::ptr_t& connection) {
 
-        if (!connection) {
-            return nullptr;
+        if (!connection || (milliseconds_timeout <= 0)) {
+            return std::make_unique<Wrapper>();
         }
 
         std::weak_ptr<Connection> weak_connection = connection;

@@ -370,7 +370,9 @@ private:
         bytes_sent_ = 0;
 
         connection_ = Connect(ctx);
-        writer_ = DataWriter::CreateIoWriter(*connection_, ctx);
+        DataWriter::WriteConfig cfg;
+        cfg.msWriteTimeout = properties_->sendTimeoutMs;
+        writer_ = DataWriter::CreateIoWriter(connection_, ctx, cfg);
 
         if (body_) {
             if (body_->GetType() == RequestBody::Type::FIXED_SIZE) {
@@ -416,9 +418,11 @@ private:
         writer_->Finish();
         writer_.reset();
 
+        DataReader::ReadConfig cfg;
+        cfg.msReadTimeout = properties_->recvTimeout;
         auto reply = ReplyImpl::Create(connection_, ctx, owner_, properties_);
         reply->StartReceiveFromServer(
-            DataReader::CreateIoReader(*connection_, ctx));
+            DataReader::CreateIoReader(connection_, ctx, cfg));
 
         const auto http_code = reply->GetResponseCode();
         if (http_code == 301 || http_code == 302) {

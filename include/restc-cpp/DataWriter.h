@@ -33,6 +33,10 @@ class DataWriter {
 public:
     using ptr_t = std::unique_ptr<DataWriter>;
 
+    struct WriteConfig {
+        int msWriteTimeout = 0;
+    };
+
     /*! Allows the user to set the headers in the chunked trailer if required */
     using add_header_fn_t = std::function<std::string()>;
 
@@ -59,7 +63,8 @@ public:
      */
     virtual void SetHeaders(Request::headers_t& headers) = 0;
 
-    static ptr_t CreateIoWriter(Connection& conn, Context& ctx);
+    static ptr_t CreateIoWriter(const Connection::ptr_t& conn, Context& ctx,
+                                const WriteConfig& cfg);
     static ptr_t CreateGzipWriter(std::unique_ptr<DataWriter>&& source);
     static ptr_t CreateZipWriter(std::unique_ptr<DataWriter>&& source);
     static ptr_t CreatePlainWriter(size_t contentLength, ptr_t&& source);
