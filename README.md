@@ -260,6 +260,11 @@ These are the operating systems I test with before releasing a new version.
  - Ubuntu Server LTS
  - macOS Sierra (OS X)
 
+
+# Similar projects
+  - [JSON for Modern C++](https://nlohmann.github.io/json/) by Niels Lohmann.
+
+
 # More information
 - [Getting started](doc/GettingStarted.md)
 - [Tutorial](doc/Tutorial.md)
