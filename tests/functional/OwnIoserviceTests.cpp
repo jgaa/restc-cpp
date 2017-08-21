@@ -18,7 +18,8 @@
 using namespace std;
 using namespace restc_cpp;
 
-#define CONNECTIONS 20
+//#define CONNECTIONS 20
+#define CONNECTIONS 1
 
 struct Post {
     int id = 0;
@@ -37,7 +38,7 @@ const string http_url = "http://localhost:3000/manyposts";
 
 const lest::test specification[] = {
 
-TEST(TestOwnIoservice)
+STARTCASE(TestOwnIoservice)
 {
     boost::asio::io_service ioservice;
 
@@ -119,8 +120,7 @@ TEST(TestOwnIoservice)
     rest_client->CloseWhenReady();
     ioservice.stop();
     worker.join();
-}
-
+} ENDCASE
 
 
 }; //lest

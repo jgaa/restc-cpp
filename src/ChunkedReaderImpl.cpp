@@ -1,4 +1,6 @@
 #include <assert.h>
+#include <locale.h>
+#include <ios>
 
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/DataReader.h"
@@ -23,24 +25,35 @@ public:
         return stream_->IsEof();
     }
 
+    string ToPrintable(boost::string_ref buf) const {
+        ostringstream out;
+        locale loc;
+        auto pos = 0;
+        out << endl;
+
+        for(const auto ch : buf) {
+            if (!(++pos % 80)) {
+                out << endl;
+            }
+            if (std::isprint(ch, loc)) {
+                out << ch;
+            } else {
+                out << '.';
+            }
+        }
+
+        return out.str();
+    }
+
     void Log(const boost::asio::const_buffers_1 buffers, const char *tag) {
-        size_t seg = 0;
+        const auto buf_len = boost::asio::buffer_size(*buffers.begin());
 
         // At the time of the implementation, there are never multiple buffers.
-        // However, if this change in the future, this logging will still be correct.
-        // It may save some time if other propbels occur.
-        for(const auto buffer : buffers) {
-
-            boost::string_ref sr {
-                boost::asio::buffer_cast<const char *>(buffer),
-                boost::asio::buffer_size(buffer)
-            };
-
-            RESTC_CPP_LOG_TRACE << tag << ' ' << seg << "# "
-                << boost::asio::buffer_size(buffer) << " bytes: "  << sr;
-
-            ++seg;
-        }
+        RESTC_CPP_LOG_TRACE << tag << ' ' << "# " << buf_len
+            << " bytes: "
+            << ToPrintable({
+                boost::asio::buffer_cast<const char *>(*buffers.begin()),
+                           buf_len});
     }
 
     boost::asio::const_buffers_1 ReadSome() override {
@@ -54,6 +67,9 @@ public:
         if (chunk_len_ == 0) {
             RESTC_CPP_LOG_TRACE << "ChunkedReaderImpl::ReadSome(): Need new chunk.";
             chunk_len_ = GetNextChunkLen();
+            RESTC_CPP_LOG_TRACE << "ChunkedReaderImpl::ReadSome(): "
+                << "Next chunk is " << chunk_len_ << " bytes ("
+                << hex << chunk_len_ << " hex)";
             if (chunk_len_ == 0) {
                 // Read the trailer
                 RESTC_CPP_LOG_TRACE << "ChunkedReaderImpl::ReadSome(): End of chunked stream - reading headers";
@@ -129,8 +145,6 @@ private:
         if ((ch = stream_->Getc()) != '\n') {
             throw ParseException("Missing LF in first chunk line");
         }
-
-        RESTC_CPP_LOG_TRACE << "ChunkedReaderImpl::GetNextChunkLen(): " << chunk_len;
 
         return chunk_len;
     }

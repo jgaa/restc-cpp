@@ -172,7 +172,8 @@ private:
                     state_ = State::DONE;
                     break;
                 } else {
-                    throw ParseException("Unexpected character in input stream");
+                    static const std::string err_msg{"IteratorFromJsonSerializer: Unexpected character in input stream: "};
+                    throw ParseException(err_msg + std::string(1, ch));
                 }
             }
         }

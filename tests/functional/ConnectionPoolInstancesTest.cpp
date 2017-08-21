@@ -27,7 +27,7 @@ const lest::test specification[] = {
 
 STARTCASE(UseAfterDelete) {
 
-    for(auto i = 0; i < 2000; ++i) {
+    for(auto i = 0; i < 500; ++i) {
 
         RestClient::Create()->ProcessWithPromiseT<int>([&](Context& ctx) {
             auto repl = ctx.Get(GetDockerUrl(http_url));

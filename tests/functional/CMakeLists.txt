@@ -18,7 +18,7 @@ target_link_libraries(readme_tests
     ${DEFAULT_LIBRARIES}
 )
 
-add_test(JSON_README_TESTS readme_tests)
+add_test(README_TESTS readme_tests)
 
 # ======================================
 

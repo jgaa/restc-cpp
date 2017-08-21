@@ -27,6 +27,7 @@ using namespace restc_cpp;
 const lest::test specification[] = {
 
 STARTCASE(TestConnectionRecycling) {
+
     auto rest_client = RestClient::Create();
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
@@ -173,7 +174,7 @@ int main( int argc, char * argv[] )
     namespace logging = boost::log;
     logging::core::get()->set_filter
     (
-        logging::trivial::severity >= logging::trivial::info
+        logging::trivial::severity >= logging::trivial::trace
     );
     return lest::run( specification, argc, argv );
 }

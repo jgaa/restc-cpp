@@ -19,7 +19,7 @@
 
 namespace restc_cpp {
 
-class TlsSocketImpl : public Socket {
+class TlsSocketImpl : public Socket, protected ExceptionWrapper {
 public:
 
     using ssl_socket_t = boost::asio::ssl::stream<boost::asio::ip::tcp::socket>;
@@ -49,12 +49,16 @@ public:
 
     std::size_t AsyncReadSome(boost::asio::mutable_buffers_1 buffers,
                               boost::asio::yield_context& yield) override {
-        return ssl_socket_->async_read_some(buffers, yield);
+        return WrapException<std::size_t>([&] {
+            return ssl_socket_->async_read_some(buffers, yield);
+        });
     }
 
     std::size_t AsyncRead(boost::asio::mutable_buffers_1 buffers,
                           boost::asio::yield_context& yield) override {
-        return boost::asio::async_read(*ssl_socket_, buffers, yield);
+        return WrapException<std::size_t>([&] {
+            return boost::asio::async_read(*ssl_socket_, buffers, yield);
+        });
     }
 
     void AsyncWrite(const boost::asio::const_buffers_1& buffers,
@@ -64,25 +68,32 @@ public:
 
     void AsyncWrite(const write_buffers_t& buffers,
                     boost::asio::yield_context& yield) override {
-        boost::asio::async_write(*ssl_socket_, buffers, yield);
+        return WrapException<void>([&] {
+            boost::asio::async_write(*ssl_socket_, buffers, yield);
+        });
     }
 
     void AsyncConnect(const boost::asio::ip::tcp::endpoint& ep,
                       boost::asio::yield_context& yield) override {
-        GetSocket().async_connect(ep, yield);
-        ssl_socket_->async_handshake(boost::asio::ssl::stream_base::client,
-                                     yield);
+        return WrapException<void>([&] {
+            GetSocket().async_connect(ep, yield);
+            ssl_socket_->async_handshake(boost::asio::ssl::stream_base::client,
+                                         yield);
+        });
     }
 
     void AsyncShutdown(boost::asio::yield_context& yield) override {
-        ssl_socket_->async_shutdown(yield);
+        return WrapException<void>([&] {
+            ssl_socket_->async_shutdown(yield);
+        });
     }
 
-    void Close() override {
+    void Close(Reason reason) override {
         if (ssl_socket_->lowest_layer().is_open()) {
             RESTC_CPP_LOG_TRACE << "Closing " << *this;
             ssl_socket_->lowest_layer().close();
         }
+        reason_ = reason;
     }
 
     bool IsOpen() const noexcept override {

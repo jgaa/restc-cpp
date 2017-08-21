@@ -1,3 +1,10 @@
+// Include before boost::log headers
+#include "restc-cpp/logging.h"
+
+#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/fusion/adapted.hpp>
 
 
 #include "restc-cpp/restc-cpp.h"
@@ -11,177 +18,177 @@ using namespace restc_cpp;
 
 const lest::test specification[] = {
 
-TEST(UrlSimple)
+STARTCASE(UrlSimple)
 {
     Url url("http://github.com");
     CHECK_EQUAL("github.com"s, url.GetHost());
     CHECK_EQUAL("80"s, url.GetPort());
     CHECK_EQUAL_ENUM(Url::Protocol::HTTP, url.GetProtocol());
     CHECK_EQUAL("/"s, url.GetPath());
-},
+} ENDCASE
 
-TEST(UrlSimpleSlash)
+STARTCASE(UrlSimpleSlash)
 {
     Url url("http://github.com/");
     CHECK_EQUAL("github.com"s, url.GetHost());
     CHECK_EQUAL("80"s, url.GetPort());
     CHECK_EQUAL_ENUM(Url::Protocol::HTTP, url.GetProtocol());
     CHECK_EQUAL("/"s, url.GetPath());
-},
+} ENDCASE
 
-TEST(UrlWithPath)
+STARTCASE(UrlWithPath)
 {
     Url url("http://github.com/jgaa");
     CHECK_EQUAL("github.com"s, url.GetHost());
     CHECK_EQUAL("80"s, url.GetPort());
     CHECK_EQUAL_ENUM(Url::Protocol::HTTP, url.GetProtocol());
     CHECK_EQUAL("/jgaa"s, url.GetPath());
-},
+} ENDCASE
 
-TEST(UrlWithPathAndSlash)
+STARTCASE(UrlWithPathAndSlash)
 {
     Url url("http://github.com/jgaa/");
     CHECK_EQUAL("github.com"s, url.GetHost());
     CHECK_EQUAL("80"s, url.GetPort());
     CHECK_EQUAL_ENUM(Url::Protocol::HTTP, url.GetProtocol());
     CHECK_EQUAL("/jgaa/"s, url.GetPath());
-},
+} ENDCASE
 
-TEST(HttpWithPort)
+STARTCASE(HttpWithPort)
 {
     Url url("http://github.com:56");
     CHECK_EQUAL("github.com"s, url.GetHost());
     CHECK_EQUAL("56"s, url.GetPort());
     CHECK_EQUAL_ENUM(Url::Protocol::HTTP, url.GetProtocol());
     CHECK_EQUAL("/"s, url.GetPath());
-},
+} ENDCASE
 
-TEST(HttpWithLongPort)
+STARTCASE(HttpWithLongPort)
 {
     Url url("http://github.com:1234567789");
     CHECK_EQUAL("github.com"s, url.GetHost());
     CHECK_EQUAL("1234567789"s, url.GetPort());
     CHECK_EQUAL_ENUM(Url::Protocol::HTTP, url.GetProtocol());
     CHECK_EQUAL("/"s, url.GetPath());
-},
+} ENDCASE
 
-TEST(HttpWithPortAndSlash)
+STARTCASE(HttpWithPortAndSlash)
 {
     Url url("http://github.com:56/");
     CHECK_EQUAL("github.com"s, url.GetHost());
     CHECK_EQUAL("56"s, url.GetPort());
     CHECK_EQUAL_ENUM(Url::Protocol::HTTP, url.GetProtocol());
     CHECK_EQUAL("/"s, url.GetPath());
-},
+} ENDCASE
 
-TEST(HttpWithPortAndPath)
+STARTCASE(HttpWithPortAndPath)
 {
     Url url("http://github.com:12345/jgaa");
     CHECK_EQUAL("github.com"s, url.GetHost());
     CHECK_EQUAL("12345"s, url.GetPort());
     CHECK_EQUAL_ENUM(Url::Protocol::HTTP, url.GetProtocol());
     CHECK_EQUAL("/jgaa"s, url.GetPath());
-},
+} ENDCASE
 
-TEST(HttpWithPortAndPathPath)
+STARTCASE(HttpWithPortAndPathPath)
 {
     Url url("http://github.com:12345/jgaa/andmore");
     CHECK_EQUAL("github.com"s, url.GetHost());
     CHECK_EQUAL("12345"s, url.GetPort());
     CHECK_EQUAL_ENUM(Url::Protocol::HTTP, url.GetProtocol());
     CHECK_EQUAL("/jgaa/andmore"s, url.GetPath());
-},
+} ENDCASE
 
-TEST(UrlSimpleHttps)
+STARTCASE(UrlSimpleHttps)
 {
     Url url("https://github.com");
     CHECK_EQUAL("github.com"s, url.GetHost());
     CHECK_EQUAL("443"s, url.GetPort());
     CHECK_EQUAL_ENUM(Url::Protocol::HTTPS, url.GetProtocol());
     CHECK_EQUAL("/"s, url.GetPath());
-},
+} ENDCASE
 
 /////
-TEST(HttpsUrlSimpleSlash)
+STARTCASE(HttpsUrlSimpleSlash)
 {
     Url url("https://github.com/");
     CHECK_EQUAL("github.com"s, url.GetHost());
     CHECK_EQUAL("443"s, url.GetPort());
     CHECK_EQUAL_ENUM(Url::Protocol::HTTPS, url.GetProtocol());
     CHECK_EQUAL("/"s, url.GetPath());
-},
+} ENDCASE
 
-TEST(HttpsUrlWithPath)
+STARTCASE(HttpsUrlWithPath)
 {
     Url url("https://github.com/jgaa");
     CHECK_EQUAL("github.com"s, url.GetHost());
     CHECK_EQUAL("443"s, url.GetPort());
     CHECK_EQUAL_ENUM(Url::Protocol::HTTPS, url.GetProtocol());
     CHECK_EQUAL("/jgaa"s, url.GetPath());
-},
+} ENDCASE
 
-TEST(HttpsUrlWithPathAndSlash)
+STARTCASE(HttpsUrlWithPathAndSlash)
 {
     Url url("https://github.com/jgaa/");
     CHECK_EQUAL("github.com"s, url.GetHost());
     CHECK_EQUAL("443"s, url.GetPort());
     CHECK_EQUAL_ENUM(Url::Protocol::HTTPS, url.GetProtocol());
     CHECK_EQUAL("/jgaa/"s, url.GetPath());
-},
+} ENDCASE
 
-TEST(HttpsWithPort)
+STARTCASE(HttpsWithPort)
 {
     Url url("https://github.com:56");
     CHECK_EQUAL("github.com"s, url.GetHost());
     CHECK_EQUAL("56"s, url.GetPort());
     CHECK_EQUAL_ENUM(Url::Protocol::HTTPS, url.GetProtocol());
     CHECK_EQUAL("/"s, url.GetPath());
-},
+} ENDCASE
 
-TEST(HttpsWithLongPort)
+STARTCASE(HttpsWithLongPort)
 {
     Url url("https://github.com:1234567789");
     CHECK_EQUAL("github.com"s, url.GetHost());
     CHECK_EQUAL("1234567789"s, url.GetPort());
     CHECK_EQUAL_ENUM(Url::Protocol::HTTPS, url.GetProtocol());
     CHECK_EQUAL("/"s, url.GetPath());
-},
+} ENDCASE
 
-TEST(HttpsWithPortAndSlash)
+STARTCASE(HttpsWithPortAndSlash)
 {
     Url url("https://github.com:56/");
     CHECK_EQUAL("github.com"s, url.GetHost());
     CHECK_EQUAL("56"s, url.GetPort());
     CHECK_EQUAL_ENUM(Url::Protocol::HTTPS, url.GetProtocol());
     CHECK_EQUAL("/"s, url.GetPath());
-},
+} ENDCASE
 
-TEST(HttpsWithPortAndPath)
+STARTCASE(HttpsWithPortAndPath)
 {
     Url url("https://github.com:12345/jgaa");
     CHECK_EQUAL("github.com"s, url.GetHost());
     CHECK_EQUAL("12345"s, url.GetPort());
     CHECK_EQUAL_ENUM(Url::Protocol::HTTPS, url.GetProtocol());
     CHECK_EQUAL("/jgaa"s, url.GetPath());
-},
+} ENDCASE
 
-TEST(HttpsWithPortAndPathPath)
+STARTCASE(HttpsWithPortAndPathPath)
 {
     Url url("https://github.com:12345/jgaa/andmore");
     CHECK_EQUAL("github.com"s, url.GetHost());
     CHECK_EQUAL("12345"s, url.GetPort());
     CHECK_EQUAL_ENUM(Url::Protocol::HTTPS, url.GetProtocol());
     CHECK_EQUAL("/jgaa/andmore"s, url.GetPath());
-},
+} ENDCASE
 
-TEST(HttpsUrlSimple)
+STARTCASE(HttpsUrlSimple)
 {
     Url url("https://github.com");
     CHECK_EQUAL("github.com"s, url.GetHost());
     CHECK_EQUAL("443"s, url.GetPort());
     CHECK_EQUAL_ENUM(Url::Protocol::HTTPS, url.GetProtocol());
     CHECK_EQUAL("/"s, url.GetPath());
-}
+} ENDCASE
 }; // lest
 
 

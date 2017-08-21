@@ -1,13 +1,22 @@
 #pragma once
 
+#define RESTC_CPP_TEST_HELPER_H_
+
 #include <cstdlib>
 #include <boost/algorithm/string.hpp>
+
 
 namespace restc_cpp {
 namespace {
 
-#define STARTCASE(name) { CASE(#name)
-#define ENDCASE },
+#define STARTCASE(name) { CASE(#name) { \
+    RESTC_CPP_LOG_DEBUG << "================================"; \
+    RESTC_CPP_LOG_INFO << "Test case: " << #name; \
+    RESTC_CPP_LOG_DEBUG << "================================";
+
+#define ENDCASE \
+    RESTC_CPP_LOG_DEBUG << "============== ENDCASE ============="; \
+}},
 
 template<typename T1, typename T2>
 bool compare(const T1& left, const T2& right) {

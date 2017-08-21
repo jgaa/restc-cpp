@@ -16,7 +16,20 @@
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 
+// If enabled, 'localhost' is mapped to the content of the
+// environment variable RESTC_CPP_TEST_DOCKER_ADDRESS
+
 namespace restc_cpp {
+
+#ifdef RESTC_CPP_ENABLE_URL_TEST_MAPPING
+#   ifndef RESTC_CPP_TEST_HELPER_H_
+#       error "Include "restc-cpp/test_helper.h" first"
+#   endif
+#   define MAP_URL_FOR_TESTING(url) url = GetDockerUrl(url);
+#else
+#   define MAP_URL_FOR_TESTING(url)
+#endif
+
 
 /*! Convenience class for building requests */
 class RequestBuilder
@@ -30,6 +43,7 @@ public:
     RequestBuilder& Get(std::string url) {
         assert(url_.empty());
         url_ = std::move(url);
+        MAP_URL_FOR_TESTING(url_);
         type_ = Request::Type::GET;
         return *this;
     }
@@ -38,6 +52,7 @@ public:
     RequestBuilder& Post(std::string url) {
         assert(url_.empty());
         url_ = std::move(url);
+        MAP_URL_FOR_TESTING(url_);
         type_ = Request::Type::POST;
         return *this;
     }
@@ -46,6 +61,7 @@ public:
     RequestBuilder& Put(std::string url) {
         assert(url_.empty());
         url_ = std::move(url);
+        MAP_URL_FOR_TESTING(url_);
         type_ = Request::Type::PUT;
         return *this;
     }
@@ -54,6 +70,7 @@ public:
     RequestBuilder& Delete(std::string url) {
         assert(url_.empty());
         url_ = std::move(url);
+        MAP_URL_FOR_TESTING(url_);
         type_ = Request::Type::DELETE;
         return *this;
     }
@@ -76,7 +93,7 @@ public:
         headers_->insert({std::move(name), std::move(value)});
         return *this;
     }
-    
+
     RequestBuilder& AddHeaders(const Request::headers_t& headers) {
         if (!headers_) {
             headers_ = Request::headers_t();
@@ -87,7 +104,7 @@ public:
         }
         return *this;
     }
-    
+
     RequestBuilder& AddHeaders(
         boost::optional<Request::headers_t> headers) {
         if (headers) {
@@ -95,7 +112,7 @@ public:
         }
         return *this;
     }
-    
+
 
     /*! Add a request argument
      *
@@ -294,7 +311,6 @@ private:
 
 
 } // restc_cpp
-
 
 #endif // RESTC_CPP_REQUEST_BUILDER_H_
 

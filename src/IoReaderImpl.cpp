@@ -21,26 +21,33 @@ public:
     }
 
     boost::asio::const_buffers_1 ReadSome() override {
-        auto timer = IoTimer::Create("IoReaderImpl",
-                                     cfg_.msReadTimeout,
-                                     connection_);
-        const auto bytes = connection_->GetSocket().AsyncReadSome(
-            {buffer_.data(), buffer_.size()}, ctx_.GetYield());
+        if (auto conn = connection_.lock()) {
+            auto timer = IoTimer::Create("IoReaderImpl",
+                                        cfg_.msReadTimeout,
+                                        conn);
+            const auto bytes = conn->GetSocket().AsyncReadSome(
+                {buffer_.data(), buffer_.size()}, ctx_.GetYield());
 
-        timer->Cancel();
+            timer->Cancel();
 
-        RESTC_CPP_LOG_TRACE << "Read #" << bytes
-            << " bytes from " << connection_;
-        return {buffer_.data(), bytes};
+            RESTC_CPP_LOG_TRACE << "Read #" << bytes
+                << " bytes from " << conn;
+            return {buffer_.data(), bytes};
+        }
+
+        throw ObjectExpiredException("Connection expired");
     }
 
     bool IsEof() const override {
-        return !connection_->GetSocket().IsOpen();
+        if (auto conn = connection_.lock()) {
+            return !conn->GetSocket().IsOpen();
+        }
+        return true;
     }
 
 private:
     Context& ctx_;
-    const Connection::ptr_t connection_;
+    const std::weak_ptr<Connection> connection_;
     const ReadConfig cfg_;
     buffer_t buffer_;
 };

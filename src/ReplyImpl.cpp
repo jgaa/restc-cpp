@@ -158,7 +158,9 @@ void ReplyImpl::HandleDecompression() {
 }
 
 boost::asio::const_buffers_1 ReplyImpl::GetSomeData()  {
-    auto rval = reader_->ReadSome();
+    auto rval = reader_
+        ? reader_->ReadSome()
+        : boost::asio::const_buffers_1{nullptr, 0};
     CheckIfWeAreDone();
     return rval;
 }
@@ -169,7 +171,7 @@ string ReplyImpl::GetBodyAsString(const size_t maxSize) {
         buffer.reserve(*content_length_);
     }
 
-    while(!reader_->IsEof()) {
+    while(!IsEof()) {
         auto data = reader_->ReadSome();
 
         const auto buffer_size = boost::asio::buffer_size(data);
@@ -187,7 +189,7 @@ string ReplyImpl::GetBodyAsString(const size_t maxSize) {
 }
 
 void ReplyImpl::CheckIfWeAreDone() {
-    if (reader_->IsEof()) {
+    if (reader_ && reader_->IsEof()) {
         ReleaseConnection();
     }
 }
@@ -201,7 +203,11 @@ void ReplyImpl::ReleaseConnection() {
         }
     }
 
-    connection_.reset();
+    if (connection_) {
+        RESTC_CPP_LOG_TRACE << "Releasing " << *connection_;
+        connection_.reset();
+        //reader_.reset();
+    }
 }
 
 std::unique_ptr<ReplyImpl>

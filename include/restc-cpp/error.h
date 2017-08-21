@@ -149,6 +149,12 @@ struct ObjectExpiredException : public RestcCppException
     : RestcCppException(cause) {}
 };
 
+struct RequestTimeOutException : public RestcCppException
+{
+    RequestTimeOutException()
+    : RestcCppException("Request Timed Out") {}
+};
+
 } // namespace
 #endif // RESTC_CPP_ERROR_H_
 

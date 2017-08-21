@@ -22,24 +22,30 @@ void DataReaderStream::Fetch() {
         RESTC_CPP_LOG_TRACE << "DataReaderStream::Fetch: Fetched buffer with "
             << boost::asio::buffer_size(buf) << " bytes.";
 
-        curr_ = boost::asio::buffer_cast<const char *>(buf);
-        end_ = curr_ + boost::asio::buffer_size(buf);
-        eof_ = curr_ == end_;
-        if (eof_) {
+        const auto bytes = boost::asio::buffer_size(buf);
+        if (bytes == 0) {
             RESTC_CPP_LOG_TRACE << "DataReaderStream::Fetch: EOF";
             throw ProtocolException("Fetch(): EOF");
         }
+        curr_ = boost::asio::buffer_cast<const char *>(buf);
+        end_ = curr_ + boost::asio::buffer_size(buf);
     }
 }
 
 boost::asio::const_buffers_1
 DataReaderStream::ReadSome() {
     Fetch();
+
     boost::asio::const_buffers_1 rval = {curr_,
         static_cast<size_t>(end_ - curr_)};
     curr_ = end_;
     RESTC_CPP_LOG_TRACE << "DataReaderStream::ReadSome: Returning buffer with "
         << boost::asio::buffer_size(rval) << " bytes.";
+
+    if (source_->IsEof()) {
+        SetEof();
+    }
+
     return rval;
 }
 
@@ -217,5 +223,10 @@ std::string DataReaderStream::GetHeaderValue() {
     }
 }
 
+
+void DataReaderStream::SetEof() {
+    RESTC_CPP_LOG_TRACE << "Reached EOF";
+    eof_ = true;
+}
 
 } // namespace

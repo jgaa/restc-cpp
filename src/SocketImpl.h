@@ -12,7 +12,7 @@
 
 namespace restc_cpp {
 
-class SocketImpl : public Socket {
+class SocketImpl : public Socket, protected ExceptionWrapper {
 public:
 
     SocketImpl(boost::asio::io_service& io_service)
@@ -30,12 +30,16 @@ public:
 
     std::size_t AsyncReadSome(boost::asio::mutable_buffers_1 buffers,
                             boost::asio::yield_context& yield) override {
-        return socket_.async_read_some(buffers, yield);
+        return WrapException<std::size_t>([&] {
+            return socket_.async_read_some(buffers, yield);
+        });
     }
 
     std::size_t AsyncRead(boost::asio::mutable_buffers_1 buffers,
                         boost::asio::yield_context& yield) override {
-        return boost::asio::async_read(socket_, buffers, yield);
+        return WrapException<std::size_t>([&] {
+            return boost::asio::async_read(socket_, buffers, yield);
+        });
     }
 
     void AsyncWrite(const boost::asio::const_buffers_1& buffers,
@@ -46,23 +50,28 @@ public:
     void AsyncWrite(const write_buffers_t& buffers,
                     boost::asio::yield_context& yield)override {
 
-        boost::asio::async_write(socket_, buffers, yield);
+        return WrapException<void>([&] {
+            boost::asio::async_write(socket_, buffers, yield);
+        });
     }
 
     void AsyncConnect(const boost::asio::ip::tcp::endpoint& ep,
                     boost::asio::yield_context& yield) override {
-        socket_.async_connect(ep, yield);
+        return WrapException<void>([&] {
+            socket_.async_connect(ep, yield);
+        });
     }
 
     void AsyncShutdown(boost::asio::yield_context& yield) override {
         // Do nothing.
     }
 
-    void Close() override {
+    void Close(Reason reason) override {
         if (socket_.is_open()) {
             RESTC_CPP_LOG_TRACE << "Closing " << *this;
             socket_.close();
         }
+        reason_ = reason;
     }
 
     bool IsOpen() const noexcept override {

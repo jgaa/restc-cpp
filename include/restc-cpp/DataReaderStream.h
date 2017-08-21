@@ -55,9 +55,7 @@ public:
         --getc_bytes_;
     }
 
-    void SetEof() {
-        eof_ = true;
-    }
+    void SetEof();
 
     char GetCurrentCh() const {
         assert(curr_ != nullptr);

@@ -113,11 +113,11 @@ public:
             [weak_connection, timerName]() {
                 if (auto connection = weak_connection.lock()) {
                     if (connection->GetSocket().GetSocket().is_open()) {
-                        RESTC_CPP_LOG_WARN
+                        RESTC_CPP_LOG_TRACE
                             << "Timer " << timerName << ": "
                             << *connection
                             << " timed out.";
-                        connection->GetSocket().GetSocket().close();
+                        connection->GetSocket().Close(Socket::Reason::TIME_OUT);
                     }
                 }
             }));

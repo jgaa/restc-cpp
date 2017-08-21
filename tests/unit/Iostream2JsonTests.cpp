@@ -37,29 +37,31 @@ BOOST_FUSION_ADAPT_STRUCT(
 )
 
 const lest::test specification[] = {
-    CASE("Read configuration from file") {
-        auto tmpname = boost::filesystem::unique_path();
-        BOOST_SCOPE_EXIT(&tmpname) {
-            boost::filesystem::remove(tmpname);
-        } BOOST_SCOPE_EXIT_END
 
-        {
-            ofstream json_out(tmpname.native());
-            json_out << '{' << endl
-                << R"("max_something":100,)" << endl
-                << R"("name":"Test Data",)" << endl
-                << R"("url":"https://www.example.com")" << endl
-                << '}';
-        }
+STARTCASE(ReadConfigurationFromFile) {
+    auto tmpname = boost::filesystem::unique_path();
+    BOOST_SCOPE_EXIT(&tmpname) {
+        boost::filesystem::remove(tmpname);
+    } BOOST_SCOPE_EXIT_END
 
-        ifstream ifs(tmpname.native());
-        Config config;
-        SerializeFromJson(config, ifs);
-
-        EXPECT(config.max_something == 100);
-        EXPECT(config.name == "Test Data");
-        EXPECT(config.url == "https://www.example.com");
+    {
+        ofstream json_out(tmpname.native());
+        json_out << '{' << endl
+            << R"("max_something":100,)" << endl
+            << R"("name":"Test Data",)" << endl
+            << R"("url":"https://www.example.com")" << endl
+            << '}';
     }
+
+    ifstream ifs(tmpname.native());
+    Config config;
+    SerializeFromJson(config, ifs);
+
+    EXPECT(config.max_something == 100);
+    EXPECT(config.name == "Test Data");
+    EXPECT(config.url == "https://www.example.com");
+} ENDCASE
+
 }; // lest
 
 

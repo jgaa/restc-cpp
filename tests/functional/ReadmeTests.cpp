@@ -1,11 +1,20 @@
 #include <iostream>
 
+#define RESTC_CPP_ENABLE_URL_TEST_MAPPING 1
+
 #include <boost/lexical_cast.hpp>
 #include <boost/fusion/adapted.hpp>
 
 #include "restc-cpp/restc-cpp.h"
-#include "restc-cpp/RequestBuilder.h"
 #include "restc-cpp/IteratorFromJsonSerializer.h"
+
+#include <boost/log/core.hpp>
+#include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
+
+#include "restc-cpp/test_helper.h"
+#include "restc-cpp/RequestBuilder.h"
+
 
 using namespace std;
 using namespace restc_cpp;
@@ -28,6 +37,8 @@ BOOST_FUSION_ADAPT_STRUCT(
     (string, title)
     (string, body)
 )
+
+string proxy_address = GetDockerUrl("http://localhost:3003");
 
 // The C++ main function - the place where any adventure starts
 void first() {
@@ -115,7 +126,7 @@ void forth() {
     // Add the proxy information to the properties used by the client
     Request::Properties properties;
     properties.proxy.type = Request::Proxy::Type::HTTP;
-    properties.proxy.address = "http://localhost:3003";
+    properties.proxy.address = proxy_address;
 
     // Create the client with our configuration
     auto rest_client = RestClient::Create(properties);
@@ -496,6 +507,13 @@ void twelfth() {
 }
 
 int main() {
+
+    namespace logging = boost::log;
+    logging::core::get()->set_filter
+    (
+        logging::trivial::severity >= logging::trivial::debug
+    );
+
     try {
         cout << "First: " << endl;
         first();

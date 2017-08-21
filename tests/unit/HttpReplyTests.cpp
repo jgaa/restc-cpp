@@ -69,7 +69,7 @@ private:
 
 
 const lest::test specification[] = {
-TEST(TestSimpleHeader)
+STARTCASE(TestSimpleHeader)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -105,9 +105,9 @@ TEST(TestSimpleHeader)
          CHECK_EQUAL("0", *reply.GetHeader("Content-Length"));
 
      }).get();
-},
+} ENDCASE
 
-TEST(TestSimpleSegmentedHeader)
+STARTCASE(TestSimpleSegmentedHeader)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -135,9 +135,9 @@ TEST(TestSimpleSegmentedHeader)
          CHECK_EQUAL("0", *reply.GetHeader("Content-Length"));
 
      }).get();
-},
+} ENDCASE
 
-TEST(TestSimpleVerySegmentedHeader)
+STARTCASE(TestSimpleVerySegmentedHeader)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -168,9 +168,9 @@ TEST(TestSimpleVerySegmentedHeader)
          CHECK_EQUAL("0", *reply.GetHeader("Content-Length"));
 
      }).get();
-},
+} ENDCASE
 
-TEST(TestSimpleBody)
+STARTCASE(TestSimpleBody)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -197,9 +197,9 @@ TEST(TestSimpleBody)
          CHECK_EQUAL(10, (int)body.size());
 
      }).get();
-},
+} ENDCASE
 
-TEST(TestSimpleBody2)
+STARTCASE(TestSimpleBody2)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -226,9 +226,9 @@ TEST(TestSimpleBody2)
          CHECK_EQUAL(10, (int)body.size());
 
      }).get();
-},
+} ENDCASE
 
-TEST(TestSimpleBody3)
+STARTCASE(TestSimpleBody3)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -256,9 +256,9 @@ TEST(TestSimpleBody3)
          CHECK_EQUAL(10, (int)body.size());
 
      }).get();
-},
+} ENDCASE
 
-TEST(TestSimpleBody4)
+STARTCASE(TestSimpleBody4)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -286,9 +286,9 @@ TEST(TestSimpleBody4)
          CHECK_EQUAL(10, (int)body.size());
 
      }).get();
-},
+} ENDCASE
 
-TEST(TestChunkedBody)
+STARTCASE(TestChunkedBody)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -316,9 +316,9 @@ TEST(TestChunkedBody)
          CHECK_EQUAL((0x4 + 0x5 + 0xE), (int)body.size());
 
      }).get();
-},
+} ENDCASE
 
-TEST(TestChunkedBody2)
+STARTCASE(TestChunkedBody2)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -348,9 +348,9 @@ TEST(TestChunkedBody2)
          CHECK_EQUAL((0x4 + 0x5 + 0xE), (int)body.size());
 
      }).get();
-},
+} ENDCASE
 
-TEST(TestChunkedBody4)
+STARTCASE(TestChunkedBody4)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -385,11 +385,11 @@ TEST(TestChunkedBody4)
          CHECK_EQUAL((0x4 + 0x5 + 0xE), (int)body.size());
 
      }).get();
-},
+} ENDCASE
 
 
 
-TEST(TestChunkedTrailer)
+STARTCASE(TestChunkedTrailer)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -428,9 +428,9 @@ TEST(TestChunkedTrailer)
          CHECK_EQUAL((0x4 + 0x5 + 0xE), (int)body.size());
 
      }).get();
-},
+} ENDCASE
 
-TEST(TestChunkedParameterAndTrailer)
+STARTCASE(TestChunkedParameterAndTrailer)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -469,7 +469,7 @@ TEST(TestChunkedParameterAndTrailer)
          CHECK_EQUAL((0x4 + 0x5 + 0xE), (int)body.size());
 
      }).get();
-}
+} ENDCASE
 }; //lest
 
 int main( int argc, char * argv[] )

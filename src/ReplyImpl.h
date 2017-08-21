@@ -49,8 +49,7 @@ public:
         = RESTC_CPP_SANE_DATA_LIMIT) override;
 
     bool MoreDataToRead() override {
-        assert(reader_);
-        return !reader_->IsEof();
+        return !IsEof();
     }
 
     boost::uuids::uuid GetConnectionId() const override {
@@ -66,6 +65,10 @@ public:
     static boost::string_ref b2sr(boost::asio::const_buffers_1 buffer) {
         return { boost::asio::buffer_cast<const char*>(buffer),
             boost::asio::buffer_size(buffer)};
+    }
+
+    bool IsEof() const {
+        return !reader_ || reader_->IsEof();
     }
 
 

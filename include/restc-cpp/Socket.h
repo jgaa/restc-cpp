@@ -8,11 +8,21 @@
 
 #include <vector>
 
+#include <boost/system/error_code.hpp>
+
+#include "restc-cpp/typename.h"
+#include "error.h"
+
 namespace restc_cpp {
 
 class Socket
 {
 public:
+    enum class Reason {
+      DONE,
+      TIME_OUT
+    };
+
     virtual ~Socket() = default;
 
     virtual boost::asio::ip::tcp::socket& GetSocket() = 0;
@@ -36,7 +46,7 @@ public:
 
     virtual void AsyncShutdown(boost::asio::yield_context& yield) = 0;
 
-    virtual void Close() = 0;
+    virtual void Close(Reason reoson = Reason::DONE) = 0;
 
     virtual bool IsOpen() const noexcept = 0;
 
@@ -48,6 +58,25 @@ protected:
     virtual std::ostream& Print(std::ostream& o) const = 0;
 };
 
+
+class ExceptionWrapper {
+protected:
+    template <typename Tret, typename Tfn>
+    Tret WrapException(Tfn fn) {
+        try {
+            return fn();
+        } catch (const boost::system::system_error& ex) {
+            if (ex.code().value() == boost::system::errc::operation_canceled) {
+                if (reason_ == Socket::Reason::TIME_OUT) {
+                    throw RequestTimeOutException();
+                }
+            }
+            throw;
+        }
+    }
+
+    boost::optional<Socket::Reason> reason_;
+};
 
 } // restc_cpp
 

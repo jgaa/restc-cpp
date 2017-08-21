@@ -203,19 +203,20 @@ public:
         try {
             fn(ctx);
         } catch(exception& ex) {
-            RESTC_CPP_LOG_ERROR << "Caught exception: " << ex.what();
+            RESTC_CPP_LOG_ERROR << "ProcessInWorker: Caught exception: " << ex.what();
             if (promise) {
                 promise->set_exception(current_exception());
+            } else {
+                throw;
             }
-            return;
         } catch(...) {
-            RESTC_CPP_LOG_ERROR << "*** Caught unknown exception";
+            RESTC_CPP_LOG_ERROR << "*** ProcessInWorker: Caught unknown exception";
             if (promise) {
                 promise->set_exception(current_exception());
+            } else {
+                throw;
             }
-            return;
         }
-
 
         if (promise) {
             promise->set_value();
