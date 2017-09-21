@@ -263,6 +263,7 @@ These are the operating systems I test with before releasing a new version.
 
 # Similar projects
   - [JSON for Modern C++](https://nlohmann.github.io/json/) by Niels Lohmann.
+  - [json11 - tiny JSON library for C++11, providing JSON parsing and serialization](https://github.com/dropbox/json11)
 
 
 # More information
