@@ -49,11 +49,6 @@ if (NOT DEFINED RESTC_CPP_WITH_ZLIB)
     option(RESTC_CPP_WITH_ZLIB "Use zlib" ON)
 endif()
 
-
-# We create a configuration file so that other code that
-# include our header files gets the correct configuration.
-set(CONF_PATH ${RESTC_ROOT_DIR}/include/restc-cpp/config.h)
-
 message(STATUS "Using ${CMAKE_CXX_COMPILER}")
 
 if (NOT EMBEDDED_RESTC_CPP)
@@ -148,6 +143,10 @@ if (RESTC_CPP_WITH_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
+# We create a configuration file so that other code that
+# include our header files gets the correct configuration.
+set(CONF_PATH ${CMAKE_BINARY_DIR}/generated-include/restc-cpp/config.h)
+include_directories(${CMAKE_BINARY_DIR}/generated-include)
 message(STATUS "Writing the current configuration to ${CONF_PATH}")
 CONFIGURE_FILE(config.h.template ${CONF_PATH})
 
