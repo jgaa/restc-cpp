@@ -4,9 +4,9 @@ project (restc-cpp VERSION 1.0.0)
 include(cmake_scripts/external-projects.cmake)
 
 if (EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-	message(STATUS "Using conan configuration: ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
-	include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-	conan_basic_setup()
+    message(STATUS "Using conan configuration: ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
+    include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+    conan_basic_setup()
 endif()
 
 if (NOT DEFINED RESTC_ROOT_DIR)
@@ -52,90 +52,8 @@ endif()
 
 message(STATUS "Using ${CMAKE_CXX_COMPILER}")
 
-if (NOT EMBEDDED_RESTC_CPP)
-
-    if (RESTC_CPP_WITH_ZLIB)
-        find_package(ZLIB REQUIRED)
-    endif()
-
-    if (RESTC_CPP_WITH_TLS)
-        find_package(OpenSSL REQUIRED)
-    endif()
-
-    if (UNIX)
-        set(THREADLIBS pthread)
-    endif()
-
-    #set(Boost_USE_MULTITHREADED ON)
-    find_package(Boost REQUIRED COMPONENTS
-        system
-        program_options
-        filesystem
-        date_time
-        context
-        coroutine
-        chrono
-        log
-    )
-
-    include_directories(${Boost_INCLUDE_DIRS})
-
-    # Asio trigger deprecation warnings
-    add_definitions(-DBOOST_COROUTINE_NO_DEPRECATION_WARNING=1)
-
-    if (EXISTS ${Boost_INCLUDE_DIRS}/boost/type_index.hpp)
-        set(RESTC_CPP_HAVE_BOOST_TYPEINDEX 1)
-    endif()
-
-    if (WIN32)
-        link_directories(${Boost_LIBRARY_DIRS})
-    endif()
-
-    set (DEFAULT_LIBRARIES
-        ${DEFAULT_LIBRARIES}
-        ${THREADLIBS}
-        ${OPENSSL_LIBRARIES}
-        ${ZLIB_LIBRARIES}
-        ${Boost_LIBRARIES}
-    )
-
-    include(cmake_scripts/pch.cmake)
-
-    if (UNIX)
-    # For now, assume we use g++/clang++
-        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG=1 -o3 ")
-        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1 -D_DEBUG=1 -o0 -g ")
-        add_definitions(-D__USE_LARGEFILE64=1 -D__USE_FILE_OFFSET64=1
-            -Wall -fPIC -std=c++14 -pthread
-        )
-    elseif(WIN32)
-        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG=1 ")
-        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1 -D_DEBUG=1 ")
-        # We will support windows from Windows Vista
-        add_definitions(-D_WIN32_WINNT=0x0600)
-            set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
-    endif()
-
-    set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib CACHE PATH "Destination location")
-    link_directories(${LIBRARY_OUTPUT_PATH})
-
-    include(cmake_scripts/doxygen.cmake)
-
-    include_directories(
-        ${ZLIB_INCLUDE_DIR} ${ZLIB_INCLUDE_DIR}/build
-        ${OPENSSL_INCLUDE_DIR}
-    )
-
-endif()
-
-include_directories(${RESTC_ROOT_DIR}/include)
-
-# We create a configuration file so that other code that
-# include our header files gets the correct configuration.
-set(CONF_PATH ${CMAKE_BINARY_DIR}/generated-include/${PROJECT_NAME}/config.h)
-include_directories(${CMAKE_BINARY_DIR}/generated-include)
-message(STATUS "Writing the current configuration to ${CONF_PATH}")
-CONFIGURE_FILE(config.h.template ${CONF_PATH})
+# We create a configuration file so that other code that include our header files gets the correct configuration.
+CONFIGURE_FILE(config.h.template ${CMAKE_BINARY_DIR}/generated-include/${PROJECT_NAME}/config.h)
 
 set(ACTUAL_SOURCES
     src/ChunkedReaderImpl.cpp
@@ -174,8 +92,85 @@ endif()
 
 add_library(${PROJECT_NAME} ${SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_OUTPUT_NAME restc-cppD)
-target_link_libraries(${PROJECT_NAME} ${DEFAULT_LIBRARIES})
+target_include_directories(${PROJECT_NAME}
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/generated-include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    )
 add_dependencies(${PROJECT_NAME} externalRapidJson)
+
+if (NOT EMBEDDED_RESTC_CPP)
+
+    if (RESTC_CPP_WITH_ZLIB)
+        find_package(ZLIB REQUIRED)
+        target_include_directories(${PROJECT_NAME} PUBLIC ${ZLIB_INCLUDE_DIRS})
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${ZLIB_LIBRARIES})
+    endif()
+
+    if (RESTC_CPP_WITH_TLS)
+        find_package(OpenSSL REQUIRED)
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENSSL_LIBRARIES})
+    endif()
+
+    if (UNIX)
+        find_package(Threads REQUIRED)
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+    endif()
+
+    #set(Boost_USE_MULTITHREADED ON)
+    find_package(Boost REQUIRED COMPONENTS
+        system
+        program_options
+        filesystem
+        date_time
+        context
+        coroutine
+        chrono
+        log
+        )
+    target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${Boost_LIBRARIES})
+    target_compile_definitions(${PROJECT_NAME} PUBLIC -DBOOST_COROUTINE_NO_DEPRECATION_WARNING=1)
+
+    if (EXISTS ${Boost_INCLUDE_DIRS}/boost/type_index.hpp)
+        set(RESTC_CPP_HAVE_BOOST_TYPEINDEX 1)
+    endif()
+
+    if (WIN32)
+        link_directories(${Boost_LIBRARY_DIRS})
+    endif()
+
+    include(cmake_scripts/pch.cmake)
+
+    if (UNIX)
+        # For now, assume we use g++/clang++
+        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG=1 -o3 ")
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1 -D_DEBUG=1 -o0 -g ")
+        add_definitions(-D__USE_LARGEFILE64=1 -D__USE_FILE_OFFSET64=1
+            -Wall -fPIC -std=c++14 -pthread
+            )
+    elseif(WIN32)
+        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG=1 ")
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1 -D_DEBUG=1 ")
+        # We will support windows from Windows Vista
+        add_definitions(-D_WIN32_WINNT=0x0600)
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
+    endif()
+
+    set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib CACHE PATH "Destination location")
+    link_directories(${LIBRARY_OUTPUT_PATH})
+
+    include(cmake_scripts/doxygen.cmake)
+
+    target_include_directories(${PROJECT_NAME}
+        PUBLIC
+            $<BUILD_INTERFACE:${ZLIB_INCLUDE_DIR}>
+            $<BUILD_INTERFACE:${ZLIB_INCLUDE_DIR}/build>
+            $<BUILD_INTERFACE:${OPENSSL_INCLUDE_DIR}>
+    )
+
+endif()
 
 include(cmake_scripts/install.cmake)
 install(DIRECTORY ${CMAKE_BINARY_DIR}/generated-include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
