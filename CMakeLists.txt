@@ -132,6 +132,13 @@ include_directories(
     ${RESTC_ROOT_DIR}/externals/rapidjson/include/
 )
 
+# We create a configuration file so that other code that
+# include our header files gets the correct configuration.
+set(CONF_PATH ${CMAKE_BINARY_DIR}/generated-include/restc-cpp/config.h)
+include_directories(${CMAKE_BINARY_DIR}/generated-include)
+message(STATUS "Writing the current configuration to ${CONF_PATH}")
+CONFIGURE_FILE(config.h.template ${CONF_PATH})
+
 add_subdirectory(src)
 
 if (RESTC_CPP_WITH_UNIT_TESTS OR RESTC_CPP_WITH_FUNCTIONALT_TESTS)
@@ -142,11 +149,3 @@ endif()
 if (RESTC_CPP_WITH_EXAMPLES)
     add_subdirectory(examples)
 endif()
-
-# We create a configuration file so that other code that
-# include our header files gets the correct configuration.
-set(CONF_PATH ${CMAKE_BINARY_DIR}/generated-include/restc-cpp/config.h)
-include_directories(${CMAKE_BINARY_DIR}/generated-include)
-message(STATUS "Writing the current configuration to ${CONF_PATH}")
-CONFIGURE_FILE(config.h.template ${CONF_PATH})
-
