@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project (restc-cpp)
+project (restc-cpp VERSION 1.0.0)
 
 include(cmake_scripts/external-projects.cmake)
 
@@ -132,12 +132,52 @@ include_directories(${RESTC_ROOT_DIR}/include)
 
 # We create a configuration file so that other code that
 # include our header files gets the correct configuration.
-set(CONF_PATH ${CMAKE_BINARY_DIR}/generated-include/restc-cpp/config.h)
+set(CONF_PATH ${CMAKE_BINARY_DIR}/generated-include/${PROJECT_NAME}/config.h)
 include_directories(${CMAKE_BINARY_DIR}/generated-include)
 message(STATUS "Writing the current configuration to ${CONF_PATH}")
 CONFIGURE_FILE(config.h.template ${CONF_PATH})
 
-add_subdirectory(src)
+set(ACTUAL_SOURCES
+    src/ChunkedReaderImpl.cpp
+    src/ChunkedWriterImpl.cpp
+    src/IoReaderImpl.cpp
+    src/IoWriterImpl.cpp
+    src/PlainReaderImpl.cpp
+    src/PlainWriterImpl.cpp
+    src/NoBodyReaderImpl.cpp
+    src/DataReaderStream.cpp
+    src/RestClientImpl.cpp
+    src/RequestImpl.cpp
+    src/ReplyImpl.cpp
+    src/ConnectionPoolImpl.cpp
+    src/Url.cpp
+    src/RequestBodyStringImpl.cpp
+    src/RequestBodyFileImpl.cpp
+    src/url_encode.cpp
+    )
+
+set(HEADERS
+    ${RESTC_ROOT_DIR}/include/restc-cpp/restc-cpp.h
+    )
+
+if (RESTC_CPP_WITH_ZLIB)
+    set(ACTUAL_SOURCES ${ACTUAL_SOURCES} src/ZipReaderImpl.cpp)
+endif()
+
+if (WIN32)
+    ADD_MSVC_PRECOMPILED_HEADER(restc-cpp/restc-cpp.h src/pch.cpp ACTUAL_SOURCES)
+    add_definitions(-DWAR_PCH)
+    set(SOURCES ${ACTUAL_SOURCES} src/pch.cpp ${HEADERS} ${RESFILES})
+else()
+    set(SOURCES ${ACTUAL_SOURCES})
+endif()
+
+add_library(${PROJECT_NAME} ${SOURCES})
+set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_OUTPUT_NAME restc-cppD)
+target_link_libraries(${PROJECT_NAME} ${DEFAULT_LIBRARIES})
+
+include(cmake_scripts/install.cmake)
+install(DIRECTORY ${CMAKE_BINARY_DIR}/generated-include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 if (RESTC_CPP_WITH_UNIT_TESTS OR RESTC_CPP_WITH_FUNCTIONALT_TESTS)
     enable_testing()
