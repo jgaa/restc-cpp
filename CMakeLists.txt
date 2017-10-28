@@ -1,6 +1,7 @@
-
 cmake_minimum_required(VERSION 3.0)
 project (restc-cpp)
+
+include(cmake_scripts/external-projects.cmake)
 
 if (EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 	message(STATUS "Using conan configuration: ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
@@ -127,10 +128,7 @@ if (NOT EMBEDDED_RESTC_CPP)
 
 endif()
 
-include_directories(
-    ${RESTC_ROOT_DIR}/include
-    ${RESTC_ROOT_DIR}/externals/rapidjson/include/
-)
+include_directories(${RESTC_ROOT_DIR}/include)
 
 # We create a configuration file so that other code that
 # include our header files gets the correct configuration.
