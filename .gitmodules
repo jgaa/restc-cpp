@@ -1,3 +1,0 @@
-[submodule "externals/lest"]
-	path = externals/lest
-	url = https://github.com/martinmoene/lest.git
