@@ -175,6 +175,7 @@ endif()
 add_library(${PROJECT_NAME} ${SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_OUTPUT_NAME restc-cppD)
 target_link_libraries(${PROJECT_NAME} ${DEFAULT_LIBRARIES})
+add_dependencies(${PROJECT_NAME} externalRapidJson)
 
 include(cmake_scripts/install.cmake)
 install(DIRECTORY ${CMAKE_BINARY_DIR}/generated-include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
