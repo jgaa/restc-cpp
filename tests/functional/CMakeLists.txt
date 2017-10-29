@@ -28,7 +28,7 @@ target_link_libraries(auth_tests
     ${DEFAULT_LIBRARIES}
     ${UNITTEST_LIB}
 )
-
+add_dependencies(auth_tests externalLest)
 add_test(AUTH_TESTS auth_tests)
 
 
@@ -40,7 +40,7 @@ target_link_libraries(upload_tests
     ${DEFAULT_LIBRARIES}
     ${UNITTEST_LIB}
 )
-
+add_dependencies(upload_tests externalLest)
 add_test(UPLOAD_TESTS upload_tests)
 
 
@@ -52,7 +52,7 @@ target_link_libraries(inserter_serializer_tests
     ${DEFAULT_LIBRARIES}
     ${UNITTEST_LIB}
 )
-
+add_dependencies(inserter_serializer_tests externalLest)
 add_test(INSERTER_SERIALIZER_TESTS inserter_serializer_tests)
 
 
@@ -64,7 +64,7 @@ target_link_libraries(ccache_tests
     ${DEFAULT_LIBRARIES}
     ${UNITTEST_LIB}
 )
-
+add_dependencies(ccache_tests externalLest)
 add_test(CCACHE_FUNCTIONAL_TESTS ccache_tests)
 
 # # ======================================
@@ -75,7 +75,7 @@ target_link_libraries(redirect_tests
     ${DEFAULT_LIBRARIES}
     ${UNITTEST_LIB}
 )
-
+add_dependencies(redirect_tests externalLest)
 add_test(REDIRECT_FUNCTIONAL_TESTS redirect_tests)
 
 
@@ -87,7 +87,7 @@ target_link_libraries(crud_tests
     ${DEFAULT_LIBRARIES}
     ${UNITTEST_LIB}
 )
-
+add_dependencies(crud_tests externalLest)
 add_test(CRUD_FUNCTIONAL_TESTS crud_tests)
 
 
@@ -99,7 +99,7 @@ target_link_libraries(many_connections_tests
     ${DEFAULT_LIBRARIES}
     ${UNITTEST_LIB}
 )
-
+add_dependencies(many_connections_tests externalLest)
 add_test(MANY_CONNECTIONS_FUNCTIONAL_TESTS many_connections_tests)
 
 
@@ -112,7 +112,7 @@ if (RESTC_CPP_WITH_TLS)
         ${DEFAULT_LIBRARIES}
         ${UNITTEST_LIB}
     )
-
+    add_dependencies(https_tests externalLest)
     add_test(HTTPS_FUNCTIONAL_TESTS https_tests)
 endif()
 
@@ -125,7 +125,7 @@ target_link_libraries(own_ioservice_tests
     ${DEFAULT_LIBRARIES}
     ${UNITTEST_LIB}
 )
-
+add_dependencies(own_ioservice_tests externalLest)
 add_test(OWN_IOSERVICE_TESTS own_ioservice_tests)
 
 
@@ -138,7 +138,7 @@ target_link_libraries(connection_pool_instances_test
     ${DEFAULT_LIBRARIES}
     ${UNITTEST_LIB}
 )
-
+add_dependencies(connection_pool_instances_test externalLest)
 add_test(CONNECTION_POOL_INSTANCES_TEST connection_pool_instances_test)
 
 

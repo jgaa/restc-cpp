@@ -1,6 +1,7 @@
 .kdev4
 build
 ?build
+/cmake-build-*/
 generated-doc
 */*.rej
 include/restc-cpp/config.h
