@@ -79,7 +79,7 @@ Restc-cpp depends on C++14 with its standard libraries and:
   - openssl or libressl (If compiled with TLS support)
   - zlib (If compiled with compression support)
 
-rapidjson and lest is attached to the project as git sub-modules.
+rapidjson and lest are included as CMake external dependencies.
 
 # License
 MIT license. It is Free. Free as in Free Beer. Free as in Free Air.
