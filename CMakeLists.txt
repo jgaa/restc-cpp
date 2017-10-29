@@ -83,6 +83,7 @@ if (RESTC_CPP_WITH_ZLIB)
 endif()
 
 if (WIN32)
+	include(cmake_scripts/pch.cmake)
     ADD_MSVC_PRECOMPILED_HEADER(restc-cpp/restc-cpp.h src/pch.cpp ACTUAL_SOURCES)
     add_definitions(-DWAR_PCH)
     set(SOURCES ${ACTUAL_SOURCES} src/pch.cpp ${HEADERS} ${RESFILES})
