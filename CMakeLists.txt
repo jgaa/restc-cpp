@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project (restc-cpp VERSION 1.0.0)
+project (restc-cpp VERSION 0.9.0)
 
 include(cmake_scripts/external-projects.cmake)
 
