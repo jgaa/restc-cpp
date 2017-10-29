@@ -18,13 +18,13 @@ include(ExternalProject)
 ExternalProject_Add(externalRapidJson
     PREFIX "${EXTERNAL_PROJECTS_PREFIX}"
     GIT_REPOSITORY "https://github.com/Tencent/rapidjson.git"
-    GIT_TAG "c34e3dfc72b6c90775aad132f27c29bbf1d79222"
+    GIT_TAG "master"
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_INSTALL_PREFIX}
     )
 
 ExternalProject_Add(externalLest
     PREFIX "${EXTERNAL_PROJECTS_PREFIX}"
     GIT_REPOSITORY "https://github.com/martinmoene/lest.git"
-    GIT_TAG "7dd133791fb4b74c795edfa6a44d769e5a3f5972"
+    GIT_TAG "master"
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_INSTALL_PREFIX}
     )
