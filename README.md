@@ -174,17 +174,19 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 // The C++ main function - the place where any adventure starts
 int main() {
+    // Create an instance of the rest client
+    auto rest_client = RestClient::Create();
 
     // Create and instantiate a Post from data received from the server.
-    Post my_post = RestClient::Create()->ProcessWithPromiseT<Post>([&](Context& ctx) {
-        // This is a lambda co-routine, running in a worker-thread
+    Post my_post = rest_client->ProcessWithPromiseT<Post>([&](Context& ctx) {
+        // This is a co-routine, running in a worker-thread
 
         // Instantiate a Post structure.
         Post post;
 
         // Serialize it asynchronously. The asynchronously part does not really matter
         // here, but it may if you receive huge data structures.
-        SerializeFromJSON(post,
+        SerializeFromJson(post,
 
             // Construct a request to the server
             RequestBuilder(ctx)
@@ -197,12 +199,12 @@ int main() {
                 // Send the request
                 .Execute());
 
-        // Return the Post instance trough a C++ future<>
+        // Return the post instance trough a C++ future<>
         return post;
     })
 
-    // Back in the main thread, get the Post instance from the future<>,
-    // or any C++ exception thrown within the lambda.
+    // Get the Post instance from the future<>, or any C++ exception thrown
+    // within the lambda.
     .get();
 
     // Print the result for everyone to see.

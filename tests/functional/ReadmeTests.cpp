@@ -43,6 +43,7 @@ string proxy_address = GetDockerUrl("http://localhost:3003");
 // The C++ main function - the place where any adventure starts
 void first() {
 
+    // Create an instance of the rest client
     auto rest_client = RestClient::Create();
 
     // Create and instantiate a Post from data received from the server.
