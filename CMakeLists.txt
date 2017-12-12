@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.0)
 project (restc-cpp VERSION 0.9.0)
 
+if (NOT DEFINED INSTALL_RAPIDJSON_HEADERS)
+    option(INSTALL_RAPIDJSON_HEADERS "Install rapidjson headers when make install is executed" ON)
+endif()
+
 include(cmake_scripts/external-projects.cmake)
 
 if (EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
@@ -20,7 +24,6 @@ endif()
 if (NOT DEFINED WITH_EXAMPLES)
     option(RESTC_CPP_WITH_EXAMPLES "Compile examples" ON)
 endif()
-
 
 if (NOT DEFINED RESTC_CPP_WITH_UNIT_TESTS)
     option(RESTC_CPP_WITH_UNIT_TESTS "Enable Unit Testing" ON)
@@ -83,7 +86,7 @@ if (RESTC_CPP_WITH_ZLIB)
 endif()
 
 if (WIN32)
-	include(cmake_scripts/pch.cmake)
+    include(cmake_scripts/pch.cmake)
     ADD_MSVC_PRECOMPILED_HEADER(restc-cpp/restc-cpp.h src/pch.cpp ACTUAL_SOURCES)
     add_definitions(-DWAR_PCH)
     set(SOURCES ${ACTUAL_SOURCES} src/pch.cpp ${HEADERS} ${RESFILES})
