@@ -185,5 +185,5 @@ if (RESTC_CPP_WITH_UNIT_TESTS OR RESTC_CPP_WITH_FUNCTIONALT_TESTS)
 endif()
 
 if (RESTC_CPP_WITH_EXAMPLES)
-    add_subdirectory(examples)
+    add_subdirectory(examples/logip)
 endif()
