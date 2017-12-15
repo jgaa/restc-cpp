@@ -276,4 +276,6 @@ These are the operating systems I test with before releasing a new version.
 - [Build for Windows](https://github.com/jgaa/restc-cpp/wiki/Building-under-Windows)
 - [Running the tests](doc/RunningTheTests.md)
 - [Planned work](https://github.com/jgaa/restc-cpp/wiki)
-
+- [How to link your program with restc-cpp from the command-line](https://github.com/jgaa/restc-cpp/tree/master/examples/cmdline)
+- [How to use cmake to find and link with restc-cpp from your project](https://github.com/jgaa/restc-cpp/tree/master/examples/cmake_normal)
+- [How to use restc-cpp as an external cmake module from your project](https://github.com/jgaa/restc-cpp/tree/master/examples/cmake_external_project)
