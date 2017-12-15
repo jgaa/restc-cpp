@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 project (example)
 
-set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-
 find_package(restc-cpp REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(OpenSSL REQUIRED)
