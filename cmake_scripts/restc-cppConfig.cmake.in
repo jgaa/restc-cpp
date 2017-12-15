@@ -4,4 +4,6 @@ include(${CMAKE_CURRENT_LIST_DIR}/@PROJECT_NAME@.cmake)
 
 check_required_components(@PROJECT_NAME@)
 
+set(RESTC_CPP_LIBRARIES restc-cpp)
+
 message(STATUS "@PROJECT_NAME@ found.")
