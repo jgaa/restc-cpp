@@ -1,9 +1,10 @@
 # example cmdline
 
 This example shows how to compile a program using restc-cpp from cmake.
-We assume that the library has been built and installed.
+We assume that the library has been built and installed with "make install". It depends on the cmake configuration files from the restc-cpp library being available for cmake to find.
 
 Currently this example is only tested under Linux.
+
 
 ```
 jgaa@vendetta:~/src/restc-cpp/examples/cmake_normal$ rm -rf build/
