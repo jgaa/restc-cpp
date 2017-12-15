@@ -1,4 +1,4 @@
-# example cmdline
+# example with cmake and find_package(restc-cpp)
 
 This example shows how to compile a program using restc-cpp from cmake.
 We assume that the library has been built and installed with "make install". It depends on the cmake configuration files from the restc-cpp library being available for cmake to find.
