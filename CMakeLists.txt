@@ -53,6 +53,10 @@ if (NOT DEFINED RESTC_CPP_WITH_ZLIB)
     option(RESTC_CPP_WITH_ZLIB "Use zlib" ON)
 endif()
 
+if (NOT DEFINED RESTC_CPP_USE_CPP17)
+    option(RESTC_CPP_USE_CPP17 "Use the C++17 standard" OFF)
+endif()
+
 message(STATUS "Using ${CMAKE_CXX_COMPILER}")
 
 # We create a configuration file so that other code that include our header files gets the correct configuration.
@@ -102,6 +106,15 @@ target_include_directories(${PROJECT_NAME}
         $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/generated-include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     )
+
+if (RESTC_CPP_USE_CPP17)
+    message(STATUS "Using C++ 17")
+    set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
+else()
+    message(STATUS "Using C++ 14")
+    set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 14)
+endif()
+
 add_dependencies(${PROJECT_NAME} externalRapidJson)
 
 if (NOT EMBEDDED_RESTC_CPP)
@@ -146,18 +159,25 @@ if (NOT EMBEDDED_RESTC_CPP)
     endif()
 
     include(cmake_scripts/pch.cmake)
+    
+    set_property(TARGET  PROPERTY CXX_STANDARD 17)
 
-    if (UNIX)
-        # For now, assume we use g++/clang++
-        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG=1 -o3 ")
-        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1 -D_DEBUG=1 -o0 -g ")
-        add_definitions(-D__USE_LARGEFILE64=1 -D__USE_FILE_OFFSET64=1
-            -Wall -fPIC -std=c++14 -pthread
-            )
-    elseif(WIN32)
-        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG=1 ")
-        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1 -D_DEBUG=1 ")
-        # We will support windows from Windows Vista
+#     if (UNIX)
+#         # For now, assume we use g++/clang++
+#         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG=1 -o3 ")
+#         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1 -D_DEBUG=1 -o0 -g ")
+#         add_definitions(-D__USE_LARGEFILE64=1 -D__USE_FILE_OFFSET64=1
+#             -Wall -fPIC -std=c++14 -pthread
+#             )
+#     elseif(WIN32)
+#         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG=1 ")
+#         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1 -D_DEBUG=1 ")
+#         # We will support windows from Windows Vista
+#         add_definitions(-D_WIN32_WINNT=0x0600)
+#         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
+#     endif()
+
+    if(WIN32)
         add_definitions(-D_WIN32_WINNT=0x0600)
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
     endif()
