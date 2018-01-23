@@ -21,7 +21,7 @@ if (NOT DEFINED WITH_APIDOC)
     option(WITH_APIDOC "Generate Doxygen documentation")
 endif()
 
-if (NOT DEFINED WITH_EXAMPLES)
+if (NOT DEFINED RESTC_CPP_WITH_EXAMPLES)
     option(RESTC_CPP_WITH_EXAMPLES "Compile examples" ON)
 endif()
 
@@ -159,7 +159,7 @@ if (NOT EMBEDDED_RESTC_CPP)
     endif()
 
     include(cmake_scripts/pch.cmake)
-    
+
     set_property(TARGET  PROPERTY CXX_STANDARD 17)
 
 #     if (UNIX)
