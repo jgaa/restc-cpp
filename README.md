@@ -247,20 +247,20 @@ Please refer to the [tutorial](doc/Tutorial.md) for more examples.
   - Just provide a C++ object and let the library serialize it directly to the wire.
 
 # Current Status
-The project is maturing fast. There are no known bugs.
-
 The project has been in public BETA since April 11th 2017.
 
 
 # Supported operating systems
-These are the operating systems I test with before releasing a new version.
+These are the operating systems where my Continues Integration system currently compiles the project and run all the tests:
 
- - Debian Stable (Jessie)
+ - Debian Stretch (Stable)
  - Debian Testing
- - Windows 10 / Microsoft Visual Studio 2015 and 2017, Community version / Professional version (All tests now passes with the latest release version of Docker for Windows)
- - Fedora 25
- - Ubuntu Server LTS
- - macOS Sierra (OS X)
+ - Windows 10 / Microsoft Visual Studio 2017, Community version
+ - Fedora 27
+ - Ubuntu Xenial (LTS)
+ - macOS High Sierra (OS X)
+
+The Jenkins setup is [here](ci/jenkins).
 
 
 # Similar projects
