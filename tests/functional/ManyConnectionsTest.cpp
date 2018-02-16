@@ -36,16 +36,14 @@ const string http_url = "http://localhost:3000/manyposts";
  * nginx-lua with some tweaking / load-balancing to get this test
  * to work with the 1000 connection goal.
  *
- * However, 500 connections is sufficient to prove that the client
- * works as expected with many co-routines in parallell.
+ * There is also a problem where several tests hit's the test containers
+ * from Jenkins. So for now 100 connections must suffice.
+ *
+ * 100 connections is sufficient to prove that the client
+ * works as expected with many co-routines in parallel.
  */
 
-// On macos the system fails to open 500 connections. We have to test with a lower number
-#if defined(__APPLE__)
-#   define CONNECTIONS 100
-#else
-#   define CONNECTIONS 500
-#endif
+#define CONNECTIONS 100
 
 struct Post {
     int id = 0;
