@@ -1,6 +1,7 @@
 project(unittests)
 
 macro (ADD_AND_RUN_UNITTEST testname targetname)
+SET_CPP_STANDARD(${targetname})
 add_test(NAME ${testname} COMMAND ${targetname})
 if (RESTC_CPP_AUTORUN_UNIT_TESTS)
     add_custom_command(
