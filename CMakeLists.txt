@@ -1,5 +1,16 @@
 cmake_minimum_required(VERSION 3.0)
-project (restc-cpp VERSION 0.9.0)
+
+if (DEFINED ENV{RESTC_CPP_VERSION})
+    set(RESTC_CPP_VERSION $ENV{RESTC_CPP_VERSION})
+endif()
+
+if (NOT DEFINED RESTC_CPP_VERSION)
+    set(RESTC_CPP_VERSION 0.9.0)
+endif()
+
+project (restc-cpp VERSION ${RESTC_CPP_VERSION})
+
+message(STATUS "Building restc-cpp version ${PROJECT_VERSION}")
 
 if (NOT DEFINED INSTALL_RAPIDJSON_HEADERS)
     option(INSTALL_RAPIDJSON_HEADERS "Install rapidjson headers when make install is executed" ON)
@@ -38,7 +49,7 @@ if (NOT DEFINED RESTC_CPP_WITH_FUNCTIONALT_TESTS)
 endif()
 
 if (NOT DEFINED RESTC_CPP_WITH_TLS)
-        option(RESTC_CPP_WITH_TLS "Enable TLS (Trough OpenSSL)" ON)
+    option(RESTC_CPP_WITH_TLS "Enable TLS (Trough OpenSSL)" ON)
 endif()
 
 if (NOT DEFINED RESTC_CPP_LOG_WITH_BOOST_LOG)
@@ -58,6 +69,16 @@ if (NOT DEFINED RESTC_CPP_USE_CPP17)
 endif()
 
 message(STATUS "Using ${CMAKE_CXX_COMPILER}")
+
+macro(SET_CPP_STANDARD target)
+    if (RESTC_CPP_USE_CPP17)
+        message(STATUS "Using C++ 17 for ${target}")
+        set_property(TARGET ${target} PROPERTY CXX_STANDARD 17)
+    else()
+        message(STATUS "Using C++ 14 for ${target}")
+        set_property(TARGET ${target} PROPERTY CXX_STANDARD 14)
+    endif()
+endmacro(SET_CPP_STANDARD)
 
 # We create a configuration file so that other code that include our header files gets the correct configuration.
 CONFIGURE_FILE(config.h.template ${CMAKE_BINARY_DIR}/generated-include/${PROJECT_NAME}/config.h)
@@ -107,13 +128,7 @@ target_include_directories(${PROJECT_NAME}
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     )
 
-if (RESTC_CPP_USE_CPP17)
-    message(STATUS "Using C++ 17")
-    set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 17)
-else()
-    message(STATUS "Using C++ 14")
-    set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 14)
-endif()
+SET_CPP_STANDARD(${PROJECT_NAME})
 
 add_dependencies(${PROJECT_NAME} externalRapidJson)
 
@@ -161,21 +176,6 @@ if (NOT EMBEDDED_RESTC_CPP)
     include(cmake_scripts/pch.cmake)
 
     set_property(TARGET  PROPERTY CXX_STANDARD 17)
-
-#     if (UNIX)
-#         # For now, assume we use g++/clang++
-#         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG=1 -o3 ")
-#         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1 -D_DEBUG=1 -o0 -g ")
-#         add_definitions(-D__USE_LARGEFILE64=1 -D__USE_FILE_OFFSET64=1
-#             -Wall -fPIC -std=c++14 -pthread
-#             )
-#     elseif(WIN32)
-#         set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG=1 ")
-#         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DDEBUG=1 -D_DEBUG=1 ")
-#         # We will support windows from Windows Vista
-#         add_definitions(-D_WIN32_WINNT=0x0600)
-#         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
-#     endif()
 
     if(WIN32)
         add_definitions(-D_WIN32_WINNT=0x0600)
