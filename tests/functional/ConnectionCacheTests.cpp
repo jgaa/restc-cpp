@@ -100,13 +100,13 @@ STARTCASE(TestMaxConnections) {
     for(; i < config->cacheMaxConnections; ++i) {
         connections.push_back(pool->GetConnection(
             boost::asio::ip::tcp::endpoint{
-                    boost::asio::ip::address_v4{addr + i}, 80},
+                    boost::asio::ip::address_v4{static_cast<unsigned int >(addr + i)}, 80},
             restc_cpp::Connection::Type::HTTP));
     }
 
     EXPECT_THROWS_AS(pool->GetConnection(
             boost::asio::ip::tcp::endpoint{
-                    boost::asio::ip::address_v4{addr + i}, 80},
+                    boost::asio::ip::address_v4{static_cast<unsigned int>(addr + i)}, 80},
             restc_cpp::Connection::Type::HTTP), std::runtime_error);
 } ENDCASE
 
