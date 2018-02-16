@@ -548,7 +548,7 @@ public:
         return true;
     }
 
-    bool EndArray(std::size_t elementCount) {
+    bool EndArray(std::size_t elementCount) override {
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
         RESTC_CPP_LOG_TRACE << "   Skipping json: EndArray()";
 #endif
