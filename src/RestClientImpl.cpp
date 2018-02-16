@@ -206,6 +206,7 @@ public:
             RESTC_CPP_LOG_ERROR << "ProcessInWorker: Caught exception: " << ex.what();
             if (promise) {
                 promise->set_exception(current_exception());
+                return;
             } else {
                 throw;
             }
@@ -213,6 +214,7 @@ public:
             RESTC_CPP_LOG_ERROR << "*** ProcessInWorker: Caught unknown exception";
             if (promise) {
                 promise->set_exception(current_exception());
+                return;
             } else {
                 throw;
             }
