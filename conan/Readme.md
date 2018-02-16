@@ -3,11 +3,12 @@
 Please see the [Conan home page](https://conan.io/) for information regarding conan.
 
 ## Status
-Currently, I am only experimenting with Conan under Windows 10 with Visual Studio 2015 Community edition
+Currently, I am only experimenting with Conan under Windows 10 with Visual Studio 2017 Community edition
 
-Conan is not as mature as I hoped (or at least not the packages), so it took a while
-to find a combination of openssl, zlib and boost that worked in all build
-combinations (debug/release/static/dynamic). The current mix seems to work.
+Conan is not as mature as I hoped (or at least not the packages). At the moment,
+I am unable to build the dependencies (openssl, zlib and boost).
+
+I'll see if I can get it to work reliable. If not, I'll remove the conan support for now.
 
 ## How to build restc-cpp with conan
 
