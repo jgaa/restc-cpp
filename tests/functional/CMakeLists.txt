@@ -6,7 +6,7 @@ project(functionaltests)
 add_executable(basic_tests BasicTests.cpp)
 target_link_libraries(basic_tests
     restc-cpp ${DEFAULT_LIBRARIES})
-
+SET_CPP_STANDARD(basic_tests)
 add_test(BASIC_TESTS basic_tests)
 
 
@@ -17,7 +17,7 @@ target_link_libraries(readme_tests
     restc-cpp
     ${DEFAULT_LIBRARIES}
 )
-
+SET_CPP_STANDARD(readme_tests)
 add_test(README_TESTS readme_tests)
 
 # ======================================
@@ -29,6 +29,7 @@ target_link_libraries(auth_tests
     ${UNITTEST_LIB}
 )
 add_dependencies(auth_tests externalLest)
+SET_CPP_STANDARD(auth_tests)
 add_test(AUTH_TESTS auth_tests)
 
 
@@ -41,6 +42,7 @@ target_link_libraries(upload_tests
     ${UNITTEST_LIB}
 )
 add_dependencies(upload_tests externalLest)
+SET_CPP_STANDARD(upload_tests)
 add_test(UPLOAD_TESTS upload_tests)
 
 
@@ -53,6 +55,7 @@ target_link_libraries(inserter_serializer_tests
     ${UNITTEST_LIB}
 )
 add_dependencies(inserter_serializer_tests externalLest)
+SET_CPP_STANDARD(inserter_serializer_tests)
 add_test(INSERTER_SERIALIZER_TESTS inserter_serializer_tests)
 
 
@@ -65,6 +68,7 @@ target_link_libraries(ccache_tests
     ${UNITTEST_LIB}
 )
 add_dependencies(ccache_tests externalLest)
+SET_CPP_STANDARD(ccache_tests)
 add_test(CCACHE_FUNCTIONAL_TESTS ccache_tests)
 
 # # ======================================
@@ -76,6 +80,7 @@ target_link_libraries(redirect_tests
     ${UNITTEST_LIB}
 )
 add_dependencies(redirect_tests externalLest)
+SET_CPP_STANDARD(redirect_tests)
 add_test(REDIRECT_FUNCTIONAL_TESTS redirect_tests)
 
 
@@ -88,6 +93,7 @@ target_link_libraries(crud_tests
     ${UNITTEST_LIB}
 )
 add_dependencies(crud_tests externalLest)
+SET_CPP_STANDARD(crud_tests)
 add_test(CRUD_FUNCTIONAL_TESTS crud_tests)
 
 
@@ -100,6 +106,7 @@ target_link_libraries(many_connections_tests
     ${UNITTEST_LIB}
 )
 add_dependencies(many_connections_tests externalLest)
+SET_CPP_STANDARD(many_connections_tests)
 add_test(MANY_CONNECTIONS_FUNCTIONAL_TESTS many_connections_tests)
 
 
@@ -113,6 +120,7 @@ if (RESTC_CPP_WITH_TLS)
         ${UNITTEST_LIB}
     )
     add_dependencies(https_tests externalLest)
+    SET_CPP_STANDARD(https_tests)
     add_test(HTTPS_FUNCTIONAL_TESTS https_tests)
 endif()
 
@@ -126,6 +134,7 @@ target_link_libraries(own_ioservice_tests
     ${UNITTEST_LIB}
 )
 add_dependencies(own_ioservice_tests externalLest)
+SET_CPP_STANDARD(own_ioservice_tests)
 add_test(OWN_IOSERVICE_TESTS own_ioservice_tests)
 
 
@@ -139,6 +148,20 @@ target_link_libraries(connection_pool_instances_test
     ${UNITTEST_LIB}
 )
 add_dependencies(connection_pool_instances_test externalLest)
+SET_CPP_STANDARD(connection_pool_instances_test)
 add_test(CONNECTION_POOL_INSTANCES_TEST connection_pool_instances_test)
 
+
+
+# ======================================
+
+add_executable(proxy-tests ProxyTests.cpp)
+target_link_libraries(proxy-tests
+    restc-cpp
+    ${DEFAULT_LIBRARIES}
+    ${UNITTEST_LIB}
+)
+add_dependencies(proxy-tests externalLest)
+SET_CPP_STANDARD(proxy-tests)
+add_test(PROXY_TESTS proxy-tests)
 
