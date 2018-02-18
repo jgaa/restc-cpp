@@ -28,6 +28,17 @@ boost::optional<string> ReplyImpl::GetHeader(const string& name) {
     return rval;
 }
 
+std::deque<std::string> ReplyImpl::GetHeaders(const std::string& name) {
+    std::deque<std::string> rval;
+
+    auto range = headers_.equal_range(name);
+    for (auto it = range.first; it != range.second; ++it) {
+        rval.push_back(it->second);
+    }
+
+    return rval;
+}
+
 ReplyImpl::ReplyImpl(Connection::ptr_t connection,
                      Context& ctx,
                      RestClient& owner,
@@ -82,7 +93,7 @@ void ReplyImpl::StartReceiveFromServer(DataReader::ptr_t&& reader) {
     stream->ReadServerResponse(response_);
     stream->ReadHeaderLines(
         [this](std::string&& name, std::string&& value) {
-        headers_[move(name)] = move(value);
+            headers_.insert({move(name), move(value)});
     });
 
     HandleContentType(move(stream));
@@ -103,7 +114,7 @@ void ReplyImpl::HandleContentType(unique_ptr<DataReaderStream>&& stream) {
         auto te = GetHeader(transfer_encoding_name);
         if (te && ciEqLibC()(*te, chunked_name)) {
             reader_ = DataReader::CreateChunkedReader([this](string&& name, string&& value) {
-                headers_[move(name)] = move(value);
+                headers_[name] = move(value);
             },  move(stream));
         } else {
             reader_ = DataReader::CreateNoBodyReader();

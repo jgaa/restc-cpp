@@ -5,6 +5,14 @@ server {
     gzip_proxied any;
 
 
+    location ~ ^/cookies(/?)(.*)$ {
+        add_header Content-Type "application/json; charset=utf-8";
+        add_header Set-Cookie test1=yes;
+        add_header Set-Cookie test2=maybe;
+        add_header Set-Cookie test3=no;
+        return 200 '{}';
+    }
+
     location ~ ^/normal(/?)(.*)$ {
         proxy_pass http://api/$2$is_args$args;
     }

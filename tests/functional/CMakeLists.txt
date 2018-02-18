@@ -165,3 +165,16 @@ add_dependencies(proxy-tests externalLest)
 SET_CPP_STANDARD(proxy-tests)
 add_test(PROXY_TESTS proxy-tests)
 
+
+# ======================================
+
+add_executable(cookie-tests CookieTests.cpp)
+target_link_libraries(cookie-tests
+    restc-cpp
+    ${DEFAULT_LIBRARIES}
+    ${UNITTEST_LIB}
+)
+add_dependencies(cookie-tests externalLest)
+SET_CPP_STANDARD(cookie-tests)
+add_test(COOKIE_TESTS cookie-tests)
+

@@ -32,6 +32,7 @@ public:
     ~ReplyImpl();
 
     boost::optional<string> GetHeader(const string& name) override;
+    std::deque<std::string> GetHeaders(const std::string& name) override;
 
     void StartReceiveFromServer(DataReader::ptr_t&& reader);
 
@@ -84,7 +85,7 @@ protected:
     Request::Properties::ptr_t properties_;
     RestClient& owner_;
     Reply::HttpResponse response_;
-    map<string, string, ciLessLibC> headers_;
+    headers_t headers_;
     bool do_close_connection_ = false;
     boost::optional<size_t> content_length_;
     const boost::uuids::uuid connection_id_;

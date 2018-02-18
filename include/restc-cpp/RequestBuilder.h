@@ -75,16 +75,32 @@ public:
         return *this;
     }
 
-
-    /*! Add a header
+     /*! Set a header
      *
      * \param name Name of the header
      * \param value Value of the header
      *
-     * This method will overwrite any estisting header
-     * wuth the same name
+     * This method will overwrite any existing header
+     * with the same name
      */
     RequestBuilder& Header(std::string name,
+                           std::string value) {
+        if (!headers_) {
+            headers_ = Request::headers_t();
+        }
+
+        (*headers_)[name] = std::move(value);
+        return *this;
+    }
+
+    /*! Insert a header
+     *
+     * \param name Name of the header
+     * \param value Value of the header
+     *
+     * This method allows more than one header with the same name.
+     */
+    RequestBuilder& AddHeader(std::string name,
                            std::string value) {
         if (!headers_) {
             headers_ = Request::headers_t();
@@ -94,6 +110,12 @@ public:
         return *this;
     }
 
+    /*! Add headers
+     *
+     * This method copies the headers. Existing headers in the destination
+     * are not deleted, so if uses carelessly, you may end up with
+     * duplicate headers for headers that needs to be unique.
+     */
     RequestBuilder& AddHeaders(const Request::headers_t& headers) {
         if (!headers_) {
             headers_ = Request::headers_t();
@@ -105,6 +127,12 @@ public:
         return *this;
     }
 
+     /*! Add headers
+     *
+     * This method copies the headers. Existing headers in the destination
+     * are not deleted, so if uses carelessly, you may end up with
+     * duplicate headers for headers that needs to be unique.
+     */
     RequestBuilder& AddHeaders(
         boost::optional<Request::headers_t> headers) {
         if (headers) {

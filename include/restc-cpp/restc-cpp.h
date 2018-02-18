@@ -63,6 +63,21 @@ class DataWriter;
 
 using write_buffers_t = std::vector<boost::asio::const_buffer>;
 
+struct Headers : public std::multimap<std::string, std::string, ciLessLibC>  {
+
+    /*! Operate on headers that can only have one instance per key */
+    std::string& operator[] (const std::string& key) {
+        auto it = find(key);
+        if (it != end()) {
+            return it->second;
+        }
+
+        return insert({key, {}})->second;
+    }
+};
+
+using headers_t = Headers;
+
 class Request {
 public:
     struct Arg {
@@ -105,9 +120,9 @@ public:
         std::string address;
     };
 
-    using headers_t = std::map<std::string, std::string, ciLessLibC>;
     using args_t = std::deque<Arg>;
     using auth_t = Auth;
+    using headers_t = restc_cpp::headers_t;
 
     enum class Type {
         GET,
@@ -226,6 +241,9 @@ public:
     /*! Get the value of a header */
     virtual boost::optional<std::string>
         GetHeader(const std::string& name) = 0;
+
+    /*! Get the values from multiple headers with the same name */
+    virtual std::deque<std::string> GetHeaders(const std::string& name) = 0;
 };
 
 /*! The context is used to keep state within a co-routine.
