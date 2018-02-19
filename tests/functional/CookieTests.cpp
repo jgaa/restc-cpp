@@ -27,7 +27,7 @@ STARTCASE(TestHaveCookies)
 
     rest_client->ProcessWithPromise([&](Context& ctx) {
         auto reply = RequestBuilder(ctx)
-            .Get("http://localhost:3001/cookies/")
+            .Get(address)
             .Execute();
 
         auto cookies = reply->GetHeaders("Set-Cookie");
