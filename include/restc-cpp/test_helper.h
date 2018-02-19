@@ -34,7 +34,7 @@ bool CHECK_CLOSE(const T expect, const T value, const T slack) {
         && (value <= (expect + slack));
 }
 
-// Substiture localhost with whatever is in the environment-variable
+// Substitute localhost with whatever is in the environment-variable
 // RESTC_CPP_TEST_DOCKER_ADDRESS
 inline std::string GetDockerUrl(std::string url) {
     const char *docker_addr = std::getenv("RESTC_CPP_TEST_DOCKER_ADDRESS");
