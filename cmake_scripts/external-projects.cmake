@@ -16,13 +16,12 @@ ExternalProject_Add(
     GIT_TAG "master"
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
-    INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory
-        <SOURCE_DIR>/include ${CMAKE_BINARY_DIR}/installed/include
+    INSTALL_COMMAND ""
     LOG_DOWNLOAD ON
     LOG_INSTALL ON
     )
 
-set(EXTERNAL_RAPIDJSON_INCLUDE_DIR ${CMAKE_BINARY_DIR}/installed/include/rapidjson)
+set(EXTERNAL_RAPIDJSON_INCLUDE_DIR ${EXTERNAL_PROJECTS_PREFIX}/src/externalRapidJson/include/rapidjson)
 
 ExternalProject_Add(
     externalLest
@@ -31,8 +30,7 @@ ExternalProject_Add(
     GIT_TAG "master"
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
-    INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory
-        <SOURCE_DIR>/include ${CMAKE_BINARY_DIR}/installed/include
+    INSTALL_COMMAND ""
     LOG_DOWNLOAD ON
     LOG_INSTALL ON
     )
@@ -43,4 +41,7 @@ if (INSTALL_RAPIDJSON_HEADERS)
     install(DIRECTORY ${EXTERNAL_RAPIDJSON_INCLUDE_DIR} DESTINATION include)
 endif()
 
-include_directories(${CMAKE_BINARY_DIR}/installed/include)
+include_directories(
+     ${EXTERNAL_PROJECTS_PREFIX}/src/externalRapidJson/include
+     ${EXTERNAL_PROJECTS_PREFIX}/src/externalLest/include/
+    )
