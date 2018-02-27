@@ -22,7 +22,7 @@ ExternalProject_Add(
     LOG_INSTALL ON
     )
 
-set(EXTERNAL_RAPIDJSON_INCLUDE_DIR ${EXTERNAL_PROJECTS_INSTALL_PREFIX}/include/rapidjson)
+set(EXTERNAL_RAPIDJSON_INCLUDE_DIR ${CMAKE_BINARY_DIR}/installed/include/rapidjson)
 
 ExternalProject_Add(
     externalLest
