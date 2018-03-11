@@ -552,7 +552,11 @@ public:
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
         RESTC_CPP_LOG_TRACE << "   Skipping json: EndArray()";
 #endif
-        --recursion_;
+        if (--recursion_ <= 0) {
+            if (HaveParent()) {
+                GetParent().OnChildIsDone();
+            }
+        }
         return true;
     }
 
@@ -996,6 +1000,10 @@ private:
                 break;
             case State::IN_ARRAY:
                 RecurseToContainerValue<data_t>();
+
+                // If this fails, you probably need to declare the data-type in the array.
+                // with BOOST_FUSION_ADAPT_STRUCT or friends.
+                assert(recursed_to_);
                 recursed_to_->StartObject();
                 break;
             case State::DONE:
