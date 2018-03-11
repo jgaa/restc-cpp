@@ -149,7 +149,7 @@ pipeline {
                     // Dependencies are installed with: brew install openssl boost zlib
 
                     steps {
-                        echo "Building on ubuntu-xenial-AMD64 in ${WORKSPACE}"
+                        echo "Building on macos in ${WORKSPACE}"
                         checkout scm
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
