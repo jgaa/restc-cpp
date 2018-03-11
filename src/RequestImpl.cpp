@@ -136,6 +136,7 @@ public:
                     << "') ";
                 url_ = move(ex.url);
                 parsed_url_ = url_.c_str();
+                add_url_args_ = false; // Use whatever arguments we got in the redirect
             }
         }
     }
@@ -178,24 +179,27 @@ private:
             request_buffer << parsed_url_.GetProtocolName() << parsed_url_.GetHost();
         }
 
-        request_buffer << url_encode(parsed_url_.GetPath());
-
         // Add arguments to the path as ?name=value&name=value...
         bool first_arg = true;
-        for(const auto& arg : properties_->args) {
-            if (first_arg) {
-                first_arg = false;
-                if (!parsed_url_.GetPath().ends_with('/')) {
-                    request_buffer << '/';
+        if (add_url_args_) {
+            // Normal processing.
+            request_buffer << url_encode(parsed_url_.GetPath());
+            for(const auto& arg : properties_->args) {
+                if (first_arg) {
+                    first_arg = false;
+                    request_buffer << '?';
+                } else {
+                    request_buffer << '&';
                 }
-                request_buffer << '?';
-            } else {
-                request_buffer << '&';
-            }
 
-            request_buffer
-                << url_encode(arg.name)
-                << '=' << url_encode(arg.value);
+                request_buffer
+                    << url_encode(arg.name)
+                    << '=' << url_encode(arg.value);
+            }
+        } else {
+            // After a redirect. We The redirect-url in parsed_url_ should be encoded,
+            // and may be exactly what the target expects - so we do nothing here.
+            request_buffer << parsed_url_.GetPath();
         }
 
         request_buffer << " HTTP/1.1" << crlf;
@@ -462,6 +466,7 @@ private:
     size_t header_size_ = 0;
     std::uint64_t bytes_sent_ = 0;
     bool dirty_ = false;
+    bool add_url_args_ = true;
 };
 
 
