@@ -946,6 +946,7 @@ private:
 
     bool DoNull() {
         // TODO: Clear value
+        current_name_.clear();
         return true;
     }
 
