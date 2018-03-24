@@ -24,6 +24,7 @@ namespace restc_cpp {
      boost::string_ref GetHost() const { return host_; }
      boost::string_ref GetPort() const { return port_; }
      boost::string_ref GetPath() const { return path_; }
+     boost::string_ref GetArgs() const { return args_; }
      Protocol GetProtocol() const { return protocol_; }
 
  private:
@@ -31,6 +32,7 @@ namespace restc_cpp {
      boost::string_ref host_;
      boost::string_ref port_;
      boost::string_ref path_ = "/";
+     boost::string_ref args_;
      Protocol protocol_ = Protocol::UNKNOWN;
  };
 

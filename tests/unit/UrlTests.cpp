@@ -188,7 +188,34 @@ STARTCASE(HttpsUrlSimple)
     CHECK_EQUAL("443"s, url.GetPort());
     CHECK_EQUAL_ENUM(Url::Protocol::HTTPS, url.GetProtocol());
     CHECK_EQUAL("/"s, url.GetPath());
+    CHECK_EQUAL(""s, url.GetArgs());
 } ENDCASE
+
+
+STARTCASE(HttpsWithPortAndPathAndArgs)
+{
+    Url url("https://github.com:12345/jgaa?arg=abc:5432");
+    CHECK_EQUAL("github.com"s, url.GetHost());
+    CHECK_EQUAL("12345"s, url.GetPort());
+    CHECK_EQUAL_ENUM(Url::Protocol::HTTPS, url.GetProtocol());
+    CHECK_EQUAL("/jgaa"s, url.GetPath());
+    CHECK_EQUAL("arg=abc:5432"s, url.GetArgs());
+} ENDCASE
+
+STARTCASE(HttpsWithArgsOnly)
+{
+    Url url("https://github.com?arg=abc:123");
+    CHECK_EQUAL("github.com"s, url.GetHost());
+    CHECK_EQUAL("443"s, url.GetPort());
+    CHECK_EQUAL_ENUM(Url::Protocol::HTTPS, url.GetProtocol());
+    CHECK_EQUAL("/"s, url.GetPath());
+    CHECK_EQUAL("arg=abc:123"s, url.GetArgs());
+    const string args{"arg=abc:123"};
+    CHECK_EQUAL(args, url.GetArgs());
+    CHECK_EQUAL(args.size(), url.GetArgs().size());
+} ENDCASE
+
+
 }; // lest
 
 
