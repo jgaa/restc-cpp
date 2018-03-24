@@ -214,6 +214,56 @@ int main()
     clog << "Done" << endl;
 ```
 
+## Add arguments to the request-url
+
+Arguments in the URL require some special care. In most situations you should
+use the *RequestBuilder*'s *Argument()* method for this.
+
+```C++
+    // Create an instance of the rest client
+    auto rest_client = RestClient::Create();
+
+    // Create a coroutine to send our request
+    rest_client->ProcessWithPromise([&](Context& ctx) {
+        // This is a co-routine, running in a worker-thread
+
+        // Construct a request to the server
+        auto reply = RequestBuilder(ctx)
+                .Get("https://www.google.com/search")
+
+                /* Add some request arguments
+                 * Here we use Google search with arguments:
+                 *
+                 *   hl=en
+                 *   q=site:lastviking.eu+stbl
+                 *
+                 * which tells Google to search for 'stbl' at the site lastviking.eu,
+                 * using the English language.
+                 *
+                 * (I believe Google is recruiting their product-owners from Hell.
+                 * One of their more annoying treats is to use geo-location in
+                 * stead of browser-settings to determine the language of the
+                 * Google web pages.
+                 * Ever used Google's services from Russia? Unless you read
+                 * Russian - just don't! Or add the 'hl' argument (which is
+                 * probably what the Google developers do when they travel)
+                 */
+
+                .Argument("hl", "en")
+                .Argument("q", "site:lastviking.eu+stbl")
+
+                // Send the request
+                .Execute();
+
+        // Fetch the payload asynchronously and send it to standard output
+        std::cout << reply->GetBodyAsString();
+
+        // Return the post instance trough a C++ future<>
+        return ;
+    });
+
+```
+
 ## Send a request using HTTP Basic Authentication
 ```C++
 
