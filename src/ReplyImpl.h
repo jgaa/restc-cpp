@@ -24,10 +24,11 @@ public:
         { NOT_CHUNKED, GET_SIZE, IN_SEGMENT, IN_TRAILER, DONE };
 
     ReplyImpl(Connection::ptr_t connection, Context& ctx,
-              RestClient& owner, Request::Properties::ptr_t& properties);
+              RestClient& owner, Request::Properties::ptr_t& properties,
+              Request::Type type);
 
     ReplyImpl(Connection::ptr_t connection, Context& ctx,
-              RestClient& owner);
+              RestClient& owner, Request::Type type);
 
     ~ReplyImpl();
 
@@ -61,7 +62,8 @@ public:
     Create(Connection::ptr_t connection,
            Context& ctx,
            RestClient& owner,
-           Request::Properties::ptr_t& properties);
+           Request::Properties::ptr_t& properties,
+           Request::Type type);
 
     static boost::string_ref b2sr(boost::asio::const_buffers_1 buffer) {
         return { boost::asio::buffer_cast<const char*>(buffer),
@@ -90,6 +92,7 @@ protected:
     boost::optional<size_t> content_length_;
     const boost::uuids::uuid connection_id_;
     std::unique_ptr<DataReader> reader_;
+    const Request::Type request_type_;
 };
 
 

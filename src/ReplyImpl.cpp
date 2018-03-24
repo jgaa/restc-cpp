@@ -42,23 +42,27 @@ std::deque<std::string> ReplyImpl::GetHeaders(const std::string& name) {
 ReplyImpl::ReplyImpl(Connection::ptr_t connection,
                      Context& ctx,
                      RestClient& owner,
-                     Request::Properties::ptr_t& properties)
+                     Request::Properties::ptr_t& properties,
+                     Request::Type type)
 : connection_{move(connection)}, ctx_{ctx}
 , properties_{properties}
 , owner_{owner}
 , connection_id_(connection_ ? connection_->GetId()
     : boost::uuids::random_generator()())
+, request_type_{type}
 {
 }
 
 ReplyImpl::ReplyImpl(Connection::ptr_t connection,
                      Context& ctx,
-                     RestClient& owner)
+                     RestClient& owner,
+                     Request::Type type)
 : connection_{move(connection)}, ctx_{ctx}
 , properties_{owner.GetConnectionProperties()}
 , owner_{owner}
 , connection_id_(connection_ ? connection_->GetId()
     : boost::uuids::random_generator()())
+, request_type_{type}
 {
 }
 
@@ -107,7 +111,9 @@ void ReplyImpl::HandleContentType(unique_ptr<DataReaderStream>&& stream) {
     static const std::string transfer_encoding_name{"Transfer-Encoding"};
     static const std::string chunked_name{"chunked"};
 
-    if (const auto cl = GetHeader(content_len_name)) {
+    if (request_type_ == Request::Type::HEAD) {
+        reader_ = DataReader::CreateNoBodyReader();
+    } else if (const auto cl = GetHeader(content_len_name)) {
         content_length_ = stoi(*cl);
         reader_ = DataReader::CreatePlainReader(*content_length_, move(stream));
     } else {
@@ -225,9 +231,10 @@ std::unique_ptr<ReplyImpl>
 ReplyImpl::Create(Connection::ptr_t connection,
        Context& ctx,
        RestClient& owner,
-       Request::Properties::ptr_t& properties) {
+       Request::Properties::ptr_t& properties,
+       Request::Type type) {
 
-    return make_unique<ReplyImpl>(move(connection), ctx, owner, properties);
+    return make_unique<ReplyImpl>(move(connection), ctx, owner, properties, type);
 }
 
 } // restc_cpp

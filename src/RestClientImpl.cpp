@@ -75,6 +75,21 @@ public:
             return Request(*req);
         }
 
+        unique_ptr< Reply > Options(string url) override {
+            auto req = Request::Create(url, restc_cpp::Request::Type::OPTIONS, rc_);
+            return Request(*req);
+        }
+
+        unique_ptr< Reply > Head(string url) override {
+            auto req = Request::Create(url, restc_cpp::Request::Type::HEAD, rc_);
+            return Request(*req);
+        }
+
+        unique_ptr< Reply > Patch(string url) override {
+            auto req = Request::Create(url, restc_cpp::Request::Type::PATCH, rc_);
+            return Request(*req);
+        }
+
         unique_ptr<Reply> Request(restc_cpp::Request& req) override {
             return req.Execute(*this);
         }

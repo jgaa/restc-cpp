@@ -128,7 +128,10 @@ public:
         GET,
         POST,
         PUT,
-        DELETE
+        DELETE,
+        OPTIONS,
+        HEAD,
+        PATCH
     };
 
     class Properties {
@@ -270,6 +273,15 @@ public:
 
     /*! Send a DELETE request asynchronously to the server. */
     virtual std::unique_ptr<Reply> Delete(std::string url) = 0;
+
+    /*! Send a OPTIONS request asynchronously to the server. */
+    virtual std::unique_ptr<Reply> Options(std::string url) = 0;
+
+    /*! Send a OPTIONS request asynchronously to the server. */
+    virtual std::unique_ptr<Reply> Head(std::string url) = 0;
+
+    /*! Send a OPTIONS request asynchronously to the server. */
+    virtual std::unique_ptr<Reply> Patch(std::string url) = 0;
 
     /*! Send a request asynchronously to the server.
      *

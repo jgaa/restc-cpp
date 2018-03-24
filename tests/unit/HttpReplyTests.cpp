@@ -51,7 +51,7 @@ class TestReply : public ReplyImpl
 {
 public:
     TestReply(Context& ctx, RestClient& owner, test_buffers_t& buffers)
-    : ReplyImpl(nullptr, ctx, owner), buffers_{buffers}
+    : ReplyImpl(nullptr, ctx, owner, Request::Type::GET), buffers_{buffers}
     {
     }
 

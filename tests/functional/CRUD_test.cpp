@@ -94,6 +94,36 @@ STARTCASE(TestCRUD) {
 
 } ENDCASE
 
+STARTCASE(TestOptions) {
+
+    auto rest_client = RestClient::Create();
+    rest_client->ProcessWithPromise([&](Context& ctx) {
+
+        auto reply = RequestBuilder(ctx)
+            .Options(GetDockerUrl(http_url)) // URL
+            .Execute();  // Do it!
+
+        CHECK_EQUAL(204, reply->GetResponseCode());
+
+    }).get();
+
+} ENDCASE
+
+STARTCASE(TestHEAD) {
+
+    auto rest_client = RestClient::Create();
+    rest_client->ProcessWithPromise([&](Context& ctx) {
+
+        auto reply = RequestBuilder(ctx)
+            .Head(GetDockerUrl(http_url)) // URL
+            .Execute();  // Do it!
+
+        CHECK_EQUAL(200, reply->GetResponseCode());
+
+    }).get();
+
+} ENDCASE
+
 }; //lest
 
 int main( int argc, char * argv[] )

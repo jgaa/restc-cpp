@@ -2,6 +2,7 @@
 #include <fstream>
 #include <thread>
 #include <future>
+#include <array>
 
 #include <boost/utility/string_ref.hpp>
 
@@ -106,8 +107,10 @@ public:
     }
 
     const std::string& Verb(const Type requestType) {
-        static const std::vector<std::string> names =
-            { "GET", "POST", "PUT", "DELETE" };
+        static const std::array<std::string, 7> names =
+            {{ "GET", "POST", "PUT", "DELETE", "OPTIONS",
+                "HEAD", "PATCH"
+            }};
 
         return names[static_cast<int>(requestType)];
     }
@@ -424,7 +427,8 @@ private:
 
         DataReader::ReadConfig cfg;
         cfg.msReadTimeout = properties_->recvTimeout;
-        auto reply = ReplyImpl::Create(connection_, ctx, owner_, properties_);
+        auto reply = ReplyImpl::Create(connection_, ctx, owner_, properties_,
+                                       request_type_);
         reply->StartReceiveFromServer(
             DataReader::CreateIoReader(connection_, ctx, cfg));
 

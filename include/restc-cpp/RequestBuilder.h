@@ -75,6 +75,33 @@ public:
         return *this;
     }
 
+    /*! Make a HTTP OPTIONS request */
+    RequestBuilder& Options(std::string url) {
+        assert(url_.empty());
+        url_ = std::move(url);
+        MAP_URL_FOR_TESTING(url_);
+        type_ = Request::Type::OPTIONS;
+        return *this;
+    }
+
+    /*! Make a HTTP HEAD request */
+    RequestBuilder& Head(std::string url) {
+        assert(url_.empty());
+        url_ = std::move(url);
+        MAP_URL_FOR_TESTING(url_);
+        type_ = Request::Type::HEAD;
+        return *this;
+    }
+
+    /*! Make a HTTP PATCH request */
+    RequestBuilder& Patch(std::string url) {
+        assert(url_.empty());
+        url_ = std::move(url);
+        MAP_URL_FOR_TESTING(url_);
+        type_ = Request::Type::PATCH;
+        return *this;
+    }
+
      /*! Set a header
      *
      * \param name Name of the header
