@@ -20,13 +20,13 @@ namespace restc_cpp {
 // recommended in Meyers, Effective STL when internationalization and embedded
 // NULLs aren't an issue.  Much faster than the STL or Boost lex versions.
 // Source: http://stackoverflow.com/questions/1801892/making-mapfind-operation-case-insensitive
-struct ciLessLibC : public std::binary_function<std::string, std::string, bool> {
+struct ciLessLibC  {
     bool operator()(const std::string &lhs, const std::string &rhs) const {
         return strcasecmp(lhs.c_str(), rhs.c_str()) < 0 ;
     }
 };
 
-struct ciEqLibC : public std::binary_function<std::string, std::string, bool> {
+struct ciEqLibC {
     bool operator()(const std::string &lhs, const std::string &rhs) const {
         return strcasecmp(lhs.c_str(), rhs.c_str()) == 0 ;
     }
