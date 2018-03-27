@@ -82,7 +82,7 @@ Restc-cpp depends on C++14 with its standard libraries and:
 rapidjson and lest are included as CMake external dependencies.
 
 # License
-MIT license. It is Free. Free as in Free Beer. Free as in Free Air.
+MIT license. It is Free. Free as in speech. Free as in Free Air.
 
 # Examples
 
