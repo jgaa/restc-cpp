@@ -1,5 +1,6 @@
 
 #include <cstdio>
+#include <sstream>
 
 #include "restc-cpp/logging.h"
 
@@ -60,6 +61,20 @@ STARTCASE(ReadConfigurationFromFile) {
     EXPECT(config.max_something == 100);
     EXPECT(config.name == "Test Data");
     EXPECT(config.url == "https://www.example.com");
+} ENDCASE
+
+STARTCASE(WriteJsonToStream) {
+
+    stringstream out;
+    Config config;
+    config.max_something = 100;
+    config.name = "John";
+    config.url = "https://www.example.com";
+
+    SerializeToJson(config, out);
+
+    EXPECT(out.str() == R"({"max_something":100,"name":"John","url":"https://www.example.com"})");
+
 } ENDCASE
 
 }; // lest

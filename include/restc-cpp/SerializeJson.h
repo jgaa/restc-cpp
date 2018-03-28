@@ -34,6 +34,7 @@
 
 #include "rapidjson/writer.h"
 #include "rapidjson/istreamwrapper.h"
+#include <rapidjson/ostreamwrapper.h>
 
 namespace restc_cpp {
 
@@ -1436,6 +1437,11 @@ public:
     RapidJsonInserter(DataWriter& writer, bool isList = false)
     : is_list_{isList}, stream_{writer}, writer_{stream_} {}
 
+    RapidJsonInserter(DataWriter& writer, bool isList,
+         const serialize_properties_t& properties)
+    : is_list_{isList}, stream_{writer}, writer_{stream_}
+    , properties_{properties} {}
+
     ~RapidJsonInserter() {
         Done();
     }
@@ -1565,6 +1571,17 @@ void SerializeFromJson(dataT& rootData,
 
     SerializeFromJson(rootData, *reply, properties);
 }
+
+/*! Serialize a C++ object to a std::ostream */
+template <typename dataT>
+void SerializeToJson(dataT& rootData,
+    std::ostream& ostream, const serialize_properties_t& properties = {}) {
+
+    rapidjson::OStreamWrapper osw(ostream);
+    rapidjson::Writer<rapidjson::OStreamWrapper> writer(osw);
+    do_serialize<dataT>(rootData, writer, properties);
+}
+
 
 } // namespace
 

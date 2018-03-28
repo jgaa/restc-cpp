@@ -774,7 +774,7 @@ Example on how to use it:
     .get();
 ```
 
-## Serializing a file with json data to a C++ object
+## Serializing a file (or any std::istream) with json data to a C++ object
 
 I tend to use json more and more for configuration files.
 Boost.ProgramOptions is great for this (and it supports several
@@ -810,7 +810,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 main() {
 
-    // Create a istream for the json file
+    // Create an istream for the json file
     ifstream ifs("config.json");
 
     // Instatiate the config object
@@ -831,3 +831,49 @@ achieve. It is however the most flexible implementation.
 Please file a ticket on github if you require a native file reader
 with optimal performance. (Don't worry - I won't charge you - I just
 focus on the most useful features that people actually need).
+
+## Serializing a C++ object to a file (or any std::ostream)
+
+```C++
+#include <cstdio>
+#include <boost/fusion/adapted.hpp>
+#include "restc-cpp/restc-cpp.h"
+#include "restc-cpp/SerializeJson.h"
+
+using namespace std;
+using namespace restc_cpp;
+
+// Our configuration object
+struct Config {
+    int max_something = {};
+    string name;
+    string url;
+};
+
+// Declare Config to boost::fusion, so we can serialize it
+BOOST_FUSION_ADAPT_STRUCT(
+    Config,
+    (int, max_something)
+    (string, name)
+    (string, url)
+)
+
+main() {
+
+    // Create an ostream for the json file
+    ofstream ofs("config.json");
+
+    // Instatiate the config object
+    Config config;
+
+    // Assign some values
+    config.max_something = 100;
+    config.name = "John";
+    config.url = "https://www.example.com";
+
+    // Serialize Config to the file
+    SerializeToJson(config, ofs);
+}
+
+```
+
