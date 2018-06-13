@@ -4,7 +4,7 @@ pipeline {
     agent { label 'master' }
 
     environment {
-        RESTC_CPP_VERSION = "0.9.1"
+        RESTC_CPP_VERSION = "0.9.2"
 
         // It is not possible to get the current IP number when running in the sandbox, and
         // Jenkinsfiles always runs in the sandbox.
