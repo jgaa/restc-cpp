@@ -709,10 +709,11 @@ private:
         assert(false);
     }
 
-    // boost::fusion declared classes
+    // boost::fusion declared classes or containers
     template <typename dataT>
     void RecurseToContainerValue(typename std::enable_if<
-            boost::fusion::traits::is_sequence<typename dataT::value_type>::value
+            (boost::fusion::traits::is_sequence<typename dataT::value_type>::value
+                || is_container<typename dataT::value_type>::value)
             && is_container<dataT>::value
             >::type* = 0) {
 
@@ -730,6 +731,7 @@ private:
     template <typename dataT>
     void RecurseToContainerValue(typename std::enable_if<
             !boost::fusion::traits::is_sequence<typename dataT::value_type>::value
+            && !is_container<typename dataT::value_type>::value
             && is_container<dataT>::value
             >::type* = 0) {
 
@@ -1070,14 +1072,22 @@ private:
         RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
             << " DoStartArray: " << current_name_;
 #endif
-        if (state_ == State::INIT) {
-            state_ = State::IN_ARRAY;
-        } else if (state_ == State::IN_OBJECT) {
-            RecurseToMember<data_t>();
-            recursed_to_->StartArray();
-        } else {
-            assert(false);
+        switch (state_) {
+            case State::INIT:
+                state_ = State::IN_ARRAY;
+                break;
+            case State::IN_ARRAY:
+                RecurseToContainerValue<data_t>();
+                recursed_to_->StartArray();
+                break;
+            case State::IN_OBJECT:
+                RecurseToMember<data_t>();
+                recursed_to_->StartArray();
+                break;
+            default:
+                assert(false && "Unexpected state");
         }
+
         return true;
     }
 

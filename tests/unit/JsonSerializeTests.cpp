@@ -159,6 +159,23 @@ STARTCASE(SerializeList) {
 
 } ENDCASE
 
+STARTCASE(SerializeNestedVector)
+{
+    std::vector<std::vector<int>> nested_ints = {{-1,2,3},{4,5,-6}};
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(nested_ints), decltype(writer)>
+        serializer(nested_ints, writer);
+
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"([[-1,2,3],[4,5,-6]])"s,
+                s.GetString());
+
+} ENDCASE
+
 STARTCASE(DeserializeSimpleObject) {
     Person person;
     std::string json = R"({ "id" : 100, "name" : "John Longdue Doe", "balance" : 123.45 })";
@@ -231,6 +248,26 @@ STARTCASE(DeserializeIntVector) {
     auto val = 0;
     for(auto v : ints) {
         CHECK_EQUAL(++val, v);
+    }
+} ENDCASE
+
+STARTCASE(DeserializeNestedArray) {
+    std::string json = R"([[1, 2, 3],[4, 5, 6]])";
+
+    std::vector<std::vector<int>> nested_ints;
+    RapidJsonDeserializer<decltype(nested_ints)> handler(nested_ints);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+
+    CHECK_EQUAL(2, static_cast<int>(nested_ints.size()));
+
+    for(int i = 0; i < 2; ++i) {
+        CHECK_EQUAL(3, static_cast<int>(nested_ints[i].size()));
+
+        for(int j = 0; j < 3; ++j) {
+            CHECK_EQUAL(i * 3 + j + 1, nested_ints[i][j]);
+        }
     }
 } ENDCASE
 
