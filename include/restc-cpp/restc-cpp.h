@@ -23,7 +23,7 @@
 #include "restc-cpp/helper.h"
 #include "restc-cpp/Connection.h"
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 // Thank you Microsoft for making every developers day productive
 #ifdef min
 #   undef min
