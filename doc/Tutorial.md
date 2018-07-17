@@ -737,7 +737,7 @@ You can apply the same restriction (via method calls) to
 
 ## Setting a memory limit on incoming objects
 
-It is possible for a rouge REST server to attack connected clients
+It is possible for a rogue REST server to attack connected clients
 by sending a never-ending stream of valid json data (for example a
 list that never ends, or a string of unlimited size). To prevent such
 attacks, restc-cpp has a default limit on 1 megabyte for objects
