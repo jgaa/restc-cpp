@@ -301,7 +301,7 @@ private:
         }
         else {
 #ifdef RESTC_CPP_WITH_TLS
-            socket = make_unique<TlsSocketImpl>(owner_.GetIoService());
+            socket = make_unique<TlsSocketImpl>(owner_.GetIoService(), owner_.GetTLSContext());
 #else
             throw NotImplementedException(
                 "restc_cpp is compiled without TLS support");

@@ -24,17 +24,9 @@ public:
 
     using ssl_socket_t = boost::asio::ssl::stream<boost::asio::ip::tcp::socket>;
 
-    TlsSocketImpl(boost::asio::io_service& io_service)
+    TlsSocketImpl(boost::asio::io_service& io_service, shared_ptr<boost::asio::ssl::context> ctx)
     {
-        tls_context_.set_options(boost::asio::ssl::context::default_workarounds
-            | boost::asio::ssl::context::no_sslv2
-            | boost::asio::ssl::context::no_sslv3
-#if BOOST_VERSION >= 105900
-            | boost::asio::ssl::context::no_tlsv1_1
-#endif
-            | boost::asio::ssl::context::single_dh_use);
-
-        ssl_socket_ = std::make_unique<ssl_socket_t>(io_service, tls_context_);
+        ssl_socket_ = std::make_unique<ssl_socket_t>(io_service, *ctx);
     }
 
     boost::asio::ip::tcp::socket& GetSocket() override {
@@ -74,8 +66,13 @@ public:
     }
 
     void AsyncConnect(const boost::asio::ip::tcp::endpoint& ep,
-                      boost::asio::yield_context& yield) override {
+                    const string &host,
+                    boost::asio::yield_context& yield) override {
         return WrapException<void>([&] {
+            //TLS-SNI (without this option, handshakes attempts with hosts behind CDNs will fail,
+            //due to the fact that the CDN does not have enough information at the TLS layer
+            //to decide where to forward the handshake attempt).
+            SSL_set_tlsext_host_name(ssl_socket_->native_handle(), host.c_str());
             GetSocket().async_connect(ep, yield);
             ssl_socket_->async_handshake(boost::asio::ssl::stream_base::client,
                                          yield);
@@ -121,9 +118,9 @@ protected:
 
 
 private:
-    boost::asio::ssl::context tls_context_{boost::asio::ssl::context::sslv23 };
     std::unique_ptr<ssl_socket_t> ssl_socket_;
 };
+
 
 
 } // restc_cpp

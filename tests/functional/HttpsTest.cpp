@@ -48,16 +48,23 @@ BOOST_FUSION_ADAPT_STRUCT(
 // library to use (boost::asio only support openssl and compatible
 // libraries out of the box).
 
-//string https_url = "https://jsonplaceholder.typicode.com/posts/1";
+string https_url = "https://jsonplaceholder.typicode.com/posts/1";
 
-string https_url = "https://lastviking.eu/files/api";
+//string https_url = "https://lastviking.eu/files/api";
 
 const lest::test specification[] = {
 
 TEST(TestHTTPS)
 {
-    auto client = RestClient::Create();
-    client->ProcessWithPromise([&](Context& ctx) {
+    shared_ptr<boost::asio::ssl::context> tls_ctx = make_shared<boost::asio::ssl::context>(boost::asio::ssl::context{ boost::asio::ssl::context::sslv23 });
+    tls_ctx->set_options(boost::asio::ssl::context::default_workarounds
+                        | boost::asio::ssl::context::no_sslv2
+                        | boost::asio::ssl::context::no_sslv3
+                        | boost::asio::ssl::context::no_tlsv1_1
+                        | boost::asio::ssl::context::single_dh_use);
+
+        auto client = RestClient::Create(tls_ctx);
+        client->ProcessWithPromise([&](Context& ctx) {
         Post post;
         auto reply = ctx.Get(https_url);
 
@@ -65,22 +72,25 @@ TEST(TestHTTPS)
 
         SerializeFromJson(post, *reply);
 
+        cout << "Received post# " << post.id
+             << ", title: " << post.title;
+
         CHECK_EQUAL(1, post.id);
 
         cout << "Received post# " << post.id
-            << ", title: " << post.title;
+             << ", title: " << post.title;
     }).get();
 }
 
 
 }; //lest
 
-int main( int argc, char * argv[] )
+int main(int argc, char * argv[])
 {
     namespace logging = boost::log;
     logging::core::get()->set_filter
     (
         logging::trivial::severity >= logging::trivial::trace
     );
-    return lest::run( specification, argc, argv );
+    return lest::run(specification, argc, argv);
 }

@@ -294,7 +294,7 @@ private:
 
                 try {
                     connection->GetSocket().AsyncConnect(
-                        endpoint, ctx.GetYield());
+                        endpoint, address_it->host_name(), ctx.GetYield());
                 } catch(const exception& ex) {
                     RESTC_CPP_LOG_WARN << "Connect to "
                         << endpoint
