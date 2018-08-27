@@ -15,7 +15,11 @@
 
 #include <boost/asio.hpp>
 #include <boost/asio/spawn.hpp>
-#include <boost/asio/ssl.hpp>
+
+#ifdef RESTC_CPP_WITH_TLS
+#   include <boost/asio/ssl.hpp>
+#endif
+
 #include <boost/optional.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/uuid/uuid.hpp>
@@ -377,7 +381,10 @@ public:
 
     virtual std::shared_ptr<ConnectionPool> GetConnectionPool() = 0;
     virtual boost::asio::io_service& GetIoService() = 0;
-	virtual std::shared_ptr<boost::asio::ssl::context> GetTLSContext() = 0;
+
+#ifdef RESTC_CPP_WITH_TLS
+    virtual std::shared_ptr<boost::asio::ssl::context> GetTLSContext() = 0;
+#endif
 
     /*! Shut down the worker-thread when the work-queue is empty.
 

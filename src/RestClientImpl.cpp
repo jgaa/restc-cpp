@@ -8,8 +8,11 @@
 #include "restc-cpp/logging.h"
 #include "restc-cpp/ConnectionPool.h"
 #include "restc-cpp/RequestBody.h"
-#include "boost/asio/ssl.hpp"
-#include "boost/asio/ssl/context.hpp"
+
+#ifdef RESTC_CPP_WITH_TLS
+#   include "boost/asio/ssl.hpp"
+#   include "boost/asio/ssl/context.hpp"
+#endif
 
 using namespace std;
 
@@ -282,8 +285,9 @@ public:
     }
 
     boost::asio::io_service& GetIoService() override { return *io_service_; }
+
 #ifdef RESTC_CPP_WITH_TLS
-	shared_ptr<boost::asio::ssl::context> GetTLSContext() override { return tls_context_; }
+    shared_ptr<boost::asio::ssl::context> GetTLSContext() override { return tls_context_; }
 #endif
 
     void OnNoMoreWork() {
@@ -322,8 +326,8 @@ private:
         tls_context_->set_options(boost::asio::ssl::context::default_workarounds
         | boost::asio::ssl::context::no_sslv2
         | boost::asio::ssl::context::no_sslv3);
-#endif
     }
+#endif
 };
 
 unique_ptr<RestClient> RestClient::Create() {

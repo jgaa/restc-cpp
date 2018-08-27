@@ -5,7 +5,6 @@
 #include <future>
 
 #include "restc-cpp/restc-cpp.h"
-#ifdef RESTC_CPP_WITH_TLS
 
 #include <boost/asio/ssl.hpp>
 #include <boost/version.hpp>
@@ -13,7 +12,7 @@
 #include "restc-cpp/Socket.h"
 #include "restc-cpp/config.h"
 
-#if !defined(RESTC_CPP_WITH_TLS) || !RESTC_CPP_WITH_TLS
+#if !defined(RESTC_CPP_WITH_TLS)
 #   error "Do not include when compiling without TLS"
 #endif
 
