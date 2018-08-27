@@ -120,9 +120,6 @@ private:
     std::unique_ptr<ssl_socket_t> ssl_socket_;
 };
 
-
-
 } // restc_cpp
 
-#endif // RESTC_CPP_WITH_TLS
 
