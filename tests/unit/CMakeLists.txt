@@ -69,3 +69,16 @@ target_link_libraries(async_sleep_tests
 )
 add_dependencies(async_sleep_tests externalLest)
 ADD_AND_RUN_UNITTEST(ASYNC_SLEEP_TESTS async_sleep_tests)
+
+
+# ======================================
+
+add_executable(request_builder_tests RequestBuilder.cpp)
+target_link_libraries(request_builder_tests
+    restc-cpp
+    ${DEFAULT_LIBRARIES}
+    ${UNITTEST_LIB}
+)
+add_dependencies(request_builder_tests externalLest)
+ADD_AND_RUN_UNITTEST(REQUEST_BUILDER_TESTS request_builder_tests)
+

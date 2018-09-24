@@ -36,8 +36,15 @@ class RequestBuilder
 {
 public:
 
+    RequestBuilder() = default;
+    RequestBuilder(const RequestBuilder&) = delete;
+    RequestBuilder(RequestBuilder&&) = delete;
+
+    void operator = (const RequestBuilder&) = delete;
+    void operator = (RequestBuilder&&) = delete;
+
     RequestBuilder(Context& ctx)
-    : ctx_{ctx} {}
+    : ctx_{&ctx} {}
 
     /*! Make a HTTP GET request */
     RequestBuilder& Get(std::string url) {
@@ -223,6 +230,29 @@ public:
 
     /*! Body (data) for the request
      *
+     * \body A c text string to send as the body.
+     */
+    RequestBuilder& Data(const char *body) {
+        assert(!body_);
+        assert(body);
+        body_ = RequestBody::CreateStringBody(std::string(body));
+        return *this;
+    }
+
+    /*! Body (data) for the request
+     *
+     * \body A c text string to send as the body.
+     * \len Number of bytes to send.
+     */
+    RequestBuilder& Data(const char *body, const size_t len) {
+        assert(!body_);
+        assert(body);
+        body_ = RequestBody::CreateStringBody(std::string(body,len));
+        return *this;
+    }
+
+    /*! Body (data) for the request
+     *
      * \body A text string to send as the body.
      */
     RequestBuilder& Data(std::string&& body) {
@@ -323,6 +353,7 @@ public:
     }
 
     std::unique_ptr<Request> Build() {
+        assert(ctx_);
         static const std::string accept_encoding{"Accept-Encoding"};
         static const std::string gzip{"gzip"};
 #ifdef DEBUG
@@ -337,7 +368,7 @@ public:
         }
 #endif
         return Request::Create(
-            url_, type_, ctx_.GetClient(), move(body_), args_, headers_, auth_);
+            url_, type_, ctx_->GetClient(), move(body_), args_, headers_, auth_);
     }
 
     /*! Exceute the request.
@@ -346,12 +377,26 @@ public:
      */
     std::unique_ptr<Reply> Execute() {
         auto request = Build();
-        return request->Execute(ctx_);
+        return request->Execute(*ctx_);
     }
 
+    /*! Get the body of the request.
+     *
+     * The function will only be able to return a value when
+     * the data is supplied as a std::string or C string.
+     *
+     * The body is moved to the request when Build() is called,
+     * so method is mostly useful for unit testing.
+     */
+    std::string GetData() const {
+        if (body_) {
+            return body_->GetCopyOfData();
+        }
+        return {};
+    }
 
 private:
-    Context& ctx_;
+    Context *ctx_ = nullptr;
     std::string url_;
     Request::Type type_;
     boost::optional<Request::headers_t> headers_;

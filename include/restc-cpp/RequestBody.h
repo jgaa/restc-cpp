@@ -40,6 +40,11 @@ public:
         throw NotImplementedException("GetFixedSize()");
     }
 
+    // For unit testing
+    virtual std::string GetCopyOfData() const {
+        return {};
+    }
+
     /*! Set the body up for a new run.
         *
         * This is typically done if request fails and the client wants

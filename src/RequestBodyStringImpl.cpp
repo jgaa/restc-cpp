@@ -42,6 +42,10 @@ public:
         eof_ = false;
     }
 
+    std::string  GetCopyOfData() const override {
+        return body_;
+    }
+
 
 private:
     string body_;
