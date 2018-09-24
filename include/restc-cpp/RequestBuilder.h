@@ -376,6 +376,7 @@ public:
      * \returns A unique pointer to a Reply instance.
      */
     std::unique_ptr<Reply> Execute() {
+        assert(ctx_);
         auto request = Build();
         return request->Execute(*ctx_);
     }
