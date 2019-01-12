@@ -15,5 +15,5 @@ services:
         ports:
             - "3003:3128"
         links: 
-            - nginx:api.example.com
+            - "nginx:api.example.com"
         
