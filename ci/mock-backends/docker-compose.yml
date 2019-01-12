@@ -1,0 +1,19 @@
+version: '3'
+services: 
+    json:
+        build: json
+        ports: 
+            - "3000:80"
+    nginx:
+        build: nginx
+        ports:
+            - "3001:80"
+        links:
+            - "json:api"
+    squid:
+        build: squid
+        ports:
+            - "3003:3128"
+        links: 
+            - nginx:api.example.com
+        

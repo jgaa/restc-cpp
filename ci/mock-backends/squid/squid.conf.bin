@@ -1,0 +1,5 @@
+
+http_access allow localhost manager
+http_access deny manager
+http_access allow all
+http_port 3128
