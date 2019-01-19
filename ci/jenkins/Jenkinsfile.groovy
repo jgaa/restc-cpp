@@ -246,8 +246,8 @@ pipeline {
             post {
                 always {
                     echo 'Shutting down test containers.'
-                    sh 'docker-compose -f ./ci/mock-backends/docker-compose.yml docker-compose down'
-                    sh 'docker-compose -f ./ci/mock-backends/docker-compose.yml docker-compose rm'
+                    sh 'docker-compose -f ./ci/mock-backends/docker-compose.yml down'
+                    sh 'docker-compose -f ./ci/mock-backends/docker-compose.yml rm'
                 }
             }
         }
