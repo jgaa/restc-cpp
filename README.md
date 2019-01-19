@@ -251,13 +251,14 @@ The project has been in public BETA since April 11th 2017.
 
 
 # Supported operating systems
-These are the operating systems where my Continues Integration system currently compiles the project and run all the tests:
+These are the operating systems where my Continues Integration (Jenkins) servers currently compiles the project and run all the tests:
 
  - Debian Stretch (Stable)
  - Debian Testing
  - Windows 10 / Microsoft Visual Studio 2017, Community version
- - Fedora 27
+ - Fedora 29
  - Ubuntu Xenial (LTS)
+ - Centos 7 (latest) with devtoolset-7-gcc and (custom built) libbbost 1.69.0
  - macOS High Sierra (OS X)
 
 The Jenkins setup is [here](ci/jenkins).
