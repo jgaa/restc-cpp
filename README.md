@@ -258,6 +258,7 @@ These are the operating systems where my Continues Integration (Jenkins) servers
  - Windows 10 / Microsoft Visual Studio 2017, Community version
  - Fedora 29
  - Ubuntu Xenial (LTS)
+ - Ubuntu Bionic (LTS)
  - Centos 7 (latest) with devtoolset-7-gcc and (custom built) libbbost 1.69.0
  - macOS High Sierra (OS X)
 
