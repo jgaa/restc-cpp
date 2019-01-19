@@ -15,7 +15,8 @@ pipeline {
     stages {
         stage('Prepare') {
             steps {
-                sh 'cd ${WORKSPACE}/ci/mock-backends/ ; docker-compose build && docker-compose up -d'
+                sh 'docker-compose --project-directory ./ci/mock-backends build'
+                dh 'docker-compose --project-directory ./ci/mock-backends up -d'
                 sh 'docker ps'
             }
         }
@@ -247,7 +248,7 @@ pipeline {
             post {
                 always {
                     echo 'Shutting down test containers.'
-                    sh 'sh 'cd ${WORKSPACE}/ci/mock-backends/ ; docker-compose build && docker-compose down'
+                    sh 'docker-compose --project-directory ./ci/mock-backends docker-compose down'
                 }
             }
         }
