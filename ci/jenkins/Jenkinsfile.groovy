@@ -15,7 +15,7 @@ pipeline {
     stages {
         stage('Prepare') {
             steps {
-                sh 'docker-compose -f ./ci/mock-backends/docker-compose.yml --build  up -d'
+                sh 'docker-compose -f ./ci/mock-backends/docker-compose.yml up --build  -d'
             }
         }
 
