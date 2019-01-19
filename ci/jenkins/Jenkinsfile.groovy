@@ -15,7 +15,7 @@ pipeline {
     stages {
         stage('Prepare') {
             steps {
-                sh './create-and-run-containers.sh'
+                sh 'cd ${WORKSPACE}/ci/mock-backends/ ; docker-compose build && docker-compose up -d'
                 sh 'docker ps'
             }
         }
@@ -247,7 +247,7 @@ pipeline {
             post {
                 always {
                     echo 'Shutting down test containers.'
-                    sh 'docker stop restc-cpp-squid restc-cpp-nginx restc-cpp-json'
+                    sh 'sh 'cd ${WORKSPACE}/ci/mock-backends/ ; docker-compose build && docker-compose down'
                 }
             }
         }
