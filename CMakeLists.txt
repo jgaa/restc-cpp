@@ -182,9 +182,6 @@ if (NOT EMBEDDED_RESTC_CPP)
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
     endif()
 
-    set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib CACHE PATH "Destination location")
-    link_directories(${LIBRARY_OUTPUT_PATH})
-
     include(cmake_scripts/doxygen.cmake)
 
     target_include_directories(${PROJECT_NAME}
