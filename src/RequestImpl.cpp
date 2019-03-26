@@ -126,6 +126,13 @@ public:
             try {
                 return DoExecute((ctx));
             } catch(RedirectException& ex) {
+                
+                auto url = move(ex.url);
+                
+                if (properties_->redirectFn) {
+                    properties_->redirectFn(url);
+                }
+                
                 if ((properties_->maxRedirects >= 0)
                     && (++redirects > properties_->maxRedirects)) {
                     throw ConstraintException("Too many redirects.");
@@ -135,9 +142,9 @@ public:
                     << ex.code
                     << ") '" << url_
                     << "' --> '"
-                    << ex.url
+                    << url
                     << "') ";
-                url_ = move(ex.url);
+                url_ = move(url);
                 parsed_url_ = url_.c_str();
                 add_url_args_ = false; // Use whatever arguments we got in the redirect
             }

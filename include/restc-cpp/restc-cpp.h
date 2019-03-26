@@ -142,6 +142,7 @@ public:
     class Properties {
     public:
         using ptr_t = std::shared_ptr<Properties>;
+        using redirect_fn_t = std::function<void (std::string& url)>;
 
         int maxRedirects = 3;
         int connectTimeoutMs = (1000 * 12);
@@ -155,6 +156,7 @@ public:
         headers_t headers;
         args_t args;
         Proxy proxy;
+        redirect_fn_t redirectFn;
     };
 
     virtual const Properties& GetProperties() const = 0;
