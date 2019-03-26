@@ -142,7 +142,8 @@ public:
     class Properties {
     public:
         using ptr_t = std::shared_ptr<Properties>;
-        using redirect_fn_t = std::function<void (std::string& url)>;
+        using redirect_fn_t = std::function<void (int code, std::string& url, 
+                                                  const Reply& reply)>;
 
         int maxRedirects = 3;
         int connectTimeoutMs = (1000 * 12);

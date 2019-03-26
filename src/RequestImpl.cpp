@@ -30,11 +30,13 @@ public:
         RedirectException(const RedirectException&) = default;
         RedirectException(RedirectException &&) = default;
 
-        RedirectException(int redirCode, string redirUrl)
-        : code{redirCode}, url{move(redirUrl)} {}
+        RedirectException(int redirCode, string redirUrl, std::unique_ptr<Reply> reply)
+        : code{redirCode}, url{move(redirUrl)}, redirectReply{move(reply)}
+        {}
 
         const int code;
         std::string url;
+        std::unique_ptr<Reply> redirectReply;
     };
 
     RequestImpl(const std::string& url,
@@ -125,12 +127,12 @@ public:
         while(true) {
             try {
                 return DoExecute((ctx));
-            } catch(RedirectException& ex) {
+            } catch(const RedirectException& ex) {
                 
-                auto url = move(ex.url);
+                auto url = ex.url;
                 
                 if (properties_->redirectFn) {
-                    properties_->redirectFn(url);
+                    properties_->redirectFn(ex.code, url, *ex.redirectReply);
                 }
                 
                 if ((properties_->maxRedirects >= 0)
@@ -446,7 +448,7 @@ private:
                 throw ProtocolException(
                     "No Location header in redirect reply");
             }
-            throw RedirectException(http_code, *redirect_location);
+            throw RedirectException(http_code, *redirect_location, move(reply));
         }
 
         ValidateReply(*reply);
