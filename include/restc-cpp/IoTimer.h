@@ -20,7 +20,7 @@ public:
     using ptr_t = std::shared_ptr<IoTimer>;
     using close_t = std::function<void ()>;
     
-#if (BOOST_VERSION/100000) >= 1 && ((BOOST_VERSION/100)%1000) > 65
+#if (BOOST_VERSION/100000) >= 1 && ((BOOST_VERSION/100)%1000) > 69
     using asio_premature_deprecation_workaround_t = boost::asio::ip::tcp::socket::executor_type;
 #else
     using asio_premature_deprecation_workaround_t = boost::asio::io_service;
@@ -115,7 +115,7 @@ public:
         return std::make_unique<Wrapper>(Create(
             timerName,
             milliseconds_timeout,
-#if (BOOST_VERSION/100000) >= 1 && ((BOOST_VERSION/100)%1000) > 65
+#if (BOOST_VERSION/100000) >= 1 && ((BOOST_VERSION/100)%1000) > 69
             connection->GetSocket().GetSocket().get_executor(),
 #else
             connection->GetSocket().GetSocket().get_io_service(),
