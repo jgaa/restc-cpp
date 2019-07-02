@@ -19,6 +19,12 @@ class IoTimer : public std::enable_shared_from_this<IoTimer>
 public:
     using ptr_t = std::shared_ptr<IoTimer>;
     using close_t = std::function<void ()>;
+    
+#if (BOOST_VERSION/100000) >= 1 && ((BOOST_VERSION/100)%1000) > 65
+    using asio_premature_deprecation_workaround_t = boost::asio::ip::tcp::socket::executor_type;
+#else
+    using asio_premature_deprecation_workaround_t = boost::asio::io_service;
+#endif
 
     class Wrapper
     {
@@ -74,12 +80,12 @@ public:
     static ptr_t Create(
         const std::string& timerName,
         int milliseconds_timeout,
-        boost::asio::io_service& io_service,
+        const asio_premature_deprecation_workaround_t& io_service,
         close_t close) {
 
         ptr_t timer;
         // Private constructor, we cannot use std::make_shared()
-        timer.reset(new IoTimer(timerName, io_service, close));
+        timer.reset(new IoTimer(timerName, const_cast<asio_premature_deprecation_workaround_t&>(io_service), close));
         timer->Start(milliseconds_timeout);
         return timer;
     }
@@ -109,7 +115,11 @@ public:
         return std::make_unique<Wrapper>(Create(
             timerName,
             milliseconds_timeout,
+#if (BOOST_VERSION/100000) >= 1 && ((BOOST_VERSION/100)%1000) > 65
+            connection->GetSocket().GetSocket().get_executor(),
+#else
             connection->GetSocket().GetSocket().get_io_service(),
+#endif
             [weak_connection, timerName]() {
                 if (auto connection = weak_connection.lock()) {
                     if (connection->GetSocket().GetSocket().is_open()) {
@@ -125,7 +135,7 @@ public:
 
 
 private:
-    IoTimer(const std::string& timerName, boost::asio::io_service& io_service,
+    IoTimer(const std::string& timerName, asio_premature_deprecation_workaround_t& io_service,
             close_t close)
     : close_{close}, timer_{io_service}, timer_name_{timerName}
     {}
