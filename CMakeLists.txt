@@ -68,6 +68,10 @@ if (NOT DEFINED RESTC_CPP_USE_CPP17)
     option(RESTC_CPP_USE_CPP17 "Use the C++17 standard" OFF)
 endif()
 
+if (NOT DEFINED RESTC_CPP_MAX_INPUT_BUFFER_LENGTH)
+    set (RESTC_CPP_MAX_INPUT_BUFFER_LENGTH 0x7fffffff)
+endif()
+
 message(STATUS "Using ${CMAKE_CXX_COMPILER}")
 
 macro(SET_CPP_STANDARD target)

@@ -22,7 +22,14 @@ public:
         }
     }
 
-    ~ZipReaderImpl() {
+    ZipReaderImpl(const ZipReaderImpl&) = delete;
+    ZipReaderImpl(ZipReaderImpl&&) = delete;
+
+    ZipReaderImpl& operator = (const ZipReaderImpl&) = delete;
+    ZipReaderImpl& operator = (ZipReaderImpl&&) = delete;
+
+
+    ~ZipReaderImpl() override {
         inflateEnd(&strm_);
     }
 
@@ -48,7 +55,7 @@ public:
                     boost::asio::buffer_cast<const char *>(buffers),
                     boost::asio::buffer_size(buffers)};
 
-                if (src.size() == 0) {
+                if (src.empty()) {
                     throw DecompressException("Decompression failed - premature end of stream.");
                 }
             }
@@ -122,7 +129,8 @@ private:
     }
 
     unique_ptr<DataReader> source_;
-    array<char, 1024*8> out_buffer_;
+    static constexpr size_t out_buffer_len_ = 1024*8;
+    array<char, out_buffer_len_> out_buffer_ = {};
     z_stream strm_ = {};
     bool done_ = false;
 };

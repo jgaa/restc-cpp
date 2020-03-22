@@ -1,5 +1,5 @@
-#include <assert.h>
-#include <locale.h>
+#include <cassert>
+#include <clocale>
 #include <ios>
 
 #include "restc-cpp/restc-cpp.h"
@@ -32,7 +32,7 @@ public:
         out << endl;
 
         for(const auto ch : buf) {
-            if (!(++pos % 80)) {
+            if (!(++pos % line_length)) {
                 out << endl;
             }
             if (std::isprint(ch, loc)) {
@@ -117,6 +117,8 @@ private:
     }
 
     size_t GetNextChunkLen() {
+        static constexpr size_t magic_16 = 16;
+        static constexpr size_t magic_10 = 10;
         size_t chunk_len = 0;
         char ch = stream_->Getc();
 
@@ -125,11 +127,11 @@ private:
         }
 
         for(; isxdigit(ch); ch = stream_->Getc()) {
-            chunk_len *= 16;
+            chunk_len *= magic_16;
             if (ch >= 'a') {
-                chunk_len += 10 + (ch - 'a');
+                chunk_len += magic_10 + (ch - 'a');
             } else if (ch >= 'A') {
-                chunk_len += 10 + (ch - 'A');
+                chunk_len += magic_10 + (ch - 'A');
             } else {
                 chunk_len += ch - '0';
             }

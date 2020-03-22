@@ -37,13 +37,20 @@ public:
             ++parent_.current_tasks_;
         }
 
-        ~DoneHandlerImpl() {
+        ~DoneHandlerImpl() override {
             RESTC_CPP_LOG_TRACE << "Done-handler is destroyed";
             if (--parent_.current_tasks_ == 0) {
                 parent_.OnNoMoreWork();
             }
         }
 
+        DoneHandlerImpl(const DoneHandlerImpl&) = delete;
+        DoneHandlerImpl(DoneHandlerImpl&&) = delete;
+
+        DoneHandlerImpl& operator = (const DoneHandlerImpl&) = delete;
+        DoneHandlerImpl& operator = (DoneHandlerImpl&&) = delete;
+
+    private:
         RestClientImpl& parent_;
     };
 
@@ -112,7 +119,7 @@ public:
         RestClient& rc_;
     };
 
-    RestClientImpl(boost::optional<Request::Properties> properties,
+    RestClientImpl(const boost::optional<Request::Properties>& properties,
                    bool useMainThread)
     : ioservice_instance_{make_unique<boost::asio::io_service>()}
     {
@@ -124,17 +131,17 @@ public:
     }
 
 #ifdef RESTC_CPP_WITH_TLS
-    RestClientImpl(boost::optional<Request::Properties> properties,
+    RestClientImpl(const boost::optional<Request::Properties>& properties,
         bool useMainThread, shared_ptr<boost::asio::ssl::context> ctx)
         : ioservice_instance_{ make_unique<boost::asio::io_service>() }
     {
-        tls_context_ = ctx;
+        tls_context_ = move(ctx);
         io_service_ = ioservice_instance_.get();
         Init(properties, useMainThread);
     }
 #endif
 
-    RestClientImpl(boost::optional<Request::Properties> properties,
+    RestClientImpl(const boost::optional<Request::Properties>& properties,
                    boost::asio::io_service& ioservice)
     : io_service_{&ioservice}
     {
@@ -144,14 +151,20 @@ public:
         Init(properties, true);
     }
 
-    ~RestClientImpl() {
+    ~RestClientImpl() override {
         CloseWhenReady(false);
         if (thread_) {
             thread_->join();
         }
     }
 
-    void Init(boost::optional<Request::Properties>& properties,
+    RestClientImpl(const RestClientImpl&) = delete;
+    RestClientImpl(RestClientImpl&&) = delete;
+
+    RestClientImpl& operator = (const RestClientImpl&) = delete;
+    RestClientImpl& operator = (RestClientImpl&&) = delete;
+
+    void Init(const boost::optional<Request::Properties>& properties,
               bool useMainThread) {
 
         static const string content_type{"Content-Type"};
@@ -188,7 +201,7 @@ public:
     }
 
 
-    const Request::Properties::ptr_t GetConnectionProperties() const override {
+    Request::Properties::ptr_t GetConnectionProperties() const override {
         return default_connection_properties_;
     }
 
@@ -229,10 +242,9 @@ public:
         }
     }
 
-    const void
-    ProcessInWorker(boost::asio::yield_context yield,
-                    const prc_fn_t& fn,
-                    const shared_ptr<promise<void>>& promise) {
+    void ProcessInWorker(boost::asio::yield_context yield,
+                         const prc_fn_t& fn,
+                         const shared_ptr<promise<void>>& promise) {
 
         ContextImpl ctx(yield, *this);
 
@@ -244,17 +256,16 @@ public:
             if (promise) {
                 promise->set_exception(current_exception());
                 return;
-            } else {
-                throw;
             }
+
+            throw;
         } catch(...) {
             RESTC_CPP_LOG_ERROR << "*** ProcessInWorker: Caught unknown exception";
             if (promise) {
                 promise->set_exception(current_exception());
                 return;
-            } else {
-                throw;
             }
+            throw;
         }
 
         if (promise) {
@@ -338,16 +349,16 @@ unique_ptr<RestClient> RestClient::Create() {
 #ifdef RESTC_CPP_WITH_TLS
 unique_ptr<RestClient> RestClient::Create(std::shared_ptr<boost::asio::ssl::context> ctx) {
     boost::optional<Request::Properties> properties;
-    return make_unique<RestClientImpl>(properties, false, ctx);
+    return make_unique<RestClientImpl>(properties, false, move(ctx));
 }
 #endif
 
 unique_ptr<RestClient> RestClient::Create(
-    boost::optional<Request::Properties> properties) {
+    const boost::optional<Request::Properties>& properties) {
     return make_unique<RestClientImpl>(properties, false);
 }
 
-unique_ptr<RestClient> RestClient::CreateUseOwnThread(boost::optional<Request::Properties> properties) {
+unique_ptr<RestClient> RestClient::CreateUseOwnThread(const boost::optional<Request::Properties>& properties) {
     return make_unique<RestClientImpl>(properties, true);
 }
 
@@ -357,7 +368,7 @@ unique_ptr<RestClient> RestClient::CreateUseOwnThread() {
 }
 
 std::unique_ptr<RestClient>
-RestClient::Create(boost::optional<Request::Properties> properties,
+RestClient::Create(const boost::optional<Request::Properties>& properties,
        boost::asio::io_service& ioservice) {
     return make_unique<RestClientImpl>(properties, ioservice);
 }

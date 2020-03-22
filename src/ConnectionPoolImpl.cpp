@@ -28,13 +28,15 @@ class ConnectionPoolImpl
 public:
 
     struct Key {
-        Key(const boost::asio::ip::tcp::endpoint ep,
+        Key(boost::asio::ip::tcp::endpoint ep,
             const Connection::Type connectionType)
-        : endpoint{ep}, type{connectionType} {}
+        : endpoint{move(ep)}, type{connectionType} {}
 
         Key(const Key&) = default;
-
         Key(Key&&) = default;
+        ~Key() = default;
+        Key& operator = (const Key&) = delete;
+        Key& operator = (Key&&) = delete;
 
         bool operator < (const Key& key) const {
             if (static_cast<int>(type) < static_cast<int>(key.type)) {
@@ -52,6 +54,7 @@ public:
                 << "}";
         }
 
+    private:
         const boost::asio::ip::tcp::endpoint endpoint;
         const Connection::Type type;
     };
@@ -60,11 +63,11 @@ public:
         using timestamp_t = decltype(chrono::steady_clock::now());
         using ptr_t = std::shared_ptr<Entry>;
 
-        Entry(const boost::asio::ip::tcp::endpoint ep,
+        Entry(boost::asio::ip::tcp::endpoint ep,
               const Connection::Type connectionType,
               Connection::ptr_t conn,
               const Request::Properties& prop)
-        : key{ep, connectionType}, connection{move(conn)}, ttl{prop.cacheTtlSeconds}
+        : key{move(ep), connectionType}, connection{move(conn)}, ttl{prop.cacheTtlSeconds}
         , created{time(nullptr)} {}
 
         friend ostream& operator << (ostream& o, const Entry& e) {
@@ -77,6 +80,13 @@ public:
             return o << '}';
         }
 
+        const Key& GetKey() const noexcept { return key; }
+        Connection::ptr_t& GetConnection() noexcept { return connection; }
+        int GetTtl() const noexcept { return ttl; }
+        time_t GetCreated() const noexcept { return created;}
+        timestamp_t GetLastUsed() const noexcept { return last_used; }
+
+    private:
         const Key key;
         Connection::ptr_t connection;
         const int ttl = 60;
@@ -89,25 +99,31 @@ public:
     {
     public:
         using release_callback_t = std::function<void (const Entry::ptr_t&)>;
-        ConnectionWrapper(const Entry::ptr_t& entry,
+        ConnectionWrapper(Entry::ptr_t entry,
                         release_callback_t on_release)
-        : on_release_{on_release}, entry_{entry}
+        : on_release_{move(on_release)}, entry_{move(entry)}
         {
         }
 
+        ConnectionWrapper() = delete;
+        ConnectionWrapper(const ConnectionWrapper&) = delete;
+        ConnectionWrapper(ConnectionWrapper&&) = delete;
+        ConnectionWrapper& operator = (const ConnectionWrapper& ) = delete;
+        ConnectionWrapper& operator = (ConnectionWrapper&& ) = delete;
+
         Socket& GetSocket() override {
-            return entry_->connection->GetSocket();
+            return entry_->GetConnection()->GetSocket();
         }
 
         const Socket& GetSocket() const override {
-             return entry_->connection->GetSocket();
+             return entry_->GetConnection()->GetSocket();
         }
 
         boost::uuids::uuid GetId() const override {
-            return entry_->connection->GetId();
+            return entry_->GetConnection()->GetId();
         }
 
-        ~ConnectionWrapper() {
+        ~ConnectionWrapper() override {
             if (on_release_) {
                 on_release_(entry_);
             }
@@ -196,12 +212,12 @@ private:
             ++it;
 
             const auto& entry = *current->second;
-            auto expires = entry.last_used + std::chrono::seconds(entry.ttl);
+            auto expires = entry.GetLastUsed() + std::chrono::seconds(entry.GetTtl());
             if (expires < now) {
-                RESTC_CPP_LOG_TRACE << "Expiring " << *current->second->connection;
+                RESTC_CPP_LOG_TRACE << "Expiring " << *current->second->GetConnection();
                 idle_.erase(current);
             } else {
-                RESTC_CPP_LOG_TRACE << "Keeping << " << *current->second->connection
+                RESTC_CPP_LOG_TRACE << "Keeping << " << *current->second->GetConnection()
                     << " expieres in "
                     << std::chrono::duration_cast<std::chrono::seconds>(expires - now).count()
                     << " seconds ";
@@ -212,19 +228,19 @@ private:
     }
 
     void OnRelease(const Entry::ptr_t& entry) {
-        in_use_.erase(entry->key);
-        if (closed_ || !entry->connection->GetSocket().IsOpen()) {
+        in_use_.erase(entry->GetKey());
+        if (closed_ || !entry->GetConnection()->GetSocket().IsOpen()) {
             RESTC_CPP_LOG_TRACE << "Discarding " << *entry << " after use";
             return;
         }
 
         RESTC_CPP_LOG_TRACE << "Recycling " << *entry << " after use";
-        entry->last_used = chrono::steady_clock::now();
-        idle_.insert({entry->key, entry});
+        entry->GetLastUsed() = chrono::steady_clock::now();
+        idle_.insert({entry->GetKey(), entry});
     }
 
     // Check the constraints to see if we can create a new connection
-    bool CanCreateNewConnection(const boost::asio::ip::tcp::endpoint ep,
+    bool CanCreateNewConnection(const boost::asio::ip::tcp::endpoint& ep,
                                 const Connection::Type connectionType) {
         if (closed_) {
             throw ObjectExpiredException("The connection-pool is closed.");
@@ -261,7 +277,7 @@ private:
     bool PurgeOldestIdleEntry() {
         auto oldest =  idle_.begin();
         for (auto it = idle_.begin(); it != idle_.end(); ++it) {
-            if (it->second->last_used < oldest->second->last_used) {
+            if (it->second->GetLastUsed() < oldest->second->GetLastUsed()) {
                 oldest = it;
             }
         }
@@ -276,7 +292,7 @@ private:
     }
 
     // Get a connection from the cache if it's there.
-    Connection::ptr_t GetFromCache(const boost::asio::ip::tcp::endpoint ep,
+    Connection::ptr_t GetFromCache(const boost::asio::ip::tcp::endpoint& ep,
                                    const Connection::Type connectionType) {
         if (closed_) {
             throw ObjectExpiredException("The connection-pool is closed.");
@@ -293,7 +309,7 @@ private:
         return nullptr;
     }
 
-    Connection::ptr_t CreateNew(const boost::asio::ip::tcp::endpoint ep,
+    Connection::ptr_t CreateNew(const boost::asio::ip::tcp::endpoint& ep,
                                 const Connection::Type connectionType) {
         unique_ptr<Socket> socket;
         if (connectionType == Connection::Type::HTTP) {
@@ -313,7 +329,7 @@ private:
                                         *properties_);
 
         RESTC_CPP_LOG_TRACE << "Created new connection " << *entry;
-        in_use_.insert({entry->key, entry});
+        in_use_.insert({entry->GetKey(), entry});
         return make_unique<ConnectionWrapper>(entry, on_release_);
     }
 

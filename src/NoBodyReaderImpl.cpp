@@ -8,7 +8,7 @@ namespace restc_cpp {
 
 class NoBodyReaderImpl : public DataReader {
 public:
-    NoBodyReaderImpl() {}
+    NoBodyReaderImpl() = default;
 
     bool IsEof() const override {
         return true;

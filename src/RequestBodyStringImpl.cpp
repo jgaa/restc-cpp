@@ -1,4 +1,4 @@
-#include <assert.h>
+#include <cassert>
 #include <array>
 
 #include <boost/utility/string_ref.hpp>

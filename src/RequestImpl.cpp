@@ -27,27 +27,37 @@ public:
 
     struct RedirectException{
 
-        RedirectException(const RedirectException&) = default;
+        RedirectException(const RedirectException&) = delete;
         RedirectException(RedirectException &&) = default;
 
         RedirectException(int redirCode, string redirUrl, std::unique_ptr<Reply> reply)
         : code{redirCode}, url{move(redirUrl)}, redirectReply{move(reply)}
         {}
 
+        RedirectException() = delete;
+        ~RedirectException() = default;
+        RedirectException& operator = (const RedirectException&) = delete;
+        RedirectException& operator = (RedirectException&&) = delete;
+
+        int GetCode() const noexcept { return code; };
+        const std::string& GetUrl() const noexcept { return url; }
+        Reply& GetRedirectReply() const { return *redirectReply; }
+
+    private:
         const int code;
         std::string url;
         std::unique_ptr<Reply> redirectReply;
     };
 
-    RequestImpl(const std::string& url,
+    RequestImpl(std::string url,
                 const Type requestType,
                 RestClient& owner,
                 std::unique_ptr<RequestBody> body,
                 const boost::optional<args_t>& args,
                 const boost::optional<headers_t>& headers,
                 const boost::optional<auth_t>& auth = {})
-    : url_{url}, parsed_url_{url_.c_str()} , request_type_{requestType}
-    , body_{std::move(body)}, owner_{owner}
+    : url_{move(url)}, parsed_url_{url_.c_str()} , request_type_{requestType}
+    , body_{move(body)}, owner_{owner}
     {
        if (args || headers || auth) {
             Properties::ptr_t props = owner_.GetConnectionProperties();
@@ -72,20 +82,27 @@ public:
 
     // modified from http://stackoverflow.com/questions/180947/base64-decode-snippet-in-c
     static std::string Base64Encode(const std::string &in) {
+        // Silence the cursed clang-tidy...
+        constexpr auto magic_4 = 4;
+        constexpr auto magic_6 = 6;
+        constexpr auto magic_8 = 8;
+        constexpr auto magic_3f = 0x3F;
+
         static const string alphabeth {"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"};
         string out;
 
-        int val = 0, valb = -6;
+        int val = 0;
+        int valb = -magic_6;
         for (const uint8_t c : in) {
-            val = (val<<8) + c;
-            valb += 8;
+            val = (val<<magic_8) + c;
+            valb += magic_8;
             while (valb>=0) {
-                out.push_back(alphabeth[(val>>valb)&0x3F]);
-                valb-=6;
+                out.push_back(alphabeth[(val>>valb)&magic_3f]);
+                valb-=magic_6;
             }
         }
-        if (valb>-6) out.push_back(alphabeth[((val<<8)>>(valb+8))&0x3F]);
-        while (out.size()%4) out.push_back('=');
+        if (valb>-magic_6) out.push_back(alphabeth[((val<<magic_8)>>(valb+magic_8))&magic_3f]);
+        while (out.size()%magic_4) out.push_back('=');
         return out;
     }
 
@@ -114,10 +131,10 @@ public:
                 "HEAD", "PATCH"
             }};
 
-        return names[static_cast<int>(requestType)];
+        return names.at(static_cast<size_t>(requestType));
     }
 
-    const uint64_t GetContentBytesSent() const noexcept {
+    uint64_t GetContentBytesSent() const noexcept {
         return bytes_sent_ - header_size_;
     }
 
@@ -129,10 +146,10 @@ public:
                 return DoExecute((ctx));
             } catch(const RedirectException& ex) {
                 
-                auto url = ex.url;
+                auto url = ex.GetUrl();
                 
                 if (properties_->redirectFn) {
-                    properties_->redirectFn(ex.code, url, *ex.redirectReply);
+                    properties_->redirectFn(ex.GetCode(), url, ex.GetRedirectReply());
                 }
                 
                 if ((properties_->maxRedirects >= 0)
@@ -141,7 +158,7 @@ public:
                 }
 
                 RESTC_CPP_LOG_DEBUG << "Redirecting ("
-                    << ex.code
+                    << ex.GetCode()
                     << ") '" << url_
                     << "' --> '"
                     << url
@@ -156,21 +173,32 @@ public:
 
 private:
     void ValidateReply(const Reply& reply) {
+        // Silence the cursed clang tidy!
+        constexpr auto magic_2 = 2;
+        constexpr auto magic_100 = 100;
+        constexpr auto http_401 = 401;
+        constexpr auto http_403 = 403;
+        constexpr auto http_404 = 404;
+        constexpr auto http_405 = 405;
+        constexpr auto http_406 = 406;
+        constexpr auto http_407 = 407;
+        constexpr auto http_408 = 408;
+
         const auto& response = reply.GetHttpResponse();
-        if (response.status_code > 299) switch(response.status_code) {
-            case 401:
+        if ((response.status_code / magic_100) > magic_2) switch(response.status_code) {
+            case http_401:
                 throw HttpAuthenticationException(response);
-            case 403:
+            case http_403:
                 throw HttpForbiddenException(response);
-            case 404:
+            case http_404:
                 throw HttpNotFoundException(response);
-            case 405:
+            case http_405:
                 throw HttpMethodNotAllowedException(response);
-            case 406:
+            case http_406:
                 throw HttpNotAcceptableException(response);
-            case 407:
+            case http_407:
                 throw HttpProxyAuthenticationRequiredException(response);
-            case 408:
+            case http_408:
                 throw HttpRequestTimeOutException(response);
             default:
                 throw RequestFailedWithErrorException(response);
@@ -322,7 +350,7 @@ private:
         throw FailedToConnectException("Failed to connect");
     }
 
-    void SendRequestPayload(Context& ctx,
+    void SendRequestPayload(Context& /*ctx*/,
                       write_buffers_t write_buffer) {
 
         static const auto timer_name = "SendRequestPayload"s;
@@ -429,6 +457,8 @@ private:
     }
 
     unique_ptr<Reply> GetReply(Context& ctx) override {
+        constexpr auto http_301 = 301;
+        constexpr auto http_302 = 302;
 
         // We will not send more data regarding the current request
         writer_->Finish();
@@ -442,7 +472,7 @@ private:
             DataReader::CreateIoReader(connection_, ctx, cfg));
 
         const auto http_code = reply->GetResponseCode();
-        if (http_code == 301 || http_code == 302) {
+        if (http_code == http_301 || http_code == http_302) {
             auto redirect_location = reply->GetHeader("Location");
             if (!redirect_location) {
                 throw ProtocolException(

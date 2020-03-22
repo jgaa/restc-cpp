@@ -49,7 +49,7 @@ private:
     Context& ctx_;
     const std::weak_ptr<Connection> connection_;
     const ReadConfig cfg_;
-    buffer_t buffer_;
+    buffer_t buffer_ = {};
 };
 
 

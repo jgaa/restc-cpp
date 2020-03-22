@@ -70,7 +70,9 @@ DataReaderStream::GetData(size_t maxBytes) {
 
 void DataReaderStream::ReadServerResponse(Reply::HttpResponse& response)
 {
-    string http_1_1{"HTTP/1.1"};
+    static const string http_1_1{"HTTP/1.1"};
+    constexpr size_t max_version_len = 16;
+    constexpr size_t max_phrase_len = 256;
     char ch = {};
     getc_bytes_ = 0;
 
@@ -78,7 +80,7 @@ void DataReaderStream::ReadServerResponse(Reply::HttpResponse& response)
     std::string value;
     for(ch = Getc(); ch != ' '; ch = Getc()) {
         value += ch;
-        if (value.size() > 16) {
+        if (value.size() > max_version_len) {
             throw ProtocolException("ReadHeaders(): Too much HTTP version!");
         }
     }
@@ -120,7 +122,7 @@ void DataReaderStream::ReadServerResponse(Reply::HttpResponse& response)
     value.clear();
     for(ch = Getc(); ch != '\r'; ch = Getc()) {
         value += ch;
-        if (value.size() > 256) {
+        if (value.size() > max_phrase_len) {
             throw ConstraintException("ReadHeaders(): Too long HTTP response phrase!");
         }
     }
@@ -143,9 +145,13 @@ void DataReaderStream::ReadServerResponse(Reply::HttpResponse& response)
 }
 
 void DataReaderStream::ReadHeaderLines(const add_header_fn_t& addHeader) {
+    constexpr size_t max_name_len = 256;
+    constexpr size_t max_headers = 256;
+
     while(true) {
         char ch;
-        std::string name, value;
+        string name;
+        string value;
         for(ch = Getc(); ch != '\r'; ch = Getc()) {
             if (ch == ' ' || ch == '\t') {
                 continue;
@@ -156,7 +162,7 @@ void DataReaderStream::ReadHeaderLines(const add_header_fn_t& addHeader) {
                 break;
             }
             name += ch;
-            if (name.size() > 256) {
+            if (name.size() > max_name_len) {
                 throw ConstraintException("Chunk Trailer: Header name too long!");
             }
         }
@@ -178,7 +184,7 @@ void DataReaderStream::ReadHeaderLines(const add_header_fn_t& addHeader) {
             return; // An empty line marks the end of the trailer
         }
 
-        if (++num_headers_ > 256) {
+        if (++num_headers_ > max_headers) {
             throw ConstraintException("Chunk Trailer: Too many lines in header!");
         }
 
@@ -190,6 +196,7 @@ void DataReaderStream::ReadHeaderLines(const add_header_fn_t& addHeader) {
 }
 
 std::string DataReaderStream::GetHeaderValue() {
+    constexpr size_t max_header_value_len = 1024 * 4;
     std::string value;
     char ch;
 
@@ -199,7 +206,7 @@ std::string DataReaderStream::GetHeaderValue() {
 
         for (; ch != '\r'; ch = Getc()) {
             value += ch;
-            if (value.size() > (1024 * 4)) {
+            if (value.size() > max_header_value_len) {
                 throw ConstraintException("Chunk Trailer: Header value too long!");
             }
         }

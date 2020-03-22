@@ -66,6 +66,9 @@ class Reply;
 class Context;
 class DataWriter;
 
+/*! Length of lines when we 'pretty-print' */
+constexpr size_t line_length = 80;
+
 using write_buffers_t = std::vector<boost::asio::const_buffer>;
 
 struct Headers : public std::multimap<std::string, std::string, ciLessLibC>  {
@@ -336,8 +339,7 @@ public:
     };
 
     /*! Get the default connection properties. */
-    virtual const Request::Properties::ptr_t
-        GetConnectionProperties() const = 0;
+    virtual Request::Properties::ptr_t GetConnectionProperties() const = 0;
     virtual ~RestClient() = default;
 
     /*! Create a context and execute fn as a co-routine
@@ -404,15 +406,15 @@ public:
 #endif
 
     static std::unique_ptr<RestClient>
-        Create(boost::optional<Request::Properties> properties);
+        Create(const boost::optional<Request::Properties>& properties);
 
     static std::unique_ptr<RestClient> CreateUseOwnThread();
 
     static std::unique_ptr<RestClient>
-        CreateUseOwnThread(boost::optional<Request::Properties> properties);
+        CreateUseOwnThread(const boost::optional<Request::Properties>& properties);
 
     static std::unique_ptr<RestClient>
-        Create(boost::optional<Request::Properties> properties,
+        Create(const boost::optional<Request::Properties>& properties,
                boost::asio::io_service& ioservice);
 
     static std::unique_ptr<RestClient>

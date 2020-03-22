@@ -1,4 +1,4 @@
-#include <assert.h>
+#include <cassert>
 #include <array>
 
 #include <boost/utility/string_ref.hpp>
@@ -46,10 +46,10 @@ public:
 
         auto want_bytes = min(buffer_.size(), static_cast<size_t>(bytes_left));
         file_->read(buffer_.data(), want_bytes);
-        const size_t read_this_time = static_cast<size_t>(file_->gcount());
+        const auto read_this_time = static_cast<size_t>(file_->gcount());
         if (read_this_time == 0) {
             const auto err = errno;
-            throw new IoException(string{"file read failed: "}
+            throw IoException(string{"file read failed: "}
                 + to_string(err) + " " + strerror(err));
         }
 
@@ -71,7 +71,8 @@ private:
     unique_ptr<ifstream> file_;
     uint64_t bytes_read_ = 0;
     const uint64_t size_;
-    array<char, 1024 * 8> buffer_;
+    static constexpr size_t buffer_size_ = 1024 * 8;
+    array<char, buffer_size_> buffer_ = {};
 };
 
 

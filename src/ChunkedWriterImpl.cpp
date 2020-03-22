@@ -1,5 +1,7 @@
 
 #include <array>
+#include <cstdio>
+
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/Connection.h"
 #include "restc-cpp/Socket.h"
@@ -69,32 +71,24 @@ private:
             return;
         }
 
-        if (len > 0x7fffffff) {
+        if (len > RESTC_CPP_MAX_INPUT_BUFFER_LENGTH) {
             throw ConstraintException("Input buffer is too large");
         }
-
+        
         // The data part of  buffers_ must be properly initialized
         assert(buffers_.size() > 1);
-
-        int digits = 2;
-        array<char, 12> header;
+        std::ostringstream hdr;
 
         if (first_) {
-            digits = 0;
             first_ = false;
         } else {
-            header[0] = '\r';
-            header[1] = '\n';
+            hdr << '\r' << '\n';
         }
 
-        digits += snprintf(header.data() + digits, header.size() +(-digits -2), "%x",
-                               static_cast<unsigned int>(len));
-        assert(digits < static_cast<int>(header.size()));
-        header[digits++] = '\r';
-        assert(digits < static_cast<int>(header.size()));
-        header[digits++] = '\n';
+        hdr << hex << len << '\r' << '\n';
+        const auto header = hdr.str();
 
-        buffers_[0] = {header.data(), static_cast<size_t>(digits)};
+        buffers_[0] = {header.c_str(), header.size()};
         next_->Write(buffers_);
     }
 
