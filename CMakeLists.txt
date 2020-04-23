@@ -16,7 +16,20 @@ if (NOT DEFINED INSTALL_RAPIDJSON_HEADERS)
     option(INSTALL_RAPIDJSON_HEADERS "Install rapidjson headers when make install is executed" ON)
 endif()
 
-include(cmake_scripts/external-projects.cmake)
+if (NOT DEFINED RESTC_CPP_FETCH_DEPENDENCIES)
+    option(RESTC_CPP_FETCH_DEPENDENCIES "Use the ExternalProject fetcher to fetch dependencies like rapidjson and lest." ON)
+endif()
+
+include(CMakeDependentOption)
+
+cmake_dependent_option(INSTALL_RAPIDJSON_HEADERS "Install rapidjson headers when make install is executed" ON
+    "RESTC_CPP_FETCH_DEPENDENCIES" OFF)
+
+if (RESTC_CPP_FETCH_DEPENDENCIES)
+    include(cmake_scripts/external-projects.cmake)
+else()
+    find_package(RapidJSON 1.1 REQUIRED)
+endif()
 
 if (EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
     message(STATUS "Using conan configuration: ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
@@ -134,7 +147,9 @@ target_include_directories(${PROJECT_NAME}
 
 SET_CPP_STANDARD(${PROJECT_NAME})
 
-add_dependencies(${PROJECT_NAME} externalRapidJson)
+if (NOT DEFINED RESTC_CPP_FETCH_DEPENDENCIES)
+    add_dependencies(${PROJECT_NAME} externalRapidJson)
+endif()
 
 if (NOT EMBEDDED_RESTC_CPP)
 
