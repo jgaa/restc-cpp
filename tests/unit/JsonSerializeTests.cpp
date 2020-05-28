@@ -1,4 +1,6 @@
 
+#include <map>
+
 // Include before boost::log headers
 #include "restc-cpp/logging.h"
 
@@ -93,6 +95,8 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 const lest::test specification[] = {
 
+
+    
 STARTCASE(SerializeSimpleObject) {
     Person person = { 100, "John Doe"s, 123.45 };
 
@@ -271,6 +275,34 @@ STARTCASE(DeserializeNestedArray) {
     }
 } ENDCASE
 
+STARTCASE(DeserializeKeyValueMap) {
+    std::string json = R"({"key1":"value1", "key2":"value2"})";
+
+    std::map<string, string> keyvalue;
+    RapidJsonDeserializer<decltype(keyvalue)> handler(keyvalue);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+
+    CHECK_EQUAL(keyvalue["key1"], "value1");
+    CHECK_EQUAL(keyvalue["key2"], "value2");
+
+} ENDCASE
+
+STARTCASE(DeserializeKeyValueMapWithObject) {
+    string json = R"({"dog1":{ "id" : 1, "name" : "Ares", "balance" : 123.45}, "dog2":{ "id" : 2, "name" : "Nusse", "balance" : 234.56}})";
+
+    map<string, Person> keyvalue;
+    RapidJsonDeserializer<decltype(keyvalue)> handler(keyvalue);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+
+    CHECK_EQUAL(keyvalue["dog1"].name, "Ares"s);
+    CHECK_EQUAL(keyvalue["dog2"].name, "Nusse"s);
+
+} ENDCASE
+
 STARTCASE(DeserializeMemoryLimit)
 {
 
@@ -401,7 +433,6 @@ STARTCASE(MissingPropertyNameNotAllowed) {
     EXPECT_THROWS_AS(reader.Parse(ss, handler), UnknownPropertyException);
 } ENDCASE
 
-
 }; // lest
 
 
@@ -416,3 +447,4 @@ int main( int argc, char * argv[] )
 }
 
 
+ 

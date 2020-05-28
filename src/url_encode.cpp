@@ -42,7 +42,7 @@ std::string url_encode(const boost::string_ref& src) {
     static const string hex{"0123456789ABCDEF"};
     static auto normal_ch = get_normal_ch();
     std::string rval;
-    rval.reserve(src.size());
+    rval.reserve(src.size() * 2);
 
     for(auto ch : src) {
         if (normal_ch[static_cast<uint8_t>(ch)]) {

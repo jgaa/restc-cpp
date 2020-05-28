@@ -7,6 +7,7 @@
 #include <set>
 #include <deque>
 #include <map>
+#include <type_traits>
 
 #include <boost/iterator/function_input_iterator.hpp>
 #include <boost/mpl/range_c.hpp>
@@ -446,7 +447,6 @@ struct is_map<std::map<std::string, T, CompareT, AllocT> > {
     constexpr static const bool value = true;
 };
 
-
 template <typename T>
 struct is_container {
     constexpr static const bool value = false;
@@ -747,6 +747,7 @@ private:
     template <typename dataT>
     void RecurseToMember(typename std::enable_if<
             boost::fusion::traits::is_sequence<dataT>::value
+            && !is_map<dataT>::value
             >::type* = 0) {
         assert(!recursed_to_);
         assert(!current_name_.empty());
@@ -772,7 +773,7 @@ private:
 
         };
 
-        on_name_and_value<dataT, decltype(fn)> handler(fn);
+        on_name_and_value<decltype(object_), decltype(fn)> handler(fn);
         handler.for_each_member(object_);
 
         if (!recursed_to_) {
@@ -799,7 +800,22 @@ private:
 
     template <typename dataT>
     void RecurseToMember( typename std::enable_if<
+         is_map<dataT>::value
+         >::type* = 0) {
+
+         using native_type_t = typename std::remove_const<
+             typename std::remove_reference<typename dataT::mapped_type>::type>::type;
+         recursed_to_ = std::make_unique<RapidJsonDeserializer<native_type_t>>(
+             object_[current_name_], this, properties_, bytes_);
+         saved_state_.push(state_);
+         state_ = State::RECURSED;
+         current_name_.clear();
+    }
+
+    template <typename dataT>
+    void RecurseToMember( typename std::enable_if<
             !boost::fusion::traits::is_sequence<dataT>::value
+            && !is_map<dataT>::value
             >::type* = 0) {
         assert(!recursed_to_);
     }
