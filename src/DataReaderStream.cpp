@@ -11,21 +11,21 @@ namespace restc_cpp {
 
 DataReaderStream::DataReaderStream(std::unique_ptr<DataReader>&& source)
 : source_{move(source)} {
-    RESTC_CPP_LOG_TRACE << "DataReaderStream: Chained to "
-        << RESTC_CPP_TYPENAME(decltype(*source_));
+    RESTC_CPP_LOG_TRACE_("DataReaderStream: Chained to "
+        << RESTC_CPP_TYPENAME(decltype(*source_)));
 }
 
 void DataReaderStream::Fetch() {
     if (++curr_ >= end_) {
         auto buf = source_->ReadSome();
 
-        RESTC_CPP_LOG_TRACE << "DataReaderStream::Fetch: Fetched buffer with "
-            << boost::asio::buffer_size(buf) << " bytes.";
+        RESTC_CPP_LOG_TRACE_("DataReaderStream::Fetch: Fetched buffer with "
+            << boost::asio::buffer_size(buf) << " bytes.");
 
         const auto bytes = boost::asio::buffer_size(buf);
         if (bytes == 0) {
-            RESTC_CPP_LOG_TRACE << "DataReaderStream::Fetch: EOF";
-            throw ProtocolException("Fetch(): EOF");
+            RESTC_CPP_LOG_TRACE_("DataReaderStream::Fetch: EOF";
+            throw ProtocolException("Fetch(): EOF"));
         }
         curr_ = boost::asio::buffer_cast<const char *>(buf);
         end_ = curr_ + boost::asio::buffer_size(buf);
@@ -39,8 +39,8 @@ DataReaderStream::ReadSome() {
     boost::asio::const_buffers_1 rval = {curr_,
         static_cast<size_t>(end_ - curr_)};
     curr_ = end_;
-    RESTC_CPP_LOG_TRACE << "DataReaderStream::ReadSome: Returning buffer with "
-        << boost::asio::buffer_size(rval) << " bytes.";
+    RESTC_CPP_LOG_TRACE_("DataReaderStream::ReadSome: Returning buffer with "
+        << boost::asio::buffer_size(rval) << " bytes.");
 
     if (source_->IsEof()) {
         SetEof();
@@ -61,8 +61,8 @@ DataReaderStream::GetData(size_t maxBytes) {
         curr_ += seg_len - 1;
     }
 
-    RESTC_CPP_LOG_TRACE << "DataReaderStream::GetData(" << maxBytes << "): Returning buffer with "
-        << boost::asio::buffer_size(rval) << " bytes.";
+    RESTC_CPP_LOG_TRACE_("DataReaderStream::GetData(" << maxBytes << "): Returning buffer with "
+        << boost::asio::buffer_size(rval) << " bytes.");
 
     return rval;
 }
@@ -135,13 +135,13 @@ void DataReaderStream::ReadServerResponse(Reply::HttpResponse& response)
     }
 
     response.reason_phrase = move(value);
-    RESTC_CPP_LOG_TRACE << "ReadServerResponse: getc_bytes is " <<  getc_bytes_;
+    RESTC_CPP_LOG_TRACE_("ReadServerResponse: getc_bytes is " <<  getc_bytes_);
 
-    RESTC_CPP_LOG_TRACE << "HTTP Response: "
+    RESTC_CPP_LOG_TRACE_("HTTP Response: "
         << (response.http_version == Reply::HttpResponse::HttpVersion::HTTP_1_1
             ? "HTTP/1.1" : "???")
         << ' ' << response.status_code
-        << ' ' << response.reason_phrase;
+        << ' ' << response.reason_phrase);
 }
 
 void DataReaderStream::ReadHeaderLines(const add_header_fn_t& addHeader) {
@@ -179,7 +179,7 @@ void DataReaderStream::ReadHeaderLines(const add_header_fn_t& addHeader) {
             if (!value.empty()) {
                 throw ProtocolException("Chunk Trailer: Header value without name!");
             }
-            RESTC_CPP_LOG_TRACE << "ReadHeaderLines: getc_bytes is " <<  getc_bytes_;
+            RESTC_CPP_LOG_TRACE_("ReadHeaderLines: getc_bytes is " <<  getc_bytes_);
             getc_bytes_ = 0;
             return; // An empty line marks the end of the trailer
         }
@@ -188,7 +188,7 @@ void DataReaderStream::ReadHeaderLines(const add_header_fn_t& addHeader) {
             throw ConstraintException("Chunk Trailer: Too many lines in header!");
         }
 
-        RESTC_CPP_LOG_TRACE << name << ": " << value;
+        RESTC_CPP_LOG_TRACE_(name << ": " << value);
         addHeader(move(name), move(value));
         name.clear();
         value.clear();
@@ -232,7 +232,7 @@ std::string DataReaderStream::GetHeaderValue() {
 
 
 void DataReaderStream::SetEof() {
-    RESTC_CPP_LOG_TRACE << "Reached EOF";
+    RESTC_CPP_LOG_TRACE_("Reached EOF");
     eof_ = true;
 }
 

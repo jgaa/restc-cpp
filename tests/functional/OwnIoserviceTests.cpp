@@ -73,8 +73,8 @@ STARTCASE(TestOwnIoservice)
             IteratorFromJsonSerializer<Post> results(*reply);
 
             auto it = results.begin();
-            RESTC_CPP_LOG_DEBUG << "Iteration #" << i
-                << " Read item # " << it->id;
+            RESTC_CPP_LOG_DEBUG_("Iteration #" << i
+                << " Read item # " << it->id);
 
             // We can't just wait on the lock since we are in a co-routine.
             // So we use the async_wait() to poll in stead.
@@ -105,14 +105,14 @@ STARTCASE(TestOwnIoservice)
     for(auto& future : futures) {
         try {
             auto i = future.get();
-            RESTC_CPP_LOG_DEBUG << "Iteration #" << i << " is done";
+            RESTC_CPP_LOG_DEBUG_("Iteration #" << i << " is done");
             ++successful_connections;
         } catch (const std::exception& ex) {
-            RESTC_CPP_LOG_ERROR << "Future threw up: " << ex.what();
+            std::clog << "Future threw up: " << ex.what();
         }
     }
 
-    RESTC_CPP_LOG_INFO << "We had " << successful_connections
+    std::clog << "We had " << successful_connections
         << " successful connections.";
 
     CHECK_EQUAL(CONNECTIONS, successful_connections);

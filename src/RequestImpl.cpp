@@ -157,12 +157,12 @@ public:
                     throw ConstraintException("Too many redirects.");
                 }
 
-                RESTC_CPP_LOG_DEBUG << "Redirecting ("
+                RESTC_CPP_LOG_DEBUG_("Redirecting ("
                     << ex.GetCode()
                     << ") '" << url_
                     << "' --> '"
                     << url
-                    << "') ";
+                    << "') ");
                 url_ = move(url);
                 parsed_url_ = url_.c_str();
                 add_url_args_ = false; // Use whatever arguments we got in the redirect
@@ -269,8 +269,8 @@ private:
         if (properties_->proxy.type == Request::Proxy::Type::HTTP) {
             Url proxy {properties_->proxy.address.c_str()};
 
-            RESTC_CPP_LOG_TRACE << "Using HTTP Proxy at: "
-                << proxy.GetHost() << ':' << proxy.GetPort();
+            RESTC_CPP_LOG_TRACE_("Using HTTP Proxy at: "
+                << proxy.GetHost() << ':' << proxy.GetPort());
 
             return { proxy.GetHost().to_string(),
                 proxy.GetPort().to_string()};
@@ -305,8 +305,8 @@ private:
         // Resolve the hostname
         const auto query = GetRequestEndpoint();
 
-        RESTC_CPP_LOG_TRACE << "Resolving " << query.host_name() << ":"
-            << query.service_name();
+        RESTC_CPP_LOG_TRACE_("Resolving " << query.host_name() << ":"
+            << query.service_name());
 
         auto address_it = resolver.async_resolve(query,
                                                  ctx.GetYield());
@@ -315,7 +315,7 @@ private:
         for(; address_it != addr_end; ++address_it) {
             const auto endpoint = address_it->endpoint();
 
-            RESTC_CPP_LOG_TRACE << "Trying endpoint " << endpoint;
+            RESTC_CPP_LOG_TRACE_("Trying endpoint " << endpoint);
 
             // Get a connection from the pool
             auto connection = owner_.GetConnectionPool()->GetConnection(
@@ -324,7 +324,7 @@ private:
             // Connect if the connection is new.
             if (!connection->GetSocket().IsOpen()) {
 
-                RESTC_CPP_LOG_DEBUG << "Connecting to " << endpoint;
+                RESTC_CPP_LOG_DEBUG_("Connecting to " << endpoint);
 
                 auto timer = IoTimer::Create(timer_name,
                     properties_->connectTimeoutMs, connection);
@@ -333,11 +333,11 @@ private:
                     connection->GetSocket().AsyncConnect(
                         endpoint, address_it->host_name(), ctx.GetYield());
                 } catch(const exception& ex) {
-                    RESTC_CPP_LOG_WARN << "Connect to "
+                    RESTC_CPP_LOG_WARN_("Connect to "
                         << endpoint
                         << " failed with exception type: "
                         << typeid(ex).name()
-                        << ", message: " << ex.what();
+                        << ", message: " << ex.what());
 
                     connection->GetSocket().GetSocket().close();
                     continue;
@@ -385,9 +385,9 @@ private:
                 bytes_sent_ += boost::asio::buffer_size(write_buffer);
 
             } catch(const exception& ex) {
-                RESTC_CPP_LOG_WARN << "Write failed with exception type: "
+                RESTC_CPP_LOG_WARN_("Write failed with exception type: "
                     << typeid(ex).name()
-                    << ", message: " << ex.what();
+                    << ", message: " << ex.what());
                 throw;
             }
 
@@ -443,14 +443,14 @@ private:
         write_buffer.push_back(headers);
         header_size_ = boost::asio::buffer_size(write_buffer);
 
-        RESTC_CPP_LOG_TRACE << "Request: " << (const boost::string_ref)headers
-            << ' ' << *connection_;
+        RESTC_CPP_LOG_TRACE_("Request: " << (const boost::string_ref)headers
+            << ' ' << *connection_);
 
         PrepareBody();
         SendRequestPayload(ctx, write_buffer);
 
-        RESTC_CPP_LOG_DEBUG << "Sent " << Verb(request_type_) << " request to '" << url_ << "' "
-            << *connection_;
+        RESTC_CPP_LOG_DEBUG_("Sent " << Verb(request_type_) << " request to '" << url_ << "' "
+            << *connection_);
 
         assert(writer_);
         return *writer_;

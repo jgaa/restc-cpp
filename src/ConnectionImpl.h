@@ -28,11 +28,11 @@ public:
     ConnectionImpl(std::unique_ptr<Socket> socket)
     : socket_{std::move(socket)}
     {
-        RESTC_CPP_LOG_TRACE << *this << " is constructed.";
+        RESTC_CPP_LOG_TRACE_(*this << " is constructed.");
     }
 
     ~ConnectionImpl() {
-        RESTC_CPP_LOG_TRACE << *this << " is dead.";
+        RESTC_CPP_LOG_TRACE_(*this << " is dead.");
     }
 
     Socket& GetSocket() override {

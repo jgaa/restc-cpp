@@ -33,12 +33,12 @@ public:
 
         DoneHandlerImpl(RestClientImpl& parent)
         : parent_{parent} {
-            RESTC_CPP_LOG_TRACE << "Done-handler is created";
+            RESTC_CPP_LOG_TRACE_("Done-handler is created");
             ++parent_.current_tasks_;
         }
 
         ~DoneHandlerImpl() override {
-            RESTC_CPP_LOG_TRACE << "Done-handler is destroyed";
+            RESTC_CPP_LOG_TRACE_("Done-handler is destroyed");
             if (--parent_.current_tasks_ == 0) {
                 parent_.OnNoMoreWork();
             }
@@ -191,9 +191,9 @@ public:
             lock_guard<decltype(done_mutex_)> lock(done_mutex_);
             work_ = make_unique<boost::asio::io_service::work>(*io_service_);
             wait.set_value();
-            RESTC_CPP_LOG_DEBUG << "Worker is starting.";
+            RESTC_CPP_LOG_DEBUG_("Worker is starting.");
             io_service_->run();
-            RESTC_CPP_LOG_DEBUG << "Worker is done.";
+            RESTC_CPP_LOG_DEBUG_("Worker is done.");
         });
 
         // Wait for the ConnectionPool to be constructed
@@ -215,9 +215,9 @@ public:
             });
         }
         if (wait) {
-            RESTC_CPP_LOG_TRACE << "CloseWhenReady: Waiting for work to end.";
+            RESTC_CPP_LOG_TRACE_("CloseWhenReady: Waiting for work to end.");
             lock_guard<decltype(done_mutex_)> lock(done_mutex_);
-            RESTC_CPP_LOG_TRACE << "CloseWhenReady: Done waiting for work to end.";
+            RESTC_CPP_LOG_TRACE_("CloseWhenReady: Done waiting for work to end.");
         }
     }
 
@@ -252,7 +252,7 @@ public:
         try {
             fn(ctx);
         } catch(exception& ex) {
-            RESTC_CPP_LOG_ERROR << "ProcessInWorker: Caught exception: " << ex.what();
+            RESTC_CPP_LOG_ERROR_("ProcessInWorker: Caught exception: " << ex.what());
             if (promise) {
                 promise->set_exception(current_exception());
                 return;
@@ -260,7 +260,7 @@ public:
 
             throw;
         } catch(...) {
-            RESTC_CPP_LOG_ERROR << "*** ProcessInWorker: Caught unknown exception";
+            RESTC_CPP_LOG_ERROR_("*** ProcessInWorker: Caught unknown exception");
             if (promise) {
                 promise->set_exception(current_exception());
                 return;

@@ -70,13 +70,13 @@ ReplyImpl::ReplyImpl(Connection::ptr_t connection,
 ReplyImpl::~ReplyImpl() {
     if (connection_ && connection_->GetSocket().IsOpen()) {
         try {
-            RESTC_CPP_LOG_TRACE << "~ReplyImpl(): " << *connection_
+            RESTC_CPP_LOG_TRACE_("~ReplyImpl(): " << *connection_
                 << " is still open. Closing it to prevent problems with partially "
-                << "received data.";
+                << "received data.");
             connection_->GetSocket().Close();
             connection_.reset();
         } catch(std::exception& ex) {
-            RESTC_CPP_LOG_WARN << "~ReplyImpl(): Caught exception:" << ex.what();
+            RESTC_CPP_LOG_WARN_("~ReplyImpl(): Caught exception:" << ex.what());
         }
     }
 }
@@ -137,8 +137,8 @@ void ReplyImpl::HandleConnectionLifetime() {
     const auto conn_hdr = GetHeader(connection_name);
     if (conn_hdr && ciEqLibC()(*conn_hdr, close_name)) {
         if (connection_) {
-            RESTC_CPP_LOG_TRACE << "'Connection: close' header. "
-                << "Tagging " << *connection_ << " for close.";
+            RESTC_CPP_LOG_TRACE_("'Connection: close' header. "
+                << "Tagging " << *connection_ << " for close.");
         }
         do_close_connection_ = true;
     }
@@ -158,17 +158,17 @@ void ReplyImpl::HandleDecompression() {
     for(auto it = tok.begin(); it != tok.end(); ++it) {
 #ifdef RESTC_CPP_WITH_ZLIB
         if (ciEqLibC()(gzip, *it)) {
-            RESTC_CPP_LOG_TRACE << "Adding gzip reader to " << *connection_;
+            RESTC_CPP_LOG_TRACE_("Adding gzip reader to " << *connection_);
             reader_ = DataReader::CreateGzipReader(move(reader_));
         } else if (ciEqLibC()(deflate, *it)) {
-            RESTC_CPP_LOG_TRACE << "Adding deflate reader to " << *connection_;
+            RESTC_CPP_LOG_TRACE_("Adding deflate reader to " << *connection_);
             reader_ = DataReader::CreateZipReader(move(reader_));
         } else
 #endif // RESTC_CPP_WITH_ZLIB
         {
-            RESTC_CPP_LOG_ERROR << "Unsupported compression: '"
+            RESTC_CPP_LOG_ERROR_("Unsupported compression: '"
                 << url_encode(*it)
-                << "' from server on " << *connection_;
+                << "' from server on " << *connection_);
             throw NotSupportedException("Unsupported compression.");
         }
     }
@@ -213,15 +213,15 @@ void ReplyImpl::CheckIfWeAreDone() {
 
 void ReplyImpl::ReleaseConnection() {
     if (connection_ && do_close_connection_) {
-        RESTC_CPP_LOG_TRACE << "Closing connection because do_close_connection_ is true: "
-            << *connection_;
+        RESTC_CPP_LOG_TRACE_("Closing connection because do_close_connection_ is true: "
+            << *connection_);
         if (connection_->GetSocket().IsOpen()) {
             connection_->GetSocket().Close();
         }
     }
 
     if (connection_) {
-        RESTC_CPP_LOG_TRACE << "Releasing " << *connection_;
+        RESTC_CPP_LOG_TRACE_("Releasing " << *connection_);
         connection_.reset();
         //reader_.reset();
     }

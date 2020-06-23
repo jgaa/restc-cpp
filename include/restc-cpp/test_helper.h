@@ -10,12 +10,12 @@ namespace restc_cpp {
 namespace {
 
 #define STARTCASE(name) { CASE(#name) { \
-    RESTC_CPP_LOG_DEBUG << "================================"; \
-    RESTC_CPP_LOG_INFO << "Test case: " << #name; \
-    RESTC_CPP_LOG_DEBUG << "================================";
+    RESTC_CPP_LOG_DEBUG_("================================"); \
+    RESTC_CPP_LOG_INFO_("Test case: " << #name;) \
+    RESTC_CPP_LOG_DEBUG_("================================");
 
 #define ENDCASE \
-    RESTC_CPP_LOG_DEBUG << "============== ENDCASE ============="; \
+    RESTC_CPP_LOG_DEBUG_("============== ENDCASE ============="); \
 }},
 
 template<typename T1, typename T2>

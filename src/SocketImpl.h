@@ -69,7 +69,7 @@ public:
 
     void Close(Reason reason) override {
         if (socket_.is_open()) {
-            RESTC_CPP_LOG_TRACE << "Closing " << *this;
+            RESTC_CPP_LOG_TRACE_("Closing " << *this);
             socket_.close();
         }
         reason_ = reason;

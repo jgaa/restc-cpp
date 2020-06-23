@@ -48,7 +48,7 @@ void DoSomethingInteresting(Context& ctx) {
 
     // Just dump the data.
     for(const auto& post : posts_list) {
-        RESTC_CPP_LOG_INFO << "Post id=" << post.id << ", title: " << post.motto;
+        RESTC_CPP_LOG_INFO_("Post id=" << post.id << ", title: " << post.motto);
     }
 
     // Asynchronously connect to server and POST data.
@@ -56,7 +56,7 @@ void DoSomethingInteresting(Context& ctx) {
 
     // Asynchronously fetch the entire data-set and return it as a string.
     auto json = repl->GetBodyAsString();
-    RESTC_CPP_LOG_INFO << "Received POST data: " << json;
+    RESTC_CPP_LOG_INFO_("Received POST data: " << json);
 
 
     // Use RequestBuilder to fetch everything
@@ -113,9 +113,9 @@ void DoSomethingInteresting(Context& ctx) {
         // Try with https
         repl = ctx.Get(https_url);
         json = repl->GetBodyAsString();
-        RESTC_CPP_LOG_INFO << "Received https GET data: " << json;
+        RESTC_CPP_LOG_INFO_("Received https GET data: " << json);
 #endif // TLS
-        RESTC_CPP_LOG_INFO << "Done";
+        RESTC_CPP_LOG_INFO_("Done");
 }
 
 
@@ -134,7 +134,7 @@ int main(int argc, char *argv[]) {
         // Hold the main thread to allow the worker to do it's job
         future.get();
     } catch (const exception& ex) {
-        RESTC_CPP_LOG_INFO << "main: Caught exception: " << ex.what();
+        RESTC_CPP_LOG_INFO_("main: Caught exception: " << ex.what());
     }
 
     // Fetch a result trough a future
@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
 
         cout << "Received post# " << my_post.id << ", username: " << my_post.username;
     } catch (const exception& ex) {
-        RESTC_CPP_LOG_INFO << "main: Caught exception: " << ex.what();
+        RESTC_CPP_LOG_INFO_("main: Caught exception: " << ex.what());
     }
 
     return 0;

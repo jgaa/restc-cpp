@@ -295,8 +295,8 @@ void assign_value(varT& var, const valT& val) {
 
 template <typename varT, typename valT>
 void assign_value(varT var, valT val) {
-	RESTC_CPP_LOG_ERROR << "assign_value: Invalid data conversion from "
-		<< RESTC_CPP_TYPENAME(varT) << " to " << RESTC_CPP_TYPENAME(valT);
+    RESTC_CPP_LOG_ERROR_("assign_value: Invalid data conversion from "
+        << RESTC_CPP_TYPENAME(varT) << " to " << RESTC_CPP_TYPENAME(valT));
     assert(false);
 	throw ParseException("assign_value: Invalid data conversion from ");
 }
@@ -515,7 +515,7 @@ public:
 
     bool StartObject() override {
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-        RESTC_CPP_LOG_TRACE << "   Skipping json: StartObject()";
+        RESTC_CPP_LOG_TRACE_("   Skipping json: StartObject()");
 #endif
         ++recursion_;
         return true;
@@ -523,15 +523,15 @@ public:
 
     bool Key(const char* str, std::size_t length, bool copy) override {
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-        RESTC_CPP_LOG_TRACE << "   Skipping json key: "
-            << boost::string_ref(str, length);
+        RESTC_CPP_LOG_TRACE_("   Skipping json key: "
+            << boost::string_ref(str, length));
 #endif
         return true;
     }
 
     bool EndObject(std::size_t memberCount) override {
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-        RESTC_CPP_LOG_TRACE << "   Skipping json: EndObject()";
+        RESTC_CPP_LOG_TRACE_("   Skipping json: EndObject()");
 #endif
         if (--recursion_ <= 0) {
             if (HaveParent()) {
@@ -543,7 +543,7 @@ public:
 
     bool StartArray() override {
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-        RESTC_CPP_LOG_TRACE << "   Skipping json: StartArray()";
+        RESTC_CPP_LOG_TRACE_("   Skipping json: StartArray()");
 #endif
         ++recursion_;
         return true;
@@ -551,7 +551,7 @@ public:
 
     bool EndArray(std::size_t elementCount) override {
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-        RESTC_CPP_LOG_TRACE << "   Skipping json: EndArray()";
+        RESTC_CPP_LOG_TRACE_("   Skipping json: EndArray()");
 #endif
         if (--recursion_ <= 0) {
             if (HaveParent()) {
@@ -778,10 +778,10 @@ private:
 
         if (!recursed_to_) {
             assert(!found);
-            RESTC_CPP_LOG_DEBUG << "RecurseToMember(): Failed to find property-name '"
+            RESTC_CPP_LOG_DEBUG_("RecurseToMember(): Failed to find property-name '"
                 << current_name_
                 << "' in C++ class '" << RESTC_CPP_TYPENAME(dataT)
-                << "' when serializing from JSON.";
+                << "' when serializing from JSON.");
 
             if (!properties_.ignore_unknown_properties) {
                 throw UnknownPropertyException(current_name_);
@@ -856,10 +856,10 @@ private:
 
         if (!found) {
             assert(!found);
-            RESTC_CPP_LOG_DEBUG << "SetValueOnMember(): Failed to find property-name '"
+            RESTC_CPP_LOG_DEBUG_("SetValueOnMember(): Failed to find property-name '"
                 << current_name_
                 << "' in C++ class '" << RESTC_CPP_TYPENAME(dataT)
-                << "' when serializing from JSON.";
+                << "' when serializing from JSON.");
 
             if (!properties_.ignore_unknown_properties) {
                 throw UnknownPropertyException(current_name_);
@@ -897,8 +897,8 @@ private:
             && !is_map<dataT>::value
             >::type* = 0) {
 
-        RESTC_CPP_LOG_ERROR << RESTC_CPP_TYPENAME(dataT)
-            << " BAD SetValueOnMember: ";
+        RESTC_CPP_LOG_ERROR_(RESTC_CPP_TYPENAME(dataT)
+            << " BAD SetValueOnMember: ");
 
         assert(false);
         return true;
@@ -944,9 +944,9 @@ private:
     template<typename argT>
     bool SetValue(argT val) {
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
+        RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(data_t)
             << " SetValue: " << current_name_
-            << " State: " << to_string(state_);
+            << " State: " << to_string(state_));
 #endif
         if (state_ == State::IN_OBJECT) {
             return SetValueOnMember<data_t>(val);
@@ -954,10 +954,10 @@ private:
             SetValueInArray<data_t>(val);
             return true;
         }
-        RESTC_CPP_LOG_ERROR << RESTC_CPP_TYPENAME(data_t)
+        RESTC_CPP_LOG_ERROR_(RESTC_CPP_TYPENAME(data_t)
             << " SetValue: " << current_name_
             << " State: " << to_string(state_)
-            << " Value type" << RESTC_CPP_TYPENAME(argT);
+            << " Value type" << RESTC_CPP_TYPENAME(argT));
 
         assert(false && "Invalid state for setting a value");
         return true;
@@ -1005,9 +1005,9 @@ private:
     bool DoStartObject() {
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
         const bool i_am_a_map = is_map<data_t>::value;
-        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
+        RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(data_t)
             << " DoStartObject: " << current_name_
-            << " i_am_a_map: " << i_am_a_map;
+            << " i_am_a_map: " << i_am_a_map);
 #endif
         switch (state_) {
 
@@ -1027,7 +1027,7 @@ private:
                 recursed_to_->StartObject();
                 break;
             case State::DONE:
-                RESTC_CPP_LOG_TRACE << "Re-using instance of RapidJsonDeserializer";
+                RESTC_CPP_LOG_TRACE_("Re-using instance of RapidJsonDeserializer");
                 state_ = State::IN_OBJECT;
                 if (bytes_) {
                     *bytes_ = properties_.GetMaxMemoryConsumption();
@@ -1050,16 +1050,16 @@ private:
             current_name_ = properties_.name_mapping->to_native_name(name);
         }
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
-            << " DoKey: " << current_name_;
+        RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(data_t)
+            << " DoKey: " << current_name_);
 #endif
         return true;
     }
 
     bool DoEndObject(std::size_t memberCount) {
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
-            << " DoEndObject: " << current_name_;
+        RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(data_t)
+            << " DoEndObject: " << current_name_);
 #endif
         current_name_.clear();
 
@@ -1085,8 +1085,8 @@ private:
 
     bool DoStartArray() {
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
-            << " DoStartArray: " << current_name_;
+        RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(data_t)
+            << " DoStartArray: " << current_name_);
 #endif
         switch (state_) {
             case State::INIT:
@@ -1109,8 +1109,8 @@ private:
 
     bool DoEndArray(std::size_t elementCount) {
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
-            << " DoEndArray: " << current_name_;
+        RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(data_t)
+            << " DoEndArray: " << current_name_);
 #endif
         current_name_.clear();
 
@@ -1136,8 +1136,8 @@ private:
 
     void OnChildIsDone() override {
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(data_t)
-            << " OnChildIsDone";
+        RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(data_t)
+            << " OnChildIsDone");
 #endif
         assert(state_ == State::RECURSED);
         assert(!saved_state_.empty());
@@ -1310,8 +1310,8 @@ void do_serialize(const dataT& object, serializerT& serializer,
         is_container<dataT>::value
         >::type* = 0) {
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-    RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
-        << " StartArray: ";
+    RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
+        << " StartArray: ");
 #endif
     serializer.StartArray();
 
@@ -1323,8 +1323,8 @@ void do_serialize(const dataT& object, serializerT& serializer,
         do_serialize<native_field_type_t>(v, serializer, properties);
     }
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-    RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
-        << " EndArray: ";
+    RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
+        << " EndArray: ");
 #endif
     serializer.EndArray();
 };
@@ -1339,8 +1339,8 @@ void do_serialize(const dataT& object, serializerT& serializer,
     static const serialize_properties_t map_name_properties{false};
 
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-    RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
-        << " StartMap: ";
+    RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
+        << " StartMap: ");
 #endif
     serializer.StartObject();
 
@@ -1353,8 +1353,8 @@ void do_serialize(const dataT& object, serializerT& serializer,
         do_serialize<native_field_type_t>(v.second, serializer, properties);
     }
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-    RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
-        << " EndMap: ";
+    RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
+        << " EndMap: ");
 #endif
     serializer.EndObject();
 };
@@ -1368,19 +1368,19 @@ void do_serialize(const dataT& object, serializerT& serializer,
 
     serializer.StartObject();
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-    RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
-        << " StartObject: ";
+    RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
+        << " StartObject: ");
 #endif
     auto fn = [&](const char *name, auto& val) {
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
-            << " Key: " << name;
+        RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
+            << " Key: " << name);
 #endif
         if (properties.ignore_empty_fileds) {
             if (is_empty_field(val)) {
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-        RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
-            << " ignoring empty field.";
+        RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
+            << " ignoring empty field.");
 #endif
                 return;
             }
@@ -1389,8 +1389,8 @@ void do_serialize(const dataT& object, serializerT& serializer,
         if (properties.excluded_names
             && properties.is_excluded(name)) {
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-            RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
-                << " ignoring excluded field.";
+            RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
+                << " ignoring excluded field.");
 #endif
             return;
         }
@@ -1411,8 +1411,8 @@ void do_serialize(const dataT& object, serializerT& serializer,
     on_name_and_value<dataT, decltype(fn)> handler(fn);
     handler.for_each_member(object);
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-    RESTC_CPP_LOG_TRACE << RESTC_CPP_TYPENAME(dataT)
-        << " EndObject: ";
+    RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
+        << " EndObject: ");
 #endif
     serializer.EndObject();
 };

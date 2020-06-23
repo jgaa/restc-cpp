@@ -30,8 +30,8 @@ public:
 
             timer->Cancel();
 
-            RESTC_CPP_LOG_TRACE << "Read #" << bytes
-                << " bytes from " << conn;
+            RESTC_CPP_LOG_TRACE_("Read #" << bytes
+                << " bytes from " << conn);
             return {buffer_.data(), bytes};
         }
 

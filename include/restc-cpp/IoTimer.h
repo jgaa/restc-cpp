@@ -71,7 +71,7 @@ public:
     void Cancel() {
         if (is_active_) {
             is_active_ = false;
-            RESTC_CPP_LOG_TRACE << "Canceled timer " << timer_name_;
+            RESTC_CPP_LOG_TRACE_("Canceled timer " << timer_name_);
         }
     }
 
@@ -109,8 +109,8 @@ public:
 
         std::weak_ptr<Connection> weak_connection = connection;
 
-        RESTC_CPP_LOG_TRACE << "Created timer " << timerName
-            << " for " << *connection;
+        RESTC_CPP_LOG_TRACE_("Created timer " << timerName
+            << " for " << *connection);
 
         return std::make_unique<Wrapper>(Create(
             timerName,
@@ -123,10 +123,9 @@ public:
             [weak_connection, timerName]() {
                 if (auto connection = weak_connection.lock()) {
                     if (connection->GetSocket().GetSocket().is_open()) {
-                        RESTC_CPP_LOG_TRACE
-                            << "Timer " << timerName << ": "
+                        RESTC_CPP_LOG_TRACE_("Timer " << timerName << ": "
                             << *connection
-                            << " timed out.";
+                            << " timed out.");
                         connection->GetSocket().Close(Socket::Reason::TIME_OUT);
                     }
                 }

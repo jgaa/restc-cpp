@@ -93,8 +93,8 @@ TEST(TestCRUD)
             IteratorFromJsonSerializer<Post> results(*reply);
 
             auto it = results.begin();
-            RESTC_CPP_LOG_DEBUG << "Iteration #" << i
-                << " Read item # " << it->id;
+            RESTC_CPP_LOG_DEBUG_("Iteration #" << i
+                << " Read item # " << it->id);
 
             promises[i].set_value(i);
             // Wait for all connections to be ready
@@ -119,15 +119,15 @@ TEST(TestCRUD)
     for(auto& future : futures) {
         try {
             auto i = future.get();
-            RESTC_CPP_LOG_DEBUG << "Iteration #" << i << " is done";
+            RESTC_CPP_LOG_DEBUG_("Iteration #" << i << " is done");
             ++successful_connections;
         } catch (const std::exception& ex) {
-            RESTC_CPP_LOG_ERROR << "Future threw up: " << ex.what();
+            RESTC_CPP_LOG_ERROR_("Future threw up: " << ex.what());
         }
     }
 
-    RESTC_CPP_LOG_INFO << "We had " << successful_connections
-        << " successful connections.";
+    RESTC_CPP_LOG_INFO_("We had " << successful_connections
+        << " successful connections.");
 
     CHECK_EQUAL(CONNECTIONS, successful_connections);
 

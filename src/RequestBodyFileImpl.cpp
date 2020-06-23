@@ -38,9 +38,9 @@ public:
         if (bytes_left == 0) {
             eof_ = true;
             file_.reset();
-            RESTC_CPP_LOG_DEBUG << "Successfully uploaded file "
+            RESTC_CPP_LOG_DEBUG_("Successfully uploaded file "
                 << path_
-                << " of size " << size_ << " bytes.";
+                << " of size " << size_ << " bytes.");
             return false;
         }
 

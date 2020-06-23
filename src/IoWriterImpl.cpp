@@ -35,8 +35,8 @@ public:
 
         const auto bytes = boost::asio::buffer_size(buffers);
 
-        RESTC_CPP_LOG_TRACE << "Wrote #" << bytes
-            << " bytes to " << connection_;
+        RESTC_CPP_LOG_TRACE_("Wrote #" << bytes
+            << " bytes to " << connection_);
     }
 
     void Write(const write_buffers_t& buffers) override {
@@ -51,8 +51,8 @@ public:
 
         const auto bytes = boost::asio::buffer_size(buffers);
 
-        RESTC_CPP_LOG_TRACE << "Wrote #" << bytes
-            << " bytes to " << connection_;
+        RESTC_CPP_LOG_TRACE_("Wrote #" << bytes
+            << " bytes to " << connection_);
     }
 
     void Finish() override {

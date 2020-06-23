@@ -154,6 +154,10 @@ if (NOT EMBEDDED_RESTC_CPP)
         target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_THREAD_LIBS_INIT})
     endif()
 
+    if (RESTC_CPP_LOG_WITH_BOOST_LOG)
+        set(BOOST_LOG_DEP log)
+    endif()
+
     #set(Boost_USE_MULTITHREADED ON)
     find_package(Boost REQUIRED COMPONENTS
         system
@@ -163,7 +167,7 @@ if (NOT EMBEDDED_RESTC_CPP)
         context
         coroutine
         chrono
-        log
+        ${BOOST_LOG_DEP}
         )
     target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${Boost_LIBRARIES})

@@ -49,11 +49,11 @@ public:
         const auto buf_len = boost::asio::buffer_size(*buffers.begin());
 
         // At the time of the implementation, there are never multiple buffers.
-        RESTC_CPP_LOG_TRACE << tag << ' ' << "# " << buf_len
+        RESTC_CPP_LOG_TRACE_(tag << ' ' << "# " << buf_len
             << " bytes: "
             << ToPrintable({
                 boost::asio::buffer_cast<const char *>(*buffers.begin()),
-                           buf_len});
+                           buf_len}));
     }
 
     boost::asio::const_buffers_1 ReadSome() override {
@@ -65,17 +65,17 @@ public:
         }
 
         if (chunk_len_ == 0) {
-            RESTC_CPP_LOG_TRACE << "ChunkedReaderImpl::ReadSome(): Need new chunk.";
+            RESTC_CPP_LOG_TRACE_("ChunkedReaderImpl::ReadSome(): Need new chunk.");
             chunk_len_ = GetNextChunkLen();
-            RESTC_CPP_LOG_TRACE << "ChunkedReaderImpl::ReadSome(): "
+            RESTC_CPP_LOG_TRACE_("ChunkedReaderImpl::ReadSome(): "
                 << "Next chunk is " << chunk_len_ << " bytes ("
-                << hex << chunk_len_ << " hex)";
+                << hex << chunk_len_ << " hex)");
             if (chunk_len_ == 0) {
                 // Read the trailer
-                RESTC_CPP_LOG_TRACE << "ChunkedReaderImpl::ReadSome(): End of chunked stream - reading headers";
+                RESTC_CPP_LOG_TRACE_("ChunkedReaderImpl::ReadSome(): End of chunked stream - reading headers");
                 stream_->ReadHeaderLines(add_header_);
                 stream_->SetEof();
-                RESTC_CPP_LOG_TRACE << "ChunkedReaderImpl::ReadSome(): End of chunked stream. Done.";
+                RESTC_CPP_LOG_TRACE_("ChunkedReaderImpl::ReadSome(): End of chunked stream. Done.");
                 return {nullptr, 0};
             }
         }

@@ -150,9 +150,8 @@ public:
 
         if (!newConnectionPlease) {
             if (auto conn = GetFromCache(ep, connectionType)) {
-                RESTC_CPP_LOG_TRACE
-                    << "Reusing connection from cache "
-                    << *conn;
+                RESTC_CPP_LOG_TRACE_("Reusing connection from cache "
+                    << *conn);
                 return conn;
             }
 
@@ -199,11 +198,11 @@ private:
         }
 
         if (error) {
-            RESTC_CPP_LOG_DEBUG << "OnCacheCleanup: " << error;
+            RESTC_CPP_LOG_DEBUG_("OnCacheCleanup: " << error);
             return;
         }
 
-        RESTC_CPP_LOG_TRACE << "Cleaning cache...";
+        RESTC_CPP_LOG_TRACE_("Cleaning cache...");
 
         const auto now = std::chrono::steady_clock::now();
         for(auto it = idle_.begin(); it != idle_.end();) {
@@ -214,13 +213,13 @@ private:
             const auto& entry = *current->second;
             auto expires = entry.GetLastUsed() + std::chrono::seconds(entry.GetTtl());
             if (expires < now) {
-                RESTC_CPP_LOG_TRACE << "Expiring " << *current->second->GetConnection();
+                RESTC_CPP_LOG_TRACE_("Expiring " << *current->second->GetConnection());
                 idle_.erase(current);
             } else {
-                RESTC_CPP_LOG_TRACE << "Keeping << " << *current->second->GetConnection()
+                RESTC_CPP_LOG_TRACE_("Keeping << " << *current->second->GetConnection()
                     << " expieres in "
                     << std::chrono::duration_cast<std::chrono::seconds>(expires - now).count()
-                    << " seconds ";
+                    << " seconds ");
             }
         }
 
@@ -230,11 +229,11 @@ private:
     void OnRelease(const Entry::ptr_t& entry) {
         in_use_.erase(entry->GetKey());
         if (closed_ || !entry->GetConnection()->GetSocket().IsOpen()) {
-            RESTC_CPP_LOG_TRACE << "Discarding " << *entry << " after use";
+            RESTC_CPP_LOG_TRACE_("Discarding " << *entry << " after use");
             return;
         }
 
-        RESTC_CPP_LOG_TRACE << "Recycling " << *entry << " after use";
+        RESTC_CPP_LOG_TRACE_("Recycling " << *entry << " after use");
         entry->GetLastUsed() = chrono::steady_clock::now();
         idle_.insert({entry->GetKey(), entry});
     }
@@ -250,8 +249,7 @@ private:
             const auto key = Key{ep, connectionType};
             const size_t ep_cnt = idle_.count(key) + in_use_.count(key);
             if (ep_cnt >= properties_->cacheMaxConnectionsPerEndpoint) {
-                RESTC_CPP_LOG_DEBUG
-                    << "No more available slots for " << key;
+                RESTC_CPP_LOG_DEBUG_("No more available slots for " << key);
                 return false;
             }
         }
@@ -262,10 +260,9 @@ private:
 
                 // See if we can release an idle connection.
                 if (!PurgeOldestIdleEntry()) {
-                    RESTC_CPP_LOG_DEBUG
-                        << "No more available slots (max="
+                    RESTC_CPP_LOG_DEBUG_("No more available slots (max="
                         << properties_->cacheMaxConnections
-                        << ", used=" << all_cnt << ")";
+                        << ", used=" << all_cnt << ')');
                         return false;
                 }
             }
@@ -283,7 +280,7 @@ private:
         }
 
         if (oldest != idle_.end()) {
-            RESTC_CPP_LOG_TRACE << "LRU-Purging " << *oldest->second;
+            RESTC_CPP_LOG_TRACE_("LRU-Purging " << *oldest->second);
             idle_.erase(oldest);
             return true;
         }
@@ -328,7 +325,7 @@ private:
                                         make_shared<ConnectionImpl>(move(socket)),
                                         *properties_);
 
-        RESTC_CPP_LOG_TRACE << "Created new connection " << *entry;
+        RESTC_CPP_LOG_TRACE_("Created new connection " << *entry);
         in_use_.insert({entry->GetKey(), entry});
         return make_unique<ConnectionWrapper>(entry, on_release_);
     }

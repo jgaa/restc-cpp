@@ -86,7 +86,7 @@ public:
 
     void Close(Reason reason) override {
         if (ssl_socket_->lowest_layer().is_open()) {
-            RESTC_CPP_LOG_TRACE << "Closing " << *this;
+            RESTC_CPP_LOG_TRACE_("Closing " << *this);
             ssl_socket_->lowest_layer().close();
         }
         reason_ = reason;
