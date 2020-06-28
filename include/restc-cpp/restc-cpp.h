@@ -383,6 +383,12 @@ public:
         return move(future);
     }
 
+    /*! Process from within an existing coroutine */
+    template <typename T>
+    void ProcessWithYield(const std::function<T (Context& ctx)>& fn, boost::asio::yield_context& yield) {
+        auto ctx = Context::Create(yield, *this);
+        fn(yield);
+    }
 
     virtual std::shared_ptr<ConnectionPool> GetConnectionPool() = 0;
     virtual boost::asio::io_service& GetIoService() = 0;
