@@ -387,7 +387,7 @@ public:
     template <typename T>
     T ProcessWithYield(const std::function<T (Context& ctx)>& fn, boost::asio::yield_context& yield) {
         auto ctx = Context::Create(yield, *this);
-        fn(yield);
+        return fn(yield);
     }
 
     virtual std::shared_ptr<ConnectionPool> GetConnectionPool() = 0;
