@@ -156,6 +156,7 @@ if (NOT EMBEDDED_RESTC_CPP)
 
     if (RESTC_CPP_LOG_WITH_BOOST_LOG)
         set(BOOST_LOG_DEP log)
+        message(STATUS "Using boost log")
     endif()
 
     #set(Boost_USE_MULTITHREADED ON)
