@@ -385,7 +385,7 @@ public:
 
     /*! Process from within an existing coroutine */
     template <typename T>
-    void ProcessWithYield(const std::function<T (Context& ctx)>& fn, boost::asio::yield_context& yield) {
+    T ProcessWithYield(const std::function<T (Context& ctx)>& fn, boost::asio::yield_context& yield) {
         auto ctx = Context::Create(yield, *this);
         fn(yield);
     }
