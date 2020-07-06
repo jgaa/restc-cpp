@@ -1,7 +1,9 @@
+#include <atomic>
 #include <iostream>
 #include <thread>
 #include <future>
 #include <queue>
+#include <mutex>
 
 #include <boost/utility/string_ref.hpp>
 
@@ -10,6 +12,7 @@
 #include "restc-cpp/ConnectionPool.h"
 #include "restc-cpp/logging.h"
 #include "restc-cpp/error.h"
+#include "restc-cpp/internals/helpers.h"
 
 #include "ConnectionImpl.h"
 #include "SocketImpl.h"
@@ -91,7 +94,11 @@ public:
         Connection::ptr_t connection;
         const int ttl = 60;
         const time_t created;
+#ifdef RESTC_CPP_THREADED_CTX
+        atomic<timestamp_t> last_used = chrono::steady_clock::now();
+#else
         timestamp_t last_used = chrono::steady_clock::now();
+#endif
     };
 
     // Owns the connection
@@ -138,6 +145,9 @@ public:
     ConnectionPoolImpl(RestClient& owner)
     : owner_{owner}, properties_{owner.GetConnectionProperties()}
     , cache_cleanup_timer_{owner.GetIoService()}
+#ifdef RESTC_CPP_THREADED_CTX
+    , strand_{owner_.GetIoService()}
+#endif
 
     {
         on_release_ = [this](const Entry::ptr_t& entry) { OnRelease(entry); };
@@ -164,9 +174,20 @@ public:
         return CreateNew(ep, connectionType);
     }
 
+    // Get ctx for internal, syncronized operations;
+#ifdef RESTC_CPP_THREADED_CTX
+    auto GetCtx() const {
+      return strand_;
+    }
+#else
+    auto& GetCtx() const {
+      return owner_.GetIoService();
+    }
+#endif
+
     std::future<std::size_t> GetIdleConnections() const override {
         auto my_promise = make_shared<promise<size_t>>() ;
-        owner_.GetIoService().dispatch([my_promise, this]() {
+        GetCtx().dispatch([my_promise, this]() {
             my_promise->set_value(idle_.size());
         });
         return my_promise->get_future();
@@ -175,8 +196,10 @@ public:
     void Close() override {
         if (!closed_) {
             closed_ = true;
-            cache_cleanup_timer_.cancel();
-            idle_.clear();
+            GetCtx().dispatch([this]{
+                cache_cleanup_timer_.cancel();
+                idle_.clear();
+            });
         }
     }
 
@@ -186,10 +209,12 @@ public:
 
 private:
     void ScheduleNextCacheCleanup() {
-        cache_cleanup_timer_.expires_from_now(
-            boost::posix_time::seconds(properties_->cacheCleanupIntervalSeconds));
-        cache_cleanup_timer_.async_wait(std::bind(&ConnectionPoolImpl::OnCacheCleanup,
-                                                  shared_from_this(), std::placeholders::_1));
+        GetCtx().dispatch([this]{
+            cache_cleanup_timer_.expires_from_now(
+                boost::posix_time::seconds(properties_->cacheCleanupIntervalSeconds));
+            cache_cleanup_timer_.async_wait(std::bind(&ConnectionPoolImpl::OnCacheCleanup,
+                                                      shared_from_this(), std::placeholders::_1));
+        });
     }
 
     void OnCacheCleanup(const boost::system::error_code& error) {
@@ -205,21 +230,23 @@ private:
         RESTC_CPP_LOG_TRACE_("Cleaning cache...");
 
         const auto now = std::chrono::steady_clock::now();
-        for(auto it = idle_.begin(); it != idle_.end();) {
+        {
+            for(auto it = idle_.begin(); !closed_ && it != idle_.end();) {
 
-            auto current = it;
-            ++it;
+                auto current = it;
+                ++it;
 
-            const auto& entry = *current->second;
-            auto expires = entry.GetLastUsed() + std::chrono::seconds(entry.GetTtl());
-            if (expires < now) {
-                RESTC_CPP_LOG_TRACE_("Expiring " << *current->second->GetConnection());
-                idle_.erase(current);
-            } else {
-                RESTC_CPP_LOG_TRACE_("Keeping << " << *current->second->GetConnection()
-                    << " expieres in "
-                    << std::chrono::duration_cast<std::chrono::seconds>(expires - now).count()
-                    << " seconds ");
+                const auto& entry = *current->second;
+                auto expires = entry.GetLastUsed() + std::chrono::seconds(entry.GetTtl());
+                if (expires < now) {
+                    RESTC_CPP_LOG_TRACE_("Expiring " << *current->second->GetConnection());
+                    idle_.erase(current);
+                } else {
+                    RESTC_CPP_LOG_TRACE_("Keeping << " << *current->second->GetConnection()
+                        << " expieres in "
+                        << std::chrono::duration_cast<std::chrono::seconds>(expires - now).count()
+                        << " seconds ");
+                }
             }
         }
 
@@ -227,15 +254,17 @@ private:
     }
 
     void OnRelease(const Entry::ptr_t& entry) {
-        in_use_.erase(entry->GetKey());
-        if (closed_ || !entry->GetConnection()->GetSocket().IsOpen()) {
-            RESTC_CPP_LOG_TRACE_("Discarding " << *entry << " after use");
-            return;
-        }
+        GetCtx().dispatch([this, entry]{
+            in_use_.erase(entry->GetKey());
+            if (closed_ || !entry->GetConnection()->GetSocket().IsOpen()) {
+                RESTC_CPP_LOG_TRACE_("Discarding " << *entry << " after use");
+                return;
+            }
 
-        RESTC_CPP_LOG_TRACE_("Recycling " << *entry << " after use");
-        entry->GetLastUsed() = chrono::steady_clock::now();
-        idle_.insert({entry->GetKey(), entry});
+            RESTC_CPP_LOG_TRACE_("Recycling " << *entry << " after use");
+            entry->GetLastUsed() = chrono::steady_clock::now();
+            idle_.insert({entry->GetKey(), entry});
+        });
     }
 
     // Check the constraints to see if we can create a new connection
@@ -245,30 +274,39 @@ private:
             throw ObjectExpiredException("The connection-pool is closed.");
         }
 
-        {
-            const auto key = Key{ep, connectionType};
-            const size_t ep_cnt = idle_.count(key) + in_use_.count(key);
-            if (ep_cnt >= properties_->cacheMaxConnectionsPerEndpoint) {
-                RESTC_CPP_LOG_DEBUG_("No more available slots for " << key);
-                return false;
-            }
-        }
+        promise<bool> pr;
+        auto result = pr.get_future();
 
-        {
-            const size_t all_cnt = idle_.size() + in_use_.size();
-            if (all_cnt >= properties_->cacheMaxConnections) {
-
-                // See if we can release an idle connection.
-                if (!PurgeOldestIdleEntry()) {
-                    RESTC_CPP_LOG_DEBUG_("No more available slots (max="
-                        << properties_->cacheMaxConnections
-                        << ", used=" << all_cnt << ')');
-                        return false;
+        GetCtx().dispatch([this, &ep, connectionType, &pr]() {
+            {
+                const auto key = Key{ep, connectionType};
+                const size_t ep_cnt = idle_.count(key) + in_use_.count(key);
+                if (ep_cnt >= properties_->cacheMaxConnectionsPerEndpoint) {
+                    RESTC_CPP_LOG_DEBUG_("No more available slots for " << key);
+                    pr.set_value(false);
+                    return;
                 }
             }
-        }
 
-        return true;
+            {
+                const size_t all_cnt = idle_.size() + in_use_.size();
+                if (all_cnt >= properties_->cacheMaxConnections) {
+
+                    // See if we can release an idle connection.
+                    if (!PurgeOldestIdleEntry()) {
+                        RESTC_CPP_LOG_DEBUG_("No more available slots (max="
+                            << properties_->cacheMaxConnections
+                            << ", used=" << all_cnt << ')');
+                            pr.set_value(false);
+                            return;
+                    }
+                }
+            }
+
+            pr.set_value(true);
+            });
+
+        return result.get();
     }
 
     bool PurgeOldestIdleEntry() {
@@ -294,16 +332,25 @@ private:
         if (closed_) {
             throw ObjectExpiredException("The connection-pool is closed.");
         }
-        const auto key = Key{ep, connectionType};
-        auto it = idle_.find(key);
-        if (it != idle_.end()) {
-            auto wrapper = make_unique<ConnectionWrapper>(it->second, on_release_);
-			in_use_.insert(*it);
-            idle_.erase(it);
-            return move(wrapper);
-        }
 
-        return nullptr;
+        promise<Connection::ptr_t> pr;
+        auto result = pr.get_future();
+
+        GetCtx().dispatch([this, &ep, connectionType, &pr]{
+            const auto key = Key{ep, connectionType};
+            auto it = idle_.find(key);
+            if (it != idle_.end()) {
+                auto wrapper = make_unique<ConnectionWrapper>(it->second, on_release_);
+                in_use_.insert(*it);
+                idle_.erase(it);
+                pr.set_value(move(wrapper));
+                return;
+            }
+
+            pr.set_value({});
+        });
+
+        return result.get();
     }
 
     Connection::ptr_t CreateNew(const boost::asio::ip::tcp::endpoint& ep,
@@ -326,11 +373,23 @@ private:
                                         *properties_);
 
         RESTC_CPP_LOG_TRACE_("Created new connection " << *entry);
-        in_use_.insert({entry->GetKey(), entry});
-        return make_unique<ConnectionWrapper>(entry, on_release_);
+
+        promise<Connection::ptr_t> pr;
+        auto result = pr.get_future();
+
+        GetCtx().dispatch([this, entry=move(entry), &pr]{
+            in_use_.insert({entry->GetKey(), entry});
+            pr.set_value(make_unique<ConnectionWrapper>(entry, on_release_));
+        });
+
+        return result.get();
     }
 
+#ifdef RESTC_CPP_THREADED_CTX
+    std::atomic_bool closed_ = false;
+#else
     bool closed_ = false;
+#endif
     RestClient& owner_;
     multimap<Key, Entry::ptr_t> idle_;
     multimap<Key, std::weak_ptr<Entry>> in_use_;
@@ -338,6 +397,11 @@ private:
     const Request::Properties::ptr_t properties_;
     ConnectionWrapper::release_callback_t on_release_;
     boost::asio::deadline_timer cache_cleanup_timer_;
+
+#ifdef RESTC_CPP_THREADED_CTX
+    mutable std::mutex mutex_;
+    boost::asio::io_context::strand strand_;
+#endif
 }; // ConnectionPoolImpl
 
 
