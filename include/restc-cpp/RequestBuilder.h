@@ -2,9 +2,7 @@
 #ifndef RESTC_CPP_REQUEST_BUILDER_H_
 #define RESTC_CPP_REQUEST_BUILDER_H_
 
-#ifndef RESTC_CPP_H_
-#       error "Include restc-cpp.h first"
-#endif
+#include "restc-cpp/restc-cpp.h"
 
 #include <string>
 #include <assert.h>
