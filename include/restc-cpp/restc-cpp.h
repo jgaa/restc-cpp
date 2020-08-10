@@ -270,6 +270,8 @@ public:
  */
 class Context {
 public:
+    virtual ~Context() noexcept = default;
+
     virtual boost::asio::yield_context& GetYield() = 0;
     virtual RestClient& GetClient() = 0;
 
