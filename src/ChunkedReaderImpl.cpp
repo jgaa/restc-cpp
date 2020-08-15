@@ -46,7 +46,14 @@ public:
     }
 
     void Log(const boost::asio::const_buffers_1 buffers, const char *tag) {
+#if __cplusplus >= 201703L
+        [[maybe_unused]]
+#endif
         const auto buf_len = boost::asio::buffer_size(*buffers.begin());
+
+#if __cplusplus < 201703L
+        static_cast<void>(buf_len);
+#endif
 
         // At the time of the implementation, there are never multiple buffers.
         RESTC_CPP_LOG_TRACE_(tag << ' ' << "# " << buf_len

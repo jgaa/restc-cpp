@@ -33,9 +33,7 @@ public:
             connection_->GetSocket().AsyncWrite(buffers, ctx_.GetYield());
         }
 
-        const auto bytes = boost::asio::buffer_size(buffers);
-
-        RESTC_CPP_LOG_TRACE_("Wrote #" << bytes
+        RESTC_CPP_LOG_TRACE_("Wrote #" << boost::asio::buffer_size(buffers)
             << " bytes to " << connection_);
     }
 
@@ -49,9 +47,7 @@ public:
             connection_->GetSocket().AsyncWrite(buffers, ctx_.GetYield());
         }
 
-        const auto bytes = boost::asio::buffer_size(buffers);
-
-        RESTC_CPP_LOG_TRACE_("Wrote #" << bytes
+        RESTC_CPP_LOG_TRACE_("Wrote #" << boost::asio::buffer_size(buffers)
             << " bytes to " << connection_);
     }
 
