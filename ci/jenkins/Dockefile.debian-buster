@@ -1,4 +1,4 @@
-FROM debian:testing
+FROM debian:buster
 
 MAINTAINER Jarle Aase <jgaa@jgaa.com>
 

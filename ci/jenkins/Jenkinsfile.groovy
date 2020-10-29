@@ -9,7 +9,7 @@ pipeline {
         // It is not possible to get the current IP number when running in the sandbox, and
         // Jenkinsfiles always runs in the sandbox.
         // For simplicity, I just put it here (I already wasted 3 hours on this)
-        RESTC_CPP_TEST_DOCKER_ADDRESS="10.201.0.11"
+        RESTC_CPP_TEST_DOCKER_ADDRESS="192.168.1.180"
     }
 
     stages {
@@ -90,6 +90,35 @@ pipeline {
 
                     steps {
                         echo "Building on debian-stretch-AMD64 in ${WORKSPACE}"
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+                                echo 'Testing failed'
+                                currentBuild.result = 'UNSTABLE'
+                            }
+                        }
+                    }
+                }
+                
+                stage('Debian Buster') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.debian-buster'
+                            dir 'ci/jenkins'
+                            label 'master'
+                        }
+                    }
+
+                    steps {
+                        echo "Building on debian-buster-AMD64 in ${WORKSPACE}"
                         checkout scm
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
@@ -225,80 +254,80 @@ pipeline {
                     }
                 }
 
-                stage('Windows msvc14 C++14') {
+//                 stage('Windows msvc14 C++14') {
+// 
+//                     agent {label 'windows'}
+// 
+//                      steps {
+//                         echo "Building on Windows in ${WORKSPACE}"
+//                         checkout scm
+// 
+//                         bat script: '''
+//                             PATH=%PATH%;C:\\devel\\zlib-1.2.11\\Release;C:\\devel\\openssl\\lib-x64\\bin;C:\\local\\boost_1_64_0\\lib64-msvc-14.1
+//                             rmdir /S /Q build
+//                             mkdir build
+//                             cd build
+//                             cmake -DCMAKE_PREFIX_PATH=c:/devel/zlib-1.2.11;c:/devel/zlib-1.2.11/Release;c:/devel/openssl;c:/devel/boost_1_64_0 -G "Visual Studio 15 Win64" ..
+//                             if %errorlevel% neq 0 exit /b %errorlevel%
+//                             cmake --build . --config Release
+//                             if %errorlevel% neq 0 exit /b %errorlevel%
+// 
+//                             echo "Build is OK"
+//                         '''
+// 
+//                         echo 'Getting ready to run tests'
+//                         script {
+//                             try {
+//                                 bat script: '''
+//                                     PATH=%PATH%;C:\\devel\\zlib-1.2.11\\Release;C:\\devel\\openssl\\lib-x64\\bin;C:\\local\\boost_1_64_0\\lib64-msvc-14.1
+//                                     cd build
+//                                     ctest -C Release
+//                                     if %errorlevel% neq 0 exit /b %errorlevel%
+//                                 '''
+//                             } catch (exc) {
+//                                 echo 'Testing failed'
+//                                 currentBuild.result = 'UNSTABLE'
+//                             }
+//                         }
+//                     }
+//                 }
 
-                    agent {label 'windows'}
-
-                     steps {
-                        echo "Building on Windows in ${WORKSPACE}"
-                        checkout scm
-
-                        bat script: '''
-                            PATH=%PATH%;C:\\devel\\zlib-1.2.11\\Release;C:\\devel\\openssl\\lib-x64\\bin;C:\\local\\boost_1_64_0\\lib64-msvc-14.1
-                            rmdir /S /Q build
-                            mkdir build
-                            cd build
-                            cmake -DCMAKE_PREFIX_PATH=c:/devel/zlib-1.2.11;c:/devel/zlib-1.2.11/Release;c:/devel/openssl;c:/devel/boost_1_64_0 -G "Visual Studio 15 Win64" ..
-                            if %errorlevel% neq 0 exit /b %errorlevel%
-                            cmake --build . --config Release
-                            if %errorlevel% neq 0 exit /b %errorlevel%
-
-                            echo "Build is OK"
-                        '''
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                bat script: '''
-                                    PATH=%PATH%;C:\\devel\\zlib-1.2.11\\Release;C:\\devel\\openssl\\lib-x64\\bin;C:\\local\\boost_1_64_0\\lib64-msvc-14.1
-                                    cd build
-                                    ctest -C Release
-                                    if %errorlevel% neq 0 exit /b %errorlevel%
-                                '''
-                            } catch (exc) {
-                                echo 'Testing failed'
-                                currentBuild.result = 'UNSTABLE'
-                            }
-                        }
-                    }
-                }
-
-                stage('Windows msvc14 C++17') {
-
-                    agent {label 'windows'}
-
-                     steps {
-                        echo "Building on Windows in ${WORKSPACE}"
-                        checkout scm
-
-                        bat script: '''
-                            PATH=%PATH%;C:\\devel\\zlib-1.2.11\\Release;C:\\devel\\openssl\\lib-x64\\bin;C:\\local\\boost_1_64_0\\lib64-msvc-14.1
-                            rmdir /S /Q build
-                            mkdir build
-                            cd build
-                            cmake -DRESTC_CPP_USE_CPP17=ON -DCMAKE_PREFIX_PATH=c:/devel/zlib-1.2.11;c:/devel/zlib-1.2.11/Release;c:/devel/openssl;c:/devel/boost_1_64_0 -G "Visual Studio 15 Win64" ..
-                            if %errorlevel% neq 0 exit /b %errorlevel%
-                            cmake --build . --config Release
-                            if %errorlevel% neq 0 exit /b %errorlevel%
-                            echo "Build is OK"
-                        '''
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                bat script: '''
-                                    PATH=%PATH%;C:\\devel\\zlib-1.2.11\\Release;C:\\devel\\openssl\\lib-x64\\bin;C:\\local\\boost_1_64_0\\lib64-msvc-14.1
-                                    cd build
-                                    ctest -C Release
-                                    if %errorlevel% neq 0 exit /b %errorlevel%
-                                '''
-                            } catch (exc) {
-                                echo 'Testing failed'
-                                currentBuild.result = 'UNSTABLE'
-                            }
-                        }
-                    }
-                }
+//                 stage('Windows msvc14 C++17') {
+// 
+//                     agent {label 'windows'}
+// 
+//                      steps {
+//                         echo "Building on Windows in ${WORKSPACE}"
+//                         checkout scm
+// 
+//                         bat script: '''
+//                             PATH=%PATH%;C:\\devel\\zlib-1.2.11\\Release;C:\\devel\\openssl\\lib-x64\\bin;C:\\local\\boost_1_64_0\\lib64-msvc-14.1
+//                             rmdir /S /Q build
+//                             mkdir build
+//                             cd build
+//                             cmake -DRESTC_CPP_USE_CPP17=ON -DCMAKE_PREFIX_PATH=c:/devel/zlib-1.2.11;c:/devel/zlib-1.2.11/Release;c:/devel/openssl;c:/devel/boost_1_64_0 -G "Visual Studio 15 Win64" ..
+//                             if %errorlevel% neq 0 exit /b %errorlevel%
+//                             cmake --build . --config Release
+//                             if %errorlevel% neq 0 exit /b %errorlevel%
+//                             echo "Build is OK"
+//                         '''
+// 
+//                         echo 'Getting ready to run tests'
+//                         script {
+//                             try {
+//                                 bat script: '''
+//                                     PATH=%PATH%;C:\\devel\\zlib-1.2.11\\Release;C:\\devel\\openssl\\lib-x64\\bin;C:\\local\\boost_1_64_0\\lib64-msvc-14.1
+//                                     cd build
+//                                     ctest -C Release
+//                                     if %errorlevel% neq 0 exit /b %errorlevel%
+//                                 '''
+//                             } catch (exc) {
+//                                 echo 'Testing failed'
+//                                 currentBuild.result = 'UNSTABLE'
+//                             }
+//                         }
+//                     }
+//                 }
             }
 
             post {
