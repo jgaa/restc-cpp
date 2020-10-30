@@ -14,6 +14,7 @@ pipeline {
 
     stages {
         stage('Prepare') {
+            agent { label 'docker' }
             steps {
                 sh 'docker-compose -f ./ci/mock-backends/docker-compose.yml up --build  -d'
             }
@@ -26,7 +27,7 @@ pipeline {
 //                         dockerfile {
 //                             filename 'Dockefile.ubuntu-bionic'
 //                             dir 'ci/jenkins'
-//                             label 'master'
+//                             label 'docker'
 //                         }
 //                     }
 // 
@@ -55,7 +56,7 @@ pipeline {
 //                         dockerfile {
 //                             filename 'Dockefile.ubuntu-xenial'
 //                             dir 'ci/jenkins'
-//                             label 'master'
+//                             label 'docker'
 //                         }
 //                     }
 // 
@@ -84,7 +85,7 @@ pipeline {
 //                         dockerfile {
 //                             filename 'Dockerfile.debian-stretch'
 //                             dir 'ci/jenkins'
-//                             label 'master'
+//                             label 'docker'
 //                         }
 //                     }
 // 
@@ -113,7 +114,7 @@ pipeline {
 //                         dockerfile {
 //                             filename 'Dockefile.debian-buster'
 //                             dir 'ci/jenkins'
-//                             label 'master'
+//                             label 'docker'
 //                         }
 //                     }
 // 
@@ -142,7 +143,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockefile.debian-testing'
                             dir 'ci/jenkins'
-                            label 'master'
+                            label 'docker'
                         }
                     }
 
@@ -171,7 +172,7 @@ pipeline {
 //                         dockerfile {
 //                             filename 'Dockerfile.fedora'
 //                             dir 'ci/jenkins'
-//                             label 'master'
+//                             label 'docker'
 //                         }
 //                     }
 // 
@@ -200,7 +201,7 @@ pipeline {
 //                         dockerfile {
 //                             filename 'Dockerfile.centos7'
 //                             dir 'ci/jenkins'
-//                             label 'master'
+//                             label 'docker'
 //                         }
 //                     }
 // 
