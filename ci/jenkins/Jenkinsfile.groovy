@@ -330,7 +330,7 @@ pipeline {
 //                     }
 //                 }
 
-                 stage('Windows with vcpkg') {
+                 stage('Windows X64 with vcpkg') {
 
                     agent {label 'windows'}
 
@@ -340,12 +340,12 @@ pipeline {
 
                         bat script: '''
                             PATH=%PATH%;C:\\Program Files\\CMake\\bin;C:\\devel\\vcpkg
-                            vcpkg install zlib openssl boost-fusion boost-program-options boost-asio boost-date-time boost-chrono boost-coroutine
+                            vcpkg install zlib openssl boost-fusion boost-filesystem boost-log boost-program-options boost-asio boost-date-time boost-chrono boost-coroutine boost-uuid boost-scope-exit --triplet x64-windows
                             if %errorlevel% neq 0 exit /b %errorlevel%
                             rmdir /S /Q build
                             mkdir build
                             cd build
-                            cmake -DRESTC_CPP_USE_CPP17=ON -DCMAKE_TOOLCHAIN_FILE=C:\\devel\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake -DCMAKE_BUILD_TYPE=Release ..
+                            cmake -DRESTC_CPP_USE_CPP17=ON -DCMAKE_PREFIX_PATH=C:\devel\vcpkg\installed\x64-windows\lib;C:\devel\vcpkg\installed\x64-windows\include ..
                             if %errorlevel% neq 0 exit /b %errorlevel%
                             cmake --build . --config Release
                             if %errorlevel% neq 0 exit /b %errorlevel%
