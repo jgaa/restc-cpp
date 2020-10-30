@@ -356,7 +356,7 @@ pipeline {
                         script {
                             try {
                                 bat script: '''
-                                    PATH=%PATH%;C:\\devel\\vcpkg\\installed\\x86-windows\\bin
+                                    PATH=%PATH%;C:\\devel\\vcpkg\\installed\\x86-windows\\bin;C:\\Program Files\\CMake\\bin
                                     cd build
                                     ctest -C Release
                                     if %errorlevel% neq 0 exit /b %errorlevel%
