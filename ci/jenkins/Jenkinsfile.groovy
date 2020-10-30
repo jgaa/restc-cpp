@@ -345,7 +345,7 @@ pipeline {
                             rmdir /S /Q build
                             mkdir build
                             cd build
-                            cmake -DRESTC_CPP_USE_CPP17=ON -DCMAKE_PREFIX_PATH=C:\devel\vcpkg\installed\x64-windows\lib;C:\devel\vcpkg\installed\x64-windows\include ..
+                            cmake -DRESTC_CPP_USE_CPP17=ON -DCMAKE_PREFIX_PATH=C:\\devel\\vcpkg\\installed\\x64-windows\\lib;C:\\devel\\vcpkg\\installed\\x64-windows\\include ..
                             if %errorlevel% neq 0 exit /b %errorlevel%
                             cmake --build . --config Release
                             if %errorlevel% neq 0 exit /b %errorlevel%
