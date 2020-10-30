@@ -7,10 +7,9 @@ RUN DEBIAN_FRONTEND="noninteractive" apt-get -q update &&\
     DEBIAN_FRONTEND="noninteractive" apt-get -y -q --no-install-recommends upgrade &&\
     DEBIAN_FRONTEND="noninteractive" apt-get install -y -q \
     openssh-server g++ git \
-    automake autoconf ruby ruby-dev rubygems build-essential \
+    build-essential \
     zlib1g-dev g++ cmake make libboost-all-dev libssl-dev \
     default-jdk &&\
-    gem install --no-ri --no-rdoc fpm &&\
     apt-get -y -q autoremove &&\
     apt-get -y -q clean
 

@@ -37,7 +37,7 @@ pipeline {
 //                         sh 'pwd; ls -la'
 //                         sh 'rm -rf build'
 //                         sh 'mkdir build'
-//                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make'
+//                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
 // 
 //                         echo 'Getting ready to run tests'
 //                         script {
@@ -66,64 +66,6 @@ pipeline {
 //                         sh 'pwd; ls -la'
 //                         sh 'rm -rf build'
 //                         sh 'mkdir build'
-//                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make'
-// 
-//                         echo 'Getting ready to run tests'
-//                         script {
-//                             try {
-//                                 sh 'cd build && ctest --no-compress-output -T Test'
-//                             } catch (exc) {
-//                                 echo 'Testing failed'
-//                                 currentBuild.result = 'UNSTABLE'
-//                             }
-//                         }
-//                     }
-//                 }
-
-//                 stage('Debian Stretch') {
-//                     agent {
-//                         dockerfile {
-//                             filename 'Dockerfile.debian-stretch'
-//                             dir 'ci/jenkins'
-//                             label 'docker'
-//                         }
-//                     }
-// 
-//                     steps {
-//                         echo "Building on debian-stretch-AMD64 in ${WORKSPACE}"
-//                         checkout scm
-//                         sh 'pwd; ls -la'
-//                         sh 'rm -rf build'
-//                         sh 'mkdir build'
-//                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make'
-// 
-//                         echo 'Getting ready to run tests'
-//                         script {
-//                             try {
-//                                 sh 'cd build && ctest --no-compress-output -T Test'
-//                             } catch (exc) {
-//                                 echo 'Testing failed'
-//                                 currentBuild.result = 'UNSTABLE'
-//                             }
-//                         }
-//                     }
-//                 }
-//                 
-//                 stage('Debian Buster') {
-//                     agent {
-//                         dockerfile {
-//                             filename 'Dockefile.debian-buster'
-//                             dir 'ci/jenkins'
-//                             label 'docker'
-//                         }
-//                     }
-// 
-//                     steps {
-//                         echo "Building on debian-buster-AMD64 in ${WORKSPACE}"
-//                         checkout scm
-//                         sh 'pwd; ls -la'
-//                         sh 'rm -rf build'
-//                         sh 'mkdir build'
 //                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
 // 
 //                         echo 'Getting ready to run tests'
@@ -137,6 +79,64 @@ pipeline {
 //                         }
 //                     }
 //                 }
+
+                 stage('Debian Stretch') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.debian-stretch'
+                            dir 'ci/jenkins'
+                            label 'docker'
+                        }
+                    }
+
+                    steps {
+                        echo "Building on debian-stretch-AMD64 in ${WORKSPACE}"
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+                                echo 'Testing failed'
+                                currentBuild.result = 'UNSTABLE'
+                            }
+                        }
+                    }
+                }
+                
+                stage('Debian Buster') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockefile.debian-buster'
+                            dir 'ci/jenkins'
+                            label 'docker'
+                        }
+                    }
+
+                    steps {
+                        echo "Building on debian-buster-AMD64 in ${WORKSPACE}"
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+                                echo 'Testing failed'
+                                currentBuild.result = 'UNSTABLE'
+                            }
+                        }
+                    }
+                }
 
                 stage('Debian Testing') {
                     agent {
@@ -153,7 +153,7 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make'
+                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
