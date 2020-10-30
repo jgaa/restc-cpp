@@ -21,97 +21,97 @@ pipeline {
 
         stage('Build') {
            parallel {
-                stage('Ubuntu Bionic') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockefile.ubuntu-bionic'
-                            dir 'ci/jenkins'
-                            label 'master'
-                        }
-                    }
+//                 stage('Ubuntu Bionic') {
+//                     agent {
+//                         dockerfile {
+//                             filename 'Dockefile.ubuntu-bionic'
+//                             dir 'ci/jenkins'
+//                             label 'master'
+//                         }
+//                     }
+// 
+//                     steps {
+//                         echo "Building on ubuntu-bionic-AMD64 in ${WORKSPACE}"
+//                         checkout scm
+//                         sh 'pwd; ls -la'
+//                         sh 'rm -rf build'
+//                         sh 'mkdir build'
+//                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make'
+// 
+//                         echo 'Getting ready to run tests'
+//                         script {
+//                             try {
+//                                 sh 'cd build && ctest --no-compress-output -T Test'
+//                             } catch (exc) {
+//                                 echo 'Testing failed'
+//                                 currentBuild.result = 'UNSTABLE'
+//                             }
+//                         }
+//                     }
+//                 }
+// 
+//                 stage('Ubuntu Xenial') {
+//                     agent {
+//                         dockerfile {
+//                             filename 'Dockefile.ubuntu-xenial'
+//                             dir 'ci/jenkins'
+//                             label 'master'
+//                         }
+//                     }
+// 
+//                     steps {
+//                         echo "Building on ubuntu-xenial-AMD64 in ${WORKSPACE}"
+//                         checkout scm
+//                         sh 'pwd; ls -la'
+//                         sh 'rm -rf build'
+//                         sh 'mkdir build'
+//                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make'
+// 
+//                         echo 'Getting ready to run tests'
+//                         script {
+//                             try {
+//                                 sh 'cd build && ctest --no-compress-output -T Test'
+//                             } catch (exc) {
+//                                 echo 'Testing failed'
+//                                 currentBuild.result = 'UNSTABLE'
+//                             }
+//                         }
+//                     }
+//                 }
 
-                    steps {
-                        echo "Building on ubuntu-bionic-AMD64 in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-                                echo 'Testing failed'
-                                currentBuild.result = 'UNSTABLE'
-                            }
-                        }
-                    }
-                }
-
-                stage('Ubuntu Xenial') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockefile.ubuntu-xenial'
-                            dir 'ci/jenkins'
-                            label 'master'
-                        }
-                    }
-
-                    steps {
-                        echo "Building on ubuntu-xenial-AMD64 in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-                                echo 'Testing failed'
-                                currentBuild.result = 'UNSTABLE'
-                            }
-                        }
-                    }
-                }
-
-                stage('Debian Stretch') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockerfile.debian-stretch'
-                            dir 'ci/jenkins'
-                            label 'master'
-                        }
-                    }
-
-                    steps {
-                        echo "Building on debian-stretch-AMD64 in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-                                echo 'Testing failed'
-                                currentBuild.result = 'UNSTABLE'
-                            }
-                        }
-                    }
-                }
-                
+//                 stage('Debian Stretch') {
+//                     agent {
+//                         dockerfile {
+//                             filename 'Dockerfile.debian-stretch'
+//                             dir 'ci/jenkins'
+//                             label 'master'
+//                         }
+//                     }
+// 
+//                     steps {
+//                         echo "Building on debian-stretch-AMD64 in ${WORKSPACE}"
+//                         checkout scm
+//                         sh 'pwd; ls -la'
+//                         sh 'rm -rf build'
+//                         sh 'mkdir build'
+//                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make'
+// 
+//                         echo 'Getting ready to run tests'
+//                         script {
+//                             try {
+//                                 sh 'cd build && ctest --no-compress-output -T Test'
+//                             } catch (exc) {
+//                                 echo 'Testing failed'
+//                                 currentBuild.result = 'UNSTABLE'
+//                             }
+//                         }
+//                     }
+//                 }
+//                 
                 stage('Debian Buster') {
                     agent {
                         dockerfile {
-                            filename 'Dockerfile.debian-buster'
+                            filename 'Dockefile.debian-buster'
                             dir 'ci/jenkins'
                             label 'master'
                         }
@@ -123,7 +123,7 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make'
+                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
@@ -137,122 +137,122 @@ pipeline {
                     }
                 }
 
-                stage('Debian Testing') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockefile.debian-testing'
-                            dir 'ci/jenkins'
-                            label 'master'
-                        }
-                    }
+//                 stage('Debian Testing') {
+//                     agent {
+//                         dockerfile {
+//                             filename 'Dockefile.debian-testing'
+//                             dir 'ci/jenkins'
+//                             label 'master'
+//                         }
+//                     }
+// 
+//                     steps {
+//                         echo "Building on debian-testing-AMD64 in ${WORKSPACE}"
+//                         checkout scm
+//                         sh 'pwd; ls -la'
+//                         sh 'rm -rf build'
+//                         sh 'mkdir build'
+//                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make'
+// 
+//                         echo 'Getting ready to run tests'
+//                         script {
+//                             try {
+//                                 sh 'cd build && ctest --no-compress-output -T Test'
+//                             } catch (exc) {
+//                                 echo 'Testing failed'
+//                                 currentBuild.result = 'UNSTABLE'
+//                             }
+//                         }
+//                     }
+//                 }
 
-                    steps {
-                        echo "Building on debian-testing-AMD64 in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make'
+//                 stage('Fedora') {
+//                     agent {
+//                         dockerfile {
+//                             filename 'Dockerfile.fedora'
+//                             dir 'ci/jenkins'
+//                             label 'master'
+//                         }
+//                     }
+// 
+//                     steps {
+//                         echo "Building on Fedora in ${WORKSPACE}"
+//                         checkout scm
+//                         sh 'pwd; ls -la'
+//                         sh 'rm -rf build'
+//                         sh 'mkdir build'
+//                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make'
+// 
+//                         echo 'Getting ready to run tests'
+//                         script {
+//                             try {
+//                                 sh 'cd build && ctest --no-compress-output -T Test'
+//                             } catch (exc) {
+//                                 echo 'Testing failed'
+//                                 currentBuild.result = 'UNSTABLE'
+//                             }
+//                         }
+//                     }
+//                 }
+//                
+//                 stage('Centos7') {
+//                     agent {
+//                         dockerfile {
+//                             filename 'Dockerfile.centos7'
+//                             dir 'ci/jenkins'
+//                             label 'master'
+//                         }
+//                     }
+// 
+//                     steps {
+//                         echo "Building on Centos7 in ${WORKSPACE}"
+//                         checkout scm
+//                         sh 'pwd; ls -la'
+//                         sh 'rm -rf build'
+//                         sh 'mkdir build'
+//                         sh 'cd build && source scl_source enable devtoolset-7 && cmake -DCMAKE_BUILD_TYPE=Release -DBOOST_ROOT=/opt/boost .. && make'
+// 
+//                         echo 'Getting ready to run tests'
+//                         script {
+//                             try {
+//                                 sh 'cd build && ctest --no-compress-output -T Test'
+//                             } catch (exc) {
+//                                 echo 'Testing failed'
+//                                 currentBuild.result = 'UNSTABLE'
+//                             }
+//                         }
+//                     }
+//                 }
 
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-                                echo 'Testing failed'
-                                currentBuild.result = 'UNSTABLE'
-                            }
-                        }
-                    }
-                }
-
-                stage('Fedora') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockerfile.fedora'
-                            dir 'ci/jenkins'
-                            label 'master'
-                        }
-                    }
-
-                    steps {
-                        echo "Building on Fedora in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-                                echo 'Testing failed'
-                                currentBuild.result = 'UNSTABLE'
-                            }
-                        }
-                    }
-                }
-               
-                stage('Centos7') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockerfile.centos7'
-                            dir 'ci/jenkins'
-                            label 'master'
-                        }
-                    }
-
-                    steps {
-                        echo "Building on Centos7 in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && source scl_source enable devtoolset-7 && cmake -DCMAKE_BUILD_TYPE=Release -DBOOST_ROOT=/opt/boost .. && make'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-                                echo 'Testing failed'
-                                currentBuild.result = 'UNSTABLE'
-                            }
-                        }
-                    }
-                }
-
-                stage('macOS') {
-                    agent {label 'macos'}
-
-                    environment {
-                        CPPFLAGS = "-I/usr/local/opt/openssl/include -I/usr/local/opt/zlib/include -I/usr/local/opt/boost/include/"
-                        LDFLAGS = "-L/usr/local/opt/openssl/lib -L/usr/local/opt/zlib/lib -L/usr/local/opt/boost/lib/"
-                    }
-
-                    // Dependencies are installed with: brew install openssl boost zlib
-
-                    steps {
-                        echo "Building on macos in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib -DBOOST_LIBRARIES=/usr/local/opt/boost/lib -DBOOSTL_ROOT_DIR=/usr/local/opt/boost -DZLIB_INCLUDE_DIRS=/usr/local/opt/zlib/include/ -DZLIB_LIBRARIES=/usr/local/opt/zlib/lib/ .. && make -j4'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-                                echo 'Testing failed'
-                                currentBuild.result = 'UNSTABLE'
-                            }
-                        }
-                    }
-                }
+//                 stage('macOS') {
+//                     agent {label 'macos'}
+// 
+//                     environment {
+//                         CPPFLAGS = "-I/usr/local/opt/openssl/include -I/usr/local/opt/zlib/include -I/usr/local/opt/boost/include/"
+//                         LDFLAGS = "-L/usr/local/opt/openssl/lib -L/usr/local/opt/zlib/lib -L/usr/local/opt/boost/lib/"
+//                     }
+// 
+//                     Dependencies are installed with: brew install openssl boost zlib
+// 
+//                     steps {
+//                         echo "Building on macos in ${WORKSPACE}"
+//                         checkout scm
+//                         sh 'pwd; ls -la'
+//                         sh 'rm -rf build'
+//                         sh 'mkdir build'
+//                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib -DBOOST_LIBRARIES=/usr/local/opt/boost/lib -DBOOSTL_ROOT_DIR=/usr/local/opt/boost -DZLIB_INCLUDE_DIRS=/usr/local/opt/zlib/include/ -DZLIB_LIBRARIES=/usr/local/opt/zlib/lib/ .. && make -j4'
+// 
+//                         echo 'Getting ready to run tests'
+//                         script {
+//                             try {
+//                                 sh 'cd build && ctest --no-compress-output -T Test'
+//                             } catch (exc) {
+//                                 echo 'Testing failed'
+//                                 currentBuild.result = 'UNSTABLE'
+//                             }
+//                         }
+//                     }
+//                 }
 
 //                 stage('Windows msvc14 C++14') {
 // 
