@@ -345,7 +345,7 @@ pipeline {
                             rmdir /S /Q build
                             mkdir build
                             cd build
-                            cmake -DRESTC_CPP_USE_CPP17=ON -DCMAKE_TOOLCHAIN_FILE=C:\\devel\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake" ..
+                            cmake -DRESTC_CPP_USE_CPP17=ON -DCMAKE_TOOLCHAIN_FILE=C:\\devel\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake -DCMAKE_BUILD_TYPE=Release ..
                             if %errorlevel% neq 0 exit /b %errorlevel%
                             cmake --build . --config Release
                             if %errorlevel% neq 0 exit /b %errorlevel%
