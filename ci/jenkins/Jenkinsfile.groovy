@@ -139,6 +139,7 @@ pipeline {
 
                 stage('Debian Testing') {
                     agent {
+                        label 'docker'
                         dockerfile {
                             filename 'Dockefile.debian-testing'
                             dir 'ci/jenkins'
