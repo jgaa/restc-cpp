@@ -6,7 +6,7 @@ RUN echo "root:password" | chpasswd
 
 # We need to create a valid user on the same uid that jenkins use on the host machine.
 # Else, we run into failing commands because the current user cannot be resolved.
-RUN useradd -u 111 -m -d /home/jenkins -s /bin/bash jenkins
+RUN useradd -u 106 -m -d /home/jenkins -s /bin/bash jenkins
 RUN echo "jenkins:jenkins" | chpasswd
 
 RUN yum -y update &&\
