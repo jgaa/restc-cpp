@@ -233,7 +233,7 @@ pipeline {
                         LDFLAGS = "-L/usr/local/opt/openssl/lib -L/usr/local/opt/zlib/lib -L/usr/local/opt/boost/lib/"
                     }
 
-                    Dependencies are installed with: brew install openssl boost zlib
+                    //Dependencies are installed with: brew install openssl boost zlib
 
                     steps {
                         echo "Building on macos in ${WORKSPACE}"
