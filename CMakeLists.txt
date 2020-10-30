@@ -28,45 +28,27 @@ if (NOT DEFINED RESTC_ROOT_DIR)
     set(RESTC_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 
-if (NOT DEFINED WITH_APIDOC)
-    option(WITH_APIDOC "Generate Doxygen documentation")
-endif()
+option(WITH_APIDOC "Generate Doxygen documentation")
 
-if (NOT DEFINED RESTC_CPP_WITH_EXAMPLES)
-    option(RESTC_CPP_WITH_EXAMPLES "Compile examples" ON)
-endif()
+option(RESTC_CPP_WITH_EXAMPLES "Compile examples" ON)
 
-if (NOT DEFINED RESTC_CPP_WITH_UNIT_TESTS)
-    option(RESTC_CPP_WITH_UNIT_TESTS "Enable Unit Testing" ON)
-endif()
+option(RESTC_CPP_WITH_UNIT_TESTS "Enable Unit Testing" ON)
 
-if (NOT DEFINED RESTC_CPP_AUTORUN_UNIT_TESTS)
-    option(RESTC_CPP_AUTORUN_UNIT_TESTS "Run Unit Tests automatically after build" OFF)
-endif()
+option(RESTC_CPP_AUTORUN_UNIT_TESTS "Run Unit Tests automatically after build" OFF)
 
-if (NOT DEFINED RESTC_CPP_WITH_FUNCTIONALT_TESTS)
-    option(RESTC_CPP_WITH_FUNCTIONALT_TESTS "Enable Functional Testing" ON)
-endif()
+option(RESTC_CPP_WITH_FUNCTIONALT_TESTS "Enable Functional Testing" ON)
 
-if (NOT DEFINED RESTC_CPP_WITH_TLS)
-    option(RESTC_CPP_WITH_TLS "Enable TLS (Trough OpenSSL)" ON)
-endif()
+option(RESTC_CPP_WITH_TLS "Enable TLS (Trough OpenSSL)" ON)
 
-if (NOT DEFINED RESTC_CPP_LOG_WITH_BOOST_LOG)
-    option(RESTC_CPP_LOG_WITH_BOOST_LOG "Use boost::log for logging" ON)
-endif()
+option(RESTC_CPP_LOG_WITH_BOOST_LOG "Use boost::log for logging" ON)
 
-if (NOT DEFINED RESTC_CPP_LOG_JSON_SERIALIZATION)
-    option(RESTC_CPP_LOG_JSON_SERIALIZATION "Enable trace logging for json serialization debugging")
-endif()
+option(RESTC_CPP_LOG_JSON_SERIALIZATION "Enable trace logging for json serialization debugging")
 
-if (NOT DEFINED RESTC_CPP_WITH_ZLIB)
-    option(RESTC_CPP_WITH_ZLIB "Use zlib" ON)
-endif()
+option(RESTC_CPP_WITH_ZLIB "Use zlib" ON)
 
-if (NOT DEFINED RESTC_CPP_USE_CPP17)
-    option(RESTC_CPP_USE_CPP17 "Use the C++17 standard" OFF)
-endif()
+option(RESTC_CPP_USE_CPP17 "Use the C++17 standard" OFF)
+
+option(RESTC_CPP_THREADED_CTX "Allow asio contextx with multiple therads. Enables thread-safe internal access." OFF)
 
 if (NOT DEFINED RESTC_CPP_MAX_INPUT_BUFFER_LENGTH)
     set (RESTC_CPP_MAX_INPUT_BUFFER_LENGTH 0x7fffffff)
@@ -147,6 +129,9 @@ if (NOT EMBEDDED_RESTC_CPP)
     if (RESTC_CPP_WITH_TLS)
         find_package(OpenSSL REQUIRED)
         target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENSSL_LIBRARIES})
+        if (WIN32)
+            target_link_libraries(${PROJECT_NAME} PUBLIC bcrypt)
+        endif()
     endif()
 
     if (UNIX)
@@ -156,6 +141,7 @@ if (NOT EMBEDDED_RESTC_CPP)
 
     if (RESTC_CPP_LOG_WITH_BOOST_LOG)
         set(BOOST_LOG_DEP log)
+        message(STATUS "Using boost log")
     endif()
 
     #set(Boost_USE_MULTITHREADED ON)

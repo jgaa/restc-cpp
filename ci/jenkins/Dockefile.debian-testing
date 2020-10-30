@@ -3,13 +3,13 @@ FROM debian:testing
 MAINTAINER Jarle Aase <jgaa@jgaa.com>
 
 # In case you need proxy
-RUN apt-get -q update &&\
-    apt-get -y -q --no-install-recommends upgrade &&\
-    apt-get -y -q install openssh-server g++ git \
-    automake autoconf ruby ruby-dev rubygems build-essential \
+RUN DEBIAN_FRONTEND="noninteractive" apt-get -q update &&\
+    DEBIAN_FRONTEND="noninteractive" apt-get -y -q --no-install-recommends upgrade &&\
+    DEBIAN_FRONTEND="noninteractive" apt-get install -y -q\
+    openssh-server g++ git \
+    build-essential \
     zlib1g-dev g++ cmake make libboost-all-dev libssl-dev \
-    openjdk-8-jdk &&\
-    gem install --no-ri --no-rdoc fpm &&\
+    default-jdk &&\
     apt-get -y -q autoremove &&\
     apt-get -y -q clean
 
