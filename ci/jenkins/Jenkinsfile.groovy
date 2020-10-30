@@ -339,13 +339,13 @@ pipeline {
                         checkout scm
 
                         bat script: '''
-                            PATH=%PATH%;C:\Program Files\CMake\bin\cmake;C:\devel\vcpkg
+                            PATH=%PATH%;C:\\Program Files\\CMake\\bin\\cmake;C:\\devel\\vcpkg
                             vcpkg install zlib openssl boost-fusion boost-program-options boost-asio boost-date-time boost-chrono boost-coroutine
                             if %errorlevel% neq 0 exit /b %errorlevel%
                             rmdir /S /Q build
                             mkdir build
                             cd build
-                            cmake -DRESTC_CPP_USE_CPP17=ON -DCMAKE_TOOLCHAIN_FILE=C:\path\to\vcpkg\scripts\buildsystems\vcpkg.cmake" ..
+                            cmake -DRESTC_CPP_USE_CPP17=ON -DCMAKE_TOOLCHAIN_FILE=C:\\devel\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake" ..
                             if %errorlevel% neq 0 exit /b %errorlevel%
                             cmake --build . --config Release
                             if %errorlevel% neq 0 exit /b %errorlevel%
@@ -356,7 +356,7 @@ pipeline {
                         script {
                             try {
                                 bat script: '''
-                                    PATH=%PATH%;C:\devel\vcpkg\installed\x86-windows\bin
+                                    PATH=%PATH%;C:\\devel\\vcpkg\\installed\\x86-windows\\bin
                                     cd build
                                     ctest -C Release
                                     if %errorlevel% neq 0 exit /b %errorlevel%
