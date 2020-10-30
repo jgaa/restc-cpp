@@ -9,7 +9,6 @@ RUN DEBIAN_FRONTEND="noninteractive" apt-get -q update &&\
     build-essential \
     zlib1g-dev g++ cmake make libboost-all-dev libssl-dev \
     openjdk-8-jdk &&\
-    gem install --no-ri --no-rdoc fpm &&\
     apt-get -y -q autoremove &&\
     apt-get -y -q clean
 
