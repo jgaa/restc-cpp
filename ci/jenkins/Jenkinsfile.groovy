@@ -80,92 +80,92 @@ pipeline {
 //                     }
 //                 }
 
-                 stage('Debian Stretch') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockerfile.debian-stretch'
-                            dir 'ci/jenkins'
-                            label 'docker'
-                        }
-                    }
-
-                    steps {
-                        echo "Building on debian-stretch-AMD64 in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-                                echo 'Testing failed'
-                                currentBuild.result = 'UNSTABLE'
-                            }
-                        }
-                    }
-                }
-                
-                stage('Debian Buster') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockefile.debian-buster'
-                            dir 'ci/jenkins'
-                            label 'docker'
-                        }
-                    }
-
-                    steps {
-                        echo "Building on debian-buster-AMD64 in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-                                echo 'Testing failed'
-                                currentBuild.result = 'UNSTABLE'
-                            }
-                        }
-                    }
-                }
-
-                stage('Debian Testing') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockefile.debian-testing'
-                            dir 'ci/jenkins'
-                            label 'docker'
-                        }
-                    }
-
-                    steps {
-                        echo "Building on debian-testing-AMD64 in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-                                echo 'Testing failed'
-                                currentBuild.result = 'UNSTABLE'
-                            }
-                        }
-                    }
-                }
+//                  stage('Debian Stretch') {
+//                     agent {
+//                         dockerfile {
+//                             filename 'Dockerfile.debian-stretch'
+//                             dir 'ci/jenkins'
+//                             label 'docker'
+//                         }
+//                     }
+// 
+//                     steps {
+//                         echo "Building on debian-stretch-AMD64 in ${WORKSPACE}"
+//                         checkout scm
+//                         sh 'pwd; ls -la'
+//                         sh 'rm -rf build'
+//                         sh 'mkdir build'
+//                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
+// 
+//                         echo 'Getting ready to run tests'
+//                         script {
+//                             try {
+//                                 sh 'cd build && ctest --no-compress-output -T Test'
+//                             } catch (exc) {
+//                                 echo 'Testing failed'
+//                                 currentBuild.result = 'UNSTABLE'
+//                             }
+//                         }
+//                     }
+//                 }
+//                 
+//                 stage('Debian Buster') {
+//                     agent {
+//                         dockerfile {
+//                             filename 'Dockefile.debian-buster'
+//                             dir 'ci/jenkins'
+//                             label 'docker'
+//                         }
+//                     }
+// 
+//                     steps {
+//                         echo "Building on debian-buster-AMD64 in ${WORKSPACE}"
+//                         checkout scm
+//                         sh 'pwd; ls -la'
+//                         sh 'rm -rf build'
+//                         sh 'mkdir build'
+//                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
+// 
+//                         echo 'Getting ready to run tests'
+//                         script {
+//                             try {
+//                                 sh 'cd build && ctest --no-compress-output -T Test'
+//                             } catch (exc) {
+//                                 echo 'Testing failed'
+//                                 currentBuild.result = 'UNSTABLE'
+//                             }
+//                         }
+//                     }
+//                 }
+// 
+//                 stage('Debian Testing') {
+//                     agent {
+//                         dockerfile {
+//                             filename 'Dockefile.debian-testing'
+//                             dir 'ci/jenkins'
+//                             label 'docker'
+//                         }
+//                     }
+// 
+//                     steps {
+//                         echo "Building on debian-testing-AMD64 in ${WORKSPACE}"
+//                         checkout scm
+//                         sh 'pwd; ls -la'
+//                         sh 'rm -rf build'
+//                         sh 'mkdir build'
+//                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
+// 
+//                         echo 'Getting ready to run tests'
+//                         script {
+//                             try {
+//                                 sh 'cd build && ctest --no-compress-output -T Test'
+//                             } catch (exc) {
+//                                 echo 'Testing failed'
+//                                 currentBuild.result = 'UNSTABLE'
+//                             }
+//                         }
+//                     }
+//                 }
 
 //                 stage('Fedora') {
 //                     agent {
@@ -329,6 +329,45 @@ pipeline {
 //                         }
 //                     }
 //                 }
+
+                 stage('Windows with vcpkg') {
+
+                    agent {label 'windows'}
+
+                     steps {
+                        echo "Building on Windows in ${WORKSPACE}"
+                        checkout scm
+
+                        bat script: '''
+                            PATH=%PATH%;C:\Program Files\CMake\bin\cmake;C:\devel\vcpkg
+                            vcpkg install zlib openssl boost-fusion boost-program-options boost-asio boost-date-time boost-chrono boost-coroutine
+                            if %errorlevel% neq 0 exit /b %errorlevel%
+                            rmdir /S /Q build
+                            mkdir build
+                            cd build
+                            cmake -DRESTC_CPP_USE_CPP17=ON -DCMAKE_TOOLCHAIN_FILE=C:\path\to\vcpkg\scripts\buildsystems\vcpkg.cmake" ..
+                            if %errorlevel% neq 0 exit /b %errorlevel%
+                            cmake --build . --config Release
+                            if %errorlevel% neq 0 exit /b %errorlevel%
+                            echo "Build is OK"
+                        '''
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                bat script: '''
+                                    PATH=%PATH%;C:\devel\vcpkg\installed\x86-windows\bin
+                                    cd build
+                                    ctest -C Release
+                                    if %errorlevel% neq 0 exit /b %errorlevel%
+                                '''
+                            } catch (exc) {
+                                echo 'Testing failed'
+                                currentBuild.result = 'UNSTABLE'
+                            }
+                        }
+                    }
+                }
             }
 
             post {
