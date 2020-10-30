@@ -9,7 +9,6 @@ RUN apt-get -q update &&\
     git build-essential \
     zlib1g-dev g++ cmake make libboost-all-dev libssl-dev \
     default-jdk &&\
-    gem install --no-rdoc fpm &&\
     apt-get -y -q autoremove &&\
     apt-get -y -q clean
 
