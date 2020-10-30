@@ -339,7 +339,7 @@ pipeline {
                         checkout scm
 
                         bat script: '''
-                            PATH=%PATH%;"C:\\Program Files\\CMake\\bin\\cmake";C:\\devel\\vcpkg
+                            PATH=%PATH%;C:\\Program Files\\CMake\\bin;C:\\devel\\vcpkg
                             vcpkg install zlib openssl boost-fusion boost-program-options boost-asio boost-date-time boost-chrono boost-coroutine
                             if %errorlevel% neq 0 exit /b %errorlevel%
                             rmdir /S /Q build
