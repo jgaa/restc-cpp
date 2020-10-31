@@ -266,7 +266,9 @@ Fedora and Centos are currently disabled in my CI because of failures to start t
 
 The Jenkins setup is [here](ci/jenkins).
 
-This project does not use *Travis CI*, for two reasons. First, Travis CI is [not suitable for modern C++ development](https://github.com/travis-ci/travis-ci/issues/6300). They use outdated versions of Ubuntu and old compilers. There are work-arounds for some of the issues, but I prefer to use services that tries to be helpful to whatever I am doing. Secondly, rest-cpp needs to be tested under Microsoft Windows. Travis CI does not offer that. So I have built my own CI infrastructure using my own hardware. I use Jenkins on a VM with Ubuntu Xenial Xerus, 6 cores and 10 GB RAM with one slave running on a VM with Microsoft Windows Server 2016 with 4 cores and 8 GB RAM, and one slave on a Mac Mini. Using Docker to build with different Linux distributions on the main Jenkins server gives me better flexibility. It also immediately catches mistakes that break the build or test(s) on a specific Linux distribution or platform.
+This project does not use *Travis CI*, for two reasons. First, Travis CI is [not suitable for modern C++ development](https://github.com/travis-ci/travis-ci/issues/6300). They use outdated versions of Ubuntu and old compilers. There are work-arounds for some of the issues, but I prefer to use services that tries to be helpful to whatever I am doing. Secondly, restc-cpp needs to be tested under Microsoft Windows. Travis CI does not offer that. So I have built my own CI infrastructure using my own hardware. I use Jenkins on a VM with Debian Buster, and three slaves for Docker on Linux VM's, one slave running on a VM with Microsoft Windows 10 Pro, and one slave on a MacBook Mini. Using Docker to build with different Linux distributions gives me flexibility. It also immediately catches mistakes that break the build or test(s) on a specific Linux distribution or platform. 
+
+Apple's MacOS is the only operating system that require dedicated hardware for CI. Developing for Apple operating systems reminds me of how we did things in the 1980's.
 
 
 # Similar projects
