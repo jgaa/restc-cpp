@@ -5,7 +5,7 @@ if (DEFINED ENV{RESTC_CPP_VERSION})
 endif()
 
 if (NOT DEFINED RESTC_CPP_VERSION)
-    set(RESTC_CPP_VERSION 0.9.2)
+    set(RESTC_CPP_VERSION 0.10.0)
 endif()
 
 project (restc-cpp VERSION ${RESTC_CPP_VERSION})
