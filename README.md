@@ -230,7 +230,8 @@ Please refer to the [tutorial](doc/Tutorial.md) for more examples.
 - Uses C++ / boost coroutines for application logic.
 - HTTP Redirects.
 - HTTP Basic Authentication.
-- Logging trough boost::log or trough your own log macros.
+- Logging trough boost::log, std::clog or trough your own log macros.
+- Log-level for the library can be set at compile time (none, error, warn, info, debug, trace)
 - Connection Pool for fast re-use of existing server connections.
 - Compression (gzip, deflate).
 - JSON serialization to and from native C++ objects.
@@ -253,14 +254,15 @@ The project has been in public BETA since April 11th 2017.
 # Supported operating systems
 These are the operating systems where my Continues Integration (Jenkins) servers currently compiles the project and run all the tests:
 
- - Debian Stretch (Stable)
+ - Debian Buster (Stable)
+ - Debian Stretch
  - Debian Testing
- - Windows 10 / Microsoft Visual Studio 2017, Community version
- - Fedora 29
+ - Windows 10 / Microsoft Visual Studio 2019, Community version using vcpkg for dependencies
  - Ubuntu Xenial (LTS)
  - Ubuntu Bionic (LTS)
- - Centos 7 (latest) with devtoolset-7-gcc and (custom built) libbbost 1.69.0
- - macOS High Sierra (OS X)
+ - macOS
+ 
+Fedora and Centos are currently disabled in my CI because of failures to start their Docker containers. (Work in progress)
 
 The Jenkins setup is [here](ci/jenkins).
 
@@ -268,6 +270,7 @@ This project does not use *Travis CI*, for two reasons. First, Travis CI is [not
 
 
 # Similar projects
+  - [RESTinCurl](https://github.com/jgaa/RESTinCurl) by me. Aimed at mobile applications, IoT and projects that already link with libcurl.
   - [JSON for Modern C++](https://nlohmann.github.io/json/) by Niels Lohmann.
   - [json11 - tiny JSON library for C++11, providing JSON parsing and serialization](https://github.com/dropbox/json11)
 
