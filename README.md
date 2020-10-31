@@ -272,8 +272,9 @@ Apple's MacOS is the only operating system that require dedicated hardware for C
 
 
 # Similar projects
+  - [Boost.Beast](https://github.com/boostorg/beast) by Vinnie Falco. When you like to write many lines of code...
   - [RESTinCurl](https://github.com/jgaa/RESTinCurl) by me. Aimed at mobile applications, IoT and projects that already link with libcurl.
-  - [JSON for Modern C++](https://nlohmann.github.io/json/) by Niels Lohmann.
+  - [JSON for Modern C++](https://nlohmann.github.io/json/) by Niels Lohmann. My favorite json library, when I need to more than just static serialization.
   - [json11 - tiny JSON library for C++11, providing JSON parsing and serialization](https://github.com/dropbox/json11)
 
 
