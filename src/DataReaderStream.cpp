@@ -15,6 +15,7 @@ DataReaderStream::DataReaderStream(std::unique_ptr<DataReader>&& source)
         << RESTC_CPP_TYPENAME(decltype(*source_)));
 }
 
+
 void DataReaderStream::Fetch() {
     if (++curr_ >= end_) {
         auto buf = source_->ReadSome();
@@ -24,8 +25,8 @@ void DataReaderStream::Fetch() {
 
         const auto bytes = boost::asio::buffer_size(buf);
         if (bytes == 0) {
-            RESTC_CPP_LOG_TRACE_("DataReaderStream::Fetch: EOF";
-            throw ProtocolException("Fetch(): EOF"));
+            RESTC_CPP_LOG_TRACE_("DataReaderStream::Fetch: EOF");
+            throw ProtocolException("Fetch(): EOF");
         }
         curr_ = boost::asio::buffer_cast<const char *>(buf);
         end_ = curr_ + boost::asio::buffer_size(buf);

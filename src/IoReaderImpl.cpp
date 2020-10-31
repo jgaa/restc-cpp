@@ -20,6 +20,10 @@ public:
     {
     }
 
+    void Finish() override {
+    }
+
+
     boost::asio::const_buffers_1 ReadSome() override {
         if (auto conn = connection_.lock()) {
             auto timer = IoTimer::Create("IoReaderImpl",

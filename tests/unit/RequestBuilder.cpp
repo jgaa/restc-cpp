@@ -1,11 +1,14 @@
 // Include before boost::log headers
 #include "restc-cpp/logging.h"
 
+#ifdef RESTC_CPP_LOG_WITH_BOOST_LOG
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
-#include <boost/fusion/adapted.hpp>
+#endif
 
+
+#include <boost/fusion/adapted.hpp>
 
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/RequestBuilder.h"

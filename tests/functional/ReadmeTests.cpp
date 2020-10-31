@@ -8,9 +8,11 @@
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/IteratorFromJsonSerializer.h"
 
+#ifdef RESTC_CPP_LOG_WITH_BOOST_LOG
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
+#endif
 
 #include "restc-cpp/test_helper.h"
 #include "restc-cpp/RequestBuilder.h"
@@ -553,14 +555,16 @@ void thirtheenth() {
 
 int main() {
 
+#ifdef RESTC_CPP_LOG_WITH_BOOST_LOG
     namespace logging = boost::log;
     logging::core::get()->set_filter
     (
         logging::trivial::severity >= logging::trivial::debug
     );
+#endif
 
     try {
-        cout << "First: " << endl;
+        /*cout << "First: " << endl;
         first();
 
         cout << "Second: " << endl;
@@ -591,7 +595,7 @@ int main() {
         tenth();
 
         cout << "Eleventh: " << endl;
-        eleventh();
+        eleventh();*/
 
         cout << "Twelfth: " << endl;
         twelfth();

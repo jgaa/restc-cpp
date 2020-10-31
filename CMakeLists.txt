@@ -42,6 +42,10 @@ option(RESTC_CPP_WITH_TLS "Enable TLS (Trough OpenSSL)" ON)
 
 option(RESTC_CPP_LOG_WITH_BOOST_LOG "Use boost::log for logging" ON)
 
+option(RESTC_CPP_LOG_WITH_CLOG "Use std::clog for logging" OFF)
+
+set(RESTC_CPP_LOG_LEVEL_STR "info" CACHE STRING "Limit logs to: none, error, warn, info, debug, trace")
+
 option(RESTC_CPP_LOG_JSON_SERIALIZATION "Enable trace logging for json serialization debugging")
 
 option(RESTC_CPP_WITH_ZLIB "Use zlib" ON)
@@ -53,6 +57,23 @@ option(RESTC_CPP_THREADED_CTX "Allow asio contextx with multiple therads. Enable
 if (NOT DEFINED RESTC_CPP_MAX_INPUT_BUFFER_LENGTH)
     set (RESTC_CPP_MAX_INPUT_BUFFER_LENGTH 0x7fffffff)
 endif()
+
+if (RESTC_CPP_LOG_LEVEL_STR STREQUAL "none")
+    set (RESTC_CPP_LOG_LEVEL 0)
+elseif(RESTC_CPP_LOG_LEVEL_STR STREQUAL  "error")
+    set (RESTC_CPP_LOG_LEVEL 1)
+elseif(RESTC_CPP_LOG_LEVEL_STR STREQUAL  "warn")
+    set (RESTC_CPP_LOG_LEVEL 2)
+elseif(RESTC_CPP_LOG_LEVEL_STR STREQUAL  "info")
+    set (RESTC_CPP_LOG_LEVEL 3)
+elseif(RESTC_CPP_LOG_LEVEL_STR STREQUAL  "debug")
+    set (RESTC_CPP_LOG_LEVEL 4)
+elseif(RESTC_CPP_LOG_LEVEL_STR STREQUAL  "trace")
+    set (RESTC_CPP_LOG_LEVEL 5)
+else()
+    message(FATAL_ERROR "Unsupported log level ${RESTC_CPP_LOG_LEVEL_STR}")
+endif()
+
 
 message(STATUS "Using ${CMAKE_CXX_COMPILER}")
 
@@ -139,11 +160,19 @@ if (NOT EMBEDDED_RESTC_CPP)
         target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_THREAD_LIBS_INIT})
     endif()
 
-    if (RESTC_CPP_LOG_WITH_BOOST_LOG)
-        set(BOOST_LOG_DEP log)
-        message(STATUS "Using boost log")
+    if (RESTC_CPP_LOG_WITH_BOOST_LOG AND RESTC_CPP_LOG_WITH_CLOG)
+        message( FATAL_ERROR "You cannot use Boost.Log and std::clog together. Cgoose one (or none)")
     endif()
 
+    if (RESTC_CPP_LOG_WITH_BOOST_LOG)
+        set(BOOST_LOG_DEP log)
+        message(STATUS "Using Boost.Log for logging (brace for horrors!)")
+    endif()
+
+    if (RESTC_CPP_LOG_WITH_CLOG)
+        message(STATUS "Using std::clog for logging")
+    endif()
+        
     #set(Boost_USE_MULTITHREADED ON)
     find_package(Boost REQUIRED COMPONENTS
         system

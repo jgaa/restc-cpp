@@ -11,7 +11,7 @@ namespace {
 
 #define STARTCASE(name) { CASE(#name) { \
     RESTC_CPP_LOG_DEBUG_("================================"); \
-    RESTC_CPP_LOG_INFO_("Test case: " << #name;) \
+    RESTC_CPP_LOG_INFO_("Test case: " << #name); \
     RESTC_CPP_LOG_DEBUG_("================================");
 
 #define ENDCASE \
