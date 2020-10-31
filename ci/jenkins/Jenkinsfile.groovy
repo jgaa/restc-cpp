@@ -167,63 +167,63 @@ pipeline {
                     }
                 }
 
-                stage('Fedora') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockerfile.fedora'
-                            dir 'ci/jenkins'
-                            label 'docker'
-                        }
-                    }
-
-                    steps {
-                        echo "Building on Fedora in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-                                echo 'Testing failed'
-                                currentBuild.result = 'UNSTABLE'
-                            }
-                        }
-                    }
-                }
-               
-                stage('Centos7') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockerfile.centos7'
-                            dir 'ci/jenkins'
-                            label 'docker'
-                        }
-                    }
-
-                    steps {
-                        echo "Building on Centos7 in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && source scl_source enable devtoolset-7 && cmake -DCMAKE_BUILD_TYPE=Release -DBOOST_ROOT=/opt/boost .. && make'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-                                echo 'Testing failed'
-                                currentBuild.result = 'UNSTABLE'
-                            }
-                        }
-                    }
-                }
+//                 stage('Fedora') {
+//                     agent {
+//                         dockerfile {
+//                             filename 'Dockerfile.fedora'
+//                             dir 'ci/jenkins'
+//                             label 'docker'
+//                         }
+//                     }
+// 
+//                     steps {
+//                         echo "Building on Fedora in ${WORKSPACE}"
+//                         checkout scm
+//                         sh 'pwd; ls -la'
+//                         sh 'rm -rf build'
+//                         sh 'mkdir build'
+//                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make'
+// 
+//                         echo 'Getting ready to run tests'
+//                         script {
+//                             try {
+//                                 sh 'cd build && ctest --no-compress-output -T Test'
+//                             } catch (exc) {
+//                                 echo 'Testing failed'
+//                                 currentBuild.result = 'UNSTABLE'
+//                             }
+//                         }
+//                     }
+//                 }
+//                
+//                 stage('Centos7') {
+//                     agent {
+//                         dockerfile {
+//                             filename 'Dockerfile.centos7'
+//                             dir 'ci/jenkins'
+//                             label 'docker'
+//                         }
+//                     }
+// 
+//                     steps {
+//                         echo "Building on Centos7 in ${WORKSPACE}"
+//                         checkout scm
+//                         sh 'pwd; ls -la'
+//                         sh 'rm -rf build'
+//                         sh 'mkdir build'
+//                         sh 'cd build && source scl_source enable devtoolset-7 && cmake -DCMAKE_BUILD_TYPE=Release -DBOOST_ROOT=/opt/boost .. && make'
+// 
+//                         echo 'Getting ready to run tests'
+//                         script {
+//                             try {
+//                                 sh 'cd build && ctest --no-compress-output -T Test'
+//                             } catch (exc) {
+//                                 echo 'Testing failed'
+//                                 currentBuild.result = 'UNSTABLE'
+//                             }
+//                         }
+//                     }
+//                 }
 
                 stage('macOS') {
                     agent {label 'macos'}
