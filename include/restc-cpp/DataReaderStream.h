@@ -24,9 +24,14 @@ public:
 
     DataReaderStream(std::unique_ptr<DataReader>&& source);
 
-     bool IsEof() const override {
-         return eof_;
-     }
+    bool IsEof() const override {
+        return eof_;
+    }
+
+    void Finish() override {
+        if (source_)
+            source_->Finish();
+    }
 
     /*! Read whatever we have buffered or can get downstream */
     boost::asio::const_buffers_1 ReadSome() override;

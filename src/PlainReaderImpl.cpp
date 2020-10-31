@@ -19,6 +19,11 @@ public:
         return remaining_ == 0;
     }
 
+    void Finish() override {
+        if (source_)
+            source_->Finish();
+    }
+
     boost::asio::const_buffers_1 ReadSome() override {
 
         if (IsEof()) {

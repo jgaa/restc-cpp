@@ -14,6 +14,9 @@ public:
         return true;
     }
 
+    void Finish() override {
+    }
+
     boost::asio::const_buffers_1 ReadSome() override {
         return {nullptr, 0};
     }

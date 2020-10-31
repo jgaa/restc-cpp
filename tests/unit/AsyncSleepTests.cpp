@@ -4,9 +4,12 @@
 // Include before boost::log headers
 #include "restc-cpp/logging.h"
 
+#ifdef RESTC_CPP_LOG_WITH_BOOST_LOG
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
+#endif
+
 #include <boost/lexical_cast.hpp>
 #include <boost/fusion/adapted.hpp>
 
@@ -59,10 +62,14 @@ TEST(TestSleepSeconds)
 
 int main( int argc, char * argv[] )
 {
+#ifdef RESTC_CPP_LOG_WITH_BOOST_LOG
     namespace logging = boost::log;
     logging::core::get()->set_filter
     (
         logging::trivial::severity >= logging::trivial::trace
     );
+
+#endif
+
     return lest::run( specification, argc, argv );
 }

@@ -25,6 +25,17 @@ public:
         return stream_->IsEof();
     }
 
+    void Finish() override {
+        ReadSome();
+        if (!IsEof()) {
+            throw ProtocolException("Failed to finish chunked payload");
+        }
+
+        if (stream_) {
+            stream_->Finish();
+        }
+    }
+
     string ToPrintable(boost::string_ref buf) const {
         ostringstream out;
         locale loc;

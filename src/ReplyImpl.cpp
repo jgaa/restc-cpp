@@ -207,6 +207,7 @@ string ReplyImpl::GetBodyAsString(const size_t maxSize) {
 
 void ReplyImpl::CheckIfWeAreDone() {
     if (reader_ && reader_->IsEof()) {
+        reader_->Finish();
         ReleaseConnection();
     }
 }
