@@ -352,6 +352,7 @@ public:
 
     RequestBuilder& Properties(Request::Properties::ptr_t properties) {
         properties_ = std::move(properties);
+        return *this;
     }
 
     std::unique_ptr<Request> Build() {
