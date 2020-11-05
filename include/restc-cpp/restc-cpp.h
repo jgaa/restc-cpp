@@ -82,6 +82,12 @@ struct Headers : public std::multimap<std::string, std::string, ciLessLibC>  {
 
         return insert({key, {}})->second;
     }
+
+    Headers& operator += (const Headers& nh) {
+        for(auto& h: nh) {
+           operator [] (h.first) = h.second;
+        }
+    }
 };
 
 using headers_t = Headers;

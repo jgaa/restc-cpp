@@ -11,6 +11,7 @@
 //#include "restc-cpp/DataWriter.h"
 #include "restc-cpp/RequestBody.h"
 #include "restc-cpp/RequestBodyWriter.h"
+#include "restc-cpp/helper.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 
@@ -373,7 +374,22 @@ public:
         auto req = Request::Create(
             url_, type_, ctx_->GetClient(), move(body_), args_, headers_, auth_);
 
+        auto orig = req->GetProperties();
+
         if (properties_) {
+            // Merge the headers and args to get what we have already
+            // set in Request::Create
+            for(const auto& h : orig.headers) {
+                if (properties_->headers.find(h.first) == properties_->headers.end()) {
+                    properties_->headers[h.first] = h.second;
+                }
+            }
+
+            // Add the original args
+            properties_->args.insert(properties_->args.end(),
+                                     orig.args.begin(),
+                                     orig.args.end());
+
             req->SetProperties(properties_);
         }
 
