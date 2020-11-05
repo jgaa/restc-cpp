@@ -147,6 +147,7 @@ public:
         using ptr_t = std::shared_ptr<Properties>;
         using redirect_fn_t = std::function<void (int code, std::string& url, 
                                                   const Reply& reply)>;
+        using general_callback_t = std::function<void()>;
 
         int maxRedirects = 3;
         int connectTimeoutMs = (1000 * 12);
@@ -161,6 +162,8 @@ public:
         args_t args;
         Proxy proxy;
         redirect_fn_t redirectFn;
+        general_callback_t beforeWriteFn;
+        general_callback_t afterWriteFn;
     };
 
     virtual const Properties& GetProperties() const = 0;

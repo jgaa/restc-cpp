@@ -356,6 +356,10 @@ private:
         static const auto timer_name = "SendRequestPayload"s;
         bool have_sent_headers = false;
 
+        if (properties_->beforeWriteFn) {
+            properties_->beforeWriteFn();
+        }
+
         while(boost::asio::buffer_size(write_buffer))
         {
             auto timer = IoTimer::Create(timer_name,
@@ -448,6 +452,9 @@ private:
 
         PrepareBody();
         SendRequestPayload(ctx, write_buffer);
+        if (properties_->afterWriteFn) {
+            properties_->afterWriteFn();
+        }
 
         RESTC_CPP_LOG_DEBUG_("Sent " << Verb(request_type_) << " request to '" << url_ << "' "
             << *connection_);
