@@ -350,6 +350,10 @@ public:
         return Header(transfer_encoding, chunked);
     }
 
+    RequestBuilder& Properties(Request::Properties::ptr_t properties) {
+        properties_ = std::move(properties);
+    }
+
     std::unique_ptr<Request> Build() {
         assert(ctx_);
         static const std::string accept_encoding{"Accept-Encoding"};
@@ -365,8 +369,14 @@ public:
             }
         }
 #endif
-        return Request::Create(
+        auto req = Request::Create(
             url_, type_, ctx_->GetClient(), move(body_), args_, headers_, auth_);
+
+        if (properties_) {
+            req->SetProperties(properties_);
+        }
+
+        return req;
     }
 
     /*! Exceute the request.
@@ -401,6 +411,7 @@ private:
     boost::optional<Request::headers_t> headers_;
     boost::optional<Request::args_t> args_;
     boost::optional<Request::auth_t> auth_;
+    Request::Properties::ptr_t properties_;
     std::unique_ptr<RequestBody> body_;
     bool disable_compression_ = false;
 #ifdef DEBUG
