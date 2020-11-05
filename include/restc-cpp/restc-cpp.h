@@ -87,6 +87,8 @@ struct Headers : public std::multimap<std::string, std::string, ciLessLibC>  {
         for(auto& h: nh) {
            operator [] (h.first) = h.second;
         }
+
+        return *this;
     }
 };
 

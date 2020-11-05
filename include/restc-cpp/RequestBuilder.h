@@ -379,11 +379,7 @@ public:
         if (properties_) {
             // Merge the headers and args to get what we have already
             // set in Request::Create
-            for(const auto& h : orig.headers) {
-                if (properties_->headers.find(h.first) == properties_->headers.end()) {
-                    properties_->headers[h.first] = h.second;
-                }
-            }
+            properties_->headers += orig.headers;
 
             // Add the original args
             properties_->args.insert(properties_->args.end(),
