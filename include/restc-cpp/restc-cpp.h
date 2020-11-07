@@ -157,6 +157,7 @@ public:
                                                   const Reply& reply)>;
         using general_callback_t = std::function<void()>;
 
+        bool tcpNodelay = true;
         int maxRedirects = 3;
         int connectTimeoutMs = (1000 * 12);
         int sendTimeoutMs = (1000 * 12); // For each IO operation
