@@ -368,10 +368,6 @@ private:
 #endif
         }
 
-        socket->GetSocket().lowest_layer().set_option(
-                    boost::asio::ip::tcp::no_delay(
-                        properties_->tcpNodelay));
-
         auto entry = make_shared<Entry>(ep, connectionType,
                                         make_shared<ConnectionImpl>(move(socket)),
                                         *properties_);

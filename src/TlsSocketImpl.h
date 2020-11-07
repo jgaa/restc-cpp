@@ -66,6 +66,7 @@ public:
 
     void AsyncConnect(const boost::asio::ip::tcp::endpoint& ep,
                     const string &host,
+                    bool tcpNodelay,
                     boost::asio::yield_context& yield) override {
         return WrapException<void>([&] {
             //TLS-SNI (without this option, handshakes attempts with hosts behind CDNs will fail,
@@ -73,6 +74,8 @@ public:
             //to decide where to forward the handshake attempt).
             SSL_set_tlsext_host_name(ssl_socket_->native_handle(), host.c_str());
             GetSocket().async_connect(ep, yield);
+            ssl_socket_->lowest_layer().set_option(
+                        boost::asio::ip::tcp::no_delay(tcpNodelay));
             ssl_socket_->async_handshake(boost::asio::ssl::stream_base::client,
                                          yield);
         });
