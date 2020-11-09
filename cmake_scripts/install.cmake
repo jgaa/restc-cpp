@@ -13,11 +13,11 @@ generate_export_header(${PROJECT_NAME}
     EXPORT_MACRO_NAME EXPORT
     NO_EXPORT_MACRO_NAME NO_EXPORT
     PREFIX_NAME RESTC_CPP_
-    EXPORT_FILE_NAME ${CMAKE_BINARY_DIR}/include-exports/${PROJECT_NAME}/export.h)
+    EXPORT_FILE_NAME ${PROJECT_BINARY_DIR}/include-exports/${PROJECT_NAME}/export.h)
 target_include_directories(${PROJECT_NAME}
-    PUBLIC $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include-exports> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+    PUBLIC $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include-exports> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-install(DIRECTORY ${CMAKE_BINARY_DIR}/include-exports/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(DIRECTORY ${PROJECT_BINARY_DIR}/include-exports/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 include(CMakePackageConfigHelpers)
 set_property(TARGET ${PROJECT_NAME} PROPERTY VERSION ${PROJECT_VERSION})
@@ -25,18 +25,18 @@ set_property(TARGET ${PROJECT_NAME} PROPERTY SOVERSION ${PROJECT_VERSION_MAJOR})
 set_property(TARGET ${PROJECT_NAME} PROPERTY INTERFACE_${PROJECT_NAME}_MAJOR_VERSION ${PROJECT_VERSION_MAJOR})
 set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY COMPATIBLE_INTERFACE_STRING ${PROJECT_VERSION_MAJOR})
 write_basic_package_version_file(
-    "${CMAKE_BINARY_DIR}/CMakePackage/${PROJECT_NAME}ConfigVersion.cmake"
+    "${PROJECT_BINARY_DIR}/CMakePackage/${PROJECT_NAME}ConfigVersion.cmake"
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY SameMajorVersion
 )
 export(EXPORT ${PROJECT_NAME}Targets
-    FILE "${CMAKE_BINARY_DIR}/CMakePackage/${PROJECT_NAME}.cmake"
+    FILE "${PROJECT_BINARY_DIR}/CMakePackage/${PROJECT_NAME}.cmake"
 )
 SET(CONFIG_SOURCE_DIR ${CMAKE_SOURCE_DIR})
-SET(CONFIG_DIR ${CMAKE_BINARY_DIR})
+SET(CONFIG_DIR ${PROJECT_BINARY_DIR})
 SET(${PROJECT_NAME}_INCLUDE_DIR "\${${PROJECT_NAME}_SOURCE_DIR}/include")
-configure_package_config_file(${CMAKE_SOURCE_DIR}/cmake_scripts/${PROJECT_NAME}Config.cmake.in
-    "${CMAKE_BINARY_DIR}/CMakePackage/${PROJECT_NAME}Config.cmake"
+configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake_scripts/${PROJECT_NAME}Config.cmake.in
+    "${PROJECT_BINARY_DIR}/CMakePackage/${PROJECT_NAME}Config.cmake"
     INSTALL_DESTINATION lib/cmake/${PROJECT_NAME}
     PATH_VARS ${PROJECT_NAME}_INCLUDE_DIR)
 install(EXPORT ${PROJECT_NAME}Targets
@@ -45,8 +45,8 @@ install(EXPORT ${PROJECT_NAME}Targets
 )
 install(
     FILES
-        "${CMAKE_BINARY_DIR}/CMakePackage/${PROJECT_NAME}Config.cmake"
-        "${CMAKE_BINARY_DIR}/CMakePackage/${PROJECT_NAME}ConfigVersion.cmake"
+        "${PROJECT_BINARY_DIR}/CMakePackage/${PROJECT_NAME}Config.cmake"
+        "${PROJECT_BINARY_DIR}/CMakePackage/${PROJECT_NAME}ConfigVersion.cmake"
     DESTINATION lib/cmake/${PROJECT_NAME}
     COMPONENT Devel
 )

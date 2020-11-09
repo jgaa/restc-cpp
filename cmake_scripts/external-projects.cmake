@@ -4,7 +4,7 @@
 # add_dependencies(TARGET externalProjectName)
 # target_link_libraries(TARGET PRIVATE ExternalLibraryName)
 
-set(EXTERNAL_PROJECTS_PREFIX ${CMAKE_BINARY_DIR}/external-projects)
+set(EXTERNAL_PROJECTS_PREFIX ${PROJECT_BINARY_DIR}/external-projects)
 set(EXTERNAL_PROJECTS_INSTALL_PREFIX ${EXTERNAL_PROJECTS_PREFIX}/installed)
 
 include(ExternalProject)
