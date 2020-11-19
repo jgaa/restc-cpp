@@ -16,7 +16,22 @@ if (NOT DEFINED INSTALL_RAPIDJSON_HEADERS)
     option(INSTALL_RAPIDJSON_HEADERS "Install rapidjson headers when make install is executed" ON)
 endif()
 
-include(cmake_scripts/external-projects.cmake)
+if (NOT DEFINED RESTC_CPP_FETCH_DEPENDENCIES)
+    option(RESTC_CPP_FETCH_DEPENDENCIES "Use the ExternalProject fetcher to fetch dependencies like rapidjson and lest." ON)
+endif()
+
+include(CMakeDependentOption)
+
+cmake_dependent_option(INSTALL_RAPIDJSON_HEADERS "Install rapidjson headers when make install is executed" ON
+    "RESTC_CPP_FETCH_DEPENDENCIES" OFF)
+
+if (RESTC_CPP_FETCH_DEPENDENCIES)
+    include(cmake_scripts/external-projects.cmake)
+else()
+    find_package(RapidJSON 1.1 REQUIRED)
+endif()
+include(CMakePrintHelpers)
+cmake_print_variables(RAPIDJSON_INCLUDE_DIRS)
 
 if (EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
     message(STATUS "Using conan configuration: ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake")
@@ -135,9 +150,19 @@ target_include_directories(${PROJECT_NAME}
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     )
 
+# As our public headers expose RapidJSON, RapidJSON should be part of the public interface.
+# Nevertheless we can't put the locally fetched version into the public interface.
+if(RESTC_CPP_FETCH_DEPENDENCIES)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${RAPIDJSON_INCLUDE_DIRS})
+else()
+    target_include_directories(${PROJECT_NAME} PUBLIC  ${RAPIDJSON_INCLUDE_DIRS})
+endif()
+
 SET_CPP_STANDARD(${PROJECT_NAME})
 
-add_dependencies(${PROJECT_NAME} externalRapidJson)
+if (NOT DEFINED RESTC_CPP_FETCH_DEPENDENCIES)
+    add_dependencies(${PROJECT_NAME} externalRapidJson)
+endif()
 
 if (NOT EMBEDDED_RESTC_CPP)
 
