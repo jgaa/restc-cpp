@@ -127,12 +127,16 @@ public:
 
     IteratorFromJsonSerializer(
         Reply& reply,
-        const serialize_properties_t *properties = nullptr)
+        const serialize_properties_t *properties = nullptr,
+        bool withoutLeadInSquereBrancket = false)
     : reply_stream_{reply}, properties_{properties}
     {
         if (!properties_) {
             pbuf = std::make_unique<serialize_properties_t>();
             properties_ = pbuf.get();
+        }
+        if (withoutLeadInSquereBrancket) {
+            state_ = State::ITERATING;
         }
     }
 
@@ -150,7 +154,7 @@ private:
         if(state_ == State::PRE) {
             const auto ch = reply_stream_.Take();
             if (ch != '[') {
-                throw ParseException("Expected leading json '{'");
+                throw ParseException("Expected leading json '['");
             }
             state_ = State::ITERATING;
         }
