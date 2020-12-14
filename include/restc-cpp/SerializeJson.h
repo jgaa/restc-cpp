@@ -57,6 +57,13 @@ struct JsonFieldMapping {
     };
     std::vector<entry> entries;
 
+    JsonFieldMapping() = default;
+    JsonFieldMapping(JsonFieldMapping&&) = default;
+    JsonFieldMapping(const JsonFieldMapping&) = default;
+    JsonFieldMapping(const std::initializer_list<entry>& entries)
+        : entries{entries}
+    {}
+
     const std::string&
     to_json_name(const std::string& name) const noexcept {
         for(const auto& entry : entries) {
