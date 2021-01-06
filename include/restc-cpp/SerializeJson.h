@@ -1,5 +1,9 @@
 #pragma once
 
+#if (__cplusplus >= 201402L)
+#include "SerializeJson-cpp17.h"
+#else
+
 #include <iostream>
 #include <type_traits>
 #include <assert.h>
@@ -1629,3 +1633,4 @@ void SerializeToJson(dataT& rootData,
 
 } // namespace
 
+#endif // c++17
