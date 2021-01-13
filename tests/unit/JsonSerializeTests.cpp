@@ -684,6 +684,23 @@ STARTCASE(SerializeOptionalObjectWithRecursiveOptionalData) {
 
 } ENDCASE
 
+STARTCASE(SerializeIgnoreEmptyString) {
+    Pet pet;
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(pet), decltype(writer)>
+        serializer(pet, writer);
+
+    serializer.IgnoreEmptyMembers(true);
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({})"s,
+                s.GetString());
+
+} ENDCASE
+
 #endif // C++ 17
 
 }; // lest

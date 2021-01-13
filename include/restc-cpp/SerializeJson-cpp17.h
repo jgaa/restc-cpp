@@ -992,7 +992,10 @@ constexpr bool is_empty_field_(const T& value) {
 
     // Could produce unexpected results for types that implement empty() with
     // another meaning than the C++ standard library
-    if constexpr (has_empty_method<T>()) {
+    if constexpr //(has_empty_method<T>()) {
+        (std::is_same_v<std::string, T>
+            || is_map<T>::value
+            || is_container<T>::value) {
         return value.empty();
     }
 
