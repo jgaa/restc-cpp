@@ -1,6 +1,11 @@
 
 #include <map>
 
+#if (__cplusplus >= 201402L)
+#   include <optional>
+#endif
+
+
 // Include before boost::log headers
 #include "restc-cpp/logging.h"
 
@@ -31,6 +36,8 @@ struct Person {
     : id{id_}, name{std::move(name_)}, balance{balance_}
     {}
 
+    Person& operator = (const Person&) = default;
+    Person& operator = (Person&&) = default;
     Person() = default;
     Person(const Person&) = default;
     Person(Person&&) = default;
@@ -39,6 +46,21 @@ struct Person {
     std::string name;
     double balance = 0;
 };
+
+#if (__cplusplus >= 201402L)
+
+struct House {
+    std::optional<bool> is_enabled;
+    std::optional<Person> person;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(
+    House,
+    (std::optional<bool>, is_enabled)
+    (std::optional<Person>, person)
+)
+
+#endif
 
 BOOST_FUSION_ADAPT_STRUCT(
     Person,
@@ -435,6 +457,80 @@ STARTCASE(MissingPropertyNameNotAllowed) {
     StringStream ss(json.c_str());
     EXPECT_THROWS_AS(reader.Parse(ss, handler), UnknownPropertyException);
 } ENDCASE
+
+#if (__cplusplus >= 201402L)
+STARTCASE(StdOptionalBoolEmpty) {
+    House house;
+    std::string json = R"({ "is_enabled": null })"; // No value
+
+    serialize_properties_t sprop;
+    sprop.ignore_unknown_properties = false;
+    RapidJsonDeserializer<House> handler(house, sprop);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+    CHECK_EQUAL(house.is_enabled.has_value(), false);
+} ENDCASE
+
+STARTCASE(StdOptionalBoolTrue) {
+    House house;
+    std::string json = R"({ "is_enabled": true })"; // No value
+
+    serialize_properties_t sprop;
+    sprop.ignore_unknown_properties = false;
+    RapidJsonDeserializer<House> handler(house, sprop);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+    CHECK_EQUAL(house.is_enabled.has_value(), true);
+    CHECK_EQUAL(house.is_enabled.value(), true);
+} ENDCASE
+
+STARTCASE(StdOptionalBoolFalse) {
+    House house;
+    std::string json = R"({ "is_enabled": false })"; // No value
+
+    serialize_properties_t sprop;
+    sprop.ignore_unknown_properties = false;
+    RapidJsonDeserializer<House> handler(house, sprop);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+    CHECK_EQUAL(house.is_enabled.has_value(), true);
+    CHECK_EQUAL(house.is_enabled.value(), false);
+} ENDCASE
+
+STARTCASE(StdOptionalObjctEmpty) {
+    House house;
+    house.person = Person{1, "foo", 0.0};
+    std::string json = R"({ "person": null })"; // No value
+
+    serialize_properties_t sprop;
+    sprop.ignore_unknown_properties = false;
+    RapidJsonDeserializer<House> handler(house, sprop);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+    CHECK_EQUAL(house.person.has_value(), false);
+} ENDCASE
+
+STARTCASE(StdOptionalObjctAssign) {
+    House house;
+    std::string json = R"({ "person": { "id" : 100, "name" : "John Doe", "balance" : 123.45 }})";
+
+    serialize_properties_t sprop;
+    sprop.ignore_unknown_properties = false;
+    RapidJsonDeserializer<House> handler(house, sprop);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+    CHECK_EQUAL(house.person.has_value(), true);
+    CHECK_EQUAL(house.person->id, 100);
+    CHECK_EQUAL(house.person->name, "John Doe");
+    CHECK_EQUAL(house.person->balance, 123.45);
+} ENDCASE
+
+#endif // C++ 17
 
 }; // lest
 
