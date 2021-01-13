@@ -49,15 +49,30 @@ struct Person {
 
 #if (__cplusplus >= 201402L)
 
+struct Pet {
+    std::string name;
+    std::string kind;
+    std::optional<string> friends;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(
+    Pet,
+    (std::string, name)
+    (std::string, kind)
+    (std::optional<string>, friends)
+)
+
 struct House {
     std::optional<bool> is_enabled;
     std::optional<Person> person;
+    std::optional<Pet> pet;
 };
 
 BOOST_FUSION_ADAPT_STRUCT(
     House,
     (std::optional<bool>, is_enabled)
     (std::optional<Person>, person)
+    (std::optional<Pet>, pet)
 )
 
 #endif
@@ -119,8 +134,6 @@ BOOST_FUSION_ADAPT_STRUCT(
 )
 
 const lest::test specification[] = {
-
-
     
 STARTCASE(SerializeSimpleObject) {
     Person person = { 100, "John Doe"s, 123.45 };
@@ -459,7 +472,7 @@ STARTCASE(MissingPropertyNameNotAllowed) {
 } ENDCASE
 
 #if (__cplusplus >= 201402L)
-STARTCASE(StdOptionalBoolEmpty) {
+STARTCASE(DesearializeOptionalBoolEmpty) {
     House house;
     std::string json = R"({ "is_enabled": null })"; // No value
 
@@ -472,7 +485,7 @@ STARTCASE(StdOptionalBoolEmpty) {
     CHECK_EQUAL(house.is_enabled.has_value(), false);
 } ENDCASE
 
-STARTCASE(StdOptionalBoolTrue) {
+STARTCASE(DesearializeOptionalBoolTrue) {
     House house;
     std::string json = R"({ "is_enabled": true })"; // No value
 
@@ -486,7 +499,7 @@ STARTCASE(StdOptionalBoolTrue) {
     CHECK_EQUAL(house.is_enabled.value(), true);
 } ENDCASE
 
-STARTCASE(StdOptionalBoolFalse) {
+STARTCASE(DesearializeOptionalBoolFalse) {
     House house;
     std::string json = R"({ "is_enabled": false })"; // No value
 
@@ -500,7 +513,7 @@ STARTCASE(StdOptionalBoolFalse) {
     CHECK_EQUAL(house.is_enabled.value(), false);
 } ENDCASE
 
-STARTCASE(StdOptionalObjctEmpty) {
+STARTCASE(DesearializeOptionalObjctEmpty) {
     House house;
     house.person = Person{1, "foo", 0.0};
     std::string json = R"({ "person": null })"; // No value
@@ -514,7 +527,7 @@ STARTCASE(StdOptionalObjctEmpty) {
     CHECK_EQUAL(house.person.has_value(), false);
 } ENDCASE
 
-STARTCASE(StdOptionalObjctAssign) {
+STARTCASE(DesearializeOptionalObjctAssign) {
     House house;
     std::string json = R"({ "person": { "id" : 100, "name" : "John Doe", "balance" : 123.45 }})";
 
@@ -528,6 +541,147 @@ STARTCASE(StdOptionalObjctAssign) {
     CHECK_EQUAL(house.person->id, 100);
     CHECK_EQUAL(house.person->name, "John Doe");
     CHECK_EQUAL(house.person->balance, 123.45);
+} ENDCASE
+
+STARTCASE(SerializeOptionalAllEmptyShowEmpty) {
+    House house;
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(house), decltype(writer)>
+        serializer(house, writer);
+
+    serializer.IgnoreEmptyMembers(false);
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({"is_enabled":null,"person":null,"pet":null})"s,
+                s.GetString());
+
+} ENDCASE
+
+
+STARTCASE(SerializeOptionalAllEmpty) {
+    House house;
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(house), decltype(writer)>
+        serializer(house, writer);
+
+    serializer.IgnoreEmptyMembers(true);
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({})"s,
+                s.GetString());
+
+} ENDCASE
+
+STARTCASE(SerializeOptionalBoolTrue) {
+    House house;
+    house.is_enabled = true;
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(house), decltype(writer)>
+        serializer(house, writer);
+
+    serializer.IgnoreEmptyMembers(true);
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({"is_enabled":true})"s,
+                s.GetString());
+
+} ENDCASE
+
+STARTCASE(SerializeOptionalBoolFalse) {
+    House house;
+    house.is_enabled = false;
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(house), decltype(writer)>
+        serializer(house, writer);
+
+    serializer.IgnoreEmptyMembers(true);
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({"is_enabled":false})"s,
+                s.GetString());
+
+} ENDCASE
+
+STARTCASE(SerializeOptionalObjectWithData) {
+    House house;
+    house.person = Person{};
+    house.person->id = 123;
+    house.person->name = "Donald the looser";
+    house.person->balance = 123.45;
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(house), decltype(writer)>
+        serializer(house, writer);
+
+    serializer.IgnoreEmptyMembers(true);
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({"person":{"id":123,"name":"Donald the looser","balance":123.45}})"s,
+                s.GetString());
+
+} ENDCASE
+
+STARTCASE(SerializeOptionalObjectWithRecursiveOptionalNoData) {
+    House house;
+    house.person = Person{};
+    house.person->id = 123;
+    house.person->name = "Donald the looser";
+    house.person->balance = 123.45;
+    house.pet = Pet{};
+    house.pet->name = "Fido";
+    house.pet->kind = "Dog";
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(house), decltype(writer)>
+        serializer(house, writer);
+
+    serializer.IgnoreEmptyMembers(true);
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({"person":{"id":123,"name":"Donald the looser","balance":123.45},"pet":{"name":"Fido","kind":"Dog"}})"s,
+                s.GetString());
+
+} ENDCASE
+
+STARTCASE(SerializeOptionalObjectWithRecursiveOptionalData) {
+    House house;
+    house.person = Person{};
+    house.person->id = 123;
+    house.person->name = "Donald the looser";
+    house.person->balance = 123.45;
+    house.pet = Pet{};
+    house.pet->name = "Fido";
+    house.pet->kind = "Dog";
+    house.pet->friends = "PusPus the Cat";
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(house), decltype(writer)>
+        serializer(house, writer);
+
+    serializer.IgnoreEmptyMembers(true);
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({"person":{"id":123,"name":"Donald the looser","balance":123.45},"pet":{"name":"Fido","kind":"Dog","friends":"PusPus the Cat"}})"s,
+                s.GetString());
+
 } ENDCASE
 
 #endif // C++ 17
