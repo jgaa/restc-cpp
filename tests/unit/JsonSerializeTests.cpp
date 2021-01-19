@@ -49,6 +49,22 @@ struct Person {
 
 #if (__cplusplus >= 201402L)
 
+struct Number {
+    std::optional<int> value;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(Number,
+    (std::optional<int>, value)
+);
+
+struct String {
+    std::optional<string> value;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(String,
+    (std::optional<std::string>, value)
+);
+
 struct Pet {
     std::string name;
     std::string kind;
@@ -698,6 +714,64 @@ STARTCASE(SerializeIgnoreEmptyString) {
 
     CHECK_EQUAL(R"({})"s,
                 s.GetString());
+
+} ENDCASE
+
+STARTCASE(SerializeEmptyOptionalWithZeroValue) {
+
+    Number data;
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(data), decltype(writer)>
+        serializer(data, writer);
+
+    serializer.IgnoreEmptyMembers(true);
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({})"s, s.GetString());
+
+} ENDCASE
+
+
+STARTCASE(SerializeOptionalWithZeroValue) {
+
+    Number data;
+    data.value = 0;
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(data), decltype(writer)>
+        serializer(data, writer);
+
+    serializer.IgnoreEmptyMembers(true);
+    serializer.Serialize();
+
+    clog << "Json: " << s.GetString() << endl;
+
+    CHECK_EQUAL(R"({"value":0})"s, s.GetString());
+
+} ENDCASE
+
+STARTCASE(SerializeOptionalWithEmptyStringValue) {
+
+    String data;
+    data.value = "";
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(data), decltype(writer)>
+        serializer(data, writer);
+
+    serializer.IgnoreEmptyMembers(true);
+    serializer.Serialize();
+
+    clog << "Json: " << s.GetString() << endl;
+
+    CHECK_EQUAL(R"({"value":""})"s, s.GetString());
 
 } ENDCASE
 

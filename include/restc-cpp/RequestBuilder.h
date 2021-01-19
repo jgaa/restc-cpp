@@ -54,6 +54,21 @@ public:
         return *this;
     }
 
+    /*! Make a HTTP request */
+    template <typename T>
+    RequestBuilder& Req(std::string url, const Request::Type type, const T& args) {
+        assert(url_.empty());
+        url_ = std::move(url);
+        MAP_URL_FOR_TESTING(url_);
+        type_ = type;
+
+        for(const auto& a: args) {
+            Argument(a.first, a.second);
+        }
+
+        return *this;
+    }
+
     /*! Make a HTTP GET request */
     RequestBuilder& Get(std::string url) {
         return Req(std::move(url), Request::Type::GET);
