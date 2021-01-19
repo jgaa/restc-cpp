@@ -45,67 +45,48 @@ public:
     RequestBuilder(Context& ctx)
     : ctx_{&ctx} {}
 
-    /*! Make a HTTP GET request */
-    RequestBuilder& Get(std::string url) {
+    /*! Make a HTTP request */
+    RequestBuilder& Req(std::string url, const Request::Type type) {
         assert(url_.empty());
         url_ = std::move(url);
         MAP_URL_FOR_TESTING(url_);
-        type_ = Request::Type::GET;
+        type_ = type;
         return *this;
+    }
+
+    /*! Make a HTTP GET request */
+    RequestBuilder& Get(std::string url) {
+        return Req(std::move(url), Request::Type::GET);
     }
 
     /*! Make a HTTP POST request */
     RequestBuilder& Post(std::string url) {
-        assert(url_.empty());
-        url_ = std::move(url);
-        MAP_URL_FOR_TESTING(url_);
-        type_ = Request::Type::POST;
-        return *this;
+        return Req(std::move(url), Request::Type::POST);
     }
 
     /*! Make a HTTP PUT request */
     RequestBuilder& Put(std::string url) {
-        assert(url_.empty());
-        url_ = std::move(url);
-        MAP_URL_FOR_TESTING(url_);
-        type_ = Request::Type::PUT;
-        return *this;
+        return Req(std::move(url), Request::Type::PUT);
     }
 
     /*! Make a HTTP DELETE request */
     RequestBuilder& Delete(std::string url) {
-        assert(url_.empty());
-        url_ = std::move(url);
-        MAP_URL_FOR_TESTING(url_);
-        type_ = Request::Type::DELETE;
-        return *this;
+        return Req(std::move(url), Request::Type::DELETE);
     }
 
     /*! Make a HTTP OPTIONS request */
     RequestBuilder& Options(std::string url) {
-        assert(url_.empty());
-        url_ = std::move(url);
-        MAP_URL_FOR_TESTING(url_);
-        type_ = Request::Type::OPTIONS;
-        return *this;
+        return Req(std::move(url), Request::Type::OPTIONS);
     }
 
     /*! Make a HTTP HEAD request */
     RequestBuilder& Head(std::string url) {
-        assert(url_.empty());
-        url_ = std::move(url);
-        MAP_URL_FOR_TESTING(url_);
-        type_ = Request::Type::HEAD;
-        return *this;
+        return Req(std::move(url), Request::Type::HEAD);
     }
 
     /*! Make a HTTP PATCH request */
     RequestBuilder& Patch(std::string url) {
-        assert(url_.empty());
-        url_ = std::move(url);
-        MAP_URL_FOR_TESTING(url_);
-        type_ = Request::Type::PATCH;
-        return *this;
+        return Req(std::move(url), Request::Type::PATCH);
     }
 
      /*! Set a header
