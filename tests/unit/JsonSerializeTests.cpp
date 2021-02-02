@@ -57,6 +57,38 @@ BOOST_FUSION_ADAPT_STRUCT(Number,
     (std::optional<int>, value)
 );
 
+struct Bool {
+    bool value = false;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(Bool,
+    (bool, value)
+);
+
+struct Int {
+    int value = 0;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(Int,
+    (int, value)
+);
+
+struct Numbers {
+    int intval = 0;
+    size_t sizetval = 0;
+    uint32_t uint32 = 0;
+    int64_t int64val = 0;
+    uint64_t uint64val = 0;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(Numbers,
+    (int, intval)
+    (size_t, sizetval)
+    (uint32_t, uint32)
+    (int64_t, int64val)
+    (uint64_t, uint64val)
+);
+
 struct String {
     std::optional<string> value;
 };
@@ -749,8 +781,6 @@ STARTCASE(SerializeOptionalWithZeroValue) {
     serializer.IgnoreEmptyMembers(true);
     serializer.Serialize();
 
-    clog << "Json: " << s.GetString() << endl;
-
     CHECK_EQUAL(R"({"value":0})"s, s.GetString());
 
 } ENDCASE
@@ -769,10 +799,85 @@ STARTCASE(SerializeOptionalWithEmptyStringValue) {
     serializer.IgnoreEmptyMembers(true);
     serializer.Serialize();
 
-    clog << "Json: " << s.GetString() << endl;
-
     CHECK_EQUAL(R"({"value":""})"s, s.GetString());
 
+} ENDCASE
+
+STARTCASE(DeserializeBoolFromStringTrue) {
+    Bool bval;
+    std::string json = R"({ "value" : "true" })";
+
+    RapidJsonDeserializer<Bool> handler(bval);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+
+    CHECK_EQUAL(bval.value, true);
+} ENDCASE
+
+STARTCASE(DeserializeBoolFromStringFalse) {
+    Bool bval{true};
+    std::string json = R"({ "value" : "false" })";
+
+    RapidJsonDeserializer<Bool> handler(bval);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+
+    CHECK_EQUAL(bval.value, false);
+} ENDCASE
+
+
+STARTCASE(DeserializeBoolFromIntTrue) {
+    Bool bval;
+    std::string json = R"({ "value" : 10 })";
+
+    RapidJsonDeserializer<Bool> handler(bval);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+
+    CHECK_EQUAL(bval.value, true);
+} ENDCASE
+
+STARTCASE(DeserializeBoolFromIntFalse) {
+    Bool bval{true};
+    std::string json = R"({ "value" : 0 })";
+
+    RapidJsonDeserializer<Bool> handler(bval);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+
+    CHECK_EQUAL(bval.value, false);
+} ENDCASE
+
+STARTCASE(DeserializeIntFromString1) {
+    Int ival;
+    std::string json = R"({ "value" : "1" })";
+
+    RapidJsonDeserializer<Int> handler(ival);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+
+    CHECK_EQUAL(ival.value, 1);
+} ENDCASE
+
+STARTCASE(DeserializeNumbersFromStrings) {
+    Numbers numbers;
+    std::string json = R"({ "intval" : "-123", "sizetval": "55", "uint32": "123456789", "int64val": "-9876543212345", "uint64val": "123451234512345" })";
+
+    RapidJsonDeserializer<Numbers> handler(numbers);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+
+    CHECK_EQUAL(numbers.intval, -123);
+    CHECK_EQUAL(numbers.sizetval, 55);
+    CHECK_EQUAL(numbers.uint32, 123456789);
+    CHECK_EQUAL(numbers.int64val, -9876543212345);
+    CHECK_EQUAL(numbers.uint64val, 123451234512345);
 } ENDCASE
 
 #endif // C++ 17

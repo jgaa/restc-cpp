@@ -270,6 +270,20 @@ struct has_reset_method : std::false_type { };
 template <typename T>
 struct has_reset_method <T, decltype((void) T::reset(), 0)> : std::true_type { };
 
+template <typename T>
+bool is_digits_only(const T& vect, bool signedFlag) {
+    size_t cnt = 0;
+    for(auto v: vect) {
+        if (signedFlag && ++cnt == 1 && v == '-') {
+            continue;
+        }
+        if (v < '0' || v > '9') {
+            return false;
+        }
+    }
+    return true;
+}
+
 template <typename varT, typename valT>
 void assign_value(varT& var, const valT& val) {
     if constexpr (std::is_same_v<valT, std::nullptr_t>) {
@@ -292,6 +306,42 @@ void assign_value(varT& var, const valT& val) {
     } else if constexpr (std::is_arithmetic<varT>::value
             && std::is_arithmetic<valT>::value) {
         var = static_cast<varT>(val);
+    } else if constexpr (std::is_same_v<bool, varT>) {
+        if constexpr (std::is_same_v<std::string, valT>) {
+            if (val == "true" || val == "yes" || atoi(val.c_str()) > 0) {
+                var = true;
+            } else if (val.empty() || val == "false" || val == "no" || (val.at(0) == '0' && atoi(val.c_str()) == 0)) {
+                var = false;
+            } else {
+                throw ParseException("assign_value: Invalid data conversion from string to bool");
+            }
+        } else if constexpr (std::is_integral_v<valT>) {
+            var = val != 0;
+        } else {
+           throw ParseException("assign_value: Invalid data conversion to bool");
+        }
+    } else if constexpr ((std::is_same_v<varT, int8_t>
+            || std::is_same_v<varT, int16_t>
+            || std::is_same_v<varT, int16_t>
+            || std::is_same_v<varT, int32_t>
+            || std::is_same_v<varT, int64_t>
+            ) && std::is_same_v<std::string, valT>) {
+        if (is_digits_only(val, true)) {
+            var = static_cast<varT>(std::stoll(val));
+        } else {
+            throw ParseException("assign_value: Invalid data conversion from string to int*_t");
+        }
+    } else if constexpr ((std::is_same_v<varT, uint8_t>
+            || std::is_same_v<varT, uint16_t>
+            || std::is_same_v<varT, uint16_t>
+            || std::is_same_v<varT, uint32_t>
+            || std::is_same_v<varT, uint64_t>
+            ) && std::is_same_v<std::string, valT>) {
+        if (is_digits_only(val, false)) {
+            var = static_cast<varT>(std::stoull(val));
+        } else {
+            throw ParseException("assign_value: Invalid data conversion from string to uint*_t");
+        }
     } else {
         throw ParseException("assign_value: Invalid data conversion");
     }
