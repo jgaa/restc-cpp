@@ -325,6 +325,7 @@ void assign_value(varT& var, const valT& val) {
             || std::is_same_v<varT, int16_t>
             || std::is_same_v<varT, int32_t>
             || std::is_same_v<varT, int64_t>
+            || std::is_same_v<varT, int>
             ) && std::is_same_v<std::string, valT>) {
         if (is_digits_only(val, true)) {
             var = static_cast<varT>(std::stoll(val));
@@ -333,9 +334,10 @@ void assign_value(varT& var, const valT& val) {
         }
     } else if constexpr ((std::is_same_v<varT, uint8_t>
             || std::is_same_v<varT, uint16_t>
-            || std::is_same_v<varT, uint16_t>
             || std::is_same_v<varT, uint32_t>
             || std::is_same_v<varT, uint64_t>
+            || std::is_same_v<varT, size_t>
+            || std::is_same_v<varT, unsigned int>
             ) && std::is_same_v<std::string, valT>) {
         if (is_digits_only(val, false)) {
             var = static_cast<varT>(std::stoull(val));
