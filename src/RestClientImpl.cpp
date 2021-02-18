@@ -139,6 +139,16 @@ public:
         io_service_ = ioservice_instance_.get();
         Init(properties, useMainThread);
     }
+
+    RestClientImpl(const boost::optional<Request::Properties>& properties,
+        bool useMainThread, shared_ptr<boost::asio::ssl::context> ctx,
+        boost::asio::io_service& ioservice)
+        : io_service_{ &ioservice }
+    {
+        tls_context_ = move(ctx);
+        io_service_ = ioservice_instance_.get();
+        Init(properties, useMainThread);
+    }
 #endif
 
     RestClientImpl(const boost::optional<Request::Properties>& properties,
@@ -351,6 +361,20 @@ unique_ptr<RestClient> RestClient::Create(std::shared_ptr<boost::asio::ssl::cont
     boost::optional<Request::Properties> properties;
     return make_unique<RestClientImpl>(properties, false, move(ctx));
 }
+
+std::unique_ptr<RestClient> RestClient::Create(std::shared_ptr<boost::asio::ssl::context> ctx,
+                                               const boost::optional<Request::Properties> &properties)
+{
+    return make_unique<RestClientImpl>(properties, false, move(ctx));
+}
+
+std::unique_ptr<RestClient> RestClient::Create(std::shared_ptr<boost::asio::ssl::context> ctx,
+                                               const boost::optional<Request::Properties> &properties,
+                                               boost::asio::io_service &ioservice)
+{
+    return make_unique<RestClientImpl>(properties, false, move(ctx), ioservice);
+}
+
 #endif
 
 unique_ptr<RestClient> RestClient::Create(
