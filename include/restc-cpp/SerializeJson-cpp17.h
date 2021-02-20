@@ -622,7 +622,7 @@ private:
                  value, this, properties_, bytes_);
         } else {
              throw ParseException(std::string{"DoRecurseToMember: Unexpected type: "} +
-                                  RESTC_CPP_TYPENAME(itemT));
+                                  RESTC_CPP_TYPENAME(itemT) + " to " + current_name_);
         }
     }
 
@@ -646,7 +646,7 @@ private:
         }
 
         throw ParseException(std::string{"RecurseToContainerValue: Unexpected type: "} +
-                             typeid(dataT).name());
+                             RESTC_CPP_TYPENAME(dataT));
     }
 
 
@@ -704,7 +704,7 @@ private:
              current_name_.clear();
         } else {
              throw ParseException(std::string{"RecurseToMember: Unexpected type: "} +
-                                  typeid(dataT).name());
+                                  RESTC_CPP_TYPENAME(dataT) + " to " + current_name_);
         }
     }
 
@@ -772,7 +772,7 @@ private:
         }
 
         throw ParseException(std::string{"SetValueOnMember: Unexpected type: "} +
-                          typeid(dataT).name());
+                          RESTC_CPP_TYPENAME(dataT) + " on " + current_name_);
     }
 
     template<typename dataT, typename argT>
@@ -792,7 +792,7 @@ private:
             }
         } else {
              throw ParseException(std::string{"SetValueInArray: Unexpected type: "} +
-                               typeid(dataT).name());
+                               RESTC_CPP_TYPENAME(argT) + " on " + current_name_);
         }
     }
 
@@ -1216,7 +1216,7 @@ void do_serialize(const dataT& object, serializerT& serializer,
         serializer.EndObject();
     } else {
         throw ParseException(std::string{"do_serialize: Unexpected type: "} +
-                             typeid(dataT).name());
+                             RESTC_CPP_TYPENAME(dataT));
     }
 }
 
