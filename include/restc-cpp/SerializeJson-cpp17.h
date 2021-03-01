@@ -1,37 +1,35 @@
 #pragma once
 
-#include <iostream>
-#include <type_traits>
 #include <assert.h>
-#include <stack>
-#include <set>
 #include <deque>
+#include <iostream>
 #include <map>
+#include <set>
+#include <stack>
 #include <type_traits>
 
-#include <boost/iterator/function_input_iterator.hpp>
-#include <boost/mpl/range_c.hpp>
-#include <boost/mpl/vector.hpp>
-#include <boost/mpl/contains.hpp>
+#include "restc-cpp/RapidJsonReader.h"
+#include "restc-cpp/RapidJsonWriter.h"
+#include "restc-cpp/error.h"
+#include "restc-cpp/internals/for_each_member.hpp"
+#include "restc-cpp/logging.h"
+#include "restc-cpp/restc-cpp.h"
+#include "restc-cpp/typename.h"
 #include <boost/fusion/adapted/struct/define_struct.hpp>
 #include <boost/fusion/algorithm/iteration/for_each.hpp>
-#include <boost/fusion/algorithm/transformation/zip.hpp>
-#include <boost/fusion/sequence/intrinsic/at_c.hpp>
-#include <boost/fusion/sequence/intrinsic/at.hpp>
-#include <boost/fusion/sequence/intrinsic/size.hpp>
-#include <boost/fusion/sequence/intrinsic/segments.hpp>
 #include <boost/fusion/algorithm/transformation/transform.hpp>
-#include <boost/fusion/support/is_sequence.hpp>
-#include <boost/fusion/include/is_sequence.hpp>
+#include <boost/fusion/algorithm/transformation/zip.hpp>
 #include <boost/fusion/container.hpp>
-
-#include "restc-cpp/restc-cpp.h"
-#include "restc-cpp/logging.h"
-#include "restc-cpp/RapidJsonReader.h"
-#include "restc-cpp/internals/for_each_member.hpp"
-#include "restc-cpp/error.h"
-#include "restc-cpp/typename.h"
-#include "restc-cpp/RapidJsonWriter.h"
+#include <boost/fusion/include/is_sequence.hpp>
+#include <boost/fusion/sequence/intrinsic/at.hpp>
+#include <boost/fusion/sequence/intrinsic/at_c.hpp>
+#include <boost/fusion/sequence/intrinsic/segments.hpp>
+#include <boost/fusion/sequence/intrinsic/size.hpp>
+#include <boost/fusion/support/is_sequence.hpp>
+#include <boost/iterator/function_input_iterator.hpp>
+#include <boost/mpl/contains.hpp>
+#include <boost/mpl/range_c.hpp>
+#include <boost/mpl/vector.hpp>
 
 #include "rapidjson/writer.h"
 #include "rapidjson/istreamwrapper.h"
@@ -255,6 +253,16 @@ template <typename T>
 struct is_optional<std::optional<T> > {
     constexpr static const bool value = true;
 };
+
+template <typename T>
+constexpr auto has_std_to_string_implementation(int) -> decltype (std::is_same_v<std::string,decltype(::std::to_string(std::declval<T>()))>) {
+    return true;
+}
+
+template <typename T>
+constexpr auto has_std_to_string_implementation(float) -> bool {
+    return false;
+}
 
 template <typename T, typename U = int>
 struct has_empty_method : std::false_type { };
@@ -1214,7 +1222,15 @@ void do_serialize(const dataT& object, serializerT& serializer,
             << " EndMap: ");
 #endif
         serializer.EndObject();
-    } else {
+    } else if constexpr (has_std_to_string_implementation<dataT>(0)) {
+        const auto s = ::std::to_string(object);
+        serializer.String(s.c_str(),
+            static_cast<rapidjson::SizeType>(s.size()),
+            true);
+    }
+
+    else {
+//        static_assert (false, "do_serialize: Unexpected type. Don't know how to convert it");
         throw ParseException(std::string{"do_serialize: Unexpected type: "} +
                              RESTC_CPP_TYPENAME(dataT));
     }

@@ -18,13 +18,28 @@
 #include <boost/fusion/adapted.hpp>
 
 #include "restc-cpp/restc-cpp.h"
-#include "restc-cpp/SerializeJson.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 
 #include "restc-cpp/test_helper.h"
 #include "lest/lest.hpp"
 
+struct Data {
+    int d = 123;
+};
+
+struct NoData {
+    int d = 321;
+};
+
+
+namespace std {
+    string to_string(const Data& d) {
+        return to_string(d.d);
+    }
+}
+
+#include "restc-cpp/SerializeJson.h"
 
 using namespace std;
 using namespace restc_cpp;
@@ -145,6 +160,23 @@ BOOST_FUSION_ADAPT_STRUCT(
     (std::string, quote)
 )
 
+struct DataHolder {
+    Data data;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(
+    DataHolder,
+    (Data, data)
+)
+
+struct NoDataHolder {
+    NoData data;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(
+    NoDataHolder,
+    (NoData, data)
+)
 
 
 struct Group {
@@ -182,7 +214,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 )
 
 const lest::test specification[] = {
-    
+
 STARTCASE(SerializeSimpleObject) {
     Person person = { 100, "John Doe"s, 123.45 };
 
@@ -880,10 +912,42 @@ STARTCASE(DeserializeNumbersFromStrings) {
     CHECK_EQUAL(numbers.uint64val, 123451234512345);
 } ENDCASE
 
+STARTCASE(DeserializeWithStdToStringSpecialization) {
+
+    DataHolder obj;
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(obj), decltype(writer)>
+        serializer(obj, writer);
+
+    serializer.IgnoreEmptyMembers(false);
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({"data":"123"})"s, s.GetString());
+} ENDCASE
+
+
+STARTCASE(DeserializeWithoutStdToStringSpecialization) {
+
+    NoDataHolder obj;
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(obj), decltype(writer)>
+        serializer(obj, writer);
+
+    serializer.IgnoreEmptyMembers(false);
+
+    EXPECT_THROWS_AS(serializer.Serialize(), ParseException);
+} ENDCASE
+
+
 #endif // C++ 17
 
 }; // lest
-
 
 int main( int argc, char * argv[] )
 {

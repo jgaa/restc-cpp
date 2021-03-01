@@ -203,7 +203,7 @@ public:
      */
     RequestBuilder& Argument(std::string name, int64_t value) {
         return Argument(move(name), std::to_string(value));
-    }
+    } 
 
     /*! Supply your own RequestBody to the request
      */
