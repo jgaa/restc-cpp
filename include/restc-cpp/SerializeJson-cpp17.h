@@ -1376,6 +1376,15 @@ void SerializeFromJson(dataT& rootData,
     SerializeFromJson(rootData, stream, properties);
 }
 
+/*! Serialize json in a std::string to a C++ class instance */
+template <typename dataT>
+void SerializeFromJson(dataT& rootData,
+                       const std::string& data, const serialize_properties_t& properties = {}) {
+
+    std::istringstream stream{data};
+    SerializeFromJson(rootData, stream, properties);
+}
+
 /*! Serialize a reply to a C++ class instance */
 template <typename dataT>
 void SerializeFromJson(dataT& rootData, Reply& reply,

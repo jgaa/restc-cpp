@@ -613,10 +613,8 @@ STARTCASE(DesearializeOptionalObjctAssign) {
 
     serialize_properties_t sprop;
     sprop.ignore_unknown_properties = false;
-    RapidJsonDeserializer<House> handler(house, sprop);
-    Reader reader;
-    StringStream ss(json.c_str());
-    reader.Parse(ss, handler);
+    SerializeFromJson(house, json, sprop);
+
     CHECK_EQUAL(house.person.has_value(), true);
     CHECK_EQUAL(house.person->id, 100);
     CHECK_EQUAL(house.person->name, "John Doe");
