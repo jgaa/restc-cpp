@@ -8,6 +8,10 @@ if (NOT DEFINED RESTC_CPP_VERSION)
     set(RESTC_CPP_VERSION 0.10.0)
 endif()
 
+if(NOT DEFINED RESTC_BOOST_VERSION)
+    set(RESTC_BOOST_VERSION 1.65)
+endif()
+
 project (restc-cpp VERSION ${RESTC_CPP_VERSION})
 
 message(STATUS "Building restc-cpp version ${PROJECT_VERSION}")
@@ -174,7 +178,7 @@ if (NOT EMBEDDED_RESTC_CPP)
     endif()
         
     #set(Boost_USE_MULTITHREADED ON)
-    find_package(Boost REQUIRED COMPONENTS
+    find_package(Boost ${RESTC_BOOST_VERSION} REQUIRED COMPONENTS
         system
         program_options
         filesystem
