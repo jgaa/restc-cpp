@@ -62,6 +62,11 @@ if (NOT DEFINED RESTC_CPP_MAX_INPUT_BUFFER_LENGTH)
     set (RESTC_CPP_MAX_INPUT_BUFFER_LENGTH 0x7fffffff)
 endif()
 
+option(BOOST_ERROR_CODE_HEADER_ONLY "Work-around for another boost issue" ON)
+if (BOOST_ERROR_CODE_HEADER_ONLY)
+    add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
+endif()
+
 if (RESTC_CPP_LOG_LEVEL_STR STREQUAL "none")
     set (RESTC_CPP_LOG_LEVEL 0)
 elseif(RESTC_CPP_LOG_LEVEL_STR STREQUAL  "error")
