@@ -170,6 +170,19 @@ public:
         }
     }
 
+    ~RequestImpl() {
+        if (connection_ && connection_->GetSocket().IsOpen()) {
+            try {
+                RESTC_CPP_LOG_TRACE_("~RequestImpl(): " << *connection_
+                    << " is still open. Closing it to prevent problems with lingering connections.");
+                connection_->GetSocket().Close();
+                connection_.reset();
+            }
+            catch (std::exception& ex) {
+                RESTC_CPP_LOG_WARN_("~RequestImpl(): Caught exception:" << ex.what());
+            }
+        }
+    }
 
 private:
     void ValidateReply(const Reply& reply) {
@@ -474,10 +487,11 @@ private:
 
         DataReader::ReadConfig cfg;
         cfg.msReadTimeout = properties_->recvTimeout;
+        auto reader = DataReader::CreateIoReader(connection_, ctx, cfg);
         auto reply = ReplyImpl::Create(connection_, ctx, owner_, properties_,
                                        request_type_);
-        reply->StartReceiveFromServer(
-            DataReader::CreateIoReader(connection_, ctx, cfg));
+        connection_.reset();
+        reply->StartReceiveFromServer(move(reader));
 
         const auto http_code = reply->GetResponseCode();
         if (http_code == http_301 || http_code == http_302) {
