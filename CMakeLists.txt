@@ -52,6 +52,10 @@ option(RESTC_CPP_WITH_ZLIB "Use zlib" ON)
 
 option(RESTC_CPP_USE_CPP17 "Use the C++17 standard" OFF)
 
+option(RESTC_CPP_USE_CPP20 "Use the C++20 standard" OFF)
+
+option(RESTC_CPP_PIC "Compile with -fPIC" OFF)
+
 option(RESTC_CPP_THREADED_CTX "Allow asio contextx with multiple therads. Enables thread-safe internal access." OFF)
 
 if (NOT DEFINED RESTC_CPP_MAX_INPUT_BUFFER_LENGTH)
@@ -78,12 +82,17 @@ endif()
 message(STATUS "Using ${CMAKE_CXX_COMPILER}")
 
 macro(SET_CPP_STANDARD target)
-    if (RESTC_CPP_USE_CPP17)
-        message(STATUS "Using C++ 17 for ${target}")
-        set_property(TARGET ${target} PROPERTY CXX_STANDARD 17)
+    if (RESTC_CPP_USE_CPP20)
+        message(STATUS "Using C++ 20 for ${target}")
+        set_property(TARGET ${target} PROPERTY CXX_STANDARD 20)
     else()
-        message(STATUS "Using C++ 14 for ${target}")
-        set_property(TARGET ${target} PROPERTY CXX_STANDARD 14)
+        if (RESTC_CPP_USE_CPP17)
+            message(STATUS "Using C++ 17 for ${target}")
+            set_property(TARGET ${target} PROPERTY CXX_STANDARD 17)
+        else()
+            message(STATUS "Using C++ 14 for ${target}")
+            set_property(TARGET ${target} PROPERTY CXX_STANDARD 14)
+        endif()
     endif()
 endmacro(SET_CPP_STANDARD)
 
@@ -127,6 +136,11 @@ else()
 endif()
 
 add_library(${PROJECT_NAME} ${SOURCES})
+
+if (DEFINED RESTC_CPP_USE_PIC)
+    set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
+endif()
+
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_OUTPUT_NAME restc-cppD)
 target_include_directories(${PROJECT_NAME}
     PUBLIC
