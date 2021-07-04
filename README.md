@@ -272,7 +272,7 @@ Apple's MacOS is the only operating system that require dedicated hardware for C
 
 # Blog-posts about the project:
   - [About version 0.90](https://lastviking.eu/restc_cpp_90.html)
-  - [testc-cpp tags on The Last Viking's Nest](https://lastviking.eu/_tags/restc-cpp.html)
+  - [restc-cpp tags on The Last Viking's Nest](https://lastviking.eu/_tags/restc-cpp.html)
 
 # Similar projects
   - [Boost.Beast](https://github.com/boostorg/beast) by Vinnie Falco. When you like to write many lines of code...
