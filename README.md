@@ -270,6 +270,9 @@ This project does not use *Travis CI*, for two reasons. First, Travis CI is [not
 
 Apple's MacOS is the only operating system that require dedicated hardware for CI. Developing for Apple operating systems reminds me of how we did things in the 1980's.
 
+# Blog-posts about the project:
+  - [About version 0.90](https://lastviking.eu/restc_cpp_90.html)
+  - [testc-cpp tags on The Last Viking's Nest](https://lastviking.eu/_tags/restc-cpp.html)
 
 # Similar projects
   - [Boost.Beast](https://github.com/boostorg/beast) by Vinnie Falco. When you like to write many lines of code...
@@ -277,7 +280,7 @@ Apple's MacOS is the only operating system that require dedicated hardware for C
   - [JSON for Modern C++](https://nlohmann.github.io/json/) by Niels Lohmann. My favorite json library, when I need to more than just static serialization.
   - [json11 - tiny JSON library for C++11, providing JSON parsing and serialization](https://github.com/dropbox/json11)
 
-
+  
 # More information
 - [Getting started](doc/GettingStarted.md)
 - [Tutorial](doc/Tutorial.md)
