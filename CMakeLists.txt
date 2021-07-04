@@ -64,7 +64,10 @@ endif()
 
 option(BOOST_ERROR_CODE_HEADER_ONLY "Work-around for another boost issue" ON)
 if (BOOST_ERROR_CODE_HEADER_ONLY)
-    add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY=1)
+    add_definitions(
+        -DBOOST_ERROR_CODE_HEADER_ONLY=1
+        -DBOOST_SYSTEM_NO_DEPRECATED=1
+        )
 endif()
 
 if (RESTC_CPP_LOG_LEVEL_STR STREQUAL "none")
