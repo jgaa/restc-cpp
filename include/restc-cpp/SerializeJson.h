@@ -1,6 +1,6 @@
 #pragma once
 
-#if (__cplusplus >= 201402L)
+#if (__cplusplus >= 201703L)
 #include "SerializeJson-cpp17.h"
 #else
 

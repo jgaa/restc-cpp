@@ -1,7 +1,7 @@
 
 #include <map>
 
-#if (__cplusplus >= 201402L)
+#if (__cplusplus >= 201703L)
 #   include <optional>
 #endif
 
@@ -62,7 +62,7 @@ struct Person {
     double balance = 0;
 };
 
-#if (__cplusplus >= 201402L)
+#if (__cplusplus >= 201703L)
 
 struct Number {
     std::optional<int> value;
@@ -551,7 +551,7 @@ STARTCASE(MissingPropertyNameNotAllowed) {
     EXPECT_THROWS_AS(reader.Parse(ss, handler), UnknownPropertyException);
 } ENDCASE
 
-#if (__cplusplus >= 201402L)
+#if (__cplusplus >= 201703L)
 STARTCASE(DesearializeOptionalBoolEmpty) {
     House house;
     std::string json = R"({ "is_enabled": null })"; // No value
