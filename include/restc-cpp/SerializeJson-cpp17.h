@@ -1,41 +1,35 @@
 #pragma once
 
-#if (__cplusplus >= 201703L)
-#include "SerializeJson-cpp17.h"
-#else
-
-#include <iostream>
-#include <type_traits>
 #include <assert.h>
-#include <stack>
-#include <set>
 #include <deque>
+#include <iostream>
 #include <map>
+#include <set>
+#include <stack>
 #include <type_traits>
 
-#include <boost/iterator/function_input_iterator.hpp>
-#include <boost/mpl/range_c.hpp>
-#include <boost/mpl/vector.hpp>
-#include <boost/mpl/contains.hpp>
+#include "restc-cpp/RapidJsonReader.h"
+#include "restc-cpp/RapidJsonWriter.h"
+#include "restc-cpp/error.h"
+#include "restc-cpp/internals/for_each_member.hpp"
+#include "restc-cpp/logging.h"
+#include "restc-cpp/restc-cpp.h"
+#include "restc-cpp/typename.h"
 #include <boost/fusion/adapted/struct/define_struct.hpp>
 #include <boost/fusion/algorithm/iteration/for_each.hpp>
-#include <boost/fusion/algorithm/transformation/zip.hpp>
-#include <boost/fusion/sequence/intrinsic/at_c.hpp>
-#include <boost/fusion/sequence/intrinsic/at.hpp>
-#include <boost/fusion/sequence/intrinsic/size.hpp>
-#include <boost/fusion/sequence/intrinsic/segments.hpp>
 #include <boost/fusion/algorithm/transformation/transform.hpp>
-#include <boost/fusion/support/is_sequence.hpp>
-#include <boost/fusion/include/is_sequence.hpp>
+#include <boost/fusion/algorithm/transformation/zip.hpp>
 #include <boost/fusion/container.hpp>
-
-#include "restc-cpp/restc-cpp.h"
-#include "restc-cpp/logging.h"
-#include "restc-cpp/RapidJsonReader.h"
-#include "restc-cpp/internals/for_each_member.hpp"
-#include "restc-cpp/error.h"
-#include "restc-cpp/typename.h"
-#include "restc-cpp/RapidJsonWriter.h"
+#include <boost/fusion/include/is_sequence.hpp>
+#include <boost/fusion/sequence/intrinsic/at.hpp>
+#include <boost/fusion/sequence/intrinsic/at_c.hpp>
+#include <boost/fusion/sequence/intrinsic/segments.hpp>
+#include <boost/fusion/sequence/intrinsic/size.hpp>
+#include <boost/fusion/support/is_sequence.hpp>
+#include <boost/iterator/function_input_iterator.hpp>
+#include <boost/mpl/contains.hpp>
+#include <boost/mpl/range_c.hpp>
+#include <boost/mpl/vector.hpp>
 
 #include "rapidjson/writer.h"
 #include "rapidjson/istreamwrapper.h"
@@ -237,15 +231,8 @@ private:
 };
 
 template <typename T>
-struct get_len {
-    size_t operator()(const T& v) const {
-        return sizeof(v);
-    }
-};
-
-template <>
-struct get_len<const std::string&> {
-    size_t operator()(const std::string& v) const {
+size_t get_len(const T& v) {
+    if constexpr (std::is_same_v<std::string, T>) {
         const auto ptrlen = sizeof(const char *);
         size_t b = sizeof(v);
         if (v.size() > (sizeof(std::string) + ptrlen)) {
@@ -253,200 +240,122 @@ struct get_len<const std::string&> {
         }
         return b;
     }
+
+    return sizeof(v);
 };
 
-template <>
-struct get_len<std::string&> {
-    size_t operator()(const std::string& v) const {
-        assert(false); //oops!
-        return get_len<const std::string&>()(v);
+template <typename T>
+struct is_optional {
+    constexpr static const bool value = false;
+};
+
+template <typename T>
+struct is_optional<std::optional<T> > {
+    constexpr static const bool value = true;
+};
+
+template <typename T>
+constexpr auto has_std_to_string_implementation(int) -> decltype (std::is_same_v<std::string,decltype(::std::to_string(std::declval<T>()))>) {
+    return true;
+}
+
+template <typename T>
+constexpr auto has_std_to_string_implementation(float) -> bool {
+    return false;
+}
+
+template <typename T, typename U = int>
+struct has_empty_method : std::false_type { };
+
+// Specialization for U = int
+template <typename T>
+struct has_empty_method <T, decltype((void) T::empty(), 0)> : std::true_type { };
+
+template <typename T, typename U = int>
+struct has_reset_method : std::false_type { };
+
+// Specialization for U = int
+template <typename T>
+struct has_reset_method <T, decltype((void) T::reset(), 0)> : std::true_type { };
+
+template <typename T>
+bool is_digits_only(const T& vect, bool signedFlag) {
+    size_t cnt = 0;
+    for(auto v: vect) {
+        if (signedFlag && ++cnt == 1 && v == '-') {
+            continue;
+        }
+        if (v < '0' || v > '9') {
+            return false;
+        }
     }
-};
-
-
-#if !defined(_MSC_VER) || (_MSC_VER >= 1910) // g++, clang, Visual Studio from 2017
-
-template <typename varT, typename valT,
-    typename std::enable_if<
-        ((std::is_integral<varT>::value && std::is_integral<valT>::value)
-            || (std::is_floating_point<varT>::value && std::is_floating_point<valT>::value))
-        && !std::is_assignable<varT&, const valT&>::value
-        >::type* = nullptr>
-void assign_value(varT& var, const valT& val) {
-    static_assert(!std::is_assignable<varT&, valT>::value, "assignable");
-    var = static_cast<varT>(val);
+    return true;
 }
-
-template <typename varT, typename valT,
-    typename std::enable_if<
-        !((std::is_integral<varT>::value && std::is_integral<valT>::value)
-            || (std::is_floating_point<varT>::value && std::is_floating_point<valT>::value))
-        && std::is_assignable<varT&, const valT&>::value
-        >::type* = nullptr>
-void assign_value(varT& var, const valT& val) {
-
-    var = val;
-}
-
-template <typename varT, typename valT,
-    typename std::enable_if<
-        !std::is_assignable<varT&, valT>::value
-        && !((std::is_integral<varT>::value && std::is_integral<valT>::value)
-            || (std::is_floating_point<varT>::value && std::is_floating_point<valT>::value))
-        >::type* = nullptr>
-void assign_value(varT& var, const valT& val) {
-    assert(false);
-    throw ParseException("assign_value: Invalid data conversion");
-}
-
-
-#else
-
-// The C++ compiler from hell cannot select the correct template from the generics above.
 
 template <typename varT, typename valT>
-void assign_value(varT var, valT val) {
-    RESTC_CPP_LOG_ERROR_("assign_value: Invalid data conversion from "
-        << RESTC_CPP_TYPENAME(varT) << " to " << RESTC_CPP_TYPENAME(valT));
-    assert(false);
-	throw ParseException("assign_value: Invalid data conversion from ");
+void assign_value(varT& var, const valT& val) {
+    if constexpr (std::is_same_v<valT, std::nullptr_t>) {
+        if constexpr (is_optional<varT>::value) {
+            var.reset();
+        } else if constexpr (has_reset_method<varT>()) {
+            var.reset();
+        } else if constexpr (std::is_pointer_v<varT>) {
+            var = nullptr;
+        } else if constexpr (std::is_default_constructible_v<valT>) {
+            var = {};
+        }
+        // If none of the above is true, just ignore it...
+        RESTC_CPP_LOG_TRACE_("assign_value: " << "Don't know how to assign null-value/empty value to type " << RESTC_CPP_TYPENAME(varT));
+    }
+    else if constexpr (std::is_assignable_v<varT, valT>) {
+        var = val;
+    } else if constexpr (std::is_same_v<std::string, varT>) {
+        var = std::to_string(val);
+    } else if constexpr (std::is_arithmetic<varT>::value
+            && std::is_arithmetic<valT>::value) {
+        var = static_cast<varT>(val);
+    } else if constexpr (std::is_same_v<bool, varT>) {
+        if constexpr (std::is_same_v<std::string, valT>) {
+            if (val == "true" || val == "yes" || atoi(val.c_str()) > 0) {
+                var = true;
+            } else if (val.empty() || val == "false" || val == "no" || (val.at(0) == '0' && atoi(val.c_str()) == 0)) {
+                var = false;
+            } else {
+                throw ParseException("assign_value: Invalid data conversion from string to bool");
+            }
+        } else if constexpr (std::is_integral_v<valT>) {
+            var = val != 0;
+        } else {
+           throw ParseException("assign_value: Invalid data conversion to bool");
+        }
+    } else if constexpr ((std::is_same_v<varT, int8_t>
+            || std::is_same_v<varT, int16_t>
+            || std::is_same_v<varT, int16_t>
+            || std::is_same_v<varT, int32_t>
+            || std::is_same_v<varT, int64_t>
+            || std::is_same_v<varT, int>
+            ) && std::is_same_v<std::string, valT>) {
+        if (is_digits_only(val, true)) {
+            var = static_cast<varT>(std::stoll(val));
+        } else {
+            throw ParseException("assign_value: Invalid data conversion from string to int*_t");
+        }
+    } else if constexpr ((std::is_same_v<varT, uint8_t>
+            || std::is_same_v<varT, uint16_t>
+            || std::is_same_v<varT, uint32_t>
+            || std::is_same_v<varT, uint64_t>
+            || std::is_same_v<varT, size_t>
+            || std::is_same_v<varT, unsigned int>
+            ) && std::is_same_v<std::string, valT>) {
+        if (is_digits_only(val, false)) {
+            var = static_cast<varT>(std::stoull(val));
+        } else {
+            throw ParseException("assign_value: Invalid data conversion from string to uint*_t");
+        }
+    } else {
+        throw ParseException("assign_value: Invalid data conversion");
+    }
 }
-
-template <>
-void assign_value(int& var, const int& val) {
-    var = val;
-}
-
-template <>
-void assign_value(unsigned int& var, const int& val) {
-    var = static_cast<unsigned int>(val);
-}
-
-template <>
-void assign_value(unsigned int& var, const unsigned int& val) {
-    var = val;
-}
-
-template <>
-void assign_value(int& var, const unsigned int& val) {
-    var = static_cast<int>(val);
-}
-
-template <>
-void assign_value(int& var, const bool& val) {
-    var = static_cast<int>(val);
-}
-
-template <>
-void assign_value(unsigned int& var, const bool& val) {
-    var = static_cast<int>(val);
-}
-
-template <>
-void assign_value(std::int64_t& var, const int& val) {
-    var = val;
-}
-
-template <>
-void assign_value(std::int64_t& var, const unsigned int& val) {
-    var = static_cast<std::int64_t>(val);
-}
-
-template <>
-void assign_value(std::int64_t& var, const std::int64_t& val) {
-    var = val;
-}
-
-template <>
-void assign_value(std::int64_t& var, const std::uint64_t& val) {
-    var = static_cast<std::int64_t>(val);
-}
-
-template <>
-void assign_value(std::uint64_t& var, const int& val) {
-    var = static_cast<std::uint64_t>(val);
-}
-
-template <>
-void assign_value(std::uint64_t& var, const unsigned int& val) {
-    var = val;
-}
-
-template <>
-void assign_value(std::uint64_t& var, const std::int64_t& val) {
-    var = static_cast<std::uint64_t>(val);
-}
-
-template <>
-void assign_value(std::uint64_t& var, const std::uint64_t& val) {
-    var = val;
-}
-
-template <>
-void assign_value(bool& var, const int& val) {
-    var = val ? true : false;
-}
-
-template <>
-void assign_value(bool& var, const unsigned int& val) {
-    var = val ? true : false;
-}
-
-template <>
-void assign_value(double& var, const double& val) {
-    var = val;
-}
-
-template <>
-void assign_value(float& var, const double& val) {
-    var = static_cast<float>(val);
-}
-
-template <>
-void assign_value(short& var, const int& val) {
-    var = static_cast<short>(val);
-}
-
-template <>
-void assign_value(short& var, const unsigned int& val) {
-    var = static_cast<short>(val);
-}
-
-template <>
-void assign_value(unsigned short& var, const int& val) {
-    var = static_cast<unsigned short>(val);
-}
-
-template <>
-void assign_value(unsigned short& var, const unsigned int& val) {
-    var = static_cast<unsigned short>(val);
-}
-
-template <>
-void assign_value(char& var, const int& val) {
-    var = static_cast<char>(val);
-}
-
-template <>
-void assign_value(char& var, const unsigned int& val) {
-    var = static_cast<char>(val);
-}
-
-template <>
-void assign_value(unsigned char& var, const int& val) {
-    var = static_cast<unsigned char>(val);
-}
-
-template <>
-void assign_value(unsigned char& var, const unsigned int& val) {
-    var = static_cast<unsigned char>(val);
-}
-
-template <>
-void assign_value(std::string& var, const std::string& val) {
-    var = val;
-}
-#endif // Compiler from hell
 
 template <typename T>
 struct is_map {
@@ -576,6 +485,13 @@ private:
     int recursion_ = 0;
 };
 
+//template <typename T, typename U = int>
+//struct has_value_type : std::false_type { };
+
+//// Specialization for U = int
+//template <typename T>
+//struct has_value_type <T, decltype((void) T::value_type, 0)> : std::true_type { };
+
 } // anonymous namespace
 
 template <typename T>
@@ -693,263 +609,199 @@ public:
     }
 
 private:
-    template <typename classT, typename itemT>
-    void DoRecurseToMember(itemT& item,
-        typename std::enable_if<
-            boost::fusion::traits::is_sequence<classT>::value
-            || is_container<classT>::value || is_map<classT>::value
-            >::type* = 0) {
+    template <typename typeT, typename itemT>
+    void DoRecurseToMember(itemT& item) {
+        using native_field_type_t = typename std::remove_const<typename std::remove_reference<itemT>::type>::type;
+        if constexpr (is_optional<native_field_type_t>::value) {
+            using val_t = typename std::remove_const<typename native_field_type_t::value_type>::type;
+            const_cast<native_field_type_t &>(item) = val_t{};
+            //DoRecurseToMember<native_field_type_t>(item.value());
+            DoRecurseToMember<typename std::remove_const<typename std::remove_reference<decltype(item.value())>::type>::type>(item.value());
+        } else if constexpr (boost::fusion::traits::is_sequence<typeT>::value
+                      || is_container<typeT>::value
+                      || is_map<typeT>::value) {
+             //using const_field_type_t = decltype(item);
+             //using native_field_type_t = typename std::remove_const<typename std::remove_reference<const_field_type_t>::type>::type;
+             using field_type_t = typename std::add_lvalue_reference<native_field_type_t>::type;
 
-        using const_field_type_t = decltype(item);
-        using native_field_type_t = typename std::remove_const<typename std::remove_reference<const_field_type_t>::type>::type;
-        using field_type_t = typename std::add_lvalue_reference<native_field_type_t>::type;
+             auto& value = const_cast<field_type_t&>(item);
 
-        auto& value = const_cast<field_type_t&>(item);
-
-        recursed_to_ = std::make_unique<RapidJsonDeserializer<field_type_t>>(
-            value, this, properties_, bytes_);
-    }
-
-    template <typename classT, typename itemT>
-    void DoRecurseToMember(itemT& field,
-        typename std::enable_if<
-            !boost::fusion::traits::is_sequence<classT>::value
-            && !is_container<classT>::value
-            && !is_map<classT>::value
-            >::type* = 0) {
-        assert(false);
-    }
-
-    // boost::fusion declared classes or containers
-    template <typename dataT>
-    void RecurseToContainerValue(typename std::enable_if<
-            (boost::fusion::traits::is_sequence<typename dataT::value_type>::value
-                || is_container<typename dataT::value_type>::value)
-            && is_container<dataT>::value
-            >::type* = 0) {
-
-        object_.push_back({});
-
-        using native_type_t = typename std::remove_const<
-            typename std::remove_reference<typename dataT::value_type>::type>::type;
-        recursed_to_ = std::make_unique<RapidJsonDeserializer<native_type_t>>(
-            object_.back(), this, properties_, bytes_);
-        saved_state_.push(state_);
-        state_ = State::RECURSED;
-    }
-
-    // Simple data types like int and string
-    template <typename dataT>
-    void RecurseToContainerValue(typename std::enable_if<
-            !boost::fusion::traits::is_sequence<typename dataT::value_type>::value
-            && !is_container<typename dataT::value_type>::value
-            && is_container<dataT>::value
-            >::type* = 0) {
-
-        // Do nothing. We will push_back() the values as they arrive
+             recursed_to_ = std::make_unique<RapidJsonDeserializer<field_type_t>>(
+                 value, this, properties_, bytes_);
+        } else {
+             throw ParseException(std::string{"DoRecurseToMember: Unexpected type: "} +
+                                  RESTC_CPP_TYPENAME(itemT) + " to " + current_name_);
+        }
     }
 
     template <typename dataT>
-    void RecurseToContainerValue(typename std::enable_if<!is_container<dataT>::value>::type* = 0) {
-        assert(false);
+    void RecurseToContainerValue() {
+        if constexpr (is_container<dataT>::value) {
+             if constexpr (boost::fusion::traits::is_sequence<typename dataT::value_type>::value
+                           || is_container<typename dataT::value_type>::value) {
+                 object_.push_back({});
+
+                 using native_type_t = typename std::remove_const<
+                     typename std::remove_reference<typename dataT::value_type>::type>::type;
+                 recursed_to_ = std::make_unique<RapidJsonDeserializer<native_type_t>>(
+                     object_.back(), this, properties_, bytes_);
+                 saved_state_.push(state_);
+                 state_ = State::RECURSED;
+                 return;
+            }
+
+            // Do nothing. We will push_back() the values as they arrive
+        }
+
+        throw ParseException(std::string{"RecurseToContainerValue: Unexpected type: "} +
+                             RESTC_CPP_TYPENAME(dataT));
     }
 
 
     template <typename dataT>
-    void RecurseToMember(typename std::enable_if<
-            boost::fusion::traits::is_sequence<dataT>::value
-            && !is_map<dataT>::value
-            >::type* = 0) {
+    void RecurseToMember() {
         assert(!recursed_to_);
-        assert(!current_name_.empty());
 
-        bool found = false;
+        if constexpr (boost::fusion::traits::is_sequence<dataT>::value
+                   && !is_map<dataT>::value) {
+             assert(!current_name_.empty());
+             bool found = false;
+             auto fn = [&](const char *name, auto& val) {
+                 if (found) {
+                     return;
+                 }
 
-        auto fn = [&](const char *name, auto& val) {
-            if (found) {
-                return;
-            }
+                 if (strcmp(name, current_name_.c_str()) == 0) {
+                     using const_field_type_t = decltype(val);
+                     using native_field_type_t = typename std::remove_const<typename std::remove_reference<const_field_type_t>::type>::type;
+                     DoRecurseToMember<native_field_type_t>(val);
+                     found = true;
+                 }
+             };
 
-            if (strcmp(name, current_name_.c_str()) == 0) {
-                using const_field_type_t = decltype(val);
-                using native_field_type_t = typename std::remove_const<typename std::remove_reference<const_field_type_t>::type>::type;
+             on_name_and_value<decltype(object_), decltype(fn)> handler(fn);
+             handler.for_each_member(object_);
 
-                /* Very obscure. g++ 5.3 is unable to resolve the symbol below
-                * without "this". I don't know if this is according to the
-                * standard or a bug. It works without in clang 3.6.
-                */
-                this->DoRecurseToMember<native_field_type_t>(val);
-                found = true;
-            }
+             if (!recursed_to_) {
+                 assert(!found);
+                 RESTC_CPP_LOG_DEBUG_("RecurseToMember(): Failed to find property-name '"
+                     << current_name_
+                     << "' in C++ class '" << RESTC_CPP_TYPENAME(dataT)
+                     << "' when serializing from JSON.");
 
-        };
+                 if (!properties_.ignore_unknown_properties) {
+                     throw UnknownPropertyException(current_name_);
+                 } else {
+                     recursed_to_ = std::make_unique<RapidJsonSkipObject>(this);
+                 }
+             } else {
+                 assert(found);
+             }
 
-        on_name_and_value<decltype(object_), decltype(fn)> handler(fn);
-        handler.for_each_member(object_);
+             assert(recursed_to_);
+             saved_state_.push(state_);
+             state_ = State::RECURSED;
+             current_name_.clear();
+        } else if constexpr (is_map<dataT>::value) {
+             using native_type_t = typename std::remove_const<
+                 typename std::remove_reference<typename dataT::mapped_type>::type>::type;
+             recursed_to_ = std::make_unique<RapidJsonDeserializer<native_type_t>>(
+                 object_[current_name_], this, properties_, bytes_);
+             saved_state_.push(state_);
+             state_ = State::RECURSED;
+             current_name_.clear();
+        } else {
+             throw ParseException(std::string{"RecurseToMember: Unexpected type: "} +
+                                  RESTC_CPP_TYPENAME(dataT) + " to " + current_name_);
+        }
+    }
 
-        if (!recursed_to_) {
-            assert(!found);
-            RESTC_CPP_LOG_DEBUG_("RecurseToMember(): Failed to find property-name '"
-                << current_name_
-                << "' in C++ class '" << RESTC_CPP_TYPENAME(dataT)
-                << "' when serializing from JSON.");
+    template<typename dataT, typename argT>
+    bool SetValueOnMember(const argT& val) {
 
-            if (!properties_.ignore_unknown_properties) {
-                throw UnknownPropertyException(current_name_);
-            } else {
-                recursed_to_ = std::make_unique<RapidJsonSkipObject>(this);
+        if constexpr (boost::fusion::traits::is_sequence<dataT>::value) {
+             assert(!current_name_.empty());
+
+             bool found = false;
+
+             auto fn = [&](const char *name, auto& v) {
+                 if (found) {
+                     return;
+                 }
+
+                 if (strcmp(name, current_name_.c_str()) == 0) {
+
+                     const auto& new_value_ = val;
+
+                     using const_field_type_t = decltype(v);
+                     using native_field_type_t = typename std::remove_const<
+                         typename std::remove_reference<const_field_type_t>::type>::type;
+                     using field_type_t = typename std::add_lvalue_reference<native_field_type_t>::type;
+
+                     auto& value = const_cast<field_type_t&>(v);
+
+                     this->AddBytes(get_len(new_value_));
+                     assign_value(value, new_value_);
+                     found = true;
+                 }
+             };
+
+             on_name_and_value<dataT, decltype(fn)> handler(fn);
+             handler.for_each_member(object_);
+
+             if (!found) {
+                 assert(!found);
+                 RESTC_CPP_LOG_DEBUG_("SetValueOnMember(): Failed to find property-name '"
+                     << current_name_
+                     << "' in C++ class '" << RESTC_CPP_TYPENAME(dataT)
+                     << "' when serializing from JSON.");
+
+                 if (!properties_.ignore_unknown_properties) {
+                     throw UnknownPropertyException(current_name_);
+                 }
+             }
+
+             current_name_.clear();
+             return true;
+        }
+
+        if constexpr (is_map<dataT>::value) {
+             assert(!current_name_.empty());
+             AddBytes(
+                 get_len(val)
+                 + sizeof(std::string)
+                 + current_name_.size()
+                 + sizeof(size_t) * 6 // FIXME: Find approximate average overhead for map
+             );
+
+             assign_value(object_[current_name_], val);
+             current_name_.clear();
+             return true;
+        }
+
+        throw ParseException(std::string{"SetValueOnMember: Unexpected type: "} +
+                          RESTC_CPP_TYPENAME(dataT) + " on " + current_name_);
+    }
+
+    template<typename dataT, typename argT>
+    void SetValueInArray(const argT& val) {
+        if constexpr (is_container<dataT>::value) {
+             if constexpr (!boost::fusion::traits::is_sequence<typename dataT::value_type>::value) {
+                 AddBytes(
+                     get_len(val)
+                     + sizeof(size_t) * 3 // Approximate average overhead for container
+                 );
+
+                 object_.push_back({});
+                 assign_value<decltype(object_.back()), decltype(val)>(object_.back(), val);
+                 } else {
+                 // We should always recurse into structs
+                 assert(false);
             }
         } else {
-            assert(found);
+             throw ParseException(std::string{"SetValueInArray: Unexpected type: "} +
+                               RESTC_CPP_TYPENAME(argT) + " on " + current_name_);
         }
-
-        assert(recursed_to_);
-        saved_state_.push(state_);
-        state_ = State::RECURSED;
-        current_name_.clear();
-    }
-
-    template <typename dataT>
-    void RecurseToMember( typename std::enable_if<
-         is_map<dataT>::value
-         >::type* = 0) {
-
-         using native_type_t = typename std::remove_const<
-             typename std::remove_reference<typename dataT::mapped_type>::type>::type;
-         recursed_to_ = std::make_unique<RapidJsonDeserializer<native_type_t>>(
-             object_[current_name_], this, properties_, bytes_);
-         saved_state_.push(state_);
-         state_ = State::RECURSED;
-         current_name_.clear();
-    }
-
-    template <typename dataT>
-    void RecurseToMember( typename std::enable_if<
-            !boost::fusion::traits::is_sequence<dataT>::value
-            && !is_map<dataT>::value
-            >::type* = 0) {
-        assert(!recursed_to_);
-    }
-
-    template<typename dataT, typename argT>
-    bool SetValueOnMember(const argT& new_value,
-        typename std::enable_if<
-            boost::fusion::traits::is_sequence<dataT>::value
-            >::type* = 0) {
-        assert(!current_name_.empty());
-
-        bool found = false;
-
-        auto fn = [&](const char *name, auto& val) {
-            if (found) {
-                return;
-            }
-
-            if (strcmp(name, current_name_.c_str()) == 0) {
-
-                const auto& new_value_ = new_value;
-
-                using const_field_type_t = decltype(val);
-                using native_field_type_t = typename std::remove_const<
-                    typename std::remove_reference<const_field_type_t>::type>::type;
-                using field_type_t = typename std::add_lvalue_reference<native_field_type_t>::type;
-
-                auto& value = const_cast<field_type_t&>(val);
-
-                this->AddBytes(get_len<decltype(new_value_)>()(new_value_));
-                assign_value<decltype(value), decltype(new_value_)>(value, new_value_);
-                found = true;
-            }
-        };
-
-        on_name_and_value<dataT, decltype(fn)> handler(fn);
-        handler.for_each_member(object_);
-
-        if (!found) {
-            assert(!found);
-            RESTC_CPP_LOG_DEBUG_("SetValueOnMember(): Failed to find property-name '"
-                << current_name_
-                << "' in C++ class '" << RESTC_CPP_TYPENAME(dataT)
-                << "' when serializing from JSON.");
-
-            if (!properties_.ignore_unknown_properties) {
-                throw UnknownPropertyException(current_name_);
-            }
-        }
-
-        current_name_.clear();
-        return true;
-    }
-
-    // std::map / the key must be a string.
-    template<typename dataT, typename argT>
-    bool SetValueOnMember(const argT& val,
-        typename std::enable_if<
-            is_map<dataT>::value
-            >::type* = 0) {
-        assert(!current_name_.empty());
-
-        AddBytes(
-            get_len<argT>()(val)
-            + sizeof(std::string)
-            + current_name_.size()
-            + sizeof(size_t) * 6 // FIXME: Find approximate average overhead for map
-        );
-
-		assign_value(object_[current_name_], val);
-        current_name_.clear();
-        return true;
-    }
-
-    template<typename dataT, typename argT>
-    bool SetValueOnMember(argT val,
-        typename std::enable_if<
-            !boost::fusion::traits::is_sequence<dataT>::value
-            && !is_map<dataT>::value
-            >::type* = 0) {
-
-        RESTC_CPP_LOG_ERROR_(RESTC_CPP_TYPENAME(dataT)
-            << " BAD SetValueOnMember: ");
-
-        assert(false);
-        return true;
-    }
-
-    template<typename dataT, typename argT>
-    void SetValueInArray(const argT& val,
-        typename std::enable_if<
-            !boost::fusion::traits::is_sequence<typename dataT::value_type>::value
-            && is_container<dataT>::value
-            >::type* = 0) {
-
-
-        AddBytes(
-            get_len<argT>()(val)
-            + sizeof(size_t) * 3 // Approximate average overhead for container
-        );
-
-        object_.push_back({});
-        assign_value<decltype(object_.back()), decltype(val)>(object_.back(), val);
-    }
-
-    template<typename dataT, typename argT>
-    void SetValueInArray(argT val,
-        typename std::enable_if<
-            boost::fusion::traits::is_sequence<typename dataT::value_type>::value
-            && is_container<dataT>::value
-            >::type* = 0) {
-
-        // We should always recurse into structs
-        assert(false);
-    }
-
-    template<typename dataT, typename argT>
-    void SetValueInArray(argT val,
-        typename std::enable_if<
-            !is_container<dataT>::value
-            >::type* = 0) {
-
-        assert(false);
     }
 
     template<typename argT>
@@ -975,9 +827,7 @@ private:
     }
 
     bool DoNull() {
-        // TODO: Clear value
-        current_name_.clear();
-        return true;
+        return SetValue(nullptr);
     }
 
     bool DoBool(bool b) {
@@ -1188,33 +1038,28 @@ private:
 
 
 namespace {
+
+
 template <typename T>
-constexpr bool is_empty_field_(const T& value,
-    typename std::enable_if<
-        !std::is_integral<T>::value
-        && !std::is_floating_point<T>::value
-        && !std::is_same<T, std::string>::value
-        && !is_container<T>::value
-        >::type* = 0) {
+constexpr bool is_empty_field_(const T& value) {
+    if constexpr (std::is_integral<T>::value || std::is_floating_point<T>::value) {
+        return value == T{};
+    }
+
+    if constexpr (is_optional<T>::value) {
+        return !value.has_value();
+    }
+
+    // Could produce unexpected results for types that implement empty() with
+    // another meaning than the C++ standard library
+    if constexpr //(has_empty_method<T>()) {
+        (std::is_same_v<std::string, T>
+            || is_map<T>::value
+            || is_container<T>::value) {
+        return value.empty();
+    }
 
     return false;
-}
-
-template <typename T>
-constexpr bool is_empty_field_(const T& value,
-    typename std::enable_if<
-        std::is_integral<T>::value
-        || std::is_floating_point<T>::value
-        >::type* = 0) {
-    return value == T{};
-}
-
-template <typename T>
-constexpr bool is_empty_field_(const T& value,
-    typename std::enable_if<
-        std::is_same<T, std::string>::value || is_container<T>::value
-        >::type* = 0) {
-    return value.empty();
 }
 
 template <typename T>
@@ -1269,164 +1114,128 @@ void do_serialize_integral(const std::uint64_t& v, S& serializer) {
     serializer.Uint64(v);
 }
 
-
 template <typename dataT, typename serializerT>
 void do_serialize(const dataT& object, serializerT& serializer,
-                const serialize_properties_t& properties,
-    typename std::enable_if<
-        !boost::fusion::traits::is_sequence<dataT>::value
-        && !std::is_integral<dataT>::value
-        && !std::is_floating_point<dataT>::value
-        && !std::is_same<dataT, std::string>::value
-        && !is_container<dataT>::value
-        && !is_map<dataT>::value
-        >::type* = 0) {
-    assert(false);
-};
+                  const serialize_properties_t& properties) {
 
-template <typename dataT, typename serializerT>
-void do_serialize(const dataT& object, serializerT& serializer,
-                const serialize_properties_t& properties,
-    typename std::enable_if<
-        std::is_integral<dataT>::value
-        || std::is_floating_point<dataT>::value
-        >::type* = 0) {
-
-    do_serialize_integral(object, serializer);
-};
-
-template <typename dataT, typename serializerT>
-void do_serialize(const dataT& object, serializerT& serializer,
-                const serialize_properties_t& properties,
-    typename std::enable_if<
-        std::is_same<dataT, std::string>::value
-        >::type* = 0) {
-
-    serializer.String(object.c_str(),
-        static_cast<rapidjson::SizeType>(object.size()),
-        true);
-};
-
-template <typename dataT, typename serializerT>
-void do_serialize(const dataT& object, serializerT& serializer,
-                const serialize_properties_t& properties,
-    typename std::enable_if<
-        boost::fusion::traits::is_sequence<dataT>::value
-        >::type* = 0);
-
-template <typename dataT, typename serializerT>
-void do_serialize(const dataT& object, serializerT& serializer,
-                const serialize_properties_t& properties,
-    typename std::enable_if<
-        is_container<dataT>::value
-        >::type* = 0) {
-#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-    RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
-        << " StartArray: ");
-#endif
-    serializer.StartArray();
-
-    for(const auto& v: object) {
-
-        using native_field_type_t = typename std::remove_const<
-            typename std::remove_reference<decltype(v)>::type>::type;
-
-        do_serialize<native_field_type_t>(v, serializer, properties);
-    }
-#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-    RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
-        << " EndArray: ");
-#endif
-    serializer.EndArray();
-};
-
-template <typename dataT, typename serializerT>
-void do_serialize(const dataT& object, serializerT& serializer,
-                const serialize_properties_t& properties,
-     typename std::enable_if<
-        is_map<dataT>::value
-        >::type* = 0) {
-
-    static const serialize_properties_t map_name_properties{false};
-
-#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-    RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
-        << " StartMap: ");
-#endif
-    serializer.StartObject();
-
-    for(const auto& v: object) {
-
-        using native_field_type_t = typename std::remove_const<
-            typename std::remove_reference<typename dataT::mapped_type>::type>::type;
-
-        do_serialize<std::string>(v.first, serializer, map_name_properties);
-        do_serialize<native_field_type_t>(v.second, serializer, properties);
-    }
-#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-    RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
-        << " EndMap: ");
-#endif
-    serializer.EndObject();
-};
-
-template <typename dataT, typename serializerT>
-void do_serialize(const dataT& object, serializerT& serializer,
-                const serialize_properties_t& properties,
-    typename std::enable_if<
-        boost::fusion::traits::is_sequence<dataT>::value
-        >::type*) {
-
-    serializer.StartObject();
-#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-    RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
-        << " StartObject: ");
-#endif
-    auto fn = [&](const char *name, auto& val) {
+    if constexpr (is_optional<dataT>::value) {
+        if (object.has_value()) {
+            do_serialize(object.value(), serializer, properties);
+        } else {
+            serializer.Null();
+        }
+    } else if constexpr (std::is_integral<dataT>::value
+            || std::is_floating_point<dataT>::value) {
+        do_serialize_integral(object, serializer);
+    } else if constexpr (std::is_same<dataT, std::string>::value) {
+        serializer.String(object.c_str(),
+            static_cast<rapidjson::SizeType>(object.size()),
+            true);
+    }  else if constexpr (boost::fusion::traits::is_sequence<dataT>::value) {
+        serializer.StartObject();
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
         RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
-            << " Key: " << name);
+            << " StartObject: ");
 #endif
-        if (properties.ignore_empty_fileds) {
-            if (is_empty_field(val)) {
+        auto fn = [&](const char *name, auto& val) {
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-        RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
-            << " ignoring empty field.");
+            RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
+                << " Key: " << name);
+#endif
+            if (properties.ignore_empty_fileds) {
+                if (is_empty_field(val)) {
+#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
+            RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
+                << " ignoring empty field.");
+#endif
+                    return;
+                }
+            }
+
+            if (properties.excluded_names
+                && properties.is_excluded(name)) {
+#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
+                RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
+                    << " ignoring excluded field.");
 #endif
                 return;
             }
-        }
 
-        if (properties.excluded_names
-            && properties.is_excluded(name)) {
+            serializer.Key(properties.map_name_to_json(name).c_str());
+
+            using const_field_type_t = decltype(val);
+            using native_field_type_t = typename std::remove_const<typename std::remove_reference<const_field_type_t>::type>::type;
+            using field_type_t = typename std::add_lvalue_reference<native_field_type_t>::type;
+
+            auto& const_value = val;
+            auto& value = const_cast<field_type_t&>(const_value);
+
+            do_serialize<native_field_type_t>(value, serializer, properties);
+
+        };
+
+        on_name_and_value<dataT, decltype(fn)> handler(fn);
+        handler.for_each_member(object);
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-            RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
-                << " ignoring excluded field.");
+        RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
+            << " EndObject: ");
 #endif
-            return;
-        }
-
-        serializer.Key(properties.map_name_to_json(name).c_str());
-
-        using const_field_type_t = decltype(val);
-        using native_field_type_t = typename std::remove_const<typename std::remove_reference<const_field_type_t>::type>::type;
-        using field_type_t = typename std::add_lvalue_reference<native_field_type_t>::type;
-
-        auto& const_value = val;
-        auto& value = const_cast<field_type_t&>(const_value);
-
-        do_serialize<native_field_type_t>(value, serializer, properties);
-
-    };
-
-    on_name_and_value<dataT, decltype(fn)> handler(fn);
-    handler.for_each_member(object);
+        serializer.EndObject();
+    } else if constexpr (is_container<dataT>::value) {
 #ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
-    RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
-        << " EndObject: ");
+        RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
+            << " StartArray: ");
 #endif
-    serializer.EndObject();
-};
+        serializer.StartArray();
+
+        for(const auto& v: object) {
+
+            using native_field_type_t = typename std::remove_const<
+                typename std::remove_reference<decltype(v)>::type>::type;
+
+            do_serialize<native_field_type_t>(v, serializer, properties);
+        }
+#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
+        RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
+            << " EndArray: ");
+#endif
+        serializer.EndArray();
+    } else if constexpr (is_map<dataT>::value) {
+        static const serialize_properties_t map_name_properties{false};
+
+#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
+        RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
+            << " StartMap: ");
+#endif
+        serializer.StartObject();
+
+        for(const auto& v: object) {
+
+            using native_field_type_t = typename std::remove_const<
+                typename std::remove_reference<typename dataT::mapped_type>::type>::type;
+
+            do_serialize<std::string>(v.first, serializer, map_name_properties);
+            do_serialize<native_field_type_t>(v.second, serializer, properties);
+        }
+#ifdef RESTC_CPP_LOG_JSON_SERIALIZATION
+        RESTC_CPP_LOG_TRACE_(RESTC_CPP_TYPENAME(dataT)
+            << " EndMap: ");
+#endif
+        serializer.EndObject();
+    } else if constexpr (has_std_to_string_implementation<dataT>(0)) {
+        const auto s = ::std::to_string(object);
+        serializer.String(s.c_str(),
+            static_cast<rapidjson::SizeType>(s.size()),
+            true);
+    }
+
+    else {
+//        static_assert (false, "do_serialize: Unexpected type. Don't know how to convert it");
+        throw ParseException(std::string{"do_serialize: Unexpected type: "} +
+                             RESTC_CPP_TYPENAME(dataT));
+    }
+}
+
 } // namespace
 
 /*! Recursively serialize the C++ object to the json serializer */
@@ -1567,6 +1376,15 @@ void SerializeFromJson(dataT& rootData,
     SerializeFromJson(rootData, stream, properties);
 }
 
+/*! Serialize json in a std::string to a C++ class instance */
+template <typename dataT>
+void SerializeFromJson(dataT& rootData,
+                       const std::string& data, const serialize_properties_t& properties = {}) {
+
+    std::istringstream stream{data};
+    SerializeFromJson(rootData, stream, properties);
+}
+
 /*! Serialize a reply to a C++ class instance */
 template <typename dataT>
 void SerializeFromJson(dataT& rootData, Reply& reply,
@@ -1633,4 +1451,3 @@ void SerializeToJson(dataT& rootData,
 
 } // namespace
 
-#endif // c++17

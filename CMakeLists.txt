@@ -5,7 +5,11 @@ if (DEFINED ENV{RESTC_CPP_VERSION})
 endif()
 
 if (NOT DEFINED RESTC_CPP_VERSION)
-    set(RESTC_CPP_VERSION 0.10.0)
+    set(RESTC_CPP_VERSION 0.90.0)
+endif()
+
+if(NOT DEFINED RESTC_BOOST_VERSION)
+    set(RESTC_BOOST_VERSION 1.58)
 endif()
 
 project (restc-cpp VERSION ${RESTC_CPP_VERSION})
@@ -56,6 +60,14 @@ option(RESTC_CPP_THREADED_CTX "Allow asio contextx with multiple therads. Enable
 
 if (NOT DEFINED RESTC_CPP_MAX_INPUT_BUFFER_LENGTH)
     set (RESTC_CPP_MAX_INPUT_BUFFER_LENGTH 0x7fffffff)
+endif()
+
+option(BOOST_ERROR_CODE_HEADER_ONLY "Work-around for another boost issue" ON)
+if (BOOST_ERROR_CODE_HEADER_ONLY)
+    add_definitions(
+        -DBOOST_ERROR_CODE_HEADER_ONLY=1
+        -DBOOST_SYSTEM_NO_DEPRECATED=1
+        )
 endif()
 
 if (RESTC_CPP_LOG_LEVEL_STR STREQUAL "none")
@@ -174,7 +186,7 @@ if (NOT EMBEDDED_RESTC_CPP)
     endif()
         
     #set(Boost_USE_MULTITHREADED ON)
-    find_package(Boost REQUIRED COMPONENTS
+    find_package(Boost ${RESTC_BOOST_VERSION} REQUIRED COMPONENTS
         system
         program_options
         filesystem

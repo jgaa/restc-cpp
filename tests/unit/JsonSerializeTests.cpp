@@ -1,6 +1,11 @@
 
 #include <map>
 
+#if (__cplusplus >= 201703L)
+#   include <optional>
+#endif
+
+
 // Include before boost::log headers
 #include "restc-cpp/logging.h"
 
@@ -13,13 +18,28 @@
 #include <boost/fusion/adapted.hpp>
 
 #include "restc-cpp/restc-cpp.h"
-#include "restc-cpp/SerializeJson.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 
 #include "restc-cpp/test_helper.h"
 #include "lest/lest.hpp"
 
+struct Data {
+    int d = 123;
+};
+
+struct NoData {
+    int d = 321;
+};
+
+
+namespace std {
+    string to_string(const Data& d) {
+        return to_string(d.d);
+    }
+}
+
+#include "restc-cpp/SerializeJson.h"
 
 using namespace std;
 using namespace restc_cpp;
@@ -31,6 +51,8 @@ struct Person {
     : id{id_}, name{std::move(name_)}, balance{balance_}
     {}
 
+    Person& operator = (const Person&) = default;
+    Person& operator = (Person&&) = default;
     Person() = default;
     Person(const Person&) = default;
     Person(Person&&) = default;
@@ -39,6 +61,84 @@ struct Person {
     std::string name;
     double balance = 0;
 };
+
+#if (__cplusplus >= 201703L)
+
+struct Number {
+    std::optional<int> value;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(Number,
+    (std::optional<int>, value)
+);
+
+struct Bool {
+    bool value = false;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(Bool,
+    (bool, value)
+);
+
+struct Int {
+    int value = 0;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(Int,
+    (int, value)
+);
+
+struct Numbers {
+    int intval = 0;
+    size_t sizetval = 0;
+    uint32_t uint32 = 0;
+    int64_t int64val = 0;
+    uint64_t uint64val = 0;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(Numbers,
+    (int, intval)
+    (size_t, sizetval)
+    (uint32_t, uint32)
+    (int64_t, int64val)
+    (uint64_t, uint64val)
+);
+
+struct String {
+    std::optional<string> value;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(String,
+    (std::optional<std::string>, value)
+);
+
+struct Pet {
+    std::string name;
+    std::string kind;
+    std::optional<string> friends;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(
+    Pet,
+    (std::string, name)
+    (std::string, kind)
+    (std::optional<string>, friends)
+)
+
+struct House {
+    std::optional<bool> is_enabled;
+    std::optional<Person> person;
+    std::optional<Pet> pet;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(
+    House,
+    (std::optional<bool>, is_enabled)
+    (std::optional<Person>, person)
+    (std::optional<Pet>, pet)
+)
+
+#endif
 
 BOOST_FUSION_ADAPT_STRUCT(
     Person,
@@ -60,6 +160,23 @@ BOOST_FUSION_ADAPT_STRUCT(
     (std::string, quote)
 )
 
+struct DataHolder {
+    Data data;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(
+    DataHolder,
+    (Data, data)
+)
+
+struct NoDataHolder {
+    NoData data;
+};
+
+BOOST_FUSION_ADAPT_STRUCT(
+    NoDataHolder,
+    (NoData, data)
+)
 
 
 struct Group {
@@ -98,8 +215,6 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 const lest::test specification[] = {
 
-
-    
 STARTCASE(SerializeSimpleObject) {
     Person person = { 100, "John Doe"s, 123.45 };
 
@@ -436,8 +551,401 @@ STARTCASE(MissingPropertyNameNotAllowed) {
     EXPECT_THROWS_AS(reader.Parse(ss, handler), UnknownPropertyException);
 } ENDCASE
 
-}; // lest
+#if (__cplusplus >= 201703L)
+STARTCASE(DesearializeOptionalBoolEmpty) {
+    House house;
+    std::string json = R"({ "is_enabled": null })"; // No value
 
+    serialize_properties_t sprop;
+    sprop.ignore_unknown_properties = false;
+    RapidJsonDeserializer<House> handler(house, sprop);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+    CHECK_EQUAL(house.is_enabled.has_value(), false);
+} ENDCASE
+
+STARTCASE(DesearializeOptionalBoolTrue) {
+    House house;
+    std::string json = R"({ "is_enabled": true })"; // No value
+
+    serialize_properties_t sprop;
+    sprop.ignore_unknown_properties = false;
+    RapidJsonDeserializer<House> handler(house, sprop);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+    CHECK_EQUAL(house.is_enabled.has_value(), true);
+    CHECK_EQUAL(house.is_enabled.value(), true);
+} ENDCASE
+
+STARTCASE(DesearializeOptionalBoolFalse) {
+    House house;
+    std::string json = R"({ "is_enabled": false })"; // No value
+
+    serialize_properties_t sprop;
+    sprop.ignore_unknown_properties = false;
+    RapidJsonDeserializer<House> handler(house, sprop);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+    CHECK_EQUAL(house.is_enabled.has_value(), true);
+    CHECK_EQUAL(house.is_enabled.value(), false);
+} ENDCASE
+
+STARTCASE(DesearializeOptionalObjctEmpty) {
+    House house;
+    house.person = Person{1, "foo", 0.0};
+    std::string json = R"({ "person": null })"; // No value
+
+    serialize_properties_t sprop;
+    sprop.ignore_unknown_properties = false;
+    RapidJsonDeserializer<House> handler(house, sprop);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+    CHECK_EQUAL(house.person.has_value(), false);
+} ENDCASE
+
+STARTCASE(DesearializeOptionalObjctAssign) {
+    House house;
+    std::string json = R"({ "person": { "id" : 100, "name" : "John Doe", "balance" : 123.45 }})";
+
+    serialize_properties_t sprop;
+    sprop.ignore_unknown_properties = false;
+    SerializeFromJson(house, json, sprop);
+
+    CHECK_EQUAL(house.person.has_value(), true);
+    CHECK_EQUAL(house.person->id, 100);
+    CHECK_EQUAL(house.person->name, "John Doe");
+    CHECK_EQUAL(house.person->balance, 123.45);
+} ENDCASE
+
+STARTCASE(SerializeOptionalAllEmptyShowEmpty) {
+    House house;
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(house), decltype(writer)>
+        serializer(house, writer);
+
+    serializer.IgnoreEmptyMembers(false);
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({"is_enabled":null,"person":null,"pet":null})"s,
+                s.GetString());
+
+} ENDCASE
+
+
+STARTCASE(SerializeOptionalAllEmpty) {
+    House house;
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(house), decltype(writer)>
+        serializer(house, writer);
+
+    serializer.IgnoreEmptyMembers(true);
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({})"s,
+                s.GetString());
+
+} ENDCASE
+
+STARTCASE(SerializeOptionalBoolTrue) {
+    House house;
+    house.is_enabled = true;
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(house), decltype(writer)>
+        serializer(house, writer);
+
+    serializer.IgnoreEmptyMembers(true);
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({"is_enabled":true})"s,
+                s.GetString());
+
+} ENDCASE
+
+STARTCASE(SerializeOptionalBoolFalse) {
+    House house;
+    house.is_enabled = false;
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(house), decltype(writer)>
+        serializer(house, writer);
+
+    serializer.IgnoreEmptyMembers(true);
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({"is_enabled":false})"s,
+                s.GetString());
+
+} ENDCASE
+
+STARTCASE(SerializeOptionalObjectWithData) {
+    House house;
+    house.person = Person{};
+    house.person->id = 123;
+    house.person->name = "Donald the looser";
+    house.person->balance = 123.45;
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(house), decltype(writer)>
+        serializer(house, writer);
+
+    serializer.IgnoreEmptyMembers(true);
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({"person":{"id":123,"name":"Donald the looser","balance":123.45}})"s,
+                s.GetString());
+
+} ENDCASE
+
+STARTCASE(SerializeOptionalObjectWithRecursiveOptionalNoData) {
+    House house;
+    house.person = Person{};
+    house.person->id = 123;
+    house.person->name = "Donald the looser";
+    house.person->balance = 123.45;
+    house.pet = Pet{};
+    house.pet->name = "Fido";
+    house.pet->kind = "Dog";
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(house), decltype(writer)>
+        serializer(house, writer);
+
+    serializer.IgnoreEmptyMembers(true);
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({"person":{"id":123,"name":"Donald the looser","balance":123.45},"pet":{"name":"Fido","kind":"Dog"}})"s,
+                s.GetString());
+
+} ENDCASE
+
+STARTCASE(SerializeOptionalObjectWithRecursiveOptionalData) {
+    House house;
+    house.person = Person{};
+    house.person->id = 123;
+    house.person->name = "Donald the looser";
+    house.person->balance = 123.45;
+    house.pet = Pet{};
+    house.pet->name = "Fido";
+    house.pet->kind = "Dog";
+    house.pet->friends = "PusPus the Cat";
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(house), decltype(writer)>
+        serializer(house, writer);
+
+    serializer.IgnoreEmptyMembers(true);
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({"person":{"id":123,"name":"Donald the looser","balance":123.45},"pet":{"name":"Fido","kind":"Dog","friends":"PusPus the Cat"}})"s,
+                s.GetString());
+
+} ENDCASE
+
+STARTCASE(SerializeIgnoreEmptyString) {
+    Pet pet;
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(pet), decltype(writer)>
+        serializer(pet, writer);
+
+    serializer.IgnoreEmptyMembers(true);
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({})"s,
+                s.GetString());
+
+} ENDCASE
+
+STARTCASE(SerializeEmptyOptionalWithZeroValue) {
+
+    Number data;
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(data), decltype(writer)>
+        serializer(data, writer);
+
+    serializer.IgnoreEmptyMembers(true);
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({})"s, s.GetString());
+
+} ENDCASE
+
+
+STARTCASE(SerializeOptionalWithZeroValue) {
+
+    Number data;
+    data.value = 0;
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(data), decltype(writer)>
+        serializer(data, writer);
+
+    serializer.IgnoreEmptyMembers(true);
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({"value":0})"s, s.GetString());
+
+} ENDCASE
+
+STARTCASE(SerializeOptionalWithEmptyStringValue) {
+
+    String data;
+    data.value = "";
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(data), decltype(writer)>
+        serializer(data, writer);
+
+    serializer.IgnoreEmptyMembers(true);
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({"value":""})"s, s.GetString());
+
+} ENDCASE
+
+STARTCASE(DeserializeBoolFromStringTrue) {
+    Bool bval;
+    std::string json = R"({ "value" : "true" })";
+
+    RapidJsonDeserializer<Bool> handler(bval);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+
+    CHECK_EQUAL(bval.value, true);
+} ENDCASE
+
+STARTCASE(DeserializeBoolFromStringFalse) {
+    Bool bval{true};
+    std::string json = R"({ "value" : "false" })";
+
+    RapidJsonDeserializer<Bool> handler(bval);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+
+    CHECK_EQUAL(bval.value, false);
+} ENDCASE
+
+
+STARTCASE(DeserializeBoolFromIntTrue) {
+    Bool bval;
+    std::string json = R"({ "value" : 10 })";
+
+    RapidJsonDeserializer<Bool> handler(bval);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+
+    CHECK_EQUAL(bval.value, true);
+} ENDCASE
+
+STARTCASE(DeserializeBoolFromIntFalse) {
+    Bool bval{true};
+    std::string json = R"({ "value" : 0 })";
+
+    RapidJsonDeserializer<Bool> handler(bval);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+
+    CHECK_EQUAL(bval.value, false);
+} ENDCASE
+
+STARTCASE(DeserializeIntFromString1) {
+    Int ival;
+    std::string json = R"({ "value" : "1" })";
+
+    RapidJsonDeserializer<Int> handler(ival);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+
+    CHECK_EQUAL(ival.value, 1);
+} ENDCASE
+
+STARTCASE(DeserializeNumbersFromStrings) {
+    Numbers numbers;
+    std::string json = R"({ "intval" : "-123", "sizetval": "55", "uint32": "123456789", "int64val": "-9876543212345", "uint64val": "123451234512345" })";
+
+    RapidJsonDeserializer<Numbers> handler(numbers);
+    Reader reader;
+    StringStream ss(json.c_str());
+    reader.Parse(ss, handler);
+
+    CHECK_EQUAL(numbers.intval, -123);
+    CHECK_EQUAL(numbers.sizetval, 55);
+    CHECK_EQUAL(numbers.uint32, 123456789);
+    CHECK_EQUAL(numbers.int64val, -9876543212345);
+    CHECK_EQUAL(numbers.uint64val, 123451234512345);
+} ENDCASE
+
+STARTCASE(DeserializeWithStdToStringSpecialization) {
+
+    DataHolder obj;
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(obj), decltype(writer)>
+        serializer(obj, writer);
+
+    serializer.IgnoreEmptyMembers(false);
+    serializer.Serialize();
+
+    CHECK_EQUAL(R"({"data":"123"})"s, s.GetString());
+} ENDCASE
+
+
+STARTCASE(DeserializeWithoutStdToStringSpecialization) {
+
+    NoDataHolder obj;
+
+    StringBuffer s;
+    Writer<StringBuffer> writer(s);
+
+    RapidJsonSerializer<decltype(obj), decltype(writer)>
+        serializer(obj, writer);
+
+    serializer.IgnoreEmptyMembers(false);
+
+    EXPECT_THROWS_AS(serializer.Serialize(), ParseException);
+} ENDCASE
+
+
+#endif // C++ 17
+
+}; // lest
 
 int main( int argc, char * argv[] )
 {

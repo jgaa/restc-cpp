@@ -422,7 +422,15 @@ public:
     static std::unique_ptr<RestClient> Create();
 
 #ifdef RESTC_CPP_WITH_TLS
-	static std::unique_ptr<RestClient> Create(std::shared_ptr<boost::asio::ssl::context> ctx);
+    static std::unique_ptr<RestClient> Create(
+            std::shared_ptr<boost::asio::ssl::context> ctx);
+    static std::unique_ptr<RestClient> Create(
+            std::shared_ptr<boost::asio::ssl::context> ctx,
+            const boost::optional<Request::Properties>& properties);
+    static std::unique_ptr<RestClient> Create(
+            std::shared_ptr<boost::asio::ssl::context> ctx,
+            const boost::optional<Request::Properties>& properties,
+            boost::asio::io_service& ioservice);
 #endif
 
     static std::unique_ptr<RestClient>
