@@ -344,36 +344,6 @@ pipeline {
 //                     }
 //                 }
 
-                stage('macOS') {
-                    agent {label 'macos'}
-
-                    environment {
-                        CPPFLAGS = "-I/usr/local/opt/openssl/include -I/usr/local/opt/zlib/include -I/usr/local/opt/boost/include/"
-                        LDFLAGS = "-L/usr/local/opt/openssl/lib -L/usr/local/opt/zlib/lib -L/usr/local/opt/boost/lib/"
-                    }
-
-                    //Dependencies are installed with: brew install openssl boost zlib
-
-                    steps {
-                        echo "Building on macos in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl -DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib -DBOOST_LIBRARIES=/usr/local/opt/boost/lib -DBOOSTL_ROOT_DIR=/usr/local/opt/boost -DZLIB_INCLUDE_DIRS=/usr/local/opt/zlib/include/ -DZLIB_LIBRARIES=/usr/local/opt/zlib/lib/ .. && make -j4'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-                                echo 'Testing failed'
-                                currentBuild.result = 'UNSTABLE'
-                            }
-                        }
-                    }
-                }
-
                 stage('Windows X64 with vcpkg') {
 
                     agent {label 'windows'}
