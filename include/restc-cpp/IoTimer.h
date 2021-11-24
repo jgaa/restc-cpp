@@ -126,7 +126,11 @@ public:
                         RESTC_CPP_LOG_TRACE_("Timer " << timerName << ": "
                             << *connection
                             << " timed out.");
-                        connection->GetSocket().Close(Socket::Reason::TIME_OUT);
+                        try {
+                            connection->GetSocket().Close(Socket::Reason::TIME_OUT);
+                        } catch(std::exception& ex) {
+                            RESTC_CPP_LOG_WARN_("Caught exception while closing socket: " << ex.what());
+                        }
                     }
                 }
             }));
