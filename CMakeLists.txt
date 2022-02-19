@@ -58,6 +58,11 @@ option(RESTC_CPP_USE_CPP17 "Use the C++17 standard" OFF)
 
 option(RESTC_CPP_THREADED_CTX "Allow asio contextx with multiple therads. Enables thread-safe internal access." OFF)
 
+option(RESTC_CPP_SILENCE_BOOST_DEPRICATED_MESSAGES "Allows us to avoid warnings (mostly) because asio is not updated between boost versions" ON)
+if(RESTC_CPP_SILENCE_BOOST_DEPRICATED_MESSAGES)
+    add_definitions(-DBOOST_ALLOW_DEPRECATED_HEADERS=1)
+endif()
+
 if (NOT DEFINED RESTC_CPP_MAX_INPUT_BUFFER_LENGTH)
     set (RESTC_CPP_MAX_INPUT_BUFFER_LENGTH 0x7fffffff)
 endif()
