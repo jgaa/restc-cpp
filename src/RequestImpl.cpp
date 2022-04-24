@@ -138,7 +138,6 @@ public:
         return bytes_sent_ - header_size_;
     }
 
-
     unique_ptr<Reply> Execute(Context& ctx) override {
         int redirects = 0;
         while(true) {
@@ -292,9 +291,91 @@ private:
         dirty_ = true;
     }
 
+    template <typename protocolT>
+    boost::asio::ip::tcp::endpoint ToEp(const std::string& endp,
+                                        const protocolT& protocol,
+                                        Context& ctx) const {
+        string host, port;
+
+        auto endipv6 = endp.find(']');
+        if (endipv6 == string::npos) {
+            endipv6 = 0;
+        }
+        const auto pos = endp.find(':', endipv6);
+        if (pos == string::npos) {
+            host = endp;
+        } else {
+            host = endp.substr(0, pos);
+            if (endp.size() > pos) {
+                port = endp.substr(pos + 1);
+            }
+        }
+
+        // Strip IPv6 brackets, asio can't resolve it
+        if (endipv6 && !host.empty() && host.front() == '[') {
+            host = host.substr(1, endipv6 -1);
+        }
+
+        RESTC_CPP_LOG_TRACE_("host=" << host << ", port=" << port);
+
+        if (host.empty()) {
+            const auto port_num = stoi(port);
+            if (port_num < 1 || port_num > std::numeric_limits<uint16_t>::max()) {
+                throw RestcCppException{"Port number out of range: "s + port};
+            }
+            return {protocol, static_cast<uint16_t>(port_num)};
+        }
+
+        boost::asio::ip::tcp::resolver::query q{host, port};
+        boost::asio::ip::tcp::resolver resolver(owner_.GetIoService());
+
+        auto ep = resolver.async_resolve(q, ctx.GetYield());
+        const decltype(ep) addr_end;
+        for(; ep != addr_end; ++ep)
+        if (ep != addr_end) {
+
+            RESTC_CPP_LOG_TRACE_("ep=" << ep->endpoint() << ", protocol=" << ep->endpoint().protocol().protocol());
+
+            if (protocol == ep->endpoint().protocol()) {
+                return ep->endpoint();
+            }
+
+            RESTC_CPP_LOG_TRACE_("Incorrect protocol, looping for next alternative");
+        }
+
+        RESTC_CPP_LOG_ERROR_("Failed to resolve endpoint " << endp
+                             << " with protocol " << protocol.protocol());
+        throw FailedToResolveEndpointException{"Failed to resolve endpoint: "s + endp};
+    }
+
+
+    auto GetBindProtocols(const std::string& endp, Context& ctx) {
+        std::vector<decltype(boost::asio::ip::tcp::v4())> p;
+
+        if (!endp.empty()) {
+            try {
+                ToEp(endp, boost::asio::ip::tcp::v4(), ctx);
+                p.push_back(boost::asio::ip::tcp::v4());
+            } catch (const FailedToResolveEndpointException&) {
+                ;
+            }
+
+            try {
+                ToEp(endp, boost::asio::ip::tcp::v6(), ctx);
+                p.push_back(boost::asio::ip::tcp::v6());
+            } catch (const FailedToResolveEndpointException&) {
+                ;
+            }
+        }
+
+        return p;
+    }
+
     Connection::ptr_t Connect(Context& ctx) {
 
         static const auto timer_name = "Connect"s;
+
+        auto prot_filter = GetBindProtocols(properties_->bindToLocalAddress, ctx);
 
         const Connection::Type protocol_type =
             (parsed_url_.GetProtocol() == Url::Protocol::HTTPS)
@@ -325,6 +406,39 @@ private:
             if (!connection->GetSocket().IsOpen()) {
 
                 RESTC_CPP_LOG_DEBUG_("Connecting to " << endpoint);
+
+                if (!properties_->bindToLocalAddress.empty()) {
+
+                    // Only connect outwards to protocols we can bind to
+                    if (!prot_filter.empty()) {
+                        if (std::find(prot_filter.begin(), prot_filter.end(), endpoint.protocol())
+                                == prot_filter.end()) {
+                            RESTC_CPP_LOG_TRACE_("Filtered out (protocol mismatch) local address: "
+                                << properties_->bindToLocalAddress);
+                            continue;
+                        }
+                    }
+
+                    RESTC_CPP_LOG_TRACE_("Binding to local address: "
+                        << properties_->bindToLocalAddress);
+
+                    boost::system::error_code ec;
+                    auto local_ep = ToEp(properties_->bindToLocalAddress, endpoint.protocol(), ctx);
+                    auto& sck = connection->GetSocket().GetSocket();
+                    sck.open(local_ep.protocol());
+                    sck.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+                    sck.bind(local_ep, ec);
+
+                    if (ec) {
+                        RESTC_CPP_LOG_ERROR_("Failed to bind to local address '"
+                            << local_ep
+                            << "': " << ec.message());
+
+                        sck.close();
+                        throw RestcCppException{"Failed to bind to local address: "s
+                                                + properties_->bindToLocalAddress};
+                    }
+                }
 
                 auto timer = IoTimer::Create(timer_name,
                     properties_->connectTimeoutMs, connection);
