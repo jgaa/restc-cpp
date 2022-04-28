@@ -250,7 +250,6 @@ Please refer to the [tutorial](doc/Tutorial.md) for more examples.
 # Current Status
 The project has been in public BETA since April 11th 2017.
 
-
 # Supported operating systems
 These are the operating systems where my Continues Integration (Jenkins) servers currently compiles the project and run all the tests:
 
@@ -269,7 +268,7 @@ Fedora is currently disabled in my CI because of failures to start their Docker 
 
 The Jenkins setup is [here](ci/jenkins).
 
-I currently use my own CI infrastructure using my own hardware. I use Jenkins on a VM with Debian Bullseye, and three slaves for Docker on Linux VM's, one slave running on a VM with Microsoft Windows 10 Pro. Using Docker to build with different Linux distributions gives me flexibility. It also immediately catches mistakes that break the build or test(s) on a specific Linux distribution or platform. 
+I currently use my own CI infrastructure running on my own hardware. I use Jenkins on a VM with Debian Bullseye, and three slaves for Docker on Linux VM's, one slave running on a VM with Microsoft Windows 10 Pro. Using Docker to build with different Linux distributions gives me flexibility. It also immediately catches mistakes that break the build or test(s) on a specific Linux distribution or platform. 
 
 # Blog-posts about the project:
   - [About version 0.90](https://lastviking.eu/restc_cpp_90.html)
@@ -281,7 +280,6 @@ I currently use my own CI infrastructure using my own hardware. I use Jenkins on
   - [JSON for Modern C++](https://nlohmann.github.io/json/) by Niels Lohmann. My favorite json library, when I need to more than just static serialization.
   - [json11 - tiny JSON library for C++11, providing JSON parsing and serialization](https://github.com/dropbox/json11)
 
-  
 # More information
 - [Getting started](doc/GettingStarted.md)
 - [Tutorial](doc/Tutorial.md)
