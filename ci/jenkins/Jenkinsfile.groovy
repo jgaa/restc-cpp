@@ -22,66 +22,67 @@ pipeline {
 
         stage('Build') {
            parallel {
-              # Unfortunately, Ubuntu Hippo cannot run 'apt update' using docker from the
-              # current Debian release version. So fuck Ubuntu Hippo. 
-
-                stage('Ubuntu Hippo') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockefile.ubuntu-hippo'
-                            dir 'ci/jenkins'
-                            label 'docker'
-                        }
-                    }
-
-                    steps {
-                        echo "Building on ubuntu-bionic-AMD64 in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-                                echo 'Testing failed'
-                                currentBuild.result = 'UNSTABLE'
-                            }
-                        }
-                    }
-                }
-                
-                stage('Ubuntu Hippo C++17') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockefile.ubuntu-hippo'
-                            dir 'ci/jenkins'
-                            label 'docker'
-                        }
-                    }
-
-                    steps {
-                        echo "Building on ubuntu-bionic-AMD64 in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-                                echo 'Testing failed'
-                                currentBuild.result = 'UNSTABLE'
-                            }
-                        }
-                    }
-                }
+//               # Unfortunately, Ubuntu Hippo cannot run 'apt update' using docker from the
+//               # current Debian release version. So fuck Ubuntu Hippo. 
+//
+//                 stage('Ubuntu Hippo') {
+//                     agent {
+//                         dockerfile {
+//                             filename 'Dockefile.ubuntu-hippo'
+//                             dir 'ci/jenkins'
+//                             label 'docker'
+//                         }
+//                     }
+// 
+//                     steps {
+//                         echo "Building on ubuntu-bionic-AMD64 in ${WORKSPACE}"
+//                         checkout scm
+//                         sh 'pwd; ls -la'
+//                         sh 'rm -rf build'
+//                         sh 'mkdir build'
+//                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
+// 
+//                         echo 'Getting ready to run tests'
+//                         script {
+//                             try {
+//                                 sh 'cd build && ctest --no-compress-output -T Test'
+//                             } catch (exc) {
+//                                 echo 'Testing failed'
+//                                 currentBuild.result = 'UNSTABLE'
+//                             }
+//                         }
+//                     }
+//                 }
+//                 
+//                  
+//                 stage('Ubuntu Hippo C++17') {
+//                     agent {
+//                         dockerfile {
+//                             filename 'Dockefile.ubuntu-hippo'
+//                             dir 'ci/jenkins'
+//                             label 'docker'
+//                         }
+//                     }
+// 
+//                     steps {
+//                         echo "Building on ubuntu-bionic-AMD64 in ${WORKSPACE}"
+//                         checkout scm
+//                         sh 'pwd; ls -la'
+//                         sh 'rm -rf build'
+//                         sh 'mkdir build'
+//                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+// 
+//                         echo 'Getting ready to run tests'
+//                         script {
+//                             try {
+//                                 sh 'cd build && ctest --no-compress-output -T Test'
+//                             } catch (exc) {
+//                                 echo 'Testing failed'
+//                                 currentBuild.result = 'UNSTABLE'
+//                             }
+//                         }
+//                     }
+//                 }
                 
                 stage('Ubuntu Bionic') {
                     agent {
