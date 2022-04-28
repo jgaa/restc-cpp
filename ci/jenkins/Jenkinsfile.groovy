@@ -9,7 +9,7 @@ pipeline {
         // It is not possible to get the current IP number when running in the sandbox, and
         // Jenkinsfiles always runs in the sandbox.
         // For simplicity, I just put it here (I already wasted 3 hours on this)
-        RESTC_CPP_TEST_DOCKER_ADDRESS="192.168.1.180"
+        RESTC_CPP_TEST_DOCKER_ADDRESS="192.168.1.131"
     }
 
     stages {
