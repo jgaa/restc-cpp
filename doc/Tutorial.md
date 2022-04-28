@@ -895,7 +895,7 @@ machine (or container) running application where restc-cpp is used. Restc-cpp wi
 choose a local IP (returned from the DNS server) with a protocol matching the outgoing 
 request (if possible).
 
-For simple use, you can just specify the local IP for the machine. Restc-cpp will try top 
+For simple use, you can just specify the local IP for the machine. Restc-cpp will try to
 connect using the same TCP/IP protocol (ipv4/ipv6) that you bind to if the dns lookup provides that
 protocol.
 
