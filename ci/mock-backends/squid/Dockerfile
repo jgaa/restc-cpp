@@ -1,4 +1,4 @@
-FROM debian
+FROM debian:buster
 MAINTAINER jarle@jgaa.com
 
 RUN apt-get update \
