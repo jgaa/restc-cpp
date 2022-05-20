@@ -155,6 +155,12 @@ struct RequestTimeOutException : public RestcCppException
     : RestcCppException("Request Timed Out") {}
 };
 
+struct FailedToResolveEndpointException : public RestcCppException
+{
+    FailedToResolveEndpointException(const std::string& what)
+    : RestcCppException(what) {}
+};
+
 } // namespace
 #endif // RESTC_CPP_ERROR_H_
 

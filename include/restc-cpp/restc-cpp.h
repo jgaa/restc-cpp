@@ -173,6 +173,7 @@ public:
         redirect_fn_t redirectFn;
         general_callback_t beforeWriteFn;
         general_callback_t afterWriteFn;
+        std::string bindToLocalAddress; // host:port
     };
 
     virtual const Properties& GetProperties() const = 0;

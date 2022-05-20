@@ -553,6 +553,18 @@ void thirtheenth() {
     });
 }
 
+void fourteenth() {
+    Request::Properties properties;
+    //properties.bindToLocalAddress = "127.0.0.1:";
+    properties.bindToLocalAddress = ":12345";
+    //properties.bindToLocalAddress = "[::1]:12345";
+    //properties.bindToLocalAddress = "localhost:12345";
+    auto rest_client = RestClient::Create(properties);
+
+    // Call DoSomethingInteresting as a co-routine in a worker-thread.
+    rest_client->Process(DoSomethingInteresting);
+}
+
 int main() {
 
 #ifdef RESTC_CPP_LOG_WITH_BOOST_LOG
@@ -602,6 +614,9 @@ int main() {
 
         cout << "Thirtheenth: " << endl;
         thirtheenth();
+
+        cout << "Fourteenth: " << endl;
+        fourteenth();
 
     } catch(const exception& ex) {
         cerr << "Something threw up: " << ex.what() << endl;

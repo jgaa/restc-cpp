@@ -877,3 +877,46 @@ main() {
 
 ```
 
+## Binding to a local address and/or port
+
+The TCP protocol allows you to bind a connection to a local IP address and/or port.
+
+Restc-cpp can do this, using the `bindToLocalAddress` property in the client. 
+
+If you use this setting, it must be consistent within the scoppe of the client. 
+The client instance maintains a connection pool, and if you change this setting, 
+the local bind address used to a request may become inconsistant.
+
+You can bind to any IPv4 or IPv6 address on your machine, or use a hostname that 
+may be resolved from a DNS server, providing both IPv4 and IPv6 addresses for the name. (This
+is probably most relevant for advanced server setups). If you use a fqdn via a DNS server with
+multiple addresses and protocols, all the addresses and protocols must be configured for the
+machine (or container) running application where restc-cpp is used. Restc-cpp will
+choose a local IP (returned from the DNS server) with a protocol matching the outgoing 
+request (if possible).
+
+For simple use, you can just specify the local IP for the machine. Restc-cpp will try to
+connect using the same TCP/IP protocol (ipv4/ipv6) that you bind to if the dns lookup provides that
+protocol.
+
+You can also bind to a specific port, without specifying the IP.
+
+Examples:
+- `127.0.0.1:12341`: Use IPv4 localhost with port 12345.
+- `[::1]:12345`: Use IPv6 localhost with port 12345.
+- `:12345`: Use the default IP, but bind to port 12345.
+- `127.0.0.1`: Bind to IPv4 localhost, let the operating system choose a port.
+
+
+
+How to use local binding in your code.
+```C++
+
+    Request::Properties properties;
+    properties.bindToLocalAddress = ":12345";
+    auto rest_client = RestClient::Create(properties);
+
+    // Call DoSomethingInteresting as a co-routine in a worker-thread.
+    rest_client->Process(DoSomethingInteresting);
+    
+```
