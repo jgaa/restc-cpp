@@ -46,6 +46,8 @@ option(RESTC_CPP_WITH_TLS "Enable TLS (Trough OpenSSL)" ON)
 
 option(RESTC_CPP_LOG_WITH_BOOST_LOG "Use boost::log for logging" ON)
 
+option(RESTC_CPP_LOG_WITH_LOGFAULT "Use logfault for logging" OFF)
+
 option(RESTC_CPP_LOG_WITH_CLOG "Use std::clog for logging" OFF)
 
 set(RESTC_CPP_LOG_LEVEL_STR "info" CACHE STRING "Limit logs to: none, error, warn, info, debug, trace")
@@ -154,7 +156,17 @@ target_include_directories(${PROJECT_NAME}
 
 SET_CPP_STANDARD(${PROJECT_NAME})
 
-add_dependencies(${PROJECT_NAME} externalRapidJson)
+if (RESTC_CPP_LOG_WITH_LOGFAULT)
+    find_path(LOGFAULT logfault/logfault.h)
+    if (LOGFAULT)
+        message ("Using existing logfault")
+    else()
+        message ("Embedding logfault header only library")
+        set(RESTC_CPP_EXTERNAL_DEPS ${RESTC_CPP_EXTERNAL_DEPS} externalLogfault)
+    endif()
+endif()
+
+add_dependencies(${PROJECT_NAME} externalRapidJson ${RESTC_CPP_EXTERNAL_DEPS})
 
 if (NOT EMBEDDED_RESTC_CPP)
 
@@ -177,16 +189,28 @@ if (NOT EMBEDDED_RESTC_CPP)
         target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_THREAD_LIBS_INIT})
     endif()
 
-    if (RESTC_CPP_LOG_WITH_BOOST_LOG AND RESTC_CPP_LOG_WITH_CLOG)
-        message( FATAL_ERROR "You cannot use Boost.Log and std::clog together. Cgoose one (or none)")
-    endif()
-
     if (RESTC_CPP_LOG_WITH_BOOST_LOG)
+        if (RESTC_CPP_LOG_WITH_LOGFAULT OR RESTC_CPP_LOG_WITH_CLOG)
+            message( FATAL_ERROR "You must use RESTC_CPP_LOG_WITH_BOOST_LOG or RESTC_CPP_LOG_WITH_LOGFAULT or RESTC_CPP_LOG_WITH_LOGFAULT or neither")
+        endif()
         set(BOOST_LOG_DEP log)
+        add_definitions(-DRESTC_CPP_LOG_WITH_BOOST_LOG)
         message(STATUS "Using Boost.Log for logging (brace for horrors!)")
     endif()
 
+    if (RESTC_CPP_LOG_WITH_LOGFAULT)
+        if (RESTC_CPP_LOG_WITH_BOOST_LOG OR RESTC_CPP_LOG_WITH_CLOG)
+            message( FATAL_ERROR "You must use RESTC_CPP_LOG_WITH_BOOST_LOG or RESTC_CPP_LOG_WITH_LOGFAULT or RESTC_CPP_LOG_WITH_LOGFAULT or neither")
+        endif()
+        add_definitions(-DRESTC_CPP_LOG_WITH_LOGFAULT)
+        message(STATUS "Using restc for logging")
+    endif()
+
     if (RESTC_CPP_LOG_WITH_CLOG)
+        if (RESTC_CPP_LOG_WITH_BOOST_LOG OR RESTC_CPP_LOG_WITH_LOGFAULT)
+            message( FATAL_ERROR "You must use RESTC_CPP_LOG_WITH_BOOST_LOG or RESTC_CPP_LOG_WITH_LOGFAULT or RESTC_CPP_LOG_WITH_LOGFAULT or neither")
+        endif()
+        add_definitions(-DRESTC_CPP_LOG_WITH_CLOG)
         message(STATUS "Using std::clog for logging")
     endif()
         

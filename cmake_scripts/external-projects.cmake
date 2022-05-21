@@ -35,6 +35,13 @@ ExternalProject_Add(
     LOG_INSTALL ON
     )
 
+ExternalProject_Add(externalLogfault
+    PREFIX "${EXTERNAL_PROJECTS_PREFIX}"
+    GIT_REPOSITORY "https://github.com/jgaa/logfault.git"
+    GIT_TAG "master"
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_INSTALL_PREFIX}
+    )
+
 message(STATUS "EXTERNAL_RAPIDJSON_INCLUDE_DIR: ${EXTERNAL_RAPIDJSON_INCLUDE_DIR}")
 
 if (INSTALL_RAPIDJSON_HEADERS)
@@ -45,3 +52,5 @@ include_directories(
      ${EXTERNAL_PROJECTS_PREFIX}/src/externalRapidJson/include
      ${EXTERNAL_PROJECTS_PREFIX}/src/externalLest/include/
     )
+
+include_directories($<BUILD_INTERFACE:${EXTERNAL_PROJECTS_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}>)

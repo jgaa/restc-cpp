@@ -9,7 +9,6 @@
  *
  */
 
-
 #include "restc-cpp/config.h"
 
 #ifdef RESTC_CPP_LOG_WITH_BOOST_LOG
@@ -18,13 +17,70 @@
 #	define BOOST_LOG_DYN_LINK 1
 #endif
 
+#include <iostream>
+#include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
+#include <boost/log/expressions.hpp>
 
 #define RESTC_CPP_LOG_ERROR_(msg)     BOOST_LOG_TRIVIAL(error) << msg
 #define RESTC_CPP_LOG_WARN_(msg)      BOOST_LOG_TRIVIAL(warning) << msg
 #define RESTC_CPP_LOG_INFO_(msg)      BOOST_LOG_TRIVIAL(info) << msg
 #define RESTC_CPP_LOG_DEBUG_(msg)     BOOST_LOG_TRIVIAL(debug) << msg
 #define RESTC_CPP_LOG_TRACE_(msg)     BOOST_LOG_TRIVIAL(trace) << msg
+
+#define RESTC_CPP_TEST_LOGGING_SETUP(level) RestcCppTestStartLogger(level)
+
+inline void RestcCppTestStartLogger(const std::string& level = "info") {
+    auto llevel = boost::log::trivial::info;
+    if (level == "debug") {
+        llevel = boost::log::trivial::debug;
+    } else if (level == "trace") {
+        llevel = boost::log::trivial::trace;
+    } else if (level == "info") {
+        ;  // Do nothing
+    } else {
+        std::cerr << "Unknown log-level: " << level << std::endl;
+        return;
+    }
+
+    boost::log::core::get()->set_filter
+    (
+        boost::log::trivial::severity >= llevel
+    );
+}
+
+#elif defined RESTC_CPP_LOG_WITH_LOGFAULT
+
+#include <iostream>
+#include <memory>
+#include "logfault/logfault.h"
+
+#define RESTC_CPP_LOG_ERROR_(msg)     LFLOG_ERROR << msg
+#define RESTC_CPP_LOG_WARN_(msg)      LFLOG_WARN << msg
+#define RESTC_CPP_LOG_INFO_(msg)      LFLOG_INFO << msg
+#define RESTC_CPP_LOG_DEBUG_(msg)     LFLOG_DEBUG << msg
+#define RESTC_CPP_LOG_TRACE_(msg)     LFLOG_TRACE << msg
+
+#define RESTC_CPP_TEST_LOGGING_INCLUDE
+#define RESTC_CPP_TEST_LOGGING_SETUP(level) RestcCppTestStartLogger(level)
+
+inline void RestcCppTestStartLogger(const std::string& level = "info") {
+    auto llevel = logfault::LogLevel::INFO;
+    if (level == "debug") {
+        llevel = logfault::LogLevel::DEBUGGING;
+    } else if (level == "trace") {
+        llevel = logfault::LogLevel::TRACE;
+    } else if (level == "info") {
+        ;  // Do nothing
+    } else {
+        std::cerr << "Unknown log-level: " << level << std::endl;
+        return;
+    }
+
+    logfault::LogManager::Instance().AddHandler(
+                std::make_unique<logfault::StreamHandler>(std::clog, llevel));
+}
+
 
 #elif defined RESTC_CPP_LOG_WITH_CLOG
 
@@ -103,5 +159,4 @@
 #   undef RESTC_CPP_LOG_ERROR_
 #   define RESTC_CPP_LOG_ERROR_(msg)
 #endif
-
 
