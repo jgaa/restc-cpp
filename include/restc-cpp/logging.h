@@ -86,6 +86,8 @@ inline void RestcCppTestStartLogger(const std::string& level = "info") {
 
 #include <iostream>
 
+#define RESTC_CPP_TEST_LOGGING_SETUP(level)
+
 #define RESTC_CPP_LOG_ERROR_(msg)     std::clog << "ERROR " << msg << std::endl
 #define RESTC_CPP_LOG_WARN_(msg)      std::clog << "WARN  " << msg << std::endl
 #define RESTC_CPP_LOG_INFO_(msg)      std::clog << "INFO  " << msg << std::endl
@@ -95,6 +97,8 @@ inline void RestcCppTestStartLogger(const std::string& level = "info") {
 
 #else
 // The user of the API framework may provide log macros, or we disable logs
+
+#define RESTC_CPP_TEST_LOGGING_SETUP(level)
 
 #   ifdef RESTC_CPP_LOG_ERROR
 #       define RESTC_CPP_LOG_ERROR_(msg)     RESTC_CPP_LOG_ERROR << msg

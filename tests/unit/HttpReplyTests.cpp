@@ -2,12 +2,6 @@
 // Include before boost::log headers
 #include "restc-cpp/logging.h"
 
-#ifdef RESTC_CPP_LOG_WITH_BOOST_LOG
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
-#endif
-
 #include "../src/ReplyImpl.h"
 
 #include "restc-cpp/test_helper.h"
@@ -479,16 +473,6 @@ STARTCASE(TestChunkedParameterAndTrailer)
 
 int main( int argc, char * argv[] )
 {
-#ifdef RESTC_CPP_LOG_WITH_BOOST_LOG
-    namespace logging = boost::log;
-    logging::core::get()->set_filter
-    (
-#ifdef _DEBUG
-        logging::trivial::severity >= logging::trivial::trace
-#else
-        logging::trivial::severity >= logging::trivial::fatal
-#endif
-    );
-#endif
+    RESTC_CPP_TEST_LOGGING_SETUP("debug");
     return lest::run( specification, argc, argv );
 }
