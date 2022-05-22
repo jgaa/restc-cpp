@@ -684,7 +684,7 @@ private:
 
              if (!recursed_to_) {
                  assert(!found);
-                 RESTC_CPP_LOG_DEBUG_("RecurseToMember(): Failed to find property-name '"
+                 RESTC_CPP_LOG_TRACE_("RecurseToMember(): Failed to find property-name '"
                      << current_name_
                      << "' in C++ class '" << RESTC_CPP_TYPENAME(dataT)
                      << "' when serializing from JSON.");
@@ -751,7 +751,7 @@ private:
 
              if (!found) {
                  assert(!found);
-                 RESTC_CPP_LOG_DEBUG_("SetValueOnMember(): Failed to find property-name '"
+                 RESTC_CPP_LOG_TRACE_("SetValueOnMember(): Failed to find property-name '"
                      << current_name_
                      << "' in C++ class '" << RESTC_CPP_TYPENAME(dataT)
                      << "' when serializing from JSON.");
