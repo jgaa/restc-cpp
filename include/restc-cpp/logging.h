@@ -20,6 +20,7 @@
 #include <chrono>
 #include <thread>
 #include <iomanip>
+#include <array>
 
 namespace restc_cpp  {
 
