@@ -25,7 +25,7 @@ namespace restc_cpp  {
 
 enum class LogLevel {
     MUTED, // Don't log anything at this level
-    ERROR,
+    LERROR,  // Thank you Microsoft, for polluting the global namespace with all your crap
     WARNING,
     INFO,
     DEBUG,
@@ -98,7 +98,7 @@ private:
 
 #define RESTC_CPP_LOG_EVENT(level, msg) Logger::Instance().Relevant(level) && LogEvent{level}.Event() << msg
 
-#define RESTC_CPP_LOG_ERROR_(msg)     RESTC_CPP_LOG_EVENT(LogLevel::ERROR, msg)
+#define RESTC_CPP_LOG_ERROR_(msg)     RESTC_CPP_LOG_EVENT(LogLevel::LERROR, msg)
 #define RESTC_CPP_LOG_WARN_(msg)      RESTC_CPP_LOG_EVENT(LogLevel::WARNING, msg)
 #define RESTC_CPP_LOG_INFO_(msg)      RESTC_CPP_LOG_EVENT(LogLevel::INFO, msg)
 #define RESTC_CPP_LOG_DEBUG_(msg)     RESTC_CPP_LOG_EVENT(LogLevel::DEBUG, msg)
