@@ -50,7 +50,6 @@ endif()
 
 include_directories(
      ${EXTERNAL_PROJECTS_PREFIX}/src/externalRapidJson/include
-     ${EXTERNAL_PROJECTS_PREFIX}/src/externalLest/include/
+     ${EXTERNAL_PROJECTS_PREFIX}/src/externalLest/include
+     ${EXTERNAL_PROJECTS_PREFIX}/installed/include
     )
-
-include_directories($<BUILD_INTERFACE:${EXTERNAL_PROJECTS_INSTALL_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}>)
