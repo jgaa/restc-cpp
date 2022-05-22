@@ -230,7 +230,7 @@ Please refer to the [tutorial](doc/Tutorial.md) for more examples.
 - Uses C++ / boost coroutines for application logic.
 - HTTP Redirects.
 - HTTP Basic Authentication.
-- Logging trough logfault, boost::log, std::clog trough your own log macros or via a callback to whatever log framework you use.
+- [Logging](doc/Logging.md) trough logfault, boost::log, std::clog or trough your own log macros or via a callback to whatever log framework you use.
 - Log-level for the library can be set at compile time (none, error, warn, info, debug, trace)
 - Connection Pool for fast re-use of existing server connections.
 - Compression (gzip, deflate).
