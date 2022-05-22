@@ -42,8 +42,9 @@ C++ HTTP Client from scratch. To see how this actually works, please see the
 
 Finally, in a world where the Internet is getting increasingly
 [dangerous](http://www.dailydot.com/layer8/bruce-schneier-internet-of-things/),
-and all kind of malicious parties, from your own government to international Mafia
-(with Putin in Moscow and the Clown in the White House, the differences is
+and all kind of malicious parties, from your own government to the international Mafia
+(with Putin in Moscow and other autocrats in parliaments and as head of state all over the world - 
+including USA, EU and Norway -, the differences is
 blurring out), search for vulnerabilities in your software stack to snoop, ddos,
 intercept and blackmail you and your customers/users - I have a strong emphasis
 on security in all software projects I'm involved in. I have limited the
