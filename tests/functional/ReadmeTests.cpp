@@ -8,12 +8,6 @@
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/IteratorFromJsonSerializer.h"
 
-#ifdef RESTC_CPP_LOG_WITH_BOOST_LOG
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
-#endif
-
 #include "restc-cpp/test_helper.h"
 #include "restc-cpp/RequestBuilder.h"
 
@@ -553,15 +547,21 @@ void thirtheenth() {
     });
 }
 
+void fourteenth() {
+    Request::Properties properties;
+    //properties.bindToLocalAddress = "127.0.0.1:";
+    properties.bindToLocalAddress = ":12345";
+    //properties.bindToLocalAddress = "[::1]:12345";
+    //properties.bindToLocalAddress = "localhost:12345";
+    auto rest_client = RestClient::Create(properties);
+
+    // Call DoSomethingInteresting as a co-routine in a worker-thread.
+    rest_client->Process(DoSomethingInteresting);
+}
+
 int main() {
 
-#ifdef RESTC_CPP_LOG_WITH_BOOST_LOG
-    namespace logging = boost::log;
-    logging::core::get()->set_filter
-    (
-        logging::trivial::severity >= logging::trivial::debug
-    );
-#endif
+    RESTC_CPP_TEST_LOGGING_SETUP("debug");
 
     try {
         /*cout << "First: " << endl;
@@ -602,6 +602,9 @@ int main() {
 
         cout << "Thirtheenth: " << endl;
         thirtheenth();
+
+        cout << "Fourteenth: " << endl;
+        fourteenth();
 
     } catch(const exception& ex) {
         cerr << "Something threw up: " << ex.what() << endl;

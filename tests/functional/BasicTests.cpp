@@ -1,14 +1,7 @@
 
 #include <iostream>
 
-// Include before boost::log headers
 #include "restc-cpp/logging.h"
-
-#ifdef RESTC_CPP_LOG_WITH_BOOST_LOG
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
-#endif
 
 #include <boost/lexical_cast.hpp>
 #include <boost/fusion/adapted.hpp>
@@ -124,13 +117,7 @@ void DoSomethingInteresting(Context& ctx) {
 
 int main(int argc, char *argv[]) {
 
-#ifdef RESTC_CPP_LOG_WITH_BOOST_LOG
-    namespace logging = boost::log;
-    logging::core::get()->set_filter
-    (
-        logging::trivial::severity >= logging::trivial::trace
-    );
-#endif
+    RESTC_CPP_TEST_LOGGING_SETUP("debug");
 
     try {
         auto rest_client = RestClient::Create();
