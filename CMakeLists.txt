@@ -44,7 +44,9 @@ option(RESTC_CPP_WITH_FUNCTIONALT_TESTS "Enable Functional Testing" ON)
 
 option(RESTC_CPP_WITH_TLS "Enable TLS (Trough OpenSSL)" ON)
 
-option(RESTC_CPP_LOG_WITH_BOOST_LOG "Use boost::log for logging" ON)
+option(RESTC_CPP_LOG_WITH_INTERNAL_LOG "Use internal log handler" ON)
+
+option(RESTC_CPP_LOG_WITH_BOOST_LOG "Use boost::log for logging" OFF)
 
 option(RESTC_CPP_LOG_WITH_LOGFAULT "Use logfault for logging" OFF)
 
@@ -93,6 +95,40 @@ else()
     message(FATAL_ERROR "Unsupported log level ${RESTC_CPP_LOG_LEVEL_STR}")
 endif()
 
+if (RESTC_CPP_LOG_WITH_INTERNAL_LOG)
+    if (RESTC_CPP_LOG_WITH_BOOST_LOG OR RESTC_CPP_LOG_WITH_LOGFAULT OR RESTC_CPP_LOG_WITH_CLOG)
+        message( FATAL_ERROR "You must use RESTC_CPP_LOG_WITH_BOOST_LOG or RESTC_CPP_LOG_WITH_LOGFAULT or RESTC_CPP_LOG_WITH_LOGFAULT or neither")
+    endif()
+    set(BOOST_LOG_DEP log)
+    add_definitions(-DRESTC_CPP_LOG_WITH_INTERNAL_LOG)
+    message(STATUS "Using internal log handler")
+    set(LOGGING_SRC src/logging.cpp)
+endif()
+
+if (RESTC_CPP_LOG_WITH_BOOST_LOG)
+    if (RESTC_CPP_LOG_WITH_LOGFAULT OR RESTC_CPP_LOG_WITH_CLOG OR RESTC_CPP_LOG_WITH_INTERNAL_LOG)
+        message( FATAL_ERROR "You must use RESTC_CPP_LOG_WITH_BOOST_LOG or RESTC_CPP_LOG_WITH_LOGFAULT or RESTC_CPP_LOG_WITH_LOGFAULT or neither")
+    endif()
+    set(BOOST_LOG_DEP log)
+    add_definitions(-DRESTC_CPP_LOG_WITH_BOOST_LOG)
+    message(STATUS "Using Boost.Log for logging (brace for horrors!)")
+endif()
+
+if (RESTC_CPP_LOG_WITH_LOGFAULT)
+    if (RESTC_CPP_LOG_WITH_BOOST_LOG OR RESTC_CPP_LOG_WITH_CLOG OR RESTC_CPP_LOG_WITH_INTERNAL_LOG)
+        message( FATAL_ERROR "You must use RESTC_CPP_LOG_WITH_BOOST_LOG or RESTC_CPP_LOG_WITH_LOGFAULT or RESTC_CPP_LOG_WITH_LOGFAULT or neither")
+    endif()
+    add_definitions(-DRESTC_CPP_LOG_WITH_LOGFAULT)
+    message(STATUS "Using restc for logging")
+endif()
+
+if (RESTC_CPP_LOG_WITH_CLOG)
+    if (RESTC_CPP_LOG_WITH_BOOST_LOG OR RESTC_CPP_LOG_WITH_LOGFAULT OR RESTC_CPP_LOG_WITH_INTERNAL_LOG)
+        message( FATAL_ERROR "You must use RESTC_CPP_LOG_WITH_BOOST_LOG or RESTC_CPP_LOG_WITH_LOGFAULT or RESTC_CPP_LOG_WITH_LOGFAULT or neither")
+    endif()
+    add_definitions(-DRESTC_CPP_LOG_WITH_CLOG)
+    message(STATUS "Using std::clog for logging")
+endif()
 
 message(STATUS "Using ${CMAKE_CXX_COMPILER}")
 
@@ -126,6 +162,7 @@ set(ACTUAL_SOURCES
     src/RequestBodyStringImpl.cpp
     src/RequestBodyFileImpl.cpp
     src/url_encode.cpp
+    ${LOGGING_SRC}
     )
 
 set(HEADERS
@@ -189,30 +226,6 @@ if (NOT EMBEDDED_RESTC_CPP)
         target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_THREAD_LIBS_INIT})
     endif()
 
-    if (RESTC_CPP_LOG_WITH_BOOST_LOG)
-        if (RESTC_CPP_LOG_WITH_LOGFAULT OR RESTC_CPP_LOG_WITH_CLOG)
-            message( FATAL_ERROR "You must use RESTC_CPP_LOG_WITH_BOOST_LOG or RESTC_CPP_LOG_WITH_LOGFAULT or RESTC_CPP_LOG_WITH_LOGFAULT or neither")
-        endif()
-        set(BOOST_LOG_DEP log)
-        add_definitions(-DRESTC_CPP_LOG_WITH_BOOST_LOG)
-        message(STATUS "Using Boost.Log for logging (brace for horrors!)")
-    endif()
-
-    if (RESTC_CPP_LOG_WITH_LOGFAULT)
-        if (RESTC_CPP_LOG_WITH_BOOST_LOG OR RESTC_CPP_LOG_WITH_CLOG)
-            message( FATAL_ERROR "You must use RESTC_CPP_LOG_WITH_BOOST_LOG or RESTC_CPP_LOG_WITH_LOGFAULT or RESTC_CPP_LOG_WITH_LOGFAULT or neither")
-        endif()
-        add_definitions(-DRESTC_CPP_LOG_WITH_LOGFAULT)
-        message(STATUS "Using restc for logging")
-    endif()
-
-    if (RESTC_CPP_LOG_WITH_CLOG)
-        if (RESTC_CPP_LOG_WITH_BOOST_LOG OR RESTC_CPP_LOG_WITH_LOGFAULT)
-            message( FATAL_ERROR "You must use RESTC_CPP_LOG_WITH_BOOST_LOG or RESTC_CPP_LOG_WITH_LOGFAULT or RESTC_CPP_LOG_WITH_LOGFAULT or neither")
-        endif()
-        add_definitions(-DRESTC_CPP_LOG_WITH_CLOG)
-        message(STATUS "Using std::clog for logging")
-    endif()
         
     #set(Boost_USE_MULTITHREADED ON)
     find_package(Boost ${RESTC_BOOST_VERSION} REQUIRED COMPONENTS
