@@ -44,13 +44,17 @@ option(RESTC_CPP_WITH_FUNCTIONALT_TESTS "Enable Functional Testing" ON)
 
 option(RESTC_CPP_WITH_TLS "Enable TLS (Trough OpenSSL)" ON)
 
-option(RESTC_CPP_LOG_WITH_INTERNAL_LOG "Use internal log handler" ON)
+option(RESTC_CPP_LOG_WITH_INTERNAL_LOG "Use internal log handler" OFF)
 
 option(RESTC_CPP_LOG_WITH_BOOST_LOG "Use boost::log for logging" OFF)
 
 option(RESTC_CPP_LOG_WITH_LOGFAULT "Use logfault for logging" OFF)
 
 option(RESTC_CPP_LOG_WITH_CLOG "Use std::clog for logging" OFF)
+
+if (NOT RESTC_CPP_LOG_WITH_INTERNAL_LOG AND NOT RESTC_CPP_LOG_WITH_LOGFAULT AND NOT RESTC_CPP_LOG_WITH_BOOST_LOG AND NOT RESTC_CPP_LOG_WITH_CLOG)
+    set(RESTC_CPP_LOG_WITH_INTERNAL_LOG ON)
+endif()
 
 set(RESTC_CPP_LOG_LEVEL_STR "info" CACHE STRING "Limit logs to: none, error, warn, info, debug, trace")
 
@@ -97,7 +101,7 @@ endif()
 
 if (RESTC_CPP_LOG_WITH_INTERNAL_LOG)
     if (RESTC_CPP_LOG_WITH_BOOST_LOG OR RESTC_CPP_LOG_WITH_LOGFAULT OR RESTC_CPP_LOG_WITH_CLOG)
-        message( FATAL_ERROR "You must use RESTC_CPP_LOG_WITH_BOOST_LOG or RESTC_CPP_LOG_WITH_LOGFAULT or RESTC_CPP_LOG_WITH_LOGFAULT or neither")
+        message( FATAL_ERROR "You must use RESTC_CPP_LOG_WITH_BOOST_LOG or RESTC_CPP_LOG_WITH_LOGFAULT or RESTC_CPP_LOG_WITH_INTERNAL_LOG or neither")
     endif()
     set(BOOST_LOG_DEP log)
     message(STATUS "Using internal log handler")
@@ -106,7 +110,7 @@ endif()
 
 if (RESTC_CPP_LOG_WITH_BOOST_LOG)
     if (RESTC_CPP_LOG_WITH_LOGFAULT OR RESTC_CPP_LOG_WITH_CLOG OR RESTC_CPP_LOG_WITH_INTERNAL_LOG)
-        message( FATAL_ERROR "You must use RESTC_CPP_LOG_WITH_BOOST_LOG or RESTC_CPP_LOG_WITH_LOGFAULT or RESTC_CPP_LOG_WITH_LOGFAULT or neither")
+        message( FATAL_ERROR "You must use RESTC_CPP_LOG_WITH_BOOST_LOG or RESTC_CPP_LOG_WITH_LOGFAULT or RESTC_CPP_LOG_WITH_INTERNAL_LOG or neither")
     endif()
     set(BOOST_LOG_DEP log)
     message(STATUS "Using Boost.Log for logging (brace for horrors!)")
@@ -114,14 +118,14 @@ endif()
 
 if (RESTC_CPP_LOG_WITH_LOGFAULT)
     if (RESTC_CPP_LOG_WITH_BOOST_LOG OR RESTC_CPP_LOG_WITH_CLOG OR RESTC_CPP_LOG_WITH_INTERNAL_LOG)
-        message( FATAL_ERROR "You must use RESTC_CPP_LOG_WITH_BOOST_LOG or RESTC_CPP_LOG_WITH_LOGFAULT or RESTC_CPP_LOG_WITH_LOGFAULT or neither")
+        message( FATAL_ERROR "You must use RESTC_CPP_LOG_WITH_BOOST_LOG or RESTC_CPP_LOG_WITH_LOGFAULT or RESTC_CPP_LOG_WITH_INTERNAL_LOG or neither")
     endif()
     message(STATUS "Using restc for logging")
 endif()
 
 if (RESTC_CPP_LOG_WITH_CLOG)
     if (RESTC_CPP_LOG_WITH_BOOST_LOG OR RESTC_CPP_LOG_WITH_LOGFAULT OR RESTC_CPP_LOG_WITH_INTERNAL_LOG)
-        message( FATAL_ERROR "You must use RESTC_CPP_LOG_WITH_BOOST_LOG or RESTC_CPP_LOG_WITH_LOGFAULT or RESTC_CPP_LOG_WITH_LOGFAULT or neither")
+        message( FATAL_ERROR "You must use RESTC_CPP_LOG_WITH_BOOST_LOG or RESTC_CPP_LOG_WITH_LOGFAULT or RESTC_CPP_LOG_WITH_INTERNAL_LOG or neither")
     endif()
     message(STATUS "Using std::clog for logging")
 endif()
