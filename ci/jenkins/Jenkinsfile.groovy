@@ -94,7 +94,7 @@ pipeline {
                     }
                     
                     options {
-                        timeout(time: 10, unit: "MINUTES")
+                        timeout(time: 30, unit: "MINUTES")
                     }
 
                     steps {
@@ -127,7 +127,7 @@ pipeline {
                     }
                     
                     options {
-                        timeout(time: 10, unit: "MINUTES")
+                        timeout(time: 30, unit: "MINUTES")
                     }
 
                     steps {
@@ -160,7 +160,7 @@ pipeline {
                     }
                     
                     options {
-                        timeout(time: 10, unit: "MINUTES")
+                        timeout(time: 30, unit: "MINUTES")
                     }
 
                     steps {
@@ -193,7 +193,7 @@ pipeline {
                     }
                     
                     options {
-                        timeout(time: 10, unit: "MINUTES")
+                        timeout(time: 30, unit: "MINUTES")
                     }
 
                     steps {
@@ -226,7 +226,7 @@ pipeline {
                     }
                     
                     options {
-                        timeout(time: 10, unit: "MINUTES")
+                        timeout(time: 30, unit: "MINUTES")
                     }
 
                     steps {
@@ -259,7 +259,7 @@ pipeline {
                     }
                     
                     options {
-                        timeout(time: 10, unit: "MINUTES")
+                        timeout(time: 30, unit: "MINUTES")
                     }
 
                     steps {
@@ -292,7 +292,7 @@ pipeline {
                     }
                     
                     options {
-                        timeout(time: 10, unit: "MINUTES")
+                        timeout(time: 30, unit: "MINUTES")
                     }
 
                     steps {
@@ -325,7 +325,7 @@ pipeline {
                     }
                     
                     options {
-                        timeout(time: 10, unit: "MINUTES")
+                        timeout(time: 30, unit: "MINUTES")
                     }
 
                     steps {
@@ -358,7 +358,7 @@ pipeline {
                     }
                     
                     options {
-                        timeout(time: 10, unit: "MINUTES")
+                        timeout(time: 30, unit: "MINUTES")
                     }
 
                     steps {
@@ -391,7 +391,7 @@ pipeline {
                     }
                     
                     options {
-                        timeout(time: 10, unit: "MINUTES")
+                        timeout(time: 30, unit: "MINUTES")
                     }
 
                     steps {
@@ -425,7 +425,7 @@ pipeline {
                     }
                     
                     options {
-                        timeout(time: 10, unit: "MINUTES")
+                        timeout(time: 30, unit: "MINUTES")
                     }
 
                     steps {
@@ -458,7 +458,7 @@ pipeline {
                     }
                     
                     options {
-                        timeout(time: 10, unit: "MINUTES")
+                        timeout(time: 30, unit: "MINUTES")
                     }
 
                     steps {
@@ -492,7 +492,7 @@ pipeline {
 
                     
                     options {
-                        timeout(time: 10, unit: "MINUTES")
+                        timeout(time: 30, unit: "MINUTES")
                     }
                     
                     steps {
@@ -525,7 +525,7 @@ pipeline {
                     }
                     
                     options {
-                        timeout(time: 10, unit: "MINUTES")
+                        timeout(time: 30, unit: "MINUTES")
                     }
 
                     steps {
@@ -558,7 +558,7 @@ pipeline {
                     }
                     
                     options {
-                        timeout(time: 10, unit: "MINUTES")
+                        timeout(time: 30, unit: "MINUTES")
                     }
 
                     steps {
@@ -591,7 +591,7 @@ pipeline {
                     }
                     
                     options {
-                        timeout(time: 10, unit: "MINUTES")
+                        timeout(time: 30, unit: "MINUTES")
                     }
 
                     steps {
@@ -677,7 +677,7 @@ pipeline {
                     agent {label 'windows'}
                     
                     options {
-                        timeout(time: 10, unit: "MINUTES")
+                        timeout(time: 30, unit: "MINUTES")
                     }
 
                      steps {
@@ -720,7 +720,7 @@ pipeline {
                     agent {label 'windows'}
                     
                     options {
-                        timeout(time: 10, unit: "MINUTES")
+                        timeout(time: 30, unit: "MINUTES")
                     }
 
                      steps {
