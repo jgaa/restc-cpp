@@ -149,10 +149,6 @@ public:
     ConnectionPoolImpl(RestClient& owner)
     : owner_{owner}, properties_{owner.GetConnectionProperties()}
     , cache_cleanup_timer_{owner.GetIoService()}
-#ifdef RESTC_CPP_THREADED_CTX
-    , strand_{owner_.GetIoService()}
-#endif
-
     {
         on_release_ = [this](const Entry::ptr_t& entry) { OnRelease(entry); };
     }
@@ -179,15 +175,9 @@ public:
     }
 
     // Get ctx for internal, syncronized operations;
-#ifdef RESTC_CPP_THREADED_CTX
-    auto GetCtx() const {
-      return strand_;
-    }
-#else
     auto& GetCtx() const {
       return owner_.GetIoService();
     }
-#endif
 
     size_t GetIdleConnections() const override {
         LOCK_ALWAYS_;
@@ -403,9 +393,6 @@ private:
     boost::asio::deadline_timer cache_cleanup_timer_;
 
     mutable std::mutex mutex_;
-#ifdef RESTC_CPP_THREADED_CTX
-    boost::asio::io_context::strand strand_;
-#endif
 }; // ConnectionPoolImpl
 
 
