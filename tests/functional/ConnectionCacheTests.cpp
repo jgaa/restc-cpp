@@ -63,7 +63,7 @@ STARTCASE(TestConnectionClose) {
         }
 
         CHECK_EQUAL(0, static_cast<int>(
-            rest_client->GetConnectionPool()->GetIdleConnections().get()));
+            rest_client->GetConnectionPool()->GetIdleConnections()));
 
     }).get();
 } ENDCASE
@@ -125,11 +125,11 @@ STARTCASE(TestCleanupTimer) {
 
     }).get();
 
-    CHECK_EQUAL(1, static_cast<int>(pool->GetIdleConnections().get()));
+    CHECK_EQUAL(1, static_cast<int>(pool->GetIdleConnections()));
 
     std::this_thread::sleep_for(std::chrono::seconds(4));
 
-    CHECK_EQUAL(0, static_cast<int>(pool->GetIdleConnections().get()));
+    CHECK_EQUAL(0, static_cast<int>(pool->GetIdleConnections()));
 } ENDCASE
 
 STARTCASE(TestPrematureCloseNotRecycled) {
@@ -143,7 +143,7 @@ STARTCASE(TestPrematureCloseNotRecycled) {
         repl_one.reset();
 
         CHECK_EQUAL(0, static_cast<int>(
-            rest_client->GetConnectionPool()->GetIdleConnections().get()));
+            rest_client->GetConnectionPool()->GetIdleConnections()));
 
     }).get();
 } ENDCASE

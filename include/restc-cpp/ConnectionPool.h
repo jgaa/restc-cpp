@@ -21,7 +21,7 @@ public:
         const Connection::Type connectionType,
         bool new_connection_please = false) = 0;
 
-    virtual std::future<std::size_t> GetIdleConnections() const = 0;
+    virtual size_t GetIdleConnections() const = 0;
     static std::shared_ptr<ConnectionPool> Create(RestClient& owner);
 
     /*! Close the connection-pool

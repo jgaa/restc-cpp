@@ -7,3 +7,5 @@
 #else
 #   define LOCK_
 #endif
+
+#define LOCK_ALWAYS_ std::lock_guard<std::mutex> lock_{mutex_}

@@ -8,6 +8,7 @@
 #include "restc-cpp/logging.h"
 #include "restc-cpp/ConnectionPool.h"
 #include "restc-cpp/RequestBody.h"
+#include "restc-cpp/internals/helpers.h"
 
 #ifdef RESTC_CPP_WITH_TLS
 #   include "boost/asio/ssl.hpp"
@@ -219,6 +220,7 @@ public:
         ClearWork();
         if (!io_service_->stopped()) {
             io_service_->dispatch([this](){
+                LOCK_;
                 if (current_tasks_ == 0) {
                     OnNoMoreWork();
                 }
@@ -237,18 +239,21 @@ public:
         }
 
         if (!io_service_->stopped()) {
-            auto promise = make_shared<std::promise<void>>();
+            call_once(close_once_, [&] {
+                auto promise = make_shared<std::promise<void>>();
 
-            io_service_->dispatch([this, promise]() {
-                if (work_) {
-                    work_.reset();
-                }
-                closed_ = true;
-                promise->set_value();
+                io_service_->dispatch([this, promise]() {
+                    LOCK_;
+                    if (work_) {
+                        work_.reset();
+                    }
+                    closed_ = true;
+                    promise->set_value();
+                });
+
+                // Wait for the lambda to finish;
+                promise->get_future().get();
             });
-
-            // Wait for the lambda to finish;
-            promise->get_future().get();
         }
     }
 
@@ -335,6 +340,7 @@ private:
     unique_ptr<boost::asio::io_service::work> work_;
     size_t current_tasks_ = 0;
     bool closed_ = false;
+    once_flag close_once_;
     unique_ptr<thread> thread_;
     recursive_mutex done_mutex_;
     unique_ptr<boost::asio::io_service> ioservice_instance_;
@@ -348,6 +354,10 @@ private:
         | boost::asio::ssl::context::no_sslv2
         | boost::asio::ssl::context::no_sslv3);
     }
+#endif
+
+#ifdef RESTC_CPP_THREADED_CTX
+    mutable std::mutex mutex_;
 #endif
 };
 
