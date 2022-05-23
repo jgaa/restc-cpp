@@ -174,6 +174,11 @@ public:
         general_callback_t beforeWriteFn;
         general_callback_t afterWriteFn;
         std::string bindToLocalAddress; // host:port
+#ifdef  RESTC_CPP_THREADED_CTX
+        size_t threads = 4; // Threads created for the Client.
+#else
+        size_t threads = 1;
+#endif
     };
 
     virtual const Properties& GetProperties() const = 0;

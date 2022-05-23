@@ -307,7 +307,7 @@ private:
             if (!PurgeOldestIdleEntry()) {
                 RESTC_CPP_LOG_DEBUG_("No more available slots (max="
                     << properties_->cacheMaxConnections
-                    << ", used=" << all_cnt << ')');
+                    << ", used=" << cnt << ')');
                     pr.set_value(false);
                     return false;
             }
@@ -403,7 +403,9 @@ private:
     boost::asio::deadline_timer cache_cleanup_timer_;
 
     mutable std::mutex mutex_;
+#ifdef RESTC_CPP_THREADED_CTX
     boost::asio::io_context::strand strand_;
+#endif
 }; // ConnectionPoolImpl
 
 

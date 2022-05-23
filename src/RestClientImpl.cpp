@@ -164,8 +164,11 @@ public:
 
     ~RestClientImpl() override {
         CloseWhenReady(false);
-        if (thread_) {
-            thread_->join();
+
+        for(auto &thread : threads_) {
+            if (thread) {
+                thread->join();
+            }
         }
     }
 
@@ -195,20 +198,44 @@ public:
             return;
         }
 
-        promise<void> wait;
-        auto done = wait.get_future();
+        std::vector<promise<void>> wait;
 
-        thread_ = make_unique<thread>([&]() {
-            lock_guard<decltype(done_mutex_)> lock(done_mutex_);
-            work_ = make_unique<boost::asio::io_service::work>(*io_service_);
-            wait.set_value();
-            RESTC_CPP_LOG_DEBUG_("Worker is starting.");
-            io_service_->run();
-            RESTC_CPP_LOG_DEBUG_("Worker is done.");
-        });
+#ifndef  RESTC_CPP_THREADED_CTX
+        if (default_connection_properties_->threads != 1) {
+            RESTC_CPP_LOG_WARN_("Init: Compiled without RESTC_CPP_THREADED_CTX: Using only one thread!");
+            default_connection_properties_->threads = 1;
+        }
+#endif
 
-        // Wait for the ConnectionPool to be constructed
-        done.get();
+        // Make sure we don't re-arrange the vectors while some thread is reading from it
+        done_mutexes_.reserve(default_connection_properties_->threads);
+        threads_.reserve(default_connection_properties_->threads);
+
+        for(size_t i = 0; i < default_connection_properties_->threads; ++i) {
+            wait.emplace_back();
+            done_mutexes_.push_back(make_unique<recursive_mutex>());
+        }
+
+        work_ = make_unique<boost::asio::io_service::work>(*io_service_);
+
+        for(size_t i = 0; i < default_connection_properties_->threads; ++i) {
+            threads_.emplace_back(make_unique<thread>([i, this, &wait]() {
+                lock_guard<recursive_mutex> lock(*done_mutexes_.at(i));
+                try {
+                    wait.at(i).set_value();
+                    RESTC_CPP_LOG_DEBUG_("Worker " << i << " is starting.");
+                    io_service_->run();
+                    RESTC_CPP_LOG_DEBUG_("Worker " << i << " is done.");
+                } catch (const exception& ex) {
+                    RESTC_CPP_LOG_ERROR_("Worker " << i << " caught exception: " << ex.what());
+                }
+            }));
+        }
+
+        // Wait for the therads to be started
+        for(auto& w : wait) {
+            w.get_future().get();
+        }
     }
 
 
@@ -228,7 +255,13 @@ public:
         }
         if (wait) {
             RESTC_CPP_LOG_TRACE_("CloseWhenReady: Waiting for work to end.");
-            lock_guard<decltype(done_mutex_)> lock(done_mutex_);
+
+            // We have to lock/unlock each of them to make sure that all the threads are done
+            for(auto& dm : done_mutexes_) {
+                if (dm) {
+                    lock_guard<recursive_mutex> lock(*dm);
+                }
+            }
             RESTC_CPP_LOG_TRACE_("CloseWhenReady: Done waiting for work to end.");
         }
     }
@@ -341,8 +374,8 @@ private:
     size_t current_tasks_ = 0;
     bool closed_ = false;
     once_flag close_once_;
-    unique_ptr<thread> thread_;
-    recursive_mutex done_mutex_;
+    std::vector<unique_ptr<thread>> threads_;
+    std::vector<std::unique_ptr<recursive_mutex>> done_mutexes_;
     unique_ptr<boost::asio::io_service> ioservice_instance_;
 
 #ifdef RESTC_CPP_WITH_TLS
