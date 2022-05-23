@@ -287,7 +287,7 @@ pipeline {
                     }
                 }
                 
-                stage('Debian Stretch') {
+                stage('Debian Stretch MT CTX') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.debian-stretch'
