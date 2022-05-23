@@ -92,6 +92,10 @@ pipeline {
                             label 'docker'
                         }
                     }
+                    
+                    options {
+                        timeout(time: 10, unit: "MINUTES")
+                    }
 
                     steps {
                         echo "Building on ubuntu-bionic-AMD64 in ${WORKSPACE}"
@@ -120,6 +124,10 @@ pipeline {
                             dir 'ci/jenkins'
                             label 'docker'
                         }
+                    }
+                    
+                    options {
+                        timeout(time: 10, unit: "MINUTES")
                     }
 
                     steps {
@@ -150,6 +158,10 @@ pipeline {
                             label 'docker'
                         }
                     }
+                    
+                    options {
+                        timeout(time: 10, unit: "MINUTES")
+                    }
 
                     steps {
                         echo "Building on ubuntu-bionic-AMD64 in ${WORKSPACE}"
@@ -178,6 +190,10 @@ pipeline {
                             dir 'ci/jenkins'
                             label 'docker'
                         }
+                    }
+                    
+                    options {
+                        timeout(time: 10, unit: "MINUTES")
                     }
 
                     steps {
@@ -274,6 +290,10 @@ pipeline {
                             label 'docker'
                         }
                     }
+                    
+                    options {
+                        timeout(time: 10, unit: "MINUTES")
+                    }
 
                     steps {
                         echo "Building on debian-stretch-AMD64 in ${WORKSPACE}"
@@ -303,6 +323,10 @@ pipeline {
                             label 'docker'
                         }
                     }
+                    
+                    options {
+                        timeout(time: 10, unit: "MINUTES")
+                    }
 
                     steps {
                         echo "Building on debian-stretch-AMD64 in ${WORKSPACE}"
@@ -310,7 +334,7 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && -DRESTC_CPP_THREADED_CTX=ON cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
@@ -331,6 +355,10 @@ pipeline {
                             dir 'ci/jenkins'
                             label 'docker'
                         }
+                    }
+                    
+                    options {
+                        timeout(time: 10, unit: "MINUTES")
                     }
 
                     steps {
@@ -360,6 +388,10 @@ pipeline {
                             dir 'ci/jenkins'
                             label 'docker'
                         }
+                    }
+                    
+                    options {
+                        timeout(time: 10, unit: "MINUTES")
                     }
 
                     steps {
@@ -391,6 +423,10 @@ pipeline {
                             label 'docker'
                         }
                     }
+                    
+                    options {
+                        timeout(time: 10, unit: "MINUTES")
+                    }
 
                     steps {
                         echo "Building on debian-buster-AMD64 in ${WORKSPACE}"
@@ -419,6 +455,10 @@ pipeline {
                             dir 'ci/jenkins'
                             label 'docker'
                         }
+                    }
+                    
+                    options {
+                        timeout(time: 10, unit: "MINUTES")
                     }
 
                     steps {
@@ -450,6 +490,11 @@ pipeline {
                         }
                     }
 
+                    
+                    options {
+                        timeout(time: 10, unit: "MINUTES")
+                    }
+                    
                     steps {
                         echo "Building on debian-bullseye-AMD64 in ${WORKSPACE}"
                         checkout scm
@@ -477,6 +522,10 @@ pipeline {
                             dir 'ci/jenkins'
                             label 'docker'
                         }
+                    }
+                    
+                    options {
+                        timeout(time: 10, unit: "MINUTES")
                     }
 
                     steps {
@@ -507,6 +556,10 @@ pipeline {
                             label 'docker'
                         }
                     }
+                    
+                    options {
+                        timeout(time: 10, unit: "MINUTES")
+                    }
 
                     steps {
                         echo "Building on debian-testing-AMD64 in ${WORKSPACE}"
@@ -535,6 +588,10 @@ pipeline {
                             dir 'ci/jenkins'
                             label 'docker'
                         }
+                    }
+                    
+                    options {
+                        timeout(time: 10, unit: "MINUTES")
                     }
 
                     steps {
@@ -618,6 +675,10 @@ pipeline {
                 stage('Windows X64 with vcpkg') {
 
                     agent {label 'windows'}
+                    
+                    options {
+                        timeout(time: 10, unit: "MINUTES")
+                    }
 
                      steps {
                         echo "Building on Windows in ${WORKSPACE}"
@@ -657,6 +718,10 @@ pipeline {
                 stage('Windows X64 with vcpkg MT CTX') {
 
                     agent {label 'windows'}
+                    
+                    options {
+                        timeout(time: 10, unit: "MINUTES")
+                    }
 
                      steps {
                         echo "Building on Windows in ${WORKSPACE}"
