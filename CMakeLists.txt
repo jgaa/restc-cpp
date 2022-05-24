@@ -56,7 +56,7 @@ if (NOT RESTC_CPP_LOG_WITH_INTERNAL_LOG AND NOT RESTC_CPP_LOG_WITH_LOGFAULT AND 
     set(RESTC_CPP_LOG_WITH_INTERNAL_LOG ON)
 endif()
 
-set(RESTC_CPP_LOG_LEVEL_STR "trace" CACHE STRING "Limit logs to: none, error, warn, info, debug, trace")
+set(RESTC_CPP_LOG_LEVEL_STR "debug" CACHE STRING "Limit logs to: none, error, warn, info, debug, trace")
 
 option(RESTC_CPP_LOG_JSON_SERIALIZATION "Enable trace logging for json serialization debugging" OFF)
 
