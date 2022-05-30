@@ -5,7 +5,7 @@ if (DEFINED ENV{RESTC_CPP_VERSION})
 endif()
 
 if (NOT DEFINED RESTC_CPP_VERSION)
-    set(RESTC_CPP_VERSION 0.92.0)
+    set(RESTC_CPP_VERSION 0.93.0)
 endif()
 
 if(NOT DEFINED RESTC_BOOST_VERSION)
@@ -56,9 +56,9 @@ if (NOT RESTC_CPP_LOG_WITH_INTERNAL_LOG AND NOT RESTC_CPP_LOG_WITH_LOGFAULT AND 
     set(RESTC_CPP_LOG_WITH_INTERNAL_LOG ON)
 endif()
 
-set(RESTC_CPP_LOG_LEVEL_STR "info" CACHE STRING "Limit logs to: none, error, warn, info, debug, trace")
+set(RESTC_CPP_LOG_LEVEL_STR "trace" CACHE STRING "Limit logs to: none, error, warn, info, debug, trace")
 
-option(RESTC_CPP_LOG_JSON_SERIALIZATION "Enable trace logging for json serialization debugging")
+option(RESTC_CPP_LOG_JSON_SERIALIZATION "Enable trace logging for json serialization debugging" OFF)
 
 option(RESTC_CPP_WITH_ZLIB "Use zlib" ON)
 

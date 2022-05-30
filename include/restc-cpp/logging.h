@@ -107,7 +107,8 @@ private:
 
 }
 
-#define RESTC_CPP_TEST_LOGGING_SETUP(level) RestcCppTestStartLogger(level)
+//#define RESTC_CPP_TEST_LOGGING_SETUP(level) RestcCppTestStartLogger(level)
+#define RESTC_CPP_TEST_LOGGING_SETUP(level) RestcCppTestStartLogger("trace")
 
 inline void RestcCppTestStartLogger(const std::string& level = "info") {
     auto llevel = restc_cpp::LogLevel::INFO;

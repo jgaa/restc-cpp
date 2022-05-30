@@ -42,20 +42,26 @@ BOOST_FUSION_ADAPT_STRUCT(
 // library to use (boost::asio only support openssl and compatible
 // libraries out of the box).
 
-string https_url = "https://jsonplaceholder.typicode.com/posts/1";
+//string https_url = "https://jsonplaceholder.typicode.com/posts/1";
 
-//string https_url = "https://lastviking.eu/files/api";
+string https_url = "https://lastviking.eu/files/api";
 
 const lest::test specification[] = {
 
 TEST(TestHTTPS)
 {
-    shared_ptr<boost::asio::ssl::context> tls_ctx = make_shared<boost::asio::ssl::context>(boost::asio::ssl::context{ boost::asio::ssl::context::sslv23 });
-    tls_ctx->set_options(boost::asio::ssl::context::default_workarounds
+    shared_ptr<boost::asio::ssl::context> tls_ctx = make_shared<boost::asio::ssl::context>(boost::asio::ssl::context{ boost::asio::ssl::context::tlsv12_client});
+
+    try {
+        tls_ctx->set_options(boost::asio::ssl::context::default_workarounds
                         | boost::asio::ssl::context::no_sslv2
                         | boost::asio::ssl::context::no_sslv3
-                        | boost::asio::ssl::context::no_tlsv1_1
+//                        | boost::asio::ssl::context::no_tlsv1_1
                         | boost::asio::ssl::context::single_dh_use);
+        } catch (const exception& ex) {
+           cout << " *** exception " << ex.what() << endl;
+           throw;
+        }
 
         auto client = RestClient::Create(tls_ctx);
         client->ProcessWithPromise([&](Context& ctx) {

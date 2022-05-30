@@ -87,18 +87,22 @@ public:
         Connection::ptr_t& GetConnection() noexcept { return connection; }
         int GetTtl() const noexcept { return ttl; }
         time_t GetCreated() const noexcept { return created;}
-        timestamp_t GetLastUsed() const noexcept { return last_used; }
+        timestamp_t GetLastUsed() const noexcept {
+            LOCK_ALWAYS_;
+            return last_used;
+        }
+        void SetLastUsed(timestamp_t ts) {
+            LOCK_ALWAYS_;
+            last_used = ts;
+        }
 
     private:
         const Key key;
         Connection::ptr_t connection;
         const int ttl = 60;
         const time_t created;
-#ifdef RESTC_CPP_THREADED_CTX
-        atomic<timestamp_t> last_used = chrono::steady_clock::now();
-#else
+        mutable std::mutex mutex_;
         timestamp_t last_used = chrono::steady_clock::now();
-#endif
     };
 
     // Owns the connection
@@ -145,10 +149,6 @@ public:
     ConnectionPoolImpl(RestClient& owner)
     : owner_{owner}, properties_{owner.GetConnectionProperties()}
     , cache_cleanup_timer_{owner.GetIoService()}
-#ifdef RESTC_CPP_THREADED_CTX
-    , strand_{owner_.GetIoService()}
-#endif
-
     {
         on_release_ = [this](const Entry::ptr_t& entry) { OnRelease(entry); };
     }
@@ -175,32 +175,27 @@ public:
     }
 
     // Get ctx for internal, syncronized operations;
-#ifdef RESTC_CPP_THREADED_CTX
-    auto GetCtx() const {
-      return strand_;
-    }
-#else
     auto& GetCtx() const {
       return owner_.GetIoService();
     }
-#endif
 
-    std::future<std::size_t> GetIdleConnections() const override {
-        auto my_promise = make_shared<promise<size_t>>() ;
-        GetCtx().dispatch([my_promise, this]() {
-            my_promise->set_value(idle_.size());
-        });
-        return my_promise->get_future();
+    size_t GetIdleConnections() const override {
+        LOCK_ALWAYS_;
+        return idle_.size();
     }
 
     void Close() override {
+        RESTC_CPP_LOG_TRACE_("ConnectionPoolImpl::Close: enter");
         if (!closed_) {
-            closed_ = true;
-            GetCtx().dispatch([this]{
+            call_once(close_once_, [this] {
+                RESTC_CPP_LOG_TRACE_("ConnectionPoolImpl::Close: closing *once*.");
+                LOCK_ALWAYS_;
+                closed_ = true;
                 cache_cleanup_timer_.cancel();
                 idle_.clear();
             });
         }
+        RESTC_CPP_LOG_TRACE_("ConnectionPoolImpl::Close: leave");
     }
 
     void StartTimer() {
@@ -209,16 +204,17 @@ public:
 
 private:
     void ScheduleNextCacheCleanup() {
-        GetCtx().dispatch([this]{
-            cache_cleanup_timer_.expires_from_now(
-                boost::posix_time::seconds(properties_->cacheCleanupIntervalSeconds));
-            cache_cleanup_timer_.async_wait(std::bind(&ConnectionPoolImpl::OnCacheCleanup,
-                                                      shared_from_this(), std::placeholders::_1));
-        });
+        LOCK_ALWAYS_;
+        cache_cleanup_timer_.expires_from_now(
+            boost::posix_time::seconds(properties_->cacheCleanupIntervalSeconds));
+        cache_cleanup_timer_.async_wait(std::bind(&ConnectionPoolImpl::OnCacheCleanup,
+                                                  shared_from_this(), std::placeholders::_1));
     }
 
     void OnCacheCleanup(const boost::system::error_code& error) {
+        RESTC_CPP_LOG_TRACE_("OnCacheCleanup: enter");
         if (closed_) {
+            RESTC_CPP_LOG_TRACE_("OnCacheCleanup: closed");
             return;
         }
 
@@ -227,10 +223,11 @@ private:
             return;
         }
 
-        RESTC_CPP_LOG_TRACE_("Cleaning cache...");
+        RESTC_CPP_LOG_TRACE_("OnCacheCleanup: Cleaning cache...");
 
         const auto now = std::chrono::steady_clock::now();
         {
+            LOCK_ALWAYS_;
             for(auto it = idle_.begin(); !closed_ && it != idle_.end();) {
 
                 auto current = it;
@@ -250,21 +247,27 @@ private:
             }
         }
 
+        RESTC_CPP_LOG_TRACE_("OnCacheCleanup: schedule next");
         ScheduleNextCacheCleanup();
+        RESTC_CPP_LOG_TRACE_("OnCacheCleanup: leave");
     }
 
-    void OnRelease(const Entry::ptr_t& entry) {
-        GetCtx().dispatch([this, entry]{
+    void OnRelease(const Entry::ptr_t entry) {
+        {
+            LOCK_ALWAYS_;
             in_use_.erase(entry->GetKey());
-            if (closed_ || !entry->GetConnection()->GetSocket().IsOpen()) {
-                RESTC_CPP_LOG_TRACE_("Discarding " << *entry << " after use");
-                return;
-            }
+        }
+        if (closed_ || !entry->GetConnection()->GetSocket().IsOpen()) {
+            RESTC_CPP_LOG_TRACE_("Discarding " << *entry << " after use");
+            return;
+        }
 
-            RESTC_CPP_LOG_TRACE_("Recycling " << *entry << " after use");
-            entry->GetLastUsed() = chrono::steady_clock::now();
+        RESTC_CPP_LOG_TRACE_("Recycling " << *entry << " after use");
+        entry->SetLastUsed(chrono::steady_clock::now());
+        {
+            LOCK_ALWAYS_;
             idle_.insert({entry->GetKey(), entry});
-        });
+        }
     }
 
     // Check the constraints to see if we can create a new connection
@@ -277,39 +280,42 @@ private:
         promise<bool> pr;
         auto result = pr.get_future();
 
-        GetCtx().dispatch([this, &ep, connectionType, &pr]() {
-            {
-                const auto key = Key{ep, connectionType};
-                const size_t ep_cnt = idle_.count(key) + in_use_.count(key);
-                if (ep_cnt >= properties_->cacheMaxConnectionsPerEndpoint) {
-                    RESTC_CPP_LOG_DEBUG_("No more available slots for " << key);
+        size_t cnt = 0;
+        const auto key = Key{ep, connectionType};
+        {
+            LOCK_ALWAYS_;
+            cnt = idle_.count(key) + in_use_.count(key);
+        }
+
+        if (cnt >= properties_->cacheMaxConnectionsPerEndpoint) {
+            RESTC_CPP_LOG_DEBUG_("No more available slots for " << key);
+            pr.set_value(false);
+            return false;
+        }
+
+
+        {
+            LOCK_ALWAYS_;
+            cnt = idle_.size() + in_use_.size();
+        }
+        if (cnt >= properties_->cacheMaxConnections) {
+
+            // See if we can release an idle connection.
+            if (!PurgeOldestIdleEntry()) {
+                RESTC_CPP_LOG_DEBUG_("No more available slots (max="
+                    << properties_->cacheMaxConnections
+                    << ", used=" << cnt << ')');
                     pr.set_value(false);
-                    return;
-                }
+                    return false;
             }
+        }
 
-            {
-                const size_t all_cnt = idle_.size() + in_use_.size();
-                if (all_cnt >= properties_->cacheMaxConnections) {
-
-                    // See if we can release an idle connection.
-                    if (!PurgeOldestIdleEntry()) {
-                        RESTC_CPP_LOG_DEBUG_("No more available slots (max="
-                            << properties_->cacheMaxConnections
-                            << ", used=" << all_cnt << ')');
-                            pr.set_value(false);
-                            return;
-                    }
-                }
-            }
-
-            pr.set_value(true);
-            });
-
-        return result.get();
+        return true;
     }
 
     bool PurgeOldestIdleEntry() {
+        RESTC_CPP_LOG_TRACE_("PurgeOldestIdleEntry: enter");
+        LOCK_ALWAYS_;
         auto oldest =  idle_.begin();
         for (auto it = idle_.begin(); it != idle_.end(); ++it) {
             if (it->second->GetLastUsed() < oldest->second->GetLastUsed()) {
@@ -320,9 +326,11 @@ private:
         if (oldest != idle_.end()) {
             RESTC_CPP_LOG_TRACE_("LRU-Purging " << *oldest->second);
             idle_.erase(oldest);
+            RESTC_CPP_LOG_TRACE_("PurgeOldestIdleEntry: success");
             return true;
         }
 
+        RESTC_CPP_LOG_TRACE_("PurgeOldestIdleEntry: failed");
         return false;
     }
 
@@ -336,21 +344,17 @@ private:
         promise<Connection::ptr_t> pr;
         auto result = pr.get_future();
 
-        GetCtx().dispatch([this, &ep, connectionType, &pr]{
-            const auto key = Key{ep, connectionType};
-            auto it = idle_.find(key);
-            if (it != idle_.end()) {
-                auto wrapper = make_unique<ConnectionWrapper>(it->second, on_release_);
-                in_use_.insert(*it);
-                idle_.erase(it);
-                pr.set_value(move(wrapper));
-                return;
-            }
+        LOCK_ALWAYS_;
+        const auto key = Key{ep, connectionType};
+        auto it = idle_.find(key);
+        if (it != idle_.end()) {
+            auto wrapper = make_unique<ConnectionWrapper>(it->second, on_release_);
+            in_use_.insert(*it);
+            idle_.erase(it);
+            return wrapper;
+        }
 
-            pr.set_value({});
-        });
-
-        return result.get();
+        return {};
     }
 
     Connection::ptr_t CreateNew(const boost::asio::ip::tcp::endpoint& ep,
@@ -377,31 +381,28 @@ private:
         promise<Connection::ptr_t> pr;
         auto result = pr.get_future();
 
-        GetCtx().dispatch([this, entry=move(entry), &pr]{
+        {
+            LOCK_ALWAYS_;
             in_use_.insert({entry->GetKey(), entry});
-            pr.set_value(make_unique<ConnectionWrapper>(entry, on_release_));
-        });
-
-        return result.get();
+        }
+        return make_unique<ConnectionWrapper>(entry, on_release_);
     }
 
 #ifdef RESTC_CPP_THREADED_CTX
-    std::atomic_bool closed_ = false;
+    std::atomic_bool closed_{false};
 #else
     bool closed_ = false;
 #endif
+    std::once_flag close_once_;
     RestClient& owner_;
     multimap<Key, Entry::ptr_t> idle_;
     multimap<Key, std::weak_ptr<Entry>> in_use_;
-    std::queue<Entry> pending_;
+    //std::queue<Entry> pending_;
     const Request::Properties::ptr_t properties_;
     ConnectionWrapper::release_callback_t on_release_;
     boost::asio::deadline_timer cache_cleanup_timer_;
 
-#ifdef RESTC_CPP_THREADED_CTX
     mutable std::mutex mutex_;
-    boost::asio::io_context::strand strand_;
-#endif
 }; // ConnectionPoolImpl
 
 

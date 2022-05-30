@@ -29,7 +29,7 @@ STARTCASE(UseAfterDelete) {
             auto repl = ctx.Get(GetDockerUrl(http_url));
             repl->GetBodyAsString();
             return 0;
-        });
+        }).get();
 
         RestClient::Create()->ProcessWithPromiseT<int>([&](Context& ctx) {
             auto repl = ctx.Get(GetDockerUrl(http_url));

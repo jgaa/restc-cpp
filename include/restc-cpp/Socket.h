@@ -11,6 +11,8 @@
 #include <boost/system/error_code.hpp>
 
 #include "restc-cpp/typename.h"
+#include "restc-cpp/logging.h"
+
 #include "error.h"
 
 namespace restc_cpp {
@@ -68,6 +70,10 @@ protected:
         try {
             return fn();
         } catch (const boost::system::system_error& ex) {
+
+            RESTC_CPP_LOG_TRACE_("ExceptionWrapper: " << ex.what()
+                                 << ", value=" << ex.code());
+
             if (ex.code().value() == boost::system::errc::operation_canceled) {
                 if (reason_ == Socket::Reason::TIME_OUT) {
                     throw RequestTimeOutException();

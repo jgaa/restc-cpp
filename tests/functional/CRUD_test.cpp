@@ -124,6 +124,6 @@ STARTCASE(TestHEAD) {
 
 int main( int argc, char * argv[] )
 {
-    RESTC_CPP_TEST_LOGGING_SETUP("debug");
+    RESTC_CPP_TEST_LOGGING_SETUP("trace");
     return lest::run( specification, argc, argv );
 }

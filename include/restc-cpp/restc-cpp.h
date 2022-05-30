@@ -174,6 +174,11 @@ public:
         general_callback_t beforeWriteFn;
         general_callback_t afterWriteFn;
         std::string bindToLocalAddress; // host:port
+#ifdef  RESTC_CPP_THREADED_CTX
+        size_t threads = 4; // Threads created for the Client.
+#else
+        size_t threads = 1;
+#endif
     };
 
     virtual const Properties& GetProperties() const = 0;
@@ -419,6 +424,8 @@ public:
      */
     virtual void CloseWhenReady(bool wait = true) = 0;
 
+    virtual bool IsClosed() const noexcept = 0;
+
     /*! Factory */
     static std::unique_ptr<RestClient> Create();
 
@@ -448,6 +455,7 @@ public:
 
     static std::unique_ptr<RestClient>
         Create(boost::asio::io_service& ioservice);
+
 
     protected:
         virtual std::unique_ptr<DoneHandler> GetDoneHandler() = 0;
