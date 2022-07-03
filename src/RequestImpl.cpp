@@ -22,6 +22,222 @@ using namespace std::string_literals;
 
 namespace restc_cpp {
 
+const std::string& Request::Proxy::GetName() {
+    static const array<string, 3> names = {
+      "NONE", "HTTP", "SOCKS5"
+    };
+
+    return names.at(static_cast<size_t>(type));
+}
+
+namespace {
+
+static constexpr char SOCKS5_VERSION = 0x05;
+static constexpr char SOCKS5_TCP_STREAM = 0x02;
+static constexpr char SOCKS5_MAX_HOSTNAME_LEN = 255;
+static constexpr char SOCKS5_IPV4_ADDR = 0x01;
+static constexpr char SOCKS5_IPV6_ADDR = 0x04;
+static constexpr char SOCKS5_HOSTNAME_ADDR = 0x03;
+
+/* hostname: example.com:123                 -> "example.com", 123
+ * ipv4:     1.2.3.4:123                     -> "1.2.3.4", 123
+ * ipv6:     [fe80::4479:f6ff:fea3:aa23]:123 -> "fe80::4479:f6ff:fea3:aa23", 123
+ */
+pair<string, uint16_t> ParseAddress(const std::string addr) {
+    auto pos = addr.find('['); // IPV6
+    string host;
+    string port;
+    if (pos != string::npos) {
+        auto host = addr.substr(1); // strip '['
+        pos = host.find(']');
+        if (pos == string::npos) {
+            throw ParseException{"IPv6 address must have a ']'"};
+        }
+        port = host.substr(pos);
+        host = host.substr(0, pos);
+
+        if (port.size() < 3 || (host.at(1) != ':')) {
+            throw ParseException{"Need `]:<port>` in "s + addr};
+        }
+        port = port.substr(2);
+    } else {
+        // IPv4 or address
+        pos = addr.find(':');
+        if (pos == string::npos || (addr.size() - pos) < 2) {
+            throw ParseException{"Need `:<port>` in "s + addr};
+        }
+        port = addr.substr(pos +1);
+        host = addr.substr(0, pos);
+    }
+
+    const uint16_t port_num = stoul(port);
+    if (port_num == 0 || port_num > numeric_limits<uint16_t>::max()) {
+        throw ParseException{"Port `:<port>` must be a valid IP port number in "s + addr};
+    }
+
+    return {host, port_num};
+}
+
+/*! Parse the address and write the socks5 connect request */
+void ParseAddressIntoSocke5ConnectRequest(const std::string& addr,
+                                          vector<uint8_t>& out) {
+
+    out.push_back(SOCKS5_VERSION);
+    out.push_back(SOCKS5_TCP_STREAM);
+    out.push_back(0);
+
+    string host;
+    uint16_t port = 0;
+
+    tie(host, port) = ParseAddress(addr);
+
+    const auto final_port = htons(port);
+
+    boost::system::error_code ec;
+    const auto a = boost::asio::ip::make_address(host, ec);
+    if (ec) {
+        // Assume that it's a hostname.
+        // TODO: Validate with a regex
+        if (host.size() > SOCKS5_MAX_HOSTNAME_LEN) {
+            throw ParseException{"SOCKS5 address must be <= 255 bytes"};
+        }
+        if (host.size() < 1) {
+            throw ParseException{"SOCKS5 address must be > 1 byte"};
+        }
+
+        out.push_back(SOCKS5_HOSTNAME_ADDR);
+
+        // Add string lenght (single byte)
+        out.push_back(static_cast<uint8_t>(host.size()));
+
+        // Copy the address, without trailing zero
+        copy(host.begin(), host.end(), back_insert_iterator(out));
+    } else if (a.is_v4()) {
+        const auto v4 = a.to_v4();
+        const auto b = v4.to_bytes();
+        assert(b.size() == 4);
+        out.push_back(SOCKS5_IPV4_ADDR);
+        copy(b.begin(), b.end(), back_insert_iterator(out));
+    } else if (a.is_v6()) {
+        const auto v6 = a.to_v6();
+        const auto b = v6.to_bytes();
+        assert(b.size() == 16);
+        out.push_back(SOCKS5_IPV6_ADDR);
+        copy(b.begin(), b.end(), back_insert_iterator(out));
+    } else {
+        throw ParseException{"Internal error. Failed to parse: "s + addr};
+    }
+
+    // Add 2 byte port number in network byte order
+    assert(sizeof(final_port) >= 2);
+    const unsigned char *p = reinterpret_cast<const unsigned char *>(&final_port);
+    out.push_back(*p);
+    out.push_back(*(p +1));
+}
+
+bool isCompleteSocks5ConnectReply(uint8_t *buf, size_t len) {
+    if (len < 3) {
+        return false;
+    }
+
+    if (buf[0] != SOCKS5_VERSION) {
+        throw ProtocolException{"Wrong/unsupported SOCKS5 version in connect reply: "s
+                                + to_string(buf[0])};
+    }
+    if (buf[1] != 0) { // Request failed
+        return true;
+    }
+
+    size_t hdr_len = 5; // Mandatory bytes
+
+    switch(buf[2]) {
+    case SOCKS5_IPV4_ADDR:
+        hdr_len += 4;
+        break;
+    case SOCKS5_IPV6_ADDR:
+        hdr_len += 16;
+        break;
+    case SOCKS5_HOSTNAME_ADDR:
+        if (len < 4) {
+            return false; // We need the length field...
+        }
+        hdr_len += buf[3];
+    break;
+    default:
+        throw ProtocolException{"Wrong/unsupported SOCKS5 BINDADDR type: "s
+                                + to_string(buf[3])};
+    }
+
+    if (len > hdr_len) {
+        // TODO: Deal with it. This may happen if data starts
+        // flowing from the remote end immediately. However, we need to
+        // keep the data in the socket buffer so we can handle TLS or other
+        // protocol when SOCKS5 initiation is done.
+        throw NotSupportedException{"SOCKS5: Received more data then the connect response."};
+    }
+
+    return len == hdr_len;
+}
+
+void DoSocks5Handshake(Connection& connection,
+                       const Url& url,
+                       const Request::Properties properties,
+                       Context& ctx) {
+
+    assert(properties.proxy.type == Request::Proxy::Type::SOCKS5);
+    auto& sck = connection.GetSocket();
+
+    // Send no-auth handshake
+    {
+        array<uint8_t, 3> hello = {SOCKS5_VERSION, 1, 0};
+        sck.AsyncWriteT(hello, ctx.GetYield());
+    }
+    {
+        array<uint8_t, 2> reply = {};
+        sck.AsyncRead({reply.data(), reply.size()}, ctx.GetYield());
+
+        if (reply[0] != SOCKS5_VERSION) {
+            throw ProtocolException{"Wrong/unsupported SOCKS5 version: "s + to_string(reply[0])};
+        }
+
+        if (reply[1] != 0) {
+            throw AccessDeniedException{"SOCKS5 Access denied: "s + to_string(reply[1])};
+        }
+    }
+
+    // Send connect parameters
+    {
+        vector<uint8_t> params;
+
+        auto addr = url.GetHost().to_string() + ":" + to_string(url.GetPort());
+
+        ParseAddressIntoSocke5ConnectRequest(addr, params);
+        sck.AsyncWriteT(params, ctx.GetYield());
+    }
+
+    {
+        array<uint8_t, 255 + 6> reply;
+        size_t remaining = reply.size();
+        size_t read = 0;
+        uint8_t *next = reply.data();
+        while(true) {
+            const auto bytes = sck.AsyncReadSome({next, remaining}, ctx.GetYield());
+            read += bytes;
+            remaining -= bytes;
+            next += bytes;
+            if (isCompleteSocks5ConnectReply(reply.data(), read)) {
+                break;
+            }
+
+            if (remaining == 0) {
+                throw ProtocolException{"SOCKS5 Connect header from the server is too large"};
+            }
+        }
+    }
+
+}
+} // anonumous ns
+
 class RequestImpl : public Request {
 public:
 
@@ -265,11 +481,26 @@ private:
     }
 
     boost::asio::ip::tcp::resolver::query GetRequestEndpoint() {
-        if (properties_->proxy.type == Request::Proxy::Type::HTTP) {
+        const auto proxy_type = properties_->proxy.type;
+
+        if (proxy_type == Request::Proxy::Type::SOCKS5) {
+            string host;
+            uint16_t port = 0;
+            tie(host, port) = ParseAddress(properties_->proxy.address);
+
+            RESTC_CPP_LOG_TRACE_("Using " << properties_->proxy.GetName()
+                                 << " Proxy at: "
+                                 << host << ':' << port);
+
+            return {host, to_string(port)};
+        }
+
+        if (proxy_type == Request::Proxy::Type::HTTP) {
             Url proxy {properties_->proxy.address.c_str()};
 
-            RESTC_CPP_LOG_TRACE_("Using HTTP Proxy at: "
-                << proxy.GetHost() << ':' << proxy.GetPort());
+            RESTC_CPP_LOG_TRACE_("Using " << properties_->proxy.GetName()
+                                 << " Proxy at: "
+                                 << proxy.GetHost() << ':' << proxy.GetPort());
 
             return { proxy.GetHost().to_string(),
                 proxy.GetPort().to_string()};
@@ -462,6 +693,16 @@ private:
                         RESTC_CPP_LOG_DEBUG_("RequestImpl::Connect: taking a nap");
                         ctx.Sleep(50ms);
                         RESTC_CPP_LOG_DEBUG_("RequestImpl::Connect: Waking up. Will try to read from the socket now.");
+                    }
+
+                    if (properties_->proxy.type == Proxy::Type::SOCKS5) {
+                        connection->GetSocket().SetAfterConnectCallback([&]() {
+                            RESTC_CPP_LOG_TRACE_("RequestImpl::Connect: In Socks5 callback");
+
+                            DoSocks5Handshake(*connection, parsed_url_, *properties_, ctx);
+
+                            RESTC_CPP_LOG_TRACE_("RequestImpl::Connect: Leaving Socks5 callback");
+                        });
                     }
 
                     RESTC_CPP_LOG_TRACE_("RequestImpl::Connect: calling AsyncConnect --> " << endpoint);

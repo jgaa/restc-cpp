@@ -89,6 +89,12 @@ struct ProtocolException : public RestcCppException
     : RestcCppException(cause) {}
 };
 
+struct AccessDeniedException : public RestcCppException
+{
+    AccessDeniedException(const std::string& cause)
+    : RestcCppException(cause) {}
+};
+
 struct ConstraintException : public RestcCppException
 {
     ConstraintException(const std::string& cause)

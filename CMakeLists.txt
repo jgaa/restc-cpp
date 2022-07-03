@@ -5,7 +5,7 @@ if (DEFINED ENV{RESTC_CPP_VERSION})
 endif()
 
 if (NOT DEFINED RESTC_CPP_VERSION)
-    set(RESTC_CPP_VERSION 0.93.0)
+    set(RESTC_CPP_VERSION 0.94.0)
 endif()
 
 if(NOT DEFINED RESTC_BOOST_VERSION)
@@ -62,7 +62,7 @@ option(RESTC_CPP_LOG_JSON_SERIALIZATION "Enable trace logging for json serializa
 
 option(RESTC_CPP_WITH_ZLIB "Use zlib" ON)
 
-option(RESTC_CPP_USE_CPP17 "Use the C++17 standard" OFF)
+option(RESTC_CPP_USE_CPP17 "Use the C++17 standard" ON)
 
 option(RESTC_CPP_THREADED_CTX "Allow asio contextx with multiple therads. Enables thread-safe internal access." OFF)
 

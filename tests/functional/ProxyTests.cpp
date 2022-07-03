@@ -13,8 +13,9 @@ using namespace std;
 using namespace restc_cpp;
 
 
-static const string defunct_proxy_address = GetDockerUrl("http://localhost:0");
-static const string proxy_address = GetDockerUrl("http://localhost:3003");
+static const string defunct_proxy_address = GetDockerUrl("http://172.17.0.1:0");
+static const string http_proxy_address = GetDockerUrl("http://172.17.0.1:3003");
+static const string socks5_proxy_address = GetDockerUrl("172.17.0.1:3004");
 
 const lest::test specification[] = {
 
@@ -36,11 +37,29 @@ STARTCASE(TestFailToConnect)
     }).get());
 } ENDCASE
 
-STARTCASE(TestWithProxy)
+STARTCASE(TestWithHttpProxy)
 {
     Request::Properties properties;
     properties.proxy.type = Request::Proxy::Type::HTTP;
-    properties.proxy.address = proxy_address;
+    properties.proxy.address = http_proxy_address;
+
+    // Create the client with our configuration
+    auto rest_client = RestClient::Create(properties);
+
+    rest_client->ProcessWithPromise([&](Context& ctx) {
+        auto reply = RequestBuilder(ctx)
+            .Get("http://api.example.com/normal/posts/1")
+            .Execute();
+
+            cout << "Got: " << reply->GetBodyAsString() << endl;
+    }).get();
+} ENDCASE
+
+STARTCASE(TestWithSocks5Proxy)
+{
+    Request::Properties properties;
+    properties.proxy.type = Request::Proxy::Type::SOCKS5;
+    properties.proxy.address = socks5_proxy_address;
 
     // Create the client with our configuration
     auto rest_client = RestClient::Create(properties);
