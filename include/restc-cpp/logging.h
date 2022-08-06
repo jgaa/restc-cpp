@@ -9,6 +9,7 @@
  *
  */
 
+#include <boost/version.hpp>
 #include "restc-cpp/config.h"
 
 #ifdef RESTC_CPP_LOG_WITH_INTERNAL_LOG
@@ -97,13 +98,13 @@ private:
     LogLevel current_ = LogLevel::INFO;
 };
 
-#define RESTC_CPP_LOG_EVENT(level, msg) Logger::Instance().Relevant(level) && LogEvent{level}.Event() << msg
+#define RESTC_CPP_LOG_EVENT(level, msg) restc_cpp::Logger::Instance().Relevant(level) && restc_cpp::LogEvent{level}.Event() << msg
 
-#define RESTC_CPP_LOG_ERROR_(msg)     RESTC_CPP_LOG_EVENT(LogLevel::LERROR, msg)
-#define RESTC_CPP_LOG_WARN_(msg)      RESTC_CPP_LOG_EVENT(LogLevel::WARNING, msg)
-#define RESTC_CPP_LOG_INFO_(msg)      RESTC_CPP_LOG_EVENT(LogLevel::INFO, msg)
-#define RESTC_CPP_LOG_DEBUG_(msg)     RESTC_CPP_LOG_EVENT(LogLevel::DEBUG, msg)
-#define RESTC_CPP_LOG_TRACE_(msg)     RESTC_CPP_LOG_EVENT(LogLevel::TRACE, msg)
+#define RESTC_CPP_LOG_ERROR_(msg)     RESTC_CPP_LOG_EVENT(restc_cpp::LogLevel::LERROR, msg)
+#define RESTC_CPP_LOG_WARN_(msg)      RESTC_CPP_LOG_EVENT(restc_cpp::LogLevel::WARNING, msg)
+#define RESTC_CPP_LOG_INFO_(msg)      RESTC_CPP_LOG_EVENT(restc_cpp::LogLevel::INFO, msg)
+#define RESTC_CPP_LOG_DEBUG_(msg)     RESTC_CPP_LOG_EVENT(restc_cpp::LogLevel::DEBUG, msg)
+#define RESTC_CPP_LOG_TRACE_(msg)     RESTC_CPP_LOG_EVENT(restc_cpp::LogLevel::TRACE, msg)
 
 }
 
@@ -136,6 +137,8 @@ inline void RestcCppTestStartLogger(const std::string& level = "info") {
                   << ' ' << std::this_thread::get_id() << ' '
                   << msg << std::endl;
     });
+
+    RESTC_CPP_LOG_INFO_("Logging on level " << level << ". Boost version is " << BOOST_LIB_VERSION);
 }
 
 #elif defined RESTC_CPP_LOG_WITH_BOOST_LOG
@@ -174,7 +177,10 @@ inline void RestcCppTestStartLogger(const std::string& level = "info") {
     (
         boost::log::trivial::severity >= llevel
     );
+
+    RESTC_CPP_LOG_INFO_("Logging on level " << level << ". Boost version is " << BOOST_LIB_VERSION);
 }
+
 
 #elif defined RESTC_CPP_LOG_WITH_LOGFAULT
 
@@ -206,6 +212,8 @@ inline void RestcCppTestStartLogger(const std::string& level = "info") {
 
     logfault::LogManager::Instance().AddHandler(
                 std::make_unique<logfault::StreamHandler>(std::clog, llevel));
+
+    RESTC_CPP_LOG_INFO_("Logging on level " << level << ". Boost version is " << BOOST_LIB_VERSION);
 }
 
 
