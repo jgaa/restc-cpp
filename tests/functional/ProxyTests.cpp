@@ -13,9 +13,9 @@ using namespace std;
 using namespace restc_cpp;
 
 
-static const string defunct_proxy_address = GetDockerUrl("http://172.17.0.1:0");
-static const string http_proxy_address = GetDockerUrl("http://172.17.0.1:3003");
-static const string socks5_proxy_address = GetDockerUrl("172.17.0.1:3004");
+static const string defunct_proxy_address = GetDockerUrl("http://localhost:0");
+static const string http_proxy_address = GetDockerUrl("http://localhost:3003");
+static const string socks5_proxy_address = GetDockerUrl("localhost:3004");
 
 const lest::test specification[] = {
 
