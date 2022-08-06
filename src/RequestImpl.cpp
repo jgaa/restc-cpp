@@ -23,16 +23,38 @@ using namespace std::string_literals;
 namespace {
 
 // We support versions of boost prior to the introduction of this convenience function
+
+auto make_address_v6(const char* str,
+    boost::system::error_code& ec) BOOST_ASIO_NOEXCEPT
+{
+  boost::asio::ip::address_v6::bytes_type bytes;
+  unsigned long scope_id = 0;
+  if (boost::asio::detail::socket_ops::inet_pton(
+        BOOST_ASIO_OS_DEF(AF_INET6), str, &bytes[0], &scope_id, ec) <= 0)
+    return boost::asio::ip::address_v6();
+  return boost::asio::ip::address_v6(bytes, scope_id);
+}
+
+auto make_address_v4(const char* str,
+    boost::system::error_code& ec) BOOST_ASIO_NOEXCEPT
+{
+  boost::asio::ip::address_v4::bytes_type bytes;
+  if (boost::asio::detail::socket_ops::inet_pton(
+        BOOST_ASIO_OS_DEF(AF_INET), str, &bytes, 0, ec) <= 0)
+    return boost::asio::ip::address_v4();
+  return boost::asio::ip::address_v4(bytes);
+}
+
 auto make_address(const char* str,
     boost::system::error_code& ec) BOOST_ASIO_NOEXCEPT
 {
   boost::asio::ip::address_v6 ipv6_address =
-    boost::asio::ip::make_address_v6(str, ec);
+    make_address_v6(str, ec);
   if (!ec)
     return boost::asio::ip::address{ipv6_address};
 
   boost::asio::ip::address_v4 ipv4_address =
-    boost::asio::ip::make_address_v4(str, ec);
+    make_address_v4(str, ec);
   if (!ec)
     return boost::asio::ip::address{ipv4_address};
 
