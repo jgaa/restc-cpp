@@ -178,17 +178,20 @@ void ParseAddressIntoSocke5ConnectRequest(const std::string& addr,
     out.push_back(*(p +1));
 }
 
-bool isCompleteSocks5ConnectReply(uint8_t *buf, size_t len) {
-    if (len < 3) {
-        return false;
+// Return 0 whene there is no more bytes to read
+size_t ValidateCompleteSocks5ConnectReply(uint8_t *buf, size_t len) {
+    if (len < 5) {
+        throw RestcCppException{"SOCKS5 server connect reply must start at minimum 5 bytes"s};
     }
 
     if (buf[0] != SOCKS5_VERSION) {
         throw ProtocolException{"Wrong/unsupported SOCKS5 version in connect reply: "s
                                 + to_string(buf[0])};
     }
+
     if (buf[1] != 0) { // Request failed
-        return true;
+        throw ProtocolException{"Unexpected value in SOCKS5 header[1] "s
+                                + to_string(buf[1])};
     }
 
     size_t hdr_len = 5; // Mandatory bytes
@@ -212,14 +215,10 @@ bool isCompleteSocks5ConnectReply(uint8_t *buf, size_t len) {
     }
 
     if (len > hdr_len) {
-        // TODO: Deal with it. This may happen if data starts
-        // flowing from the remote end immediately. However, we need to
-        // keep the data in the socket buffer so we can handle TLS or other
-        // protocol when SOCKS5 initiation is done.
         throw NotSupportedException{"SOCKS5: Received more data then the connect response."};
     }
 
-    return len == hdr_len;
+    return hdr_len;
 }
 
 void DoSocks5Handshake(Connection& connection,
@@ -233,11 +232,13 @@ void DoSocks5Handshake(Connection& connection,
     // Send no-auth handshake
     {
         array<uint8_t, 3> hello = {SOCKS5_VERSION, 1, 0};
+        RESTC_CPP_LOG_TRACE_("DoSocks5Handshake - saying hello");
         sck.AsyncWriteT(hello, ctx.GetYield());
     }
     {
         array<uint8_t, 2> reply = {};
-        sck.AsyncRead({reply.data(), reply.size()}, ctx.GetYield());
+        RESTC_CPP_LOG_TRACE_("DoSocks5Handshake - waiting for greeting");
+        sck.AsyncRead({reply.data(), 2}, ctx.GetYield());
 
         if (reply[0] != SOCKS5_VERSION) {
             throw ProtocolException{"Wrong/unsupported SOCKS5 version: "s + to_string(reply[0])};
@@ -255,29 +256,32 @@ void DoSocks5Handshake(Connection& connection,
         auto addr = url.GetHost().to_string() + ":" + to_string(url.GetPort());
 
         ParseAddressIntoSocke5ConnectRequest(addr, params);
+        RESTC_CPP_LOG_TRACE_("DoSocks5Handshake - saying connect to " <<  url.GetHost().to_string() << ":" << url.GetPort());
         sck.AsyncWriteT(params, ctx.GetYield());
     }
 
     {
         array<uint8_t, 255 + 6> reply;
-        size_t remaining = reply.size();
-        size_t read = 0;
+        size_t remaining = 5; // Minimum length
         uint8_t *next = reply.data();
-        while(true) {
-            const auto bytes = sck.AsyncReadSome({next, remaining}, ctx.GetYield());
-            read += bytes;
-            remaining -= bytes;
-            next += bytes;
-            if (isCompleteSocks5ConnectReply(reply.data(), read)) {
-                break;
-            }
 
-            if (remaining == 0) {
+        RESTC_CPP_LOG_TRACE_("DoSocks5Handshake - waiting for connect confirmation - first segment");
+        auto read = sck.AsyncRead({next, remaining}, ctx.GetYield());
+        const auto hdr_len = ValidateCompleteSocks5ConnectReply(reply.data(), read);
+        if (hdr_len > read) {
+            remaining = hdr_len - read;
+            next += read;
+            if (hdr_len > reply.size()) {
                 throw ProtocolException{"SOCKS5 Connect header from the server is too large"};
             }
+            RESTC_CPP_LOG_TRACE_("DoSocks5Handshake - waiting for connect confirmation - second segment");
+            read += sck.AsyncRead({next, remaining}, ctx.GetYield());
+            ValidateCompleteSocks5ConnectReply(reply.data(), read);
         }
-    }
 
+        assert(read == hdr_len);
+    }
+    RESTC_CPP_LOG_TRACE_("DoSocks5Handshake - done");
 }
 } // anonumous ns
 
