@@ -247,6 +247,8 @@ Please refer to the [tutorial](doc/Tutorial.md) for more examples.
   - Override RequestBody to let the library pull for data when required.
   - Write directly to the outgoing DataWriter when data is required.
   - Just provide a C++ object and let the library serialize it directly to the wire.
+- HTTP Proxy support
+- SOCKS5 Proxy support (naive implementatin for now, no support for authentication).
 
 # Current Status
 The project has been in public BETA since April 11th 2017.

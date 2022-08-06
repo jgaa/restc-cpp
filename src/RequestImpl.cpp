@@ -33,7 +33,7 @@ const std::string& Request::Proxy::GetName() {
 namespace {
 
 static constexpr char SOCKS5_VERSION = 0x05;
-static constexpr char SOCKS5_TCP_STREAM = 0x02;
+static constexpr char SOCKS5_TCP_STREAM = 0x01;
 static constexpr char SOCKS5_MAX_HOSTNAME_LEN = 255;
 static constexpr char SOCKS5_IPV4_ADDR = 0x01;
 static constexpr char SOCKS5_IPV6_ADDR = 0x04;
@@ -150,18 +150,18 @@ bool isCompleteSocks5ConnectReply(uint8_t *buf, size_t len) {
 
     size_t hdr_len = 5; // Mandatory bytes
 
-    switch(buf[2]) {
+    switch(buf[3]) {
     case SOCKS5_IPV4_ADDR:
-        hdr_len += 4;
+        hdr_len += 4 + 1;
         break;
     case SOCKS5_IPV6_ADDR:
-        hdr_len += 16;
+        hdr_len += 16 + 1;
         break;
     case SOCKS5_HOSTNAME_ADDR:
         if (len < 4) {
             return false; // We need the length field...
         }
-        hdr_len += buf[3];
+        hdr_len += buf[3] + 1 + 1;
     break;
     default:
         throw ProtocolException{"Wrong/unsupported SOCKS5 BINDADDR type: "s
