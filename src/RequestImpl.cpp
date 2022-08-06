@@ -24,8 +24,8 @@ namespace {
 
 // We support versions of boost prior to the introduction of this convenience function
 
-auto make_address_v6(const char* str,
-    boost::system::error_code& ec) BOOST_ASIO_NOEXCEPT
+boost::asio::ip::address_v6 make_address_v6(const char* str,
+    boost::system::error_code& ec)
 {
   boost::asio::ip::address_v6::bytes_type bytes;
   unsigned long scope_id = 0;
@@ -35,8 +35,8 @@ auto make_address_v6(const char* str,
   return boost::asio::ip::address_v6(bytes, scope_id);
 }
 
-auto make_address_v4(const char* str,
-    boost::system::error_code& ec) BOOST_ASIO_NOEXCEPT
+boost::asio::ip::address_v4 make_address_v4(const char* str,
+    boost::system::error_code& ec)
 {
   boost::asio::ip::address_v4::bytes_type bytes;
   if (boost::asio::detail::socket_ops::inet_pton(
@@ -45,8 +45,8 @@ auto make_address_v4(const char* str,
   return boost::asio::ip::address_v4(bytes);
 }
 
-auto make_address(const char* str,
-    boost::system::error_code& ec) BOOST_ASIO_NOEXCEPT
+boost::asio::ip::address make_address(const char* str,
+    boost::system::error_code& ec)
 {
   boost::asio::ip::address_v6 ipv6_address =
     make_address_v6(str, ec);
