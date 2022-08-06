@@ -734,7 +734,7 @@ private:
                 try {
                     if (retries) {
                         RESTC_CPP_LOG_DEBUG_("RequestImpl::Connect: taking a nap");
-                        ctx.Sleep(50ms);
+                        ctx.Sleep(retries * 20ms);
                         RESTC_CPP_LOG_DEBUG_("RequestImpl::Connect: Waking up. Will try to read from the socket now.");
                     }
 
@@ -760,7 +760,7 @@ private:
                     connection->GetSocket().GetSocket().close();
 
                     if (ex.code() == boost::system::errc::resource_unavailable_try_again) {
-                        if ( retries < 16) {
+                        if ( retries < 32) {
                             RESTC_CPP_LOG_DEBUG_("RequestImpl::Connect:: Caught boost::system::system_error exception: " << ex.what()
                                                  << ". I will continue the retry loop.");
                             continue;
