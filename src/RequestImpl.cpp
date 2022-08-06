@@ -20,6 +20,27 @@
 using namespace std;
 using namespace std::string_literals;
 
+namespace {
+
+// We support versions of boost prior to the introduction of this convenience function
+auto make_address(const char* str,
+    boost::system::error_code& ec) BOOST_ASIO_NOEXCEPT
+{
+  boost::asio::ip::address_v6 ipv6_address =
+    boost::asio::ip::make_address_v6(str, ec);
+  if (!ec)
+    return boost::asio::ip::address{ipv6_address};
+
+  boost::asio::ip::address_v4 ipv4_address =
+    boost::asio::ip::make_address_v4(str, ec);
+  if (!ec)
+    return boost::asio::ip::address{ipv4_address};
+
+  return boost::asio::ip::address{};
+}
+
+} // anon ns
+
 namespace restc_cpp {
 
 const std::string& Request::Proxy::GetName() {
@@ -32,12 +53,12 @@ const std::string& Request::Proxy::GetName() {
 
 namespace {
 
-static constexpr char SOCKS5_VERSION = 0x05;
-static constexpr char SOCKS5_TCP_STREAM = 0x01;
-static constexpr char SOCKS5_MAX_HOSTNAME_LEN = 255;
-static constexpr char SOCKS5_IPV4_ADDR = 0x01;
-static constexpr char SOCKS5_IPV6_ADDR = 0x04;
-static constexpr char SOCKS5_HOSTNAME_ADDR = 0x03;
+constexpr char SOCKS5_VERSION = 0x05;
+constexpr char SOCKS5_TCP_STREAM = 0x01;
+constexpr char SOCKS5_MAX_HOSTNAME_LEN = 255;
+constexpr char SOCKS5_IPV4_ADDR = 0x01;
+constexpr char SOCKS5_IPV6_ADDR = 0x04;
+constexpr char SOCKS5_HOSTNAME_ADDR = 0x03;
 
 /* hostname: example.com:123                 -> "example.com", 123
  * ipv4:     1.2.3.4:123                     -> "1.2.3.4", 123
@@ -94,7 +115,7 @@ void ParseAddressIntoSocke5ConnectRequest(const std::string& addr,
     const auto final_port = htons(port);
 
     boost::system::error_code ec;
-    const auto a = boost::asio::ip::make_address(host, ec);
+    const auto a = make_address(host.c_str(), ec);
     if (ec) {
         // Assume that it's a hostname.
         // TODO: Validate with a regex
