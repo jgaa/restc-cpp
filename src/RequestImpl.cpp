@@ -154,19 +154,19 @@ void ParseAddressIntoSocke5ConnectRequest(const std::string& addr,
         out.push_back(static_cast<uint8_t>(host.size()));
 
         // Copy the address, without trailing zero
-        copy(host.begin(), host.end(), back_insert_iterator(out));
+        copy(host.begin(), host.end(), back_insert_iterator<vector<uint8_t>>(out));
     } else if (a.is_v4()) {
         const auto v4 = a.to_v4();
         const auto b = v4.to_bytes();
         assert(b.size() == 4);
         out.push_back(SOCKS5_IPV4_ADDR);
-        copy(b.begin(), b.end(), back_insert_iterator(out));
+        copy(b.begin(), b.end(), back_insert_iterator<vector<uint8_t>>(out));
     } else if (a.is_v6()) {
         const auto v6 = a.to_v6();
         const auto b = v6.to_bytes();
         assert(b.size() == 16);
         out.push_back(SOCKS5_IPV6_ADDR);
-        copy(b.begin(), b.end(), back_insert_iterator(out));
+        copy(b.begin(), b.end(), back_insert_iterator<vector<uint8_t>>(out));
     } else {
         throw ParseException{"Internal error. Failed to parse: "s + addr};
     }
