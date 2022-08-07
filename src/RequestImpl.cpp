@@ -938,9 +938,11 @@ private:
             throw RedirectException(http_code, *redirect_location, move(reply));
         }
 
-        RESTC_CPP_LOG_TRACE_("GetReply: Calling ValidateReply");
-        ValidateReply(*reply);
-        RESTC_CPP_LOG_TRACE_("GetReply: returning from ValidateReply");
+        if (properties_->throwOnHttpError) {
+            RESTC_CPP_LOG_TRACE_("GetReply: Calling ValidateReply");
+            ValidateReply(*reply);
+            RESTC_CPP_LOG_TRACE_("GetReply: returning from ValidateReply");
+        }
 
         /* Return the reply. At this time the reply headers and body
             * is returned. However, the body may or may not be
