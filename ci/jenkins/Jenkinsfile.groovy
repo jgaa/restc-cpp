@@ -23,7 +23,7 @@ pipeline {
 
         stage('Build') {
            parallel {
-                stage('Ubuntu Jellyfish') {
+                stage('Ubuntu Jammy') {
                     agent {
                         dockerfile {
                             filename 'Dockefile.ubuntu-jellyfish'
@@ -33,7 +33,7 @@ pipeline {
                     }
 
                     steps {
-                        echo "Building on ubuntu-jellyfish-AMD64 in ${WORKSPACE}"
+                        echo "Building on ubuntu-Jammy-AMD64 in ${WORKSPACE}"
                         checkout scm
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
@@ -52,7 +52,7 @@ pipeline {
                     }
                 }
                 
-                stage('Ubuntu Jellyfish CTX') {
+                stage('Ubuntu Jammy CTX') {
                     agent {
                         dockerfile {
                             filename 'Dockefile.ubuntu-jellyfish'
@@ -62,7 +62,7 @@ pipeline {
                     }
 
                     steps {
-                        echo "Building on ubuntu-jellyfish-AMD64 in ${WORKSPACE}"
+                        echo "Building on ubuntu-Jammy-AMD64 in ${WORKSPACE}"
                         checkout scm
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
@@ -238,7 +238,7 @@ pipeline {
                         echo 'Getting ready to run tests'
                         script {
                             try {
-                                sh 'cd build && ctest -E HTTPS_FUNCTIONAL_TESTS -E PROXY_TESTS --no-compress-output -T Test'
+                                sh 'cd build && ctest -E "HTTPS_FUNCTIONAL_TESTS|PROXY_TESTS" --no-compress-output -T Test'
                             } catch (exc) {
                                 
                                 unstable(message: "${STAGE_NAME} - Testing failed")
@@ -271,7 +271,7 @@ pipeline {
                         echo 'Getting ready to run tests'
                         script {
                             try {
-                                sh 'cd build && ctest -E HTTPS_FUNCTIONAL_TESTS -E PROXY_TESTS --no-compress-output -T Test'
+                                sh 'cd build && ctest -E "HTTPS_FUNCTIONAL_TESTS|PROXY_TESTS" --no-compress-output -T Test'
                             } catch (exc) {
                                 
                                 unstable(message: "${STAGE_NAME} - Testing failed")
@@ -304,7 +304,7 @@ pipeline {
                         echo 'Getting ready to run tests'
                         script {
                             try {
-                                sh 'cd build && ctest -E HTTPS_FUNCTIONAL_TESTS -E PROXY_TESTS --no-compress-output -T Test'
+                                sh 'cd build && ctest -E "HTTPS_FUNCTIONAL_TESTS|PROXY_TESTS" --no-compress-output -T Test'
                             } catch (exc) {
                                 
                                 unstable(message: "${STAGE_NAME} - Testing failed")
@@ -337,7 +337,7 @@ pipeline {
                         echo 'Getting ready to run tests'
                         script {
                             try {
-                                sh 'cd build && ctest -E HTTPS_FUNCTIONAL_TESTS -E PROXY_TESTS --no-compress-output -T Test'
+                                sh 'cd build && ctest -E "HTTPS_FUNCTIONAL_TESTS|PROXY_TESTS" --no-compress-output -T Test'
                             } catch (exc) {
                                 
                                 unstable(message: "${STAGE_NAME} - Testing failed")
