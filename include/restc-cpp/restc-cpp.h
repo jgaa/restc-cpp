@@ -181,6 +181,7 @@ public:
 #else
         size_t threads = 1;
 #endif
+        bool throwOnHttpError = true; // If false, the user must detect and deal with the error
     };
 
     virtual const Properties& GetProperties() const = 0;
