@@ -23,7 +23,7 @@ pipeline {
 
         stage('Build') {
            parallel {
-                stage('Ubuntu Jammy') {
+                 stage('Ubuntu Jammy') {
                     agent {
                         dockerfile {
                             filename 'Dockefile.ubuntu-jammy'
@@ -31,9 +31,13 @@ pipeline {
                             label 'docker'
                         }
                     }
+                    
+                    options {
+                        timeout(time: 30, unit: "MINUTES")
+                    }
 
                     steps {
-                        echo "Building on ubuntu-Jammy-AMD64 in ${WORKSPACE}"
+                        echo "Building on ubuntu-jammy-AMD64 in ${WORKSPACE}"
                         checkout scm
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
@@ -52,7 +56,7 @@ pipeline {
                     }
                 }
                 
-                stage('Ubuntu Jammy CTX') {
+                stage('Ubuntu Jammy MT CTX') {
                     agent {
                         dockerfile {
                             filename 'Dockefile.ubuntu-jammy'
@@ -60,14 +64,18 @@ pipeline {
                             label 'docker'
                         }
                     }
+                    
+                    options {
+                        timeout(time: 30, unit: "MINUTES")
+                    }
 
                     steps {
-                        echo "Building on ubuntu-Jammy-AMD64 in ${WORKSPACE}"
+                        echo "Building on ubuntu-jammy-AMD64 in ${WORKSPACE}"
                         checkout scm
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON  -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
@@ -80,7 +88,7 @@ pipeline {
                         }
                     }
                 }
-                
+                                
                 stage('Ubuntu Bionic') {
                     agent {
                         dockerfile {
