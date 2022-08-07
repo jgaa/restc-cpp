@@ -2,7 +2,8 @@ FROM ubuntu:22.04
 
 MAINTAINER Jarle Aase <jgaa@jgaa.com>
 
-RUN apt-get update &&\
+RUN chmod -R a+rX /etc/apt/trusted.gpg.d &&\
+    apt-get update -q &&\
     apt-get -y -q --no-install-recommends upgrade &&\
     apt-get -y -q install openssh-server g++ git gpgv \
     automake autoconf build-essential \

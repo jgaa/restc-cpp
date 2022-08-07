@@ -28,63 +28,63 @@ pipeline {
 //  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 871920D1991BC93C
 // There is a ticket about it: https://bugs.launchpad.net/subiquity/+bug/1971623
 // But it seems like Ubuntu don't care to *actually* fix it, so fuck them!
-//                 stage('Ubuntu Jammy') {
-//                     agent {
-//                         dockerfile {
-//                             filename 'Dockefile.ubuntu-jammy'
-//                             dir 'ci/jenkins'
-//                             label 'docker'
-//                         }
-//                     }
-// 
-//                     steps {
-//                         echo "Building on ubuntu-Jammy-AMD64 in ${WORKSPACE}"
-//                         checkout scm
-//                         sh 'pwd; ls -la'
-//                         sh 'rm -rf build'
-//                         sh 'mkdir build'
-//                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
-// 
-//                         echo 'Getting ready to run tests'
-//                         script {
-//                             try {
-//                                 sh 'cd build && ctest --no-compress-output -T Test'
-//                             } catch (exc) {
-//                                 
-//                                 unstable(message: "${STAGE_NAME} - Testing failed")
-//                             }
-//                         }
-//                     }
-//                 }
-//                 
-//                 stage('Ubuntu Jammy CTX') {
-//                     agent {
-//                         dockerfile {
-//                             filename 'Dockefile.ubuntu-jammy'
-//                             dir 'ci/jenkins'
-//                             label 'docker'
-//                         }
-//                     }
-// 
-//                     steps {
-//                         echo "Building on ubuntu-Jammy-AMD64 in ${WORKSPACE}"
-//                         checkout scm
-//                         sh 'pwd; ls -la'
-//                         sh 'rm -rf build'
-//                         sh 'mkdir build'
-//                         sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON  -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
-// 
-//                         echo 'Getting ready to run tests'
-//                         script {
-//                             try {
-//                                 sh 'cd build && ctest --no-compress-output -T Test'
-//                             } catch (exc) {
-//                                 
-//                                 unstable(message: "${STAGE_NAME} - Testing failed")
-//                             }
-//                         }
-//                     }
-//                 }
+                stage('Ubuntu Jammy') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockefile.ubuntu-jammy'
+                            dir 'ci/jenkins'
+                            label 'docker'
+                        }
+                    }
+
+                    steps {
+                        echo "Building on ubuntu-Jammy-AMD64 in ${WORKSPACE}"
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+                                
+                                unstable(message: "${STAGE_NAME} - Testing failed")
+                            }
+                        }
+                    }
+                }
+                
+                stage('Ubuntu Jammy CTX') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockefile.ubuntu-jammy'
+                            dir 'ci/jenkins'
+                            label 'docker'
+                        }
+                    }
+
+                    steps {
+                        echo "Building on ubuntu-Jammy-AMD64 in ${WORKSPACE}"
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON  -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+                                
+                                unstable(message: "${STAGE_NAME} - Testing failed")
+                            }
+                        }
+                    }
+                }
                 
                 stage('Ubuntu Bionic') {
                     agent {
