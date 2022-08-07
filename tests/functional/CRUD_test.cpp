@@ -87,7 +87,6 @@ STARTCASE(TestCRUD) {
 
 
     }).get();
-
 } ENDCASE
 
 STARTCASE(TestOptions) {

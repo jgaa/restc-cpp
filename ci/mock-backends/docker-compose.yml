@@ -17,3 +17,11 @@ services:
         links: 
             - "nginx:api.example.com"
         
+    socks:
+        image: jgaafromnorth/shinysocks
+        environment:
+          - LOG_LEVEL=trace
+        ports:
+          - "3004:1080"
+        links: 
+            - "nginx:api.example.com"

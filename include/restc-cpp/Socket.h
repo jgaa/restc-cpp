@@ -7,6 +7,7 @@
 #endif
 
 #include <vector>
+#include <array>
 
 #include <boost/system/error_code.hpp>
 
@@ -24,6 +25,8 @@ public:
       DONE,
       TIME_OUT
     };
+
+    using after_connect_cb_t = std::function<void()>;
 
     virtual ~Socket() = default;
 
@@ -43,6 +46,12 @@ public:
     virtual void AsyncWrite(const write_buffers_t& buffers,
         boost::asio::yield_context& yield) = 0;
 
+    template <typename T>
+    void AsyncWriteT(const T& buffer, boost::asio::yield_context& yield) {
+        boost::asio::const_buffers_1 b{buffer.data(), buffer.size()};
+        AsyncWrite(b, yield);
+    }
+
     virtual void AsyncConnect(const boost::asio::ip::tcp::endpoint& ep,
 		const std::string &host,
         bool tcpNodelay,
@@ -58,8 +67,20 @@ public:
         return v.Print(o);
     }
 
+    void SetAfterConnectCallback(after_connect_cb_t cb) {
+      after_connect_cb_ = std::move(cb);
+    }
+
 protected:
     virtual std::ostream& Print(std::ostream& o) const = 0;
+
+    void OnAfterConnect() {
+        if (after_connect_cb_) {
+            after_connect_cb_();
+        }
+    }
+
+    after_connect_cb_t after_connect_cb_;
 };
 
 

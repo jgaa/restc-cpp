@@ -564,7 +564,7 @@ int main() {
     RESTC_CPP_TEST_LOGGING_SETUP("debug");
 
     try {
-        /*cout << "First: " << endl;
+        cout << "First: " << endl;
         first();
 
         cout << "Second: " << endl;
@@ -595,7 +595,7 @@ int main() {
         tenth();
 
         cout << "Eleventh: " << endl;
-        eleventh();*/
+        eleventh();
 
         cout << "Twelfth: " << endl;
         twelfth();

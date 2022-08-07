@@ -4,7 +4,7 @@ pipeline {
     agent { label 'master' }
 
     environment {
-        RESTC_CPP_VERSION = "0.93.0"
+        RESTC_CPP_VERSION = "0.94.0"
 
         // It is not possible to get the current IP number when running in the sandbox, and
         // Jenkinsfiles always runs in the sandbox.
@@ -23,50 +23,22 @@ pipeline {
 
         stage('Build') {
            parallel {
-//               # Unfortunately, Ubuntu Hippo cannot run 'apt update' using docker from the
-//               # current Debian release version. So fuck Ubuntu Hippo. 
-//
-//                 stage('Ubuntu Hippo') {
+// Broken:  java.io.IOException: Failed to run image '692f7cce9b970633dba347a9aaf12846429c073f'. Error: docker: Error // response from daemon: OCI runtime create failed: container_linux.go:367: starting container process caused: chdir to cwd ("/home/jenkins/build/workspace/restc-staging") set in config.json failed: permission denied: unknown.        
+//                  stage('Ubuntu Jammy') {
 //                     agent {
 //                         dockerfile {
-//                             filename 'Dockefile.ubuntu-hippo'
+//                             filename 'Dockefile.ubuntu-jammy'
 //                             dir 'ci/jenkins'
 //                             label 'docker'
 //                         }
 //                     }
-// 
-//                     steps {
-//                         echo "Building on ubuntu-bionic-AMD64 in ${WORKSPACE}"
-//                         checkout scm
-//                         sh 'pwd; ls -la'
-//                         sh 'rm -rf build'
-//                         sh 'mkdir build'
-//                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
-// 
-//                         echo 'Getting ready to run tests'
-//                         script {
-//                             try {
-//                                 sh 'cd build && ctest --no-compress-output -T Test'
-//                             } catch (exc) {
-//                                 
-//                                 unstable(message: "${STAGE_NAME} - Testing failed")
-//                             }
-//                         }
-//                     }
-//                 }
-//                 
-//                  
-//                 stage('Ubuntu Hippo C++17') {
-//                     agent {
-//                         dockerfile {
-//                             filename 'Dockefile.ubuntu-hippo'
-//                             dir 'ci/jenkins'
-//                             label 'docker'
-//                         }
+//                     
+//                     options {
+//                         timeout(time: 30, unit: "MINUTES")
 //                     }
 // 
 //                     steps {
-//                         echo "Building on ubuntu-bionic-AMD64 in ${WORKSPACE}"
+//                         echo "Building on ubuntu-jammy-AMD64 in ${WORKSPACE}"
 //                         checkout scm
 //                         sh 'pwd; ls -la'
 //                         sh 'rm -rf build'
@@ -84,7 +56,40 @@ pipeline {
 //                         }
 //                     }
 //                 }
-                
+//                 
+//                 stage('Ubuntu Jammy MT CTX') {
+//                     agent {
+//                         dockerfile {
+//                             filename 'Dockefile.ubuntu-jammy'
+//                             dir 'ci/jenkins'
+//                             label 'docker'
+//                         }
+//                     }
+//                     
+//                     options {
+//                         timeout(time: 30, unit: "MINUTES")
+//                     }
+// 
+//                     steps {
+//                         echo "Building on ubuntu-jammy-AMD64 in ${WORKSPACE}"
+//                         checkout scm
+//                         sh 'pwd; ls -la'
+//                         sh 'rm -rf build'
+//                         sh 'mkdir build'
+//                         sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+// 
+//                         echo 'Getting ready to run tests'
+//                         script {
+//                             try {
+//                                 sh 'cd build && ctest --no-compress-output -T Test'
+//                             } catch (exc) {
+//                                 
+//                                 unstable(message: "${STAGE_NAME} - Testing failed")
+//                             }
+//                         }
+//                     }
+//                 }
+                                
                 stage('Ubuntu Bionic') {
                     agent {
                         dockerfile {
@@ -104,7 +109,7 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=OFF .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
@@ -138,7 +143,7 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=OFF .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
@@ -237,12 +242,12 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=OFF .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
                             try {
-                                sh 'cd build && ctest -E HTTPS_FUNCTIONAL_TESTS --no-compress-output -T Test'
+                                sh 'cd build && ctest -E "HTTPS_FUNCTIONAL_TESTS|PROXY_TESTS" --no-compress-output -T Test'
                             } catch (exc) {
                                 
                                 unstable(message: "${STAGE_NAME} - Testing failed")
@@ -270,12 +275,12 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=OFF .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
                             try {
-                                sh 'cd build && ctest -E HTTPS_FUNCTIONAL_TESTS --no-compress-output -T Test'
+                                sh 'cd build && ctest -E "HTTPS_FUNCTIONAL_TESTS|PROXY_TESTS" --no-compress-output -T Test'
                             } catch (exc) {
                                 
                                 unstable(message: "${STAGE_NAME} - Testing failed")
@@ -303,12 +308,12 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=OFF .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
                             try {
-                                sh 'cd build && ctest -E HTTPS_FUNCTIONAL_TESTS --no-compress-output -T Test'
+                                sh 'cd build && ctest -E "HTTPS_FUNCTIONAL_TESTS|PROXY_TESTS" --no-compress-output -T Test'
                             } catch (exc) {
                                 
                                 unstable(message: "${STAGE_NAME} - Testing failed")
@@ -336,12 +341,12 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=OFF .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
                             try {
-                                sh 'cd build && ctest -E HTTPS_FUNCTIONAL_TESTS --no-compress-output -T Test'
+                                sh 'cd build && ctest -E "HTTPS_FUNCTIONAL_TESTS|PROXY_TESTS" --no-compress-output -T Test'
                             } catch (exc) {
                                 
                                 unstable(message: "${STAGE_NAME} - Testing failed")
@@ -349,73 +354,6 @@ pipeline {
                         }
                     }
                 }
-                
-                stage('Debian Buster') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockefile.debian-buster'
-                            dir 'ci/jenkins'
-                            label 'docker'
-                        }
-                    }
-                    
-                    options {
-                        timeout(time: 30, unit: "MINUTES")
-                    }
-
-                    steps {
-                        echo "Building on debian-buster-AMD64 in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-                                
-                                unstable(message: "${STAGE_NAME} - Testing failed")
-                            }
-                        }
-                    }
-                }
-                
-                stage('Debian Buster MT CTX') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockefile.debian-buster'
-                            dir 'ci/jenkins'
-                            label 'docker'
-                        }
-                    }
-                    
-                    options {
-                        timeout(time: 30, unit: "MINUTES")
-                    }
-
-                    steps {
-                        echo "Building on debian-buster-AMD64 in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-                                
-                                unstable(message: "${STAGE_NAME} - Testing failed")
-                            }
-                        }
-                    }
-                }
-                
                 
                 stage('Debian Buster C++17') {
                     agent {
@@ -550,7 +488,7 @@ pipeline {
                     }
                 }
 
-                stage('Debian Testing') {
+                stage('Debian Testing C++17') {
                     agent {
                         dockerfile {
                             filename 'Dockefile.debian-testing'
@@ -583,7 +521,7 @@ pipeline {
                     }
                 }
                 
-                stage('Debian Testing MT CTX') {
+                stage('Debian Testing MT CTX C++17') {
                     agent {
                         dockerfile {
                             filename 'Dockefile.debian-testing'
@@ -674,7 +612,7 @@ pipeline {
 //                     }
 //                 }
 
-                stage('Windows X64 with vcpkg') {
+                stage('Windows X64 with vcpkg C++17') {
 
                     agent {label 'windows'}
                     
@@ -717,7 +655,7 @@ pipeline {
                     }
                 }
                 
-                stage('Windows X64 with vcpkg MT CTX') {
+                stage('Windows X64 with vcpkg MT CTX C++17') {
 
                     agent {label 'windows'}
                     

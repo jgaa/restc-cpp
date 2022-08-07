@@ -35,7 +35,7 @@ public:
                 try {
                     if (retries) {
                         RESTC_CPP_LOG_DEBUG_("IoReaderImpl::ReadSome: taking a nap");
-                        ctx_.Sleep(50ms);
+                        ctx_.Sleep(retries * 20ms);
                         RESTC_CPP_LOG_DEBUG_("IoReaderImpl::ReadSome: Waking up. Will try to read from the socket now.");
                     }
 
@@ -43,7 +43,7 @@ public:
                         {buffer_.data(), buffer_.size()}, ctx_.GetYield());
                 } catch (const boost::system::system_error& ex) {
                     if (ex.code() == boost::system::errc::resource_unavailable_try_again) {
-                        if ( retries < 16) {
+                        if ( retries < 32) {
                             RESTC_CPP_LOG_DEBUG_("IoReaderImpl::ReadSome: Caught boost::system::system_error exception: " << ex.what()
                                                  << ". I will continue the retry loop.");
                             continue;

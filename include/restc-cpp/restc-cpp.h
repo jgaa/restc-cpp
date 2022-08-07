@@ -131,9 +131,11 @@ public:
     };
 
     struct Proxy {
-        enum class Type { NONE, HTTP };
+        enum class Type { NONE, HTTP, SOCKS5 };
         Type type = Type::NONE;
         std::string address;
+
+        const std::string& GetName();
     };
 
     using args_t = std::deque<Arg>;
@@ -179,6 +181,7 @@ public:
 #else
         size_t threads = 1;
 #endif
+        bool throwOnHttpError = true; // If false, the user must detect and deal with the error
     };
 
     virtual const Properties& GetProperties() const = 0;

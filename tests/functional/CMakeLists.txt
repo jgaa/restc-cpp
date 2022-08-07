@@ -178,3 +178,15 @@ add_dependencies(cookie-tests externalLest)
 SET_CPP_STANDARD(cookie-tests)
 add_test(COOKIE_TESTS cookie-tests)
 
+# ======================================
+
+add_executable(properties-tests PropertiesTests.cpp)
+target_link_libraries(properties-tests
+    restc-cpp
+    ${DEFAULT_LIBRARIES}
+    ${UNITTEST_LIB}
+)
+add_dependencies(properties-tests externalLest)
+SET_CPP_STANDARD(properties-tests)
+add_test(PROPERTIES_TESTS properties-tests)
+

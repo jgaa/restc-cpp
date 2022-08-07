@@ -84,6 +84,9 @@ public:
             ssl_socket_->lowest_layer().set_option(
                         boost::asio::ip::tcp::no_delay(tcpNodelay));
 
+            RESTC_CPP_LOG_TRACE_("AsyncConnect - Calling OnAfterConnect()");
+            OnAfterConnect();
+
             RESTC_CPP_LOG_TRACE_("AsyncConnect - Calling async_handshake");
             ssl_socket_->async_handshake(boost::asio::ssl::stream_base::client,
                                          yield);

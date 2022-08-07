@@ -62,6 +62,7 @@ public:
         return WrapException<void>([&] {
             socket_.async_connect(ep, yield);
             socket_.lowest_layer().set_option(boost::asio::ip::tcp::no_delay(tcpNodelay));
+            OnAfterConnect();
         });
     }
 
