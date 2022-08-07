@@ -23,11 +23,6 @@ pipeline {
 
         stage('Build') {
            parallel {
-// Broken. Yields
-// Err:1 http://security.ubuntu.com/ubuntu jammy-security InRelease
-//  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 871920D1991BC93C
-// There is a ticket about it: https://bugs.launchpad.net/subiquity/+bug/1971623
-// But it seems like Ubuntu don't care to *actually* fix it, so fuck them!
                 stage('Ubuntu Jammy') {
                     agent {
                         dockerfile {
