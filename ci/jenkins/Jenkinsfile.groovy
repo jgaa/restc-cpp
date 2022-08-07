@@ -23,67 +23,63 @@ pipeline {
 
         stage('Build') {
            parallel {
-//               # Unfortunately, Ubuntu Hippo cannot run 'apt update' using docker from the
-//               # current Debian release version. So fuck Ubuntu Hippo. 
-//
-//                 stage('Ubuntu Hippo') {
-//                     agent {
-//                         dockerfile {
-//                             filename 'Dockefile.ubuntu-hippo'
-//                             dir 'ci/jenkins'
-//                             label 'docker'
-//                         }
-//                     }
-// 
-//                     steps {
-//                         echo "Building on ubuntu-bionic-AMD64 in ${WORKSPACE}"
-//                         checkout scm
-//                         sh 'pwd; ls -la'
-//                         sh 'rm -rf build'
-//                         sh 'mkdir build'
-//                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
-// 
-//                         echo 'Getting ready to run tests'
-//                         script {
-//                             try {
-//                                 sh 'cd build && ctest --no-compress-output -T Test'
-//                             } catch (exc) {
-//                                 
-//                                 unstable(message: "${STAGE_NAME} - Testing failed")
-//                             }
-//                         }
-//                     }
-//                 }
-//                 
-//                  
-//                 stage('Ubuntu Hippo C++17') {
-//                     agent {
-//                         dockerfile {
-//                             filename 'Dockefile.ubuntu-hippo'
-//                             dir 'ci/jenkins'
-//                             label 'docker'
-//                         }
-//                     }
-// 
-//                     steps {
-//                         echo "Building on ubuntu-bionic-AMD64 in ${WORKSPACE}"
-//                         checkout scm
-//                         sh 'pwd; ls -la'
-//                         sh 'rm -rf build'
-//                         sh 'mkdir build'
-//                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
-// 
-//                         echo 'Getting ready to run tests'
-//                         script {
-//                             try {
-//                                 sh 'cd build && ctest --no-compress-output -T Test'
-//                             } catch (exc) {
-//                                 
-//                                 unstable(message: "${STAGE_NAME} - Testing failed")
-//                             }
-//                         }
-//                     }
-//                 }
+                stage('Ubuntu Jellyfish') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockefile.ubuntu-jellyfish'
+                            dir 'ci/jenkins'
+                            label 'docker'
+                        }
+                    }
+
+                    steps {
+                        echo "Building on ubuntu-jellyfish-AMD64 in ${WORKSPACE}"
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+                                
+                                unstable(message: "${STAGE_NAME} - Testing failed")
+                            }
+                        }
+                    }
+                }
+                
+                stage('Ubuntu Jellyfish CTX') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockefile.ubuntu-jellyfish'
+                            dir 'ci/jenkins'
+                            label 'docker'
+                        }
+                    }
+
+                    steps {
+                        echo "Building on ubuntu-jellyfish-AMD64 in ${WORKSPACE}"
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON  -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+                                
+                                unstable(message: "${STAGE_NAME} - Testing failed")
+                            }
+                        }
+                    }
+                }
                 
                 stage('Ubuntu Bionic') {
                     agent {
@@ -242,7 +238,7 @@ pipeline {
                         echo 'Getting ready to run tests'
                         script {
                             try {
-                                sh 'cd build && ctest -E HTTPS_FUNCTIONAL_TESTS --no-compress-output -T Test'
+                                sh 'cd build && ctest -E HTTPS_FUNCTIONAL_TESTS -E PROXY_TESTS --no-compress-output -T Test'
                             } catch (exc) {
                                 
                                 unstable(message: "${STAGE_NAME} - Testing failed")
@@ -275,7 +271,7 @@ pipeline {
                         echo 'Getting ready to run tests'
                         script {
                             try {
-                                sh 'cd build && ctest -E HTTPS_FUNCTIONAL_TESTS --no-compress-output -T Test'
+                                sh 'cd build && ctest -E HTTPS_FUNCTIONAL_TESTS -E PROXY_TESTS --no-compress-output -T Test'
                             } catch (exc) {
                                 
                                 unstable(message: "${STAGE_NAME} - Testing failed")
@@ -308,7 +304,7 @@ pipeline {
                         echo 'Getting ready to run tests'
                         script {
                             try {
-                                sh 'cd build && ctest -E HTTPS_FUNCTIONAL_TESTS --no-compress-output -T Test'
+                                sh 'cd build && ctest -E HTTPS_FUNCTIONAL_TESTS -E PROXY_TESTS --no-compress-output -T Test'
                             } catch (exc) {
                                 
                                 unstable(message: "${STAGE_NAME} - Testing failed")
@@ -341,7 +337,7 @@ pipeline {
                         echo 'Getting ready to run tests'
                         script {
                             try {
-                                sh 'cd build && ctest -E HTTPS_FUNCTIONAL_TESTS --no-compress-output -T Test'
+                                sh 'cd build && ctest -E HTTPS_FUNCTIONAL_TESTS -E PROXY_TESTS --no-compress-output -T Test'
                             } catch (exc) {
                                 
                                 unstable(message: "${STAGE_NAME} - Testing failed")
