@@ -82,7 +82,7 @@ STARTCASE(TestCRUD) {
     EXPECT_THROWS_AS(
         RequestBuilder(ctx)
             .Get(GetDockerUrl(http_url) + "/" + to_string(post.id)) // URL
-            .Execute(), RequestFailedWithErrorException);
+            .Execute(), HttpNotFoundException);
 
 
 
