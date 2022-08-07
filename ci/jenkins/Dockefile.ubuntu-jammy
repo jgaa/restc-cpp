@@ -13,7 +13,9 @@ RUN DEBIAN_FRONTEND="noninteractive" apt-get -q update &&\
 
 # Set user jenkins to the image
 RUN useradd -m -d /home/jenkins -s /bin/sh jenkins &&\
-    echo "jenkins:jenkins" | chpasswd
+    echo "jenkins:jenkins" | chpasswd &&\
+    mkdir -p /home/jenkins/build/workspace/restc-staging &&\
+    chmod -R a+rwX /home/jenkins/build
 
 # Standard SSH port
 EXPOSE 22
