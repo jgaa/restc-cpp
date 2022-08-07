@@ -7,6 +7,7 @@
 #include <set>
 #include <stack>
 #include <type_traits>
+#include <optional>
 
 #include "restc-cpp/RapidJsonReader.h"
 #include "restc-cpp/RapidJsonWriter.h"
