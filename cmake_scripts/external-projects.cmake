@@ -77,7 +77,7 @@ ExternalProject_Add(googletest
         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -Dgtest_force_shared_crt=TRUE
+        #${GTEST_EXTRA_ARGS}
 )
 set(GTEST_LIB_DIR ${RESTC_EXTERNAL_INSTALLED_LIB_DIR})
 
