@@ -7,7 +7,7 @@ add_executable(basic_tests BasicTests.cpp)
 SET_CPP_STANDARD(basic_tests)
 add_dependencies(basic_tests googletest)
 message("GTEST_LIB_DIR: ${GTEST_LIB_DIR}")
-target_link_directories(basic_tests PRIVATE ${GTEST_LIB_DIR})
+#target_link_directories(basic_tests PRIVATE ${GTEST_LIB_DIR})
 target_link_libraries(basic_tests PRIVATE gtest restc-cpp ${DEFAULT_LIBRARIES})
 add_test(BASIC_TESTS basic_tests)
 
