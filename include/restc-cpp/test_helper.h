@@ -37,7 +37,8 @@ namespace restc_cpp {
         return (value >= (expect - slack))
             && (value <= (expect + slack));
     }
-
+#else
+#define EXPECT_HTTP_OK(res) EXPECT_GE(res, 200); EXPECT_LE(res, 201)
 #endif
 
 // Substitute localhost with whatever is in the environment-variable

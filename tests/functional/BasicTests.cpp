@@ -35,32 +35,29 @@ const string http_url = "http://localhost:3001/normal/manyposts";
 const string https_url = "https://lastviking.eu/files/api";
 
 
-#define EXPECT_HTTP_OK(res) EXPECT_GE(res, 200); EXPECT_LE(res, 201)
-
-
-
-//    // Fetch a result trough a future
-//    try {
-//        auto client = RestClient::Create();
-//        Post my_post = client->ProcessWithPromiseT<Post>([&](Context& ctx) {
-//            Post post;
-//            SerializeFromJson(post, ctx.Get(GetDockerUrl(http_url) + "/1"));
-//            return post;
-//        }).get();
-
-//        cout << "Received post# " << my_post.id << ", username: " << my_post.username;
-//    } catch (const exception& ex) {
-//        RESTC_CPP_LOG_INFO_("main: Caught exception: " << ex.what());
-//    }
-
-//    return 0;
-//}
-
 TEST(Gtest, validateOk) {
     EXPECT_EQ(1, 1);
 }
 
-TEST(ExampleWorkflow, all) {
+TEST(Future, GetData) {
+    auto client = RestClient::Create();
+    EXPECT_TRUE(client);
+
+    Post my_post;
+
+    EXPECT_NO_THROW(
+        my_post = client->ProcessWithPromiseT<Post>([&](Context& ctx) {
+            Post post;
+            SerializeFromJson(post, ctx.Get(GetDockerUrl(http_url) + "/1"));
+            return post;
+            }).get();
+        ); // EXPECT_NO_THROW
+    EXPECT_EQ(my_post.id, 1);
+    EXPECT_FALSE(my_post.username.empty());
+    EXPECT_FALSE(my_post.motto.empty());
+}
+
+TEST(ExampleWorkflow, SequentialRequests) {
     auto cb = [](Context& ctx) -> void {
         // Asynchronously fetch the entire data-set, and convert it from json
         // to C++ objects was we go.
