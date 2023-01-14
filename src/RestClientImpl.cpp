@@ -246,7 +246,7 @@ public:
         return default_connection_properties_;
     }
 
-    bool IsClosed() const noexcept override {
+    bool IsClosing() const noexcept override {
         return closed_;
     }
 

@@ -186,6 +186,13 @@ inline void RestcCppTestStartLogger(const std::string& level = "info") {
 
 #include <iostream>
 #include <memory>
+
+#ifdef __linux__
+#  include <sys/types.h>
+#  include <unistd.h>
+#  define LOGFAULT_THREAD_NAME gettid()
+#endif
+
 #include "logfault/logfault.h"
 
 #define RESTC_CPP_LOG_ERROR_(msg)     LFLOG_ERROR << msg

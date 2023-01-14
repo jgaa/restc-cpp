@@ -672,10 +672,10 @@ private:
         const decltype(address_it) addr_end;
 
         for(; address_it != addr_end; ++address_it) {
-            if (owner_.IsClosed()) {
-                RESTC_CPP_LOG_DEBUG_("RequestImpl::Connect: The rest client is closed (at first loop). Aborting.");
-                throw FailedToConnectException("Failed to connect (closed)");
-            }
+//            if (owner_.IsClosing()) {
+//                RESTC_CPP_LOG_DEBUG_("RequestImpl::Connect: The rest client is closed (at first loop). Aborting.");
+//                throw FailedToConnectException("Failed to connect (closed)");
+//            }
 
             const auto endpoint = address_it->endpoint();
 
@@ -727,10 +727,10 @@ private:
                 }
 
 
-                if (owner_.IsClosed()) {
-                    RESTC_CPP_LOG_DEBUG_("RequestImpl::Connect: The rest client is closed. Aborting.");
-                    throw FailedToConnectException("Failed to connect (closed)");
-                }
+//                if (owner_.IsClosed()) {
+//                    RESTC_CPP_LOG_DEBUG_("RequestImpl::Connect: The rest client is closed. Aborting.");
+//                    throw FailedToConnectException("Failed to connect (closed)");
+//                }
 
                 auto timer = IoTimer::Create(timer_name,
                     properties_->connectTimeoutMs, connection);
