@@ -9,7 +9,7 @@
 namespace restc_cpp {
 
 // todo: Remove when migration to gtest is complete!
-#ifndef GOOGLETEST_INCLUDE_GTEST_GTEST_H_
+#if !defined(GOOGLETEST_INCLUDE_GTEST_GTEST_H_) && !defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     namespace {
 
 
@@ -38,7 +38,7 @@ namespace restc_cpp {
             && (value <= (expect + slack));
     }
 #else
-#define EXPECT_HTTP_OK(res) EXPECT_GE(res, 200); EXPECT_LE(res, 201)
+#   define EXPECT_HTTP_OK(res) EXPECT_GE(res, 200); EXPECT_LE(res, 201)
 #endif
 
 // Substitute localhost with whatever is in the environment-variable
@@ -54,7 +54,7 @@ inline std::string GetDockerUrl(std::string url) {
 } // namespace
 
 // todo: Remove when migration to gtest is complete!
-#ifndef GOOGLETEST_INCLUDE_GTEST_GTEST_H_
+#if !defined(GOOGLETEST_INCLUDE_GTEST_GTEST_H_) && !defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     #define CHECK_EQUAL(a,b) EXPECT(compare(a,b))
     #define CHECK_EQUAL_ENUM(a,b) EXPECT(compare(static_cast<int>(a), static_cast<int>(b)))
     #define TEST(name) CASE(#name)
