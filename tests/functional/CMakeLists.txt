@@ -4,9 +4,9 @@ project(functionaltests)
 # ======================================
 
 add_executable(basic_tests BasicTests.cpp)
-target_link_libraries(basic_tests
-    restc-cpp ${DEFAULT_LIBRARIES})
 SET_CPP_STANDARD(basic_tests)
+add_dependencies(basic_tests googletest)
+target_link_libraries(basic_tests gtest restc-cpp ${DEFAULT_LIBRARIES} )
 add_test(BASIC_TESTS basic_tests)
 
 

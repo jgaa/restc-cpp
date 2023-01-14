@@ -6,6 +6,7 @@
 
 set(EXTERNAL_PROJECTS_PREFIX ${CMAKE_BINARY_DIR}/external-projects)
 set(EXTERNAL_PROJECTS_INSTALL_PREFIX ${EXTERNAL_PROJECTS_PREFIX}/installed)
+link_directories(${EXTERNAL_PROJECTS_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
 
 include(ExternalProject)
 
@@ -53,3 +54,13 @@ include_directories(
      ${EXTERNAL_PROJECTS_PREFIX}/src/externalLest/include
      ${EXTERNAL_PROJECTS_PREFIX}/installed/include
     )
+
+ExternalProject_Add(googletest
+    GIT_TAG "main"
+    PREFIX "${EXTERNAL_PROJECTS_PREFIX}"
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    CMAKE_ARGS
+        -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_INSTALL_PREFIX}
+        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+)

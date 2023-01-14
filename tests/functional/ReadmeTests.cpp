@@ -95,6 +95,8 @@ void second() {
 
     // Call DoSomethingInteresting as a co-routine in a worker-thread.
     rest_client->Process(DoSomethingInteresting);
+
+    rest_client->CloseWhenReady();
 }
 
 void third() {
