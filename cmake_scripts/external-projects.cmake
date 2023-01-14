@@ -4,11 +4,13 @@
 # add_dependencies(TARGET externalProjectName)
 # target_link_libraries(TARGET PRIVATE ExternalLibraryName)
 
+include(GNUInstallDirs)
+include(ExternalProject)
+
 set(EXTERNAL_PROJECTS_PREFIX ${CMAKE_BINARY_DIR}/external-projects)
 set(EXTERNAL_PROJECTS_INSTALL_PREFIX ${EXTERNAL_PROJECTS_PREFIX}/installed)
-link_directories(${EXTERNAL_PROJECTS_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
+set(RESTC_EXTERNAL_INSTALLED_LIB_DIR ${EXTERNAL_PROJECTS_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
 
-include(ExternalProject)
 
 ExternalProject_Add(
     externalRapidJson
@@ -64,3 +66,5 @@ ExternalProject_Add(googletest
         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
 )
+set(GTEST_LIB_DIR ${RESTC_EXTERNAL_INSTALLED_LIB_DIR})
+
