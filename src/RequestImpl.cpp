@@ -673,7 +673,7 @@ private:
 
         for(; address_it != addr_end; ++address_it) {
             if (owner_.IsClosed()) {
-                RESTC_CPP_LOG_DEBUG_("RequestImpl::Connect: The rest client is closed (at first lkoop). Aborting.");
+                RESTC_CPP_LOG_DEBUG_("RequestImpl::Connect: The rest client is closed (at first loop). Aborting.");
                 throw FailedToConnectException("Failed to connect (closed)");
             }
 

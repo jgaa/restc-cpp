@@ -35,98 +35,9 @@ const string http_url = "http://localhost:3001/normal/manyposts";
 const string https_url = "https://lastviking.eu/files/api";
 
 
-//void DoSomethingInteresting(Context& ctx) {
+#define EXPECT_HTTP_OK(res) EXPECT_GE(res, 200); EXPECT_LE(res, 201)
 
 
-//    // Asynchronously fetch the entire data-set, and convert it from json
-//    // to C++ objects was we go.
-//    // We expcet a list of Post objects
-//    list<Post> posts_list;
-//    SerializeFromJson(posts_list, ctx.Get(GetDockerUrl(http_url)));
-
-//    // Just dump the data.
-//    for(const auto& post : posts_list) {
-//        RESTC_CPP_LOG_INFO_("Post id=" << post.id << ", title: " << post.motto);
-//    }
-
-//    // Asynchronously connect to server and POST data.
-//    auto repl = ctx.Post(GetDockerUrl(http_url), "{\"test\":\"teste\"}");
-
-//    // Asynchronously fetch the entire data-set and return it as a string.
-//    auto json = repl->GetBodyAsString();
-//    RESTC_CPP_LOG_INFO_("Received POST data: " << json);
-
-
-//    // Use RequestBuilder to fetch everything
-//    repl = RequestBuilder(ctx)
-//        .Get(GetDockerUrl(http_url))
-//        .Header("X-Client", "RESTC_CPP")
-//        .Header("X-Client-Purpose", "Testing")
-//        .Header("Accept", "*/*")
-//        .Execute();
-
-//    string body = repl->GetBodyAsString();
-//    cout << "Got compressed list: " << body << endl;
-//    repl.reset();
-
-//    // Use RequestBuilder to fetch a record
-//    repl = RequestBuilder(ctx)
-//        .Get(GetDockerUrl(http_url))
-//        .Header("X-Client", "RESTC_CPP")
-//        .Header("X-Client-Purpose", "Testing")
-//        .Header("Accept", "*/*")
-//        .Argument("id", 1)
-//        .Argument("test some $ stuff", "oh my my")
-//        .Execute();
-
-//    cout << "Got: " << repl->GetBodyAsString() << endl;
-//    repl.reset();
-
-//    // Use RequestBuilder to fetch a record without compression
-//    repl = RequestBuilder(ctx)
-//        .Get(GetDockerUrl(http_url))
-//        .Header("X-Client", "RESTC_CPP")
-//        .Header("X-Client-Purpose", "Testing")
-//        .Header("Accept", "*/*")
-//        .DisableCompression()
-//        .Argument("id", 2)
-//        .Execute();
-
-//    cout << "Got: " << repl->GetBodyAsString() << endl;
-//    repl.reset();
-
-//    // Use RequestBuilder to post a record
-//    Post data_object;
-//    data_object.username = "testid";
-//    data_object.motto = "Carpe diem";
-//    repl = RequestBuilder(ctx)
-//        .Post(GetDockerUrl(http_url))
-//        .Header("X-Client", "RESTC_CPP")
-//        .Data(data_object)
-//        .Execute();
-
-//    repl.reset();
-
-//#ifdef RESTC_CPP_WITH_TLS
-//        // Try with https
-//        repl = ctx.Get(https_url);
-//        json = repl->GetBodyAsString();
-//        RESTC_CPP_LOG_INFO_("Received https GET data: " << json);
-//#endif // TLS
-//        RESTC_CPP_LOG_INFO_("Done");
-//}
-
-
-
-//    try {
-//        auto rest_client = RestClient::Create();
-//        auto future = rest_client->ProcessWithPromise(DoSomethingInteresting);
-
-//        // Hold the main thread to allow the worker to do it's job
-//        future.get();
-//    } catch (const exception& ex) {
-//        RESTC_CPP_LOG_INFO_("main: Caught exception: " << ex.what());
-//    }
 
 //    // Fetch a result trough a future
 //    try {
@@ -145,102 +56,102 @@ const string https_url = "https://lastviking.eu/files/api";
 //    return 0;
 //}
 
-TEST(testGeneral, validateGtest) {
+TEST(Gtest, validateOk) {
     EXPECT_EQ(1, 1);
 }
 
-//TEST(ExampleWorkflow, all) {
-//    auto cb = [](Context& ctx) -> void {
-//        // Asynchronously fetch the entire data-set, and convert it from json
-//        // to C++ objects was we go.
-//        // We expcet a list of Post objects
-//        list<Post> posts_list;
-//        SerializeFromJson(posts_list, ctx.Get(GetDockerUrl(http_url)));
+TEST(ExampleWorkflow, all) {
+    auto cb = [](Context& ctx) -> void {
+        // Asynchronously fetch the entire data-set, and convert it from json
+        // to C++ objects was we go.
+        // We expcet a list of Post objects
+        list<Post> posts_list;
+        SerializeFromJson(posts_list, ctx.Get(GetDockerUrl(http_url)));
 
-//        EXPECT_GE(posts_list.size(), 1);
+        EXPECT_GE(posts_list.size(), 1);
 
-//        // Asynchronously connect to server and POST data.
-//        auto repl = ctx.Post(GetDockerUrl(http_url), "{\"test\":\"teste\"}");
+        // Asynchronously connect to server and POST data.
+        auto repl = ctx.Post(GetDockerUrl(http_url), "{\"test\":\"teste\"}");
 
-//        // Asynchronously fetch the entire data-set and return it as a string.
-//        auto json = repl->GetBodyAsString();
-//        RESTC_CPP_LOG_INFO_("Received POST data: " << json);
-//        EXPECT_EQ(repl->GetHttpResponse().status_code, 200);
+        // Asynchronously fetch the entire data-set and return it as a string.
+        auto json = repl->GetBodyAsString();
+        RESTC_CPP_LOG_INFO_("Received POST data: " << json);
+        EXPECT_HTTP_OK(repl->GetHttpResponse().status_code);
 
-//        // Use RequestBuilder to fetch everything
-//        repl = RequestBuilder(ctx)
-//            .Get(GetDockerUrl(http_url))
-//            .Header("X-Client", "RESTC_CPP")
-//            .Header("X-Client-Purpose", "Testing")
-//            .Header("Accept", "*/*")
-//            .Execute();
+        // Use RequestBuilder to fetch everything
+        repl = RequestBuilder(ctx)
+            .Get(GetDockerUrl(http_url))
+            .Header("X-Client", "RESTC_CPP")
+            .Header("X-Client-Purpose", "Testing")
+            .Header("Accept", "*/*")
+            .Execute();
 
-//        string body = repl->GetBodyAsString();
-//        cout << "Got compressed list: " << body << endl;
+        string body = repl->GetBodyAsString();
+        cout << "Got compressed list: " << body << endl;
 
-//        EXPECT_EQ(repl->GetHttpResponse().status_code, 200);
-//        EXPECT_FALSE(body.empty());
+        EXPECT_HTTP_OK(repl->GetHttpResponse().status_code);
+        EXPECT_FALSE(body.empty());
 
-//        repl.reset();
+        repl.reset();
 
-//        // Use RequestBuilder to fetch a record
-//        repl = RequestBuilder(ctx)
-//            .Get(GetDockerUrl(http_url))
-//            .Header("X-Client", "RESTC_CPP")
-//            .Header("X-Client-Purpose", "Testing")
-//            .Header("Accept", "*/*")
-//            .Argument("id", 1)
-//            .Argument("test some $ stuff", "oh my my")
-//            .Execute();
+        // Use RequestBuilder to fetch a record
+        repl = RequestBuilder(ctx)
+            .Get(GetDockerUrl(http_url))
+            .Header("X-Client", "RESTC_CPP")
+            .Header("X-Client-Purpose", "Testing")
+            .Header("Accept", "*/*")
+            .Argument("id", 1)
+            .Argument("test some $ stuff", "oh my my")
+            .Execute();
 
-//        EXPECT_EQ(repl->GetHttpResponse().status_code, 200);
-//        EXPECT_FALSE(body.empty());
-//        cout << "Got: " << repl->GetBodyAsString() << endl;
-//        repl.reset();
+        EXPECT_HTTP_OK(repl->GetHttpResponse().status_code);
+        EXPECT_FALSE(body.empty());
+        cout << "Got: " << repl->GetBodyAsString() << endl;
+        repl.reset();
 
-//        // Use RequestBuilder to fetch a record without compression
-//        repl = RequestBuilder(ctx)
-//            .Get(GetDockerUrl(http_url))
-//            .Header("X-Client", "RESTC_CPP")
-//            .Header("X-Client-Purpose", "Testing")
-//            .Header("Accept", "*/*")
-//            .DisableCompression()
-//            .Argument("id", 2)
-//            .Execute();
+        // Use RequestBuilder to fetch a record without compression
+        repl = RequestBuilder(ctx)
+            .Get(GetDockerUrl(http_url))
+            .Header("X-Client", "RESTC_CPP")
+            .Header("X-Client-Purpose", "Testing")
+            .Header("Accept", "*/*")
+            .DisableCompression()
+            .Argument("id", 2)
+            .Execute();
 
-//        cout << "Got: " << repl->GetBodyAsString() << endl;
-//        repl.reset();
+        cout << "Got: " << repl->GetBodyAsString() << endl;
+        repl.reset();
 
-//        // Use RequestBuilder to post a record
-//        Post data_object;
-//        data_object.username = "testid";
-//        data_object.motto = "Carpe diem";
-//        repl = RequestBuilder(ctx)
-//            .Post(GetDockerUrl(http_url))
-//            .Header("X-Client", "RESTC_CPP")
-//            .Data(data_object)
-//            .Execute();
+        // Use RequestBuilder to post a record
+        Post data_object;
+        data_object.username = "testid";
+        data_object.motto = "Carpe diem";
+        repl = RequestBuilder(ctx)
+            .Post(GetDockerUrl(http_url))
+            .Header("X-Client", "RESTC_CPP")
+            .Data(data_object)
+            .Execute();
 
-//        EXPECT_EQ(repl->GetHttpResponse().status_code, 200);
-//        repl.reset();
+        EXPECT_HTTP_OK(repl->GetHttpResponse().status_code);
+        repl.reset();
 
-//#ifdef RESTC_CPP_WITH_TLS
-//            // Try with https
-//            repl = ctx.Get(https_url);
-//            json = repl->GetBodyAsString();
-//            EXPECT_EQ(repl->GetHttpResponse().status_code, 200);
-//            EXPECT_FALSE(body.empty());
-//            RESTC_CPP_LOG_INFO_("Received https GET data: " << json);
-//#endif // TLS
-//            RESTC_CPP_LOG_INFO_("Done");
-//    };
+#ifdef RESTC_CPP_WITH_TLS
+            // Try with https
+            repl = ctx.Get(https_url);
+            json = repl->GetBodyAsString();
+            EXPECT_HTTP_OK(repl->GetHttpResponse().status_code);
+            EXPECT_FALSE(body.empty());
+            RESTC_CPP_LOG_INFO_("Received https GET data: " << json);
+#endif // TLS
+            RESTC_CPP_LOG_INFO_("Done");
+    };
 
-//    auto rest_client = RestClient::Create();
-//    auto future = rest_client->ProcessWithPromise(cb);
+    auto rest_client = RestClient::Create();
+    auto future = rest_client->ProcessWithPromise(cb);
 
-//    // Hold the main thread to allow the worker to do it's job
-//    future.get();
-//}
+    // Hold the main thread to allow the worker to do it's job
+    future.get();
+}
 
 TEST(Request, HttpGetOk) {
     auto client = RestClient::Create();
@@ -252,12 +163,52 @@ TEST(Request, HttpGetOk) {
             EXPECT_TRUE(repl);
             if (repl) {
                 auto body = repl->GetBodyAsString();
-                EXPECT_EQ(repl->GetHttpResponse().status_code, 200);
+                EXPECT_HTTP_OK(repl->GetHttpResponse().status_code);
                 EXPECT_FALSE(body.empty());
             }
         ); // EXPECT_NO_THROW
     });
 }
+
+TEST(RequestWithFuture, HttpGetOk) {
+    auto client = RestClient::Create();
+    EXPECT_TRUE(client);
+
+    auto res = client->ProcessWithPromise([](Context& ctx) {
+        auto repl = ctx.Get(GetDockerUrl(http_url));
+        EXPECT_TRUE(repl);
+        if (repl) {
+            auto body = repl->GetBodyAsString();
+            EXPECT_HTTP_OK(repl->GetHttpResponse().status_code);
+            EXPECT_FALSE(body.empty());
+        }
+    });
+
+    EXPECT_NO_THROW(res.get());
+}
+
+TEST(RequestBuilder, HttpGetOk) {
+    auto client = RestClient::Create();
+    EXPECT_TRUE(client);
+
+    client->Process([](Context& ctx) {
+        EXPECT_NO_THROW(
+        auto repl = RequestBuilder(ctx)
+                    .Get(GetDockerUrl(http_url))
+                    .Header("X-Client", "RESTC_CPP")
+                    .Header("X-Client-Purpose", "Testing")
+                    .Header("Accept", "*/*")
+                    .Execute();
+
+                const auto body = repl->GetBodyAsString();
+
+                EXPECT_HTTP_OK(repl->GetHttpResponse().status_code);
+                EXPECT_FALSE(body.empty());
+
+        ); // EXPECT_NO_THROW
+    });
+}
+
 
 int main(int argc, char *argv[]) {
 
