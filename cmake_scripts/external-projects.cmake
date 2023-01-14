@@ -57,9 +57,15 @@ include_directories(
      ${EXTERNAL_PROJECTS_PREFIX}/installed/include
     )
 
+if (NOT DEFINED GTEST_TAG)
+    set(GTEST_TAG "main")
+endif()
+
+message("GTEST_TAG: ${GTEST_TAG}")
+
 ExternalProject_Add(googletest
     #GIT_TAG "main"
-    GIT_TAG "release-1.10.0"
+    GIT_TAG "${GTEST_TAG}"
     PREFIX "${EXTERNAL_PROJECTS_PREFIX}"
     GIT_REPOSITORY https://github.com/google/googletest.git
     CMAKE_ARGS
