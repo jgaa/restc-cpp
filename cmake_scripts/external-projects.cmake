@@ -63,6 +63,10 @@ endif()
 
 message("GTEST_TAG: ${GTEST_TAG}")
 
+if (WIN32)
+    set(GTEST_EXTRA_ARGS "${GTEST_EXTRA_ARGS} -Dgtest_force_shared_crt=TRUE")
+endif()
+
 ExternalProject_Add(googletest
     #GIT_TAG "main"
     GIT_TAG "${GTEST_TAG}"
@@ -72,6 +76,7 @@ ExternalProject_Add(googletest
         -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_INSTALL_PREFIX}
         -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
         -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+        ${GTEST_EXTRA_ARGS}
 )
 set(GTEST_LIB_DIR ${RESTC_EXTERNAL_INSTALLED_LIB_DIR})
 
