@@ -376,6 +376,15 @@ public:
      * fn, but rather execute long-running (more than a few milliseconds)
      * tasks in worker-threads. Do not wait for input or sleep() inside
      * the co-routine.
+     *
+     * \param fn Functor to call. This functor should be considered `noexcept`.
+     *      If an exception is thrown from the functor and not caught, the
+     *      library will call `std::terminate()`. This is because there is
+     *      no simple way to communicate from the library back to your code that
+     *      some operation inside the functor failed and did not handle that
+     *      exception. If you in stead want to have the exceptin propagated to
+     *      another thread, where you c an deal with it, use `ProcessWithPromise()`
+     *      or `ProcessWithPromiseT()`.
      */
     virtual void Process(const prc_fn_t& fn) = 0;
 

@@ -312,14 +312,14 @@ public:
                 return;
             }
 
-            throw;
+            terminate();
         } catch(...) {
             RESTC_CPP_LOG_ERROR_("*** ProcessInWorker: Caught unknown exception");
             if (promise) {
                 promise->set_exception(current_exception());
                 return;
             }
-            throw;
+            terminate();
         }
 
         if (promise) {
