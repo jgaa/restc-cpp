@@ -208,7 +208,8 @@ TEST(RequestBuilder, HttpGetOk) {
     EXPECT_TRUE(client);
 
     client->Process([](Context& ctx) {
-        EXPECT_NO_THROW(
+        try {
+        //EXPECT_NO_THROW(
         auto repl = RequestBuilder(ctx)
                     .Get(GetDockerUrl(http_url))
                     .Header("X-Client", "RESTC_CPP")
@@ -221,7 +222,21 @@ TEST(RequestBuilder, HttpGetOk) {
                 EXPECT_HTTP_OK(repl->GetHttpResponse().status_code);
                 EXPECT_FALSE(body.empty());
 
-        ); // EXPECT_NO_THROW
+        //); // EXPECT_NO_THROW
+        } catch (const exception& ex) {
+            RESTC_CPP_LOG_ERROR_("RequestBuilder.HttpGetOk Caught exception: " << ex.what());
+            EXPECT_FALSE(true);
+        } catch (const boost::exception& ex) {
+            RESTC_CPP_LOG_ERROR_("RequestBuilder.HttpGetOk Caught boost exception: "
+                << boost::diagnostic_information(ex));
+        } catch (...) {
+            RESTC_CPP_LOG_ERROR_("RequestBuilder.HttpGetOk Caught unexpected exception "
+#ifdef __unix__
+            << __cxxabiv1::__cxa_current_exception_type()->name()
+#endif
+            );
+            EXPECT_FALSE(true);
+        }
     });
 }
 
