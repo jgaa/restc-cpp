@@ -172,7 +172,7 @@ TEST(Request, HttpGetOk) {
         } catch (const exception& ex) {
             RESTC_CPP_LOG_ERROR_("Request.HttpGetOk Caught exception: " << ex.what());
             EXPECT_FALSE(true);
-        } catch (boost::exception& ex) {
+        } catch (const boost::exception& ex) {
             RESTC_CPP_LOG_ERROR_("Request.HttpGetOk Caught boost exception: "
                 << boost::diagnostic_information(ex));
         } catch (...) {
