@@ -156,7 +156,8 @@ TEST(Request, HttpGetOk) {
     EXPECT_TRUE(client);
 
     client->Process([](Context& ctx) {
-        EXPECT_NO_THROW(
+        //EXPECT_NO_THROW(
+        try {
             auto repl = ctx.Get(GetDockerUrl(http_url));
             EXPECT_TRUE(repl);
             if (repl) {
@@ -164,7 +165,18 @@ TEST(Request, HttpGetOk) {
                 EXPECT_HTTP_OK(repl->GetHttpResponse().status_code);
                 EXPECT_FALSE(body.empty());
             }
-        ); // EXPECT_NO_THROW
+        //); // EXPECT_NO_THROW
+        } catch (const exception& ex) {
+            RESTC_CPP_LOG_ERROR_("Request.HttpGetOk Caught exception: "
+                << typeid (current_exception()).name()
+                << ". message: " << ex.what());
+            EXPECT_FALSE(true);
+        } catch (...) {
+            RESTC_CPP_LOG_ERROR_("Request.HttpGetOk Caught unexpected exception: "
+                << typeid (current_exception()).name()
+                );
+            EXPECT_FALSE(true);
+        }
     });
 }
 
