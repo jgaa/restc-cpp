@@ -167,14 +167,13 @@ TEST(Request, HttpGetOk) {
             }
         //); // EXPECT_NO_THROW
         } catch (const exception& ex) {
-            RESTC_CPP_LOG_ERROR_("Request.HttpGetOk Caught exception: "
-                << typeid (current_exception()).name()
-                << ". message: " << ex.what());
+            RESTC_CPP_LOG_ERROR_("Request.HttpGetOk Caught exception: " << ex.what());
             EXPECT_FALSE(true);
+        } catch (boost::exception& ex) {
+            RESTC_CPP_LOG_ERROR_("Request.HttpGetOk Caught boost exception: "
+                << boost::diagnostic_information(ex));
         } catch (...) {
-            RESTC_CPP_LOG_ERROR_("Request.HttpGetOk Caught unexpected exception: "
-                << typeid (current_exception()).name()
-                );
+            RESTC_CPP_LOG_ERROR_("Request.HttpGetOk Caught unexpected exception ...");
             EXPECT_FALSE(true);
         }
     });
