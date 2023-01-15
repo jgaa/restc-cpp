@@ -34,6 +34,9 @@ BOOST_FUSION_ADAPT_STRUCT(
 const string http_url = "http://localhost:3001/normal/manyposts";
 const string https_url = "https://lastviking.eu/files/api";
 
+#ifdef __unix__
+#   include <cxxabi.h>
+#endif
 
 TEST(Gtest, validateOk) {
     EXPECT_EQ(1, 1);
@@ -173,7 +176,11 @@ TEST(Request, HttpGetOk) {
             RESTC_CPP_LOG_ERROR_("Request.HttpGetOk Caught boost exception: "
                 << boost::diagnostic_information(ex));
         } catch (...) {
-            RESTC_CPP_LOG_ERROR_("Request.HttpGetOk Caught unexpected exception ...");
+            RESTC_CPP_LOG_ERROR_("Request.HttpGetOk Caught unexpected exception "
+#ifdef __unix__
+            << __cxxabiv1::__cxa_current_exception_type()->name()
+#endif
+            );
             EXPECT_FALSE(true);
         }
     });
