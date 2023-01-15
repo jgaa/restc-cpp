@@ -452,7 +452,7 @@ public:
     /*! Check if the client is closing
      *
      * This is true after `CloseWhenReady()` has been called or
-     * the rest-client is goling out of scope, but some requests
+     * the rest-client is going out of scope, but some requests
      * are still being served.
      */
     virtual bool IsClosing() const noexcept = 0;
