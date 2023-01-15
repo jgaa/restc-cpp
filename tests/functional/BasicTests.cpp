@@ -175,6 +175,8 @@ TEST(Request, HttpGetOk) {
         } catch (const boost::exception& ex) {
             RESTC_CPP_LOG_ERROR_("Request.HttpGetOk Caught boost exception: "
                 << boost::diagnostic_information(ex));
+        } catch (boost::coroutines::detail::forced_unwind const& e) {
+           throw; // required for Boost Coroutine!
         } catch (...) {
             RESTC_CPP_LOG_ERROR_("Request.HttpGetOk Caught unexpected exception "
 #ifdef __unix__
@@ -229,6 +231,8 @@ TEST(RequestBuilder, HttpGetOk) {
         } catch (const boost::exception& ex) {
             RESTC_CPP_LOG_ERROR_("RequestBuilder.HttpGetOk Caught boost exception: "
                 << boost::diagnostic_information(ex));
+        } catch (boost::coroutines::detail::forced_unwind const& e) {
+           throw; // required for Boost Coroutine!
         } catch (...) {
             RESTC_CPP_LOG_ERROR_("RequestBuilder.HttpGetOk Caught unexpected exception "
 #ifdef __unix__
