@@ -2,6 +2,7 @@ project(functionaltests)
 
 
 # ======================================
+message("DEFAULT_LIBRARIES: ${DEFAULT_LIBRARIES}")
 
 add_executable(basic_tests BasicTests.cpp)
 SET_CPP_STANDARD(basic_tests)
