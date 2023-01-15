@@ -61,7 +61,7 @@ TEST(Future, GetData) {
 }
 
 // This test fails randomly. Could be a timing issue.
-TEST(ExampleWorkflow, DISABLED_SequentialRequests) {
+TEST(ExampleWorkflow, SequentialRequests) {
     auto cb = [](Context& ctx) -> void {
         // Asynchronously fetch the entire data-set, and convert it from json
         // to C++ objects was we go.
@@ -151,7 +151,7 @@ TEST(ExampleWorkflow, DISABLED_SequentialRequests) {
     auto future = rest_client->ProcessWithPromise(cb);
 
     // Hold the main thread to allow the worker to do it's job
-    future.get();
+    EXPECT_NO_THROW(future.get());
 }
 
 TEST(Request, HttpGetOk) {
@@ -159,7 +159,6 @@ TEST(Request, HttpGetOk) {
     EXPECT_TRUE(client);
 
     client->Process([](Context& ctx) {
-        //EXPECT_NO_THROW(
         try {
             auto repl = ctx.Get(GetDockerUrl(http_url));
             EXPECT_TRUE(repl);
@@ -168,16 +167,12 @@ TEST(Request, HttpGetOk) {
                 EXPECT_HTTP_OK(repl->GetHttpResponse().status_code);
                 EXPECT_FALSE(body.empty());
             }
-        //); // EXPECT_NO_THROW
         } catch (const exception& ex) {
             RESTC_CPP_LOG_ERROR_("Request.HttpGetOk Caught exception: " << ex.what());
             EXPECT_FALSE(true);
         } catch (const boost::exception& ex) {
             RESTC_CPP_LOG_ERROR_("Request.HttpGetOk Caught boost exception: "
                 << boost::diagnostic_information(ex));
-        } catch (boost::coroutines::detail::forced_unwind const& e) {
-           throw; // required for Boost Coroutine!
-        } catch (...) {
             ostringstream estr;
 #ifdef __unix__
             estr << " of type : " << __cxxabiv1::__cxa_current_exception_type()->name();
@@ -185,6 +180,14 @@ TEST(Request, HttpGetOk) {
             RESTC_CPP_LOG_ERROR_("Request.HttpGetOk Caught unexpected exception " << estr.str());
             EXPECT_FALSE(true);
         }
+        RESTC_CPP_IN_COROUTINE_CATCH_ALL(
+            ostringstream estr;
+#ifdef __unix__
+            estr << " of type : " << __cxxabiv1::__cxa_current_exception_type()->name();
+#endif
+            RESTC_CPP_LOG_ERROR_("Request.HttpGetOk Caught unexpected exception " << estr.str());
+            EXPECT_FALSE(true);
+        ) // catch all
     });
 }
 
@@ -211,7 +214,6 @@ TEST(RequestBuilder, HttpGetOk) {
 
     client->Process([](Context& ctx) {
         try {
-        //EXPECT_NO_THROW(
         auto repl = RequestBuilder(ctx)
                     .Get(GetDockerUrl(http_url))
                     .Header("X-Client", "RESTC_CPP")
@@ -224,23 +226,20 @@ TEST(RequestBuilder, HttpGetOk) {
                 EXPECT_HTTP_OK(repl->GetHttpResponse().status_code);
                 EXPECT_FALSE(body.empty());
 
-        //); // EXPECT_NO_THROW
         } catch (const exception& ex) {
             RESTC_CPP_LOG_ERROR_("RequestBuilder.HttpGetOk Caught exception: " << ex.what());
             EXPECT_FALSE(true);
         } catch (const boost::exception& ex) {
             RESTC_CPP_LOG_ERROR_("RequestBuilder.HttpGetOk Caught boost exception: "
                 << boost::diagnostic_information(ex));
-        } catch (boost::coroutines::detail::forced_unwind const& e) {
-           throw; // required for Boost Coroutine!
-        } catch (...) {
+        } RESTC_CPP_IN_COROUTINE_CATCH_ALL(
             ostringstream estr;
 #ifdef __unix__
             estr << " of type : " << __cxxabiv1::__cxa_current_exception_type()->name();
 #endif
             RESTC_CPP_LOG_ERROR_("RequestBuilder.HttpGetOk Caught unexpected exception " << estr.str());
             EXPECT_FALSE(true);
-        }
+        ) // catch all
     });
 }
 
