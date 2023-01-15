@@ -1,4 +1,7 @@
 
+#ifdef __unix__
+#   include <cxxabi.h>
+#endif
 
 #include <iostream>
 #include <thread>
@@ -305,16 +308,25 @@ public:
         DoneHandlerImpl handler(*this);
         try {
             fn(ctx);
-        } catch(exception& ex) {
+        } catch (boost::coroutines::detail::forced_unwind const&) {
+           throw; // required for Boost Coroutine!
+        } catch(const exception& ex) {
             RESTC_CPP_LOG_ERROR_("ProcessInWorker: Caught exception: " << ex.what());
             if (promise) {
                 promise->set_exception(current_exception());
                 return;
             }
-
+            terminate();
+        } catch (const boost::exception& ex) {
+            RESTC_CPP_LOG_ERROR_("ProcessInWorker: Caught boost exception: "
+                << boost::diagnostic_information(ex));
             terminate();
         } catch(...) {
-            RESTC_CPP_LOG_ERROR_("*** ProcessInWorker: Caught unknown exception");
+            RESTC_CPP_LOG_ERROR_("*** ProcessInWorker: Caught unknown exception "
+#ifdef __unix__
+            << " of type : " << __cxxabiv1::__cxa_current_exception_type()->name()
+#endif
+);
             if (promise) {
                 promise->set_exception(current_exception());
                 return;
