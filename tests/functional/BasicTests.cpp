@@ -179,15 +179,14 @@ TEST(Request, HttpGetOk) {
 #endif
             RESTC_CPP_LOG_ERROR_("Request.HttpGetOk Caught unexpected exception " << estr.str());
             EXPECT_FALSE(true);
-        }
-        RESTC_CPP_IN_COROUTINE_CATCH_ALL(
+        } RESTC_CPP_IN_COROUTINE_CATCH_ALL {
             ostringstream estr;
 #ifdef __unix__
             estr << " of type : " << __cxxabiv1::__cxa_current_exception_type()->name();
 #endif
             RESTC_CPP_LOG_ERROR_("Request.HttpGetOk Caught unexpected exception " << estr.str());
             EXPECT_FALSE(true);
-        ) // catch all
+        } // catch all
     });
 }
 
@@ -232,14 +231,14 @@ TEST(RequestBuilder, HttpGetOk) {
         } catch (const boost::exception& ex) {
             RESTC_CPP_LOG_ERROR_("RequestBuilder.HttpGetOk Caught boost exception: "
                 << boost::diagnostic_information(ex));
-        } RESTC_CPP_IN_COROUTINE_CATCH_ALL(
+        } RESTC_CPP_IN_COROUTINE_CATCH_ALL {
             ostringstream estr;
 #ifdef __unix__
             estr << " of type : " << __cxxabiv1::__cxa_current_exception_type()->name();
 #endif
             RESTC_CPP_LOG_ERROR_("RequestBuilder.HttpGetOk Caught unexpected exception " << estr.str());
             EXPECT_FALSE(true);
-        ) // catch all
+        } // catch all
     });
 }
 

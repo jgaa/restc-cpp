@@ -52,10 +52,10 @@
 #   define RESTC_CPP_IO_BUFFER_SIZE (1024 * 16)
 #endif
 
-#define RESTC_CPP_IN_COROUTINE_CATCH_ALL(statement) \
+#define RESTC_CPP_IN_COROUTINE_CATCH_ALL \
     catch (boost::coroutines::detail::forced_unwind const&) { \
        throw; /* required for Boost Coroutine! */ \
-    } catch (...) { statement }
+    } catch (...)
 
 namespace restc_cpp {
 
