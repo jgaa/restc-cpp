@@ -52,6 +52,11 @@
 #   define RESTC_CPP_IO_BUFFER_SIZE (1024 * 16)
 #endif
 
+#define RESTC_CPP_IN_COROUTINE_CATCH_ALL \
+    catch (boost::coroutines::detail::forced_unwind const&) { \
+       throw; /* required for Boost Coroutine! */ \
+    } catch (...)
+
 namespace restc_cpp {
 
 class RestClient;
@@ -376,6 +381,15 @@ public:
      * fn, but rather execute long-running (more than a few milliseconds)
      * tasks in worker-threads. Do not wait for input or sleep() inside
      * the co-routine.
+     *
+     * \param fn Functor to call. This functor should be considered `noexcept`.
+     *      If an exception is thrown from the functor and not caught, the
+     *      library will call `std::terminate()`. This is because there is
+     *      no simple way to communicate from the library back to your code that
+     *      some operation inside the functor failed and did not handle that
+     *      exception. If you in stead want to have the exception propagated to
+     *      another thread, where you can deal with it, use `ProcessWithPromise()`
+     *      or `ProcessWithPromiseT()`.
      */
     virtual void Process(const prc_fn_t& fn) = 0;
 
@@ -421,13 +435,27 @@ public:
 #endif
 
     /*! Shut down the worker-thread when the work-queue is empty.
-
-        \param wait Wait until the worker thread is shut down if true
-
+     *
+     *   \param wait Wait until the worker thread is shut down if true
      */
     virtual void CloseWhenReady(bool wait = true) = 0;
 
-    virtual bool IsClosed() const noexcept = 0;
+    /*! Check if the client is closing
+     *
+     *  \deprecated use `IsClosing()` in stead.
+     */
+    [[deprecated( "use `IsClosing()` in stead" )]]
+    virtual bool IsClosed() const noexcept {
+        return IsClosing();
+    }
+
+    /*! Check if the client is closing
+     *
+     * This is true after `CloseWhenReady()` has been called or
+     * the rest-client is goling out of scope, but some requests
+     * are still being served.
+     */
+    virtual bool IsClosing() const noexcept = 0;
 
     /*! Factory */
     static std::unique_ptr<RestClient> Create();

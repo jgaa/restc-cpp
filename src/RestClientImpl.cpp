@@ -1,4 +1,7 @@
 
+#ifdef __unix__
+#   include <cxxabi.h>
+#endif
 
 #include <iostream>
 #include <thread>
@@ -246,7 +249,7 @@ public:
         return default_connection_properties_;
     }
 
-    bool IsClosed() const noexcept override {
+    bool IsClosing() const noexcept override {
         return closed_;
     }
 
@@ -305,21 +308,30 @@ public:
         DoneHandlerImpl handler(*this);
         try {
             fn(ctx);
-        } catch(exception& ex) {
+        } catch (boost::coroutines::detail::forced_unwind const&) {
+           throw; // required for Boost Coroutine!
+        } catch(const exception& ex) {
             RESTC_CPP_LOG_ERROR_("ProcessInWorker: Caught exception: " << ex.what());
             if (promise) {
                 promise->set_exception(current_exception());
                 return;
             }
-
-            throw;
+            terminate();
+        } catch (const boost::exception& ex) {
+            RESTC_CPP_LOG_ERROR_("ProcessInWorker: Caught boost exception: "
+                << boost::diagnostic_information(ex));
+            terminate();
         } catch(...) {
-            RESTC_CPP_LOG_ERROR_("*** ProcessInWorker: Caught unknown exception");
+            ostringstream estr;
+#ifdef __unix__
+            estr << " of type : " << __cxxabiv1::__cxa_current_exception_type()->name();
+#endif
+            RESTC_CPP_LOG_ERROR_("*** ProcessInWorker: Caught unknown exception " << estr.str());
             if (promise) {
                 promise->set_exception(current_exception());
                 return;
             }
-            throw;
+            terminate();
         }
 
         if (promise) {
