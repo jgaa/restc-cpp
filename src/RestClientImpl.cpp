@@ -322,11 +322,11 @@ public:
                 << boost::diagnostic_information(ex));
             terminate();
         } catch(...) {
-            RESTC_CPP_LOG_ERROR_("*** ProcessInWorker: Caught unknown exception "
+            ostringstream estr;
 #ifdef __unix__
-            << " of type : " << __cxxabiv1::__cxa_current_exception_type()->name()
+            estr << " of type : " << __cxxabiv1::__cxa_current_exception_type()->name();
 #endif
-);
+            RESTC_CPP_LOG_ERROR_("*** ProcessInWorker: Caught unknown exception " << estr.str());
             if (promise) {
                 promise->set_exception(current_exception());
                 return;
