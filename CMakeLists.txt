@@ -11,7 +11,7 @@ if (DEFINED ENV{RESTC_CPP_VERSION})
 endif()
 
 if (NOT DEFINED RESTC_CPP_VERSION)
-    set(RESTC_CPP_VERSION 0.95.0)
+    set(RESTC_CPP_VERSION 0.96.0)
 endif()
 
 if(NOT DEFINED RESTC_BOOST_VERSION)
@@ -212,35 +212,14 @@ endif()
 add_dependencies(${PROJECT_NAME} externalRapidJson ${RESTC_CPP_EXTERNAL_DEPS})
 
 if (NOT EMBEDDED_RESTC_CPP)
-
-    if (RESTC_CPP_WITH_ZLIB)
-        find_package(ZLIB REQUIRED)
-        target_include_directories(${PROJECT_NAME} PUBLIC ${ZLIB_INCLUDE_DIRS})
-        target_link_libraries(${PROJECT_NAME} PUBLIC ${ZLIB_LIBRARIES})
-    endif()
-
-    if (RESTC_CPP_WITH_TLS)
-        find_package(OpenSSL REQUIRED)
-        target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENSSL_LIBRARIES})
-        if (WIN32)
-            target_link_libraries(${PROJECT_NAME} PUBLIC bcrypt)
-        endif()
-    endif()
-
-    if (UNIX)
-        find_package(Threads REQUIRED)
-        target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_THREAD_LIBS_INIT})
-    endif()
-
-        
     #set(Boost_USE_MULTITHREADED ON)
     find_package(Boost ${RESTC_BOOST_VERSION} REQUIRED COMPONENTS
         system
         program_options
         filesystem
         date_time
-        context
         coroutine
+        context
         chrono
         ${BOOST_LOG_DEP}
         )
@@ -251,6 +230,26 @@ if (NOT EMBEDDED_RESTC_CPP)
     if (EXISTS ${Boost_INCLUDE_DIRS}/boost/type_index.hpp)
         set(RESTC_CPP_HAVE_BOOST_TYPEINDEX 1)
     endif()
+
+    if (RESTC_CPP_WITH_TLS)
+        find_package(OpenSSL REQUIRED)
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENSSL_LIBRARIES})
+        if (WIN32)
+            target_link_libraries(${PROJECT_NAME} PUBLIC bcrypt)
+        endif()
+    endif()
+
+    if (RESTC_CPP_WITH_ZLIB)
+        find_package(ZLIB REQUIRED)
+        target_include_directories(${PROJECT_NAME} PUBLIC ${ZLIB_INCLUDE_DIRS})
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${ZLIB_LIBRARIES})
+    endif()
+
+    if (UNIX)
+        find_package(Threads REQUIRED)
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_THREAD_LIBS_INIT})
+    endif()
+
 
     if (WIN32)
         link_directories(${Boost_LIBRARY_DIRS})
@@ -290,3 +289,5 @@ endif()
 if (RESTC_CPP_WITH_EXAMPLES)
     add_subdirectory(examples/logip)
 endif()
+
+
