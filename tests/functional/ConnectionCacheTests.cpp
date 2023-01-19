@@ -6,8 +6,8 @@
 
 #include "../src/ReplyImpl.h"
 
+#include "gtest/gtest.h"
 #include "restc-cpp/test_helper.h"
-#include "lest/lest.hpp"
 
 /* These url's points to a local Docker container with nginx, linked to
  * a jsonserver docker container with mock data.
@@ -20,16 +20,15 @@ const string http_connection_close_url = "http://localhost:3001/close/posts";
 using namespace std;
 using namespace restc_cpp;
 
-const lest::test specification[] = {
 
-STARTCASE(TestConnectionRecycling) {
+TEST(ConnectionCache, ConnectionRecycling) {
 
     auto rest_client = RestClient::Create();
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
         auto repl_one = ctx.Get(GetDockerUrl(http_url));
         auto first_conn_id = repl_one->GetConnectionId();
-        CHECK_EQUAL(200, repl_one->GetResponseCode());
+        EXPECT_EQ(200, repl_one->GetResponseCode());
         // Discard all data
         while(repl_one->MoreDataToRead()) {
             repl_one->GetSomeData();
@@ -37,38 +36,38 @@ STARTCASE(TestConnectionRecycling) {
 
         auto repl_two = ctx.Get(GetDockerUrl(http_url));
         auto second_conn_id = repl_two->GetConnectionId();
-        CHECK_EQUAL(200, repl_two->GetResponseCode());
+        EXPECT_EQ(200, repl_two->GetResponseCode());
         // Discard all data
         while(repl_two->MoreDataToRead()) {
             repl_two->GetSomeData();
         }
 
-        CHECK_EQUAL(first_conn_id, second_conn_id);
+        EXPECT_EQ(first_conn_id, second_conn_id);
 
     }).get();
-} ENDCASE
+}
 
 // Test that we honor 'Connection: close' server header
-STARTCASE(TestConnectionClose) {
+TEST(ConnectionCache, ConnectionClose) {
     auto rest_client = RestClient::Create();
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
         auto repl_one = ctx.Get(GetDockerUrl(http_connection_close_url));
 
-        CHECK_EQUAL(200, repl_one->GetResponseCode());
+        EXPECT_EQ(200, repl_one->GetResponseCode());
 
         // Discard all data
         while(repl_one->MoreDataToRead()) {
             repl_one->GetSomeData();
         }
 
-        CHECK_EQUAL(0, static_cast<int>(
+        EXPECT_EQ(0, static_cast<int>(
             rest_client->GetConnectionPool()->GetIdleConnections()));
 
     }).get();
-} ENDCASE
+}
 
-STARTCASE(TestMaxConnectionsToEndpoint) {
+TEST(ConnectionCache, MaxConnectionsToEndpoint) {
     auto rest_client = RestClient::Create();
     auto pool = rest_client->GetConnectionPool();
     auto config = rest_client->GetConnectionProperties();
@@ -80,11 +79,11 @@ STARTCASE(TestMaxConnectionsToEndpoint) {
         connections.push_back(pool->GetConnection(ep, restc_cpp::Connection::Type::HTTP));
     }
 
-    EXPECT_THROWS_AS(pool->GetConnection(ep,
+    EXPECT_THROW(pool->GetConnection(ep,
             restc_cpp::Connection::Type::HTTP), std::runtime_error);
-} ENDCASE
+}
 
-STARTCASE(TestMaxConnections) {
+TEST(ConnectionCache, MaxConnections) {
     auto rest_client = RestClient::Create();
     auto pool = rest_client->GetConnectionPool();
     auto config = rest_client->GetConnectionProperties();
@@ -100,13 +99,13 @@ STARTCASE(TestMaxConnections) {
             restc_cpp::Connection::Type::HTTP));
     }
 
-    EXPECT_THROWS_AS(pool->GetConnection(
+    EXPECT_THROW(pool->GetConnection(
             boost::asio::ip::tcp::endpoint{
                     boost::asio::ip::address_v4{static_cast<unsigned int>(addr + i)}, 80},
             restc_cpp::Connection::Type::HTTP), std::runtime_error);
-} ENDCASE
+}
 
-STARTCASE(TestCleanupTimer) {
+TEST(ConnectionCache, CleanupTimer) {
     auto rest_client = RestClient::Create();
     auto pool = rest_client->GetConnectionPool();
     auto config = rest_client->GetConnectionProperties();
@@ -116,7 +115,7 @@ STARTCASE(TestCleanupTimer) {
 
     rest_client->ProcessWithPromise([&](Context& ctx) {
         auto repl = ctx.Get(GetDockerUrl(http_url));
-        CHECK_EQUAL(200, repl->GetResponseCode());
+        EXPECT_EQ(200, repl->GetResponseCode());
 
         // Discard all data
         while(repl->MoreDataToRead()) {
@@ -125,30 +124,30 @@ STARTCASE(TestCleanupTimer) {
 
     }).get();
 
-    CHECK_EQUAL(1, static_cast<int>(pool->GetIdleConnections()));
+    EXPECT_EQ(1, static_cast<int>(pool->GetIdleConnections()));
 
     std::this_thread::sleep_for(std::chrono::seconds(4));
 
-    CHECK_EQUAL(0, static_cast<int>(pool->GetIdleConnections()));
-} ENDCASE
+    EXPECT_EQ(0, static_cast<int>(pool->GetIdleConnections()));
+}
 
-STARTCASE(TestPrematureCloseNotRecycled) {
+TEST(ConnectionCache, PrematureCloseNotRecycled) {
     auto rest_client = RestClient::Create();
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
         auto repl_one = ctx.Get(GetDockerUrl(http_url_many));
 
-        CHECK_EQUAL(200, repl_one->GetResponseCode());
+        EXPECT_EQ(200, repl_one->GetResponseCode());
 
         repl_one.reset();
 
-        CHECK_EQUAL(0, static_cast<int>(
+        EXPECT_EQ(0, static_cast<int>(
             rest_client->GetConnectionPool()->GetIdleConnections()));
 
     }).get();
-} ENDCASE
+}
 
-STARTCASE(TestOverrideMaxConnectionsToEndpoint) {
+TEST(ConnectionCache, OverrideMaxConnectionsToEndpoint) {
     auto rest_client = RestClient::Create();
     auto pool = rest_client->GetConnectionPool();
     auto config = rest_client->GetConnectionProperties();
@@ -161,13 +160,11 @@ STARTCASE(TestOverrideMaxConnectionsToEndpoint) {
     }
 
     connections.push_back(pool->GetConnection(ep, restc_cpp::Connection::Type::HTTP, true));
-} ENDCASE
-
-}; //lest
+}
 
 int main( int argc, char * argv[] )
 {
     RESTC_CPP_TEST_LOGGING_SETUP("debug");
-
-    return lest::run( specification, argc, argv );
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();;
 }

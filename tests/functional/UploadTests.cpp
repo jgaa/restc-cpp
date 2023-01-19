@@ -9,19 +9,16 @@
 #include "restc-cpp/error.h"
 #include "restc-cpp/RequestBuilder.h"
 
+#include "gtest/gtest.h"
 #include "restc-cpp/test_helper.h"
-#include "lest/lest.hpp"
-
 
 using namespace std;
 using namespace restc_cpp;
 
 boost::filesystem::path temp_path;
 
-const lest::test specification[] = {
-
 // The content is send un-encoded in the body
-TEST(TestRawUpload)
+TEST(Upload, Raw)
 {
     auto rest_client = RestClient::Create();
     rest_client->ProcessWithPromise([&](Context& ctx) {
@@ -32,13 +29,11 @@ TEST(TestRawUpload)
             .File(temp_path)
             .Execute();
 
-        CHECK_EQUAL(200, reply->GetResponseCode());
+        EXPECT_EQ(200, reply->GetResponseCode());
 
     }).get();
 }
 
-
-}; //lest
 
 int main( int argc, char * argv[] )
 {
@@ -51,8 +46,8 @@ int main( int argc, char * argv[] )
     }
 
     RESTC_CPP_TEST_LOGGING_SETUP("debug");
-
-    const auto rval = lest::run( specification, argc, argv );
+    ::testing::InitGoogleTest(&argc, argv);
+    auto rval = RUN_ALL_TESTS();
 
     boost::filesystem::remove(temp_path);
 

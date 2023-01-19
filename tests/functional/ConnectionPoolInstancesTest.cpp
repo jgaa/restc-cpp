@@ -4,8 +4,8 @@
 
 #include "../src/ReplyImpl.h"
 
+#include "gtest/gtest.h"
 #include "restc-cpp/test_helper.h"
-#include "lest/lest.hpp"
 
 /* These url's points to a local Docker container with nginx, linked to
  * a jsonserver docker container with mock data.
@@ -18,38 +18,34 @@ const string http_connection_close_url = "http://localhost:3001/close/posts";
 using namespace std;
 using namespace restc_cpp;
 
-const lest::test specification[] = {
 
-
-STARTCASE(UseAfterDelete) {
+TEST(ConnectionPoolInstances, UseAfterDelete) {
 
     for(auto i = 0; i < 500; ++i) {
 
         RestClient::Create()->ProcessWithPromiseT<int>([&](Context& ctx) {
             auto repl = ctx.Get(GetDockerUrl(http_url));
-            repl->GetBodyAsString();
+            EXPECT_HTTP_OK(repl->GetHttpResponse().status_code);
+            EXPECT_NO_THROW(repl->GetBodyAsString());
             return 0;
         }).get();
 
         RestClient::Create()->ProcessWithPromiseT<int>([&](Context& ctx) {
             auto repl = ctx.Get(GetDockerUrl(http_url));
-            repl->GetBodyAsString();
+            EXPECT_HTTP_OK(repl->GetHttpResponse().status_code);
+            EXPECT_NO_THROW(repl->GetBodyAsString());
             return 0;
         }).get();
-
 
         if ((i % 100) == 0) {
             clog << '#' << (i +1) << endl;
         }
     }
-
-} ENDCASE
-
-}; //lest
+}
 
 int main( int argc, char * argv[] )
 {
     RESTC_CPP_TEST_LOGGING_SETUP("debug");
-
-    return lest::run( specification, argc, argv );
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();;
 }

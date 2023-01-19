@@ -9,14 +9,14 @@
 #include "restc-cpp/SerializeJson.h"
 #include "restc-cpp/IteratorFromJsonSerializer.h"
 
+#include "gtest/gtest.h"
 #include "restc-cpp/test_helper.h"
-#include "lest/lest.hpp"
 
 using namespace std;
 using namespace restc_cpp;
 
-//#define CONNECTIONS 20
-#define CONNECTIONS 1
+#define CONNECTIONS 20
+//#define CONNECTIONS 1
 
 struct Post {
     int id = 0;
@@ -33,9 +33,8 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 const string http_url = "http://localhost:3000/manyposts";
 
-const lest::test specification[] = {
 
-STARTCASE(TestOwnIoservice)
+TEST(OwnIoservice, All)
 {
     boost::asio::io_service ioservice;
 
@@ -60,33 +59,38 @@ STARTCASE(TestOwnIoservice)
         futures.push_back(promises.back().get_future());
 
         rest_client->Process([i, &promises, &rest_client, &mutex](Context& ctx) {
+            try {
+                auto reply = RequestBuilder(ctx)
+                    .Get(GetDockerUrl(http_url))
+                    .Execute();
 
-            auto reply = RequestBuilder(ctx)
-                .Get(GetDockerUrl(http_url))
-                .Execute();
+                // Use an iterator to make it simple to fetch some data and
+                // then wait on the mutex before we finish.
+                IteratorFromJsonSerializer<Post> results(*reply);
 
-            // Use an iterator to make it simple to fetch some data and
-            // then wait on the mutex before we finish.
-            IteratorFromJsonSerializer<Post> results(*reply);
+                auto it = results.begin();
+                RESTC_CPP_LOG_DEBUG_("Iteration #" << i
+                    << " Read item # " << it->id);
 
-            auto it = results.begin();
-            RESTC_CPP_LOG_DEBUG_("Iteration #" << i
-                << " Read item # " << it->id);
+                // We can't just wait on the lock since we are in a co-routine.
+                // So we use the async_wait() to poll in stead.
+                while(!mutex.try_lock()) {
+                    boost::asio::deadline_timer timer(rest_client->GetIoService(),
+                        boost::posix_time::milliseconds(1));
+                    timer.async_wait(ctx.GetYield());
+                }
+                mutex.unlock();
 
-            // We can't just wait on the lock since we are in a co-routine.
-            // So we use the async_wait() to poll in stead.
-            while(!mutex.try_lock()) {
-                boost::asio::deadline_timer timer(rest_client->GetIoService(),
-                    boost::posix_time::milliseconds(1));
-                timer.async_wait(ctx.GetYield());
+                // Fetch the rest
+                for(; it != results.end(); ++it)
+                    ;
+
+                promises[i].set_value(i);
+            } RESTC_CPP_IN_COROUTINE_CATCH_ALL {
+                // If we got a "real" exception during the processing above
+                EXPECT_TRUE(false);
+                promises[i].set_exception(current_exception());
             }
-            mutex.unlock();
-
-            // Fetch the rest
-            for(; it != results.end(); ++it)
-                ;
-
-            promises[i].set_value(i);
         });
     }
 
@@ -112,19 +116,16 @@ STARTCASE(TestOwnIoservice)
     std::clog << "We had " << successful_connections
         << " successful connections.";
 
-    CHECK_EQUAL(CONNECTIONS, successful_connections);
+    EXPECT_EQ(CONNECTIONS, successful_connections);
 
     rest_client->CloseWhenReady();
     ioservice.stop();
     worker.join();
-} ENDCASE
-
-
-}; //lest
+}
 
 int main( int argc, char * argv[] )
 {
     RESTC_CPP_TEST_LOGGING_SETUP("debug");
-
-    return lest::run( specification, argc, argv );
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();;
 }
