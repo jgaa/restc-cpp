@@ -777,7 +777,6 @@ private:
                         "RequestImpl::Connect:: Caught boost::system::system_error exception: \""
                             << ex.what()
                             << "\" while connecting to " << endpoint);
-                    //throw FailedToConnectException("Failed to connect: "s + ex.what());
                     break; // Go to the next endpoint
                 } catch(const exception& ex) {
                     RESTC_CPP_LOG_WARN_("Connect to "
