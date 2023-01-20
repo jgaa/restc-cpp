@@ -12,9 +12,8 @@
 #include "rapidjson/writer.h"
 #include "rapidjson/stringbuffer.h"
 
+#include "gtest/gtest.h"
 #include "restc-cpp/test_helper.h"
-#include "lest/lest.hpp"
-
 
 using namespace std;
 using namespace restc_cpp;
@@ -76,10 +75,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 /////////////////////////////////
 
 
-
-const lest::test specification[] = {
-
-STARTCASE(ReadConfigurationFromFile) {
+TEST(IOstream2Json, ReadConfigurationFromFile) {
     auto tmpname = boost::filesystem::unique_path();
     BOOST_SCOPE_EXIT(&tmpname) {
         boost::filesystem::remove(tmpname);
@@ -98,12 +94,12 @@ STARTCASE(ReadConfigurationFromFile) {
     Config config;
     SerializeFromJson(config, ifs);
 
-    EXPECT(config.max_something == 100);
-    EXPECT(config.name == "Test Data");
-    EXPECT(config.url == "https://www.example.com");
-} ENDCASE
+    EXPECT_TRUE(config.max_something == 100);
+    EXPECT_TRUE(config.name == "Test Data");
+    EXPECT_TRUE(config.url == "https://www.example.com");
+}
 
-STARTCASE(WriteJsonToStream) {
+TEST(IOstream2Json, WriteJsonToStream) {
 
     stringstream out;
     Config config;
@@ -113,35 +109,10 @@ STARTCASE(WriteJsonToStream) {
 
     SerializeToJson(config, out);
 
-    EXPECT(out.str() == R"({"max_something":100,"name":"John","url":"https://www.example.com"})");
+    EXPECT_EQ(out.str(), R"({"max_something":100,"name":"John","url":"https://www.example.com"})");
+}
 
-} ENDCASE
-
-STARTCASE(ReadConfigurationFromFile) {
-    auto tmpname = boost::filesystem::unique_path();
-    BOOST_SCOPE_EXIT(&tmpname) {
-        boost::filesystem::remove(tmpname);
-    } BOOST_SCOPE_EXIT_END
-
-    {
-        ofstream json_out(tmpname.native());
-        json_out << '{' << endl
-            << R"("max_something":100,)" << endl
-            << R"("name":"Test Data",)" << endl
-            << R"("url":"https://www.example.com")" << endl
-            << '}';
-    }
-
-    ifstream ifs(tmpname.native());
-    Config config;
-    SerializeFromJson(config, ifs);
-
-    EXPECT(config.max_something == 100);
-    EXPECT(config.name == "Test Data");
-    EXPECT(config.url == "https://www.example.com");
-} ENDCASE
-
-STARTCASE(issue58) {
+TEST(IOstream2Json, issue58) {
 
     auto tmpname = boost::filesystem::unique_path();
     BOOST_SCOPE_EXIT(&tmpname) {
@@ -168,14 +139,11 @@ STARTCASE(issue58) {
     SerializeToJson(config, ofs);
     cout<<"done"<<endl;
 
-} ENDCASE
-
-}; // lest
-
+}
 
 int main( int argc, char * argv[] )
 {
     RESTC_CPP_TEST_LOGGING_SETUP("debug");
-
-    return lest::run( specification, argc, argv );
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();;
 }

@@ -39,7 +39,6 @@ TEST(Cookies, HaveCookies)
     }).get();
 }
 
-
 int main( int argc, char * argv[] )
 {
     RESTC_CPP_TEST_LOGGING_SETUP("debug");

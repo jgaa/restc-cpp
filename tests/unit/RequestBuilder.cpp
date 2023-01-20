@@ -6,48 +6,42 @@
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/RequestBuilder.h"
 
+#include "gtest/gtest.h"
 #include "restc-cpp/test_helper.h"
-#include "lest/lest.hpp"
 
 using namespace std;
 using namespace restc_cpp;
 
-const lest::test specification[] = {
-
-STARTCASE(TestDataWithCString)
+TEST(RequestBuilder, DataWithCString)
 {
     RequestBuilder rb;
     rb.Data("{}");
-    CHECK_EQUAL("{}", rb.GetData());
+    EXPECT_EQ("{}", rb.GetData());
 
-} ENDCASE
+}
 
-STARTCASE(TestDataWithCStringLen)
+TEST(RequestBuilder, DataWithCStringLen)
 {
     RequestBuilder rb;
     rb.Data("{}12345", 2);
-    CHECK_EQUAL("{}", rb.GetData());
+    EXPECT_EQ("{}", rb.GetData());
 
-} ENDCASE
+}
 
-STARTCASE(TestDataWithString)
+TEST(RequestBuilder, DataWithString)
 {
 
     const string data{"{}"};
 
     RequestBuilder rb;
     rb.Data(data);
-    CHECK_EQUAL(data, rb.GetData());
+    EXPECT_EQ(data, rb.GetData());
 
-} ENDCASE
-
-
-}; // lest
-
+}
 
 int main( int argc, char * argv[] )
 {
     RESTC_CPP_TEST_LOGGING_SETUP("debug");
-
-    return lest::run( specification, argc, argv );
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();;
 }
