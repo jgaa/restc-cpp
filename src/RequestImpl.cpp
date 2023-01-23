@@ -77,7 +77,7 @@ namespace {
 
 constexpr char SOCKS5_VERSION = 0x05;
 constexpr char SOCKS5_TCP_STREAM = 0x01;
-constexpr char SOCKS5_MAX_HOSTNAME_LEN = 255;
+constexpr size_t SOCKS5_MAX_HOSTNAME_LEN = 255;
 constexpr char SOCKS5_IPV4_ADDR = 0x01;
 constexpr char SOCKS5_IPV6_ADDR = 0x04;
 constexpr char SOCKS5_HOSTNAME_ADDR = 0x03;
