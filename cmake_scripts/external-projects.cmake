@@ -53,7 +53,7 @@ if (RESTC_CPP_WITH_UNIT_TESTS OR RESTC_CPP_WITH_FUNCTIONALT_TESTS)
         message("Using installed googletest")
     else()
         message("Will download and install googletest as a cmake included project")
-        set(DEPENDS_GTEST googletests)
+        set(DEPENDS_GTEST googletest)
         set(GTEST_LIBRARIES gtest)
 
         if (NOT DEFINED GTEST_TAG)
