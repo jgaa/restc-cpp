@@ -75,12 +75,10 @@ using boost::asio with JSON serialization/deserialization.
 # Dependencies
 Restc-cpp depends on C++14 with its standard libraries and:
   - boost
-  - rapidjson (mature, ultra-fast, json sax, header-only library)
-  - gtest (Cmake will download and install gtest for the project if it is not installed)
+  - rapidjson (CMake will download and install rapidjson for the project)
+  - gtest (CMake will download and install gtest for the project if it is not installed)
   - openssl or libressl (If compiled with TLS support)
   - zlib (If compiled with compression support)
-
-rapidjson and lest are included as CMake external dependencies.
 
 # License
 MIT license. It is Free. Free as in speech. Free as in Free Air.
