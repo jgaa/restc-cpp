@@ -5,8 +5,8 @@
 #include "restc-cpp/logging.h"
 #include "restc-cpp/RequestBuilder.h"
 
+#include "gtest/gtest.h"
 #include "restc-cpp/test_helper.h"
-#include "lest/lest.hpp"
 
 using namespace std;
 using namespace restc_cpp;
@@ -32,9 +32,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 )
 
 
-const lest::test specification[] = {
-
-STARTCASE(TestCRUD) {
+TEST(CRUD, Crud) {
     auto rest_client = RestClient::Create();
     rest_client->ProcessWithPromise([&](Context& ctx) {
 
@@ -42,7 +40,7 @@ STARTCASE(TestCRUD) {
     post.username = "catch22";
     post.motto = "Carpe Diem!";
 
-    CHECK_EQUAL(0, post.id);
+    EXPECT_EQ(0, post.id);
 
     auto reply = RequestBuilder(ctx)
         .Post(GetDockerUrl(http_url)) // URL
@@ -54,9 +52,9 @@ STARTCASE(TestCRUD) {
     Post svr_post;
     SerializeFromJson(svr_post, *reply);
 
-    CHECK_EQUAL(post.username, svr_post.username);
-    CHECK_EQUAL(post.motto, svr_post.motto);
-    EXPECT(svr_post.id > 0);
+    EXPECT_EQ(post.username, svr_post.username);
+    EXPECT_EQ(post.motto, svr_post.motto);
+    EXPECT_TRUE(svr_post.id > 0);
 
     // Change the data
     post = svr_post;
@@ -71,7 +69,7 @@ STARTCASE(TestCRUD) {
         .Get(GetDockerUrl(http_url) + "/" + to_string(post.id)) // URL
         .Execute();
     SerializeFromJson(svr_post, *reply);
-    CHECK_EQUAL(post.motto, svr_post.motto);
+    EXPECT_EQ(post.motto, svr_post.motto);
 
     // Delete
     reply = RequestBuilder(ctx)
@@ -79,7 +77,7 @@ STARTCASE(TestCRUD) {
         .Execute();
 
     // Verify that it's gone
-    EXPECT_THROWS_AS(
+    EXPECT_THROW(
         RequestBuilder(ctx)
             .Get(GetDockerUrl(http_url) + "/" + to_string(post.id)) // URL
             .Execute(), HttpNotFoundException);
@@ -87,9 +85,9 @@ STARTCASE(TestCRUD) {
 
 
     }).get();
-} ENDCASE
+}
 
-STARTCASE(TestOptions) {
+TEST(CRUD, Options) {
 
     auto rest_client = RestClient::Create();
     rest_client->ProcessWithPromise([&](Context& ctx) {
@@ -98,13 +96,13 @@ STARTCASE(TestOptions) {
             .Options(GetDockerUrl(http_url)) // URL
             .Execute();  // Do it!
 
-        CHECK_EQUAL(204, reply->GetResponseCode());
+        EXPECT_EQ(204, reply->GetResponseCode());
 
     }).get();
 
-} ENDCASE
+}
 
-STARTCASE(TestHEAD) {
+TEST(CRUD, HEAD) {
 
     auto rest_client = RestClient::Create();
     rest_client->ProcessWithPromise([&](Context& ctx) {
@@ -113,16 +111,15 @@ STARTCASE(TestHEAD) {
             .Head(GetDockerUrl(http_url)) // URL
             .Execute();  // Do it!
 
-        CHECK_EQUAL(200, reply->GetResponseCode());
+        EXPECT_EQ(200, reply->GetResponseCode());
 
     }).get();
 
-} ENDCASE
-
-}; //lest
+}
 
 int main( int argc, char * argv[] )
 {
     RESTC_CPP_TEST_LOGGING_SETUP("debug");
-    return lest::run( specification, argc, argv );
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();;
 }

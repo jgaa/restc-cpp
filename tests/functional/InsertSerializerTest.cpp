@@ -5,9 +5,8 @@
 #include "restc-cpp/RequestBuilder.h"
 #include "restc-cpp/SerializeJson.h"
 
+#include "gtest/gtest.h"
 #include "restc-cpp/test_helper.h"
-#include "lest/lest.hpp"
-
 
 using namespace std;
 using namespace restc_cpp;
@@ -29,33 +28,31 @@ BOOST_FUSION_ADAPT_STRUCT(
     (string, motto)
 )
 
-
-
-const lest::test specification[] = {
-
-TEST(TestInserter)
+TEST(InsertSerializer, Inserter)
 {
     Post post{"catch22", "Carpe Diem!"};
-    CHECK_EQUAL(0, post.id);
+    EXPECT_EQ(0, post.id);
 
 
     auto rest_client = RestClient::Create();
-    rest_client->ProcessWithPromise([&](Context& ctx) {
+    auto f = rest_client->ProcessWithPromise([&](Context& ctx) {
 
     auto reply = RequestBuilder(ctx)
         .Post(GetDockerUrl("http://localhost:3000/posts")) // URL
         .Data(post)                                 // Data object to send
         .Execute();                                 // Do it!
 
-        CHECK_EQUAL(201, reply->GetResponseCode());
+        EXPECT_HTTP_OK(reply->GetResponseCode());
 
-    }).get();
-},
+    });
 
-TEST(TestFunctorWriter)
+    EXPECT_NO_THROW(f.get());
+}
+
+TEST(InsertSerializer, FunctorWriter)
 {
     auto rest_client = RestClient::Create();
-    rest_client->ProcessWithPromise([&](Context& ctx) {
+    auto f = rest_client->ProcessWithPromise([&](Context& ctx) {
 
         std::vector<Post> posts;
         posts.emplace_back("catch22", "Carpe Diem!");
@@ -77,16 +74,17 @@ TEST(TestFunctorWriter)
             })
             .Execute();
 
-            CHECK_EQUAL(200, reply->GetResponseCode());
+            EXPECT_EQ(200, reply->GetResponseCode());
 
-    }).get();
+    });
 
-},
+    EXPECT_NO_THROW(f.get());
+}
 
-TEST(TestManualWriter)
+TEST(InsertSerializer, ManualWriter)
 {
     auto rest_client = RestClient::Create();
-    rest_client->ProcessWithPromise([&](Context& ctx) {
+    auto f = rest_client->ProcessWithPromise([&](Context& ctx) {
 
         std::vector<Post> posts;
         posts.emplace_back("catch22", "Carpe Diem!");
@@ -108,16 +106,17 @@ TEST(TestManualWriter)
         }
 
         auto reply = request->GetReply(ctx);
-        CHECK_EQUAL(200, reply->GetResponseCode());
+        EXPECT_HTTP_OK(reply->GetResponseCode());
 
-    }).get();
+    });
+
+    EXPECT_NO_THROW(f.get());
 }
 
-}; //lest
 
 int main( int argc, char * argv[] )
 {
     RESTC_CPP_TEST_LOGGING_SETUP("debug");
-
-    return lest::run( specification, argc, argv );
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();;
 }

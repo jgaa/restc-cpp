@@ -6,8 +6,8 @@
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/RequestBuilder.h"
 
+#include "gtest/gtest.h"
 #include "restc-cpp/test_helper.h"
-#include "lest/lest.hpp"
 
 using namespace std;
 using namespace restc_cpp;
@@ -15,9 +15,7 @@ using namespace restc_cpp;
 
 static const string address = GetDockerUrl("http://localhost:3001/cookies/");
 
-const lest::test specification[] = {
-
-STARTCASE(TestHaveCookies)
+TEST(Cookies, HaveCookies)
 {
     auto rest_client = RestClient::Create();
 
@@ -27,26 +25,23 @@ STARTCASE(TestHaveCookies)
             .Execute();
 
         auto cookies = reply->GetHeaders("Set-Cookie");
-        CHECK_EQUAL(3, cookies.size());
+        EXPECT_EQ(3, cookies.size());
 
         set<string> allowed = {"test1=yes", "test2=maybe", "test3=no"};
 
         for(const auto c : cookies) {
-            CHECK_EQUAL(true, allowed.find(c) != allowed.end());
+            EXPECT_EQ(true, allowed.find(c) != allowed.end());
             allowed.erase(c);
         }
 
-        CHECK_EQUAL(0, allowed.size());
+        EXPECT_EQ(0, allowed.size());
 
     }).get();
-} ENDCASE
-
-}; //lest
-
+}
 
 int main( int argc, char * argv[] )
 {
     RESTC_CPP_TEST_LOGGING_SETUP("debug");
-
-    return lest::run( specification, argc, argv );
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();;
 }

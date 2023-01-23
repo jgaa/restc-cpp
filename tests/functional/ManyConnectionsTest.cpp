@@ -7,9 +7,8 @@
 #include "restc-cpp/RequestBuilder.h"
 #include "restc-cpp/IteratorFromJsonSerializer.h"
 
+#include "gtest/gtest.h"
 #include "restc-cpp/test_helper.h"
-#include "lest/lest.hpp"
-
 
 using namespace std;
 using namespace restc_cpp;
@@ -55,10 +54,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 )
 
 
-const lest::test specification[] = {
-
-TEST(TestCRUD)
-{
+TEST(ManyConnections, CRUD) {
     mutex mutex;
     mutex.lock();
 
@@ -125,18 +121,17 @@ TEST(TestCRUD)
     RESTC_CPP_LOG_INFO_("We had " << successful_connections
         << " successful connections.");
 
-    CHECK_EQUAL(CONNECTIONS, successful_connections);
+    EXPECT_EQ(CONNECTIONS, successful_connections);
 
     mutex.unlock();
 
     rest_client->CloseWhenReady();
 }
 
-}; //lest
 
 int main( int argc, char * argv[] )
 {
     RESTC_CPP_TEST_LOGGING_SETUP("debug");
-
-    return lest::run( specification, argc, argv );
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();;
 }

@@ -4,9 +4,8 @@
 
 #include "../src/ReplyImpl.h"
 
+#include "gtest/gtest.h"
 #include "restc-cpp/test_helper.h"
-#include "lest/lest.hpp"
-
 
 using namespace std;
 using namespace restc_cpp;
@@ -67,8 +66,7 @@ private:
 } // restc_cpp
 
 
-const lest::test specification[] = {
-STARTCASE(TestSimpleHeader)
+TEST(HttpReply, SimpleHeader)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -86,27 +84,27 @@ STARTCASE(TestSimpleHeader)
         "\r\n");
 
      auto rest_client = RestClient::Create();
-     rest_client->ProcessWithPromise([&](Context& ctx) {
+     auto f = rest_client->ProcessWithPromise([&](Context& ctx) {
 
          ::restc_cpp::unittests::TestReply reply(ctx, *rest_client, buffer);
 
          reply.SimulateServerReply();
 
-         CHECK_EQUAL("Cowboy", *reply.GetHeader("Server"));
-         CHECK_EQUAL("keep-alive", *reply.GetHeader("Connection"));
-         CHECK_EQUAL("Express", *reply.GetHeader("X-Powered-By"));
-         CHECK_EQUAL("Origin, Accept-Encoding", *reply.GetHeader("Vary"));
-         CHECK_EQUAL("no-cache", *reply.GetHeader("Cache-Control"));
-         CHECK_EQUAL("no-cache", *reply.GetHeader("Pragma"));
-         CHECK_EQUAL("-1", *reply.GetHeader("Expires"));
-         CHECK_EQUAL("application/json; charset=utf-8", *reply.GetHeader("Content-Type"));
-         CHECK_EQUAL("Thu, 21 Apr 2016 13:44:36 GMT", *reply.GetHeader("Date"));
-         CHECK_EQUAL("0", *reply.GetHeader("Content-Length"));
+         EXPECT_EQ("Cowboy", *reply.GetHeader("Server"));
+         EXPECT_EQ("keep-alive", *reply.GetHeader("Connection"));
+         EXPECT_EQ("Express", *reply.GetHeader("X-Powered-By"));
+         EXPECT_EQ("Origin, Accept-Encoding", *reply.GetHeader("Vary"));
+         EXPECT_EQ("no-cache", *reply.GetHeader("Cache-Control"));
+         EXPECT_EQ("no-cache", *reply.GetHeader("Pragma"));
+         EXPECT_EQ("-1", *reply.GetHeader("Expires"));
+         EXPECT_EQ("application/json; charset=utf-8", *reply.GetHeader("Content-Type"));
+         EXPECT_EQ("Thu, 21 Apr 2016 13:44:36 GMT", *reply.GetHeader("Date"));
+         EXPECT_EQ("0", *reply.GetHeader("Content-Length"));
 
-     }).get();
-} ENDCASE
+     });
+}
 
-STARTCASE(TestSimpleSegmentedHeader)
+TEST(HttpReply, SimpleSegmentedHeader)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -124,19 +122,21 @@ STARTCASE(TestSimpleSegmentedHeader)
     buffer.push_back("\r\n");
 
      auto rest_client = RestClient::Create();
-     rest_client->ProcessWithPromise([&](Context& ctx) {
+     auto f = rest_client->ProcessWithPromise([&](Context& ctx) {
 
          ::restc_cpp::unittests::TestReply reply(ctx, *rest_client, buffer);
 
          reply.SimulateServerReply();
 
-         CHECK_EQUAL("keep-alive", *reply.GetHeader("Connection"));
-         CHECK_EQUAL("0", *reply.GetHeader("Content-Length"));
+         EXPECT_EQ("keep-alive", *reply.GetHeader("Connection"));
+         EXPECT_EQ("0", *reply.GetHeader("Content-Length"));
 
-     }).get();
-} ENDCASE
+     });
 
-STARTCASE(TestSimpleVerySegmentedHeader)
+     EXPECT_NO_THROW(f.get());
+}
+
+TEST(HttpReply, SimpleVerySegmentedHeader)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -157,19 +157,21 @@ STARTCASE(TestSimpleVerySegmentedHeader)
     buffer.push_back("\n");
 
      auto rest_client = RestClient::Create();
-     rest_client->ProcessWithPromise([&](Context& ctx) {
+     auto f = rest_client->ProcessWithPromise([&](Context& ctx) {
 
          ::restc_cpp::unittests::TestReply reply(ctx, *rest_client, buffer);
 
          reply.SimulateServerReply();
 
-         CHECK_EQUAL("keep-alive", *reply.GetHeader("Connection"));
-         CHECK_EQUAL("0", *reply.GetHeader("Content-Length"));
+         EXPECT_EQ("keep-alive", *reply.GetHeader("Connection"));
+         EXPECT_EQ("0", *reply.GetHeader("Content-Length"));
 
-     }).get();
-} ENDCASE
+     });
 
-STARTCASE(TestSimpleBody)
+     EXPECT_NO_THROW(f.get());
+}
+
+TEST(HttpReply, SimpleBody)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -184,21 +186,23 @@ STARTCASE(TestSimpleBody)
         "1234567890");
 
      auto rest_client = RestClient::Create();
-     rest_client->ProcessWithPromise([&](Context& ctx) {
+     auto f = rest_client->ProcessWithPromise([&](Context& ctx) {
 
          ::restc_cpp::unittests::TestReply reply(ctx, *rest_client, buffer);
 
          reply.SimulateServerReply();
          auto body = reply.GetBodyAsString();
 
-         CHECK_EQUAL("Cowboy", *reply.GetHeader("Server"));
-         CHECK_EQUAL("10", *reply.GetHeader("Content-Length"));
-         CHECK_EQUAL(10, (int)body.size());
+         EXPECT_EQ("Cowboy", *reply.GetHeader("Server"));
+         EXPECT_EQ("10", *reply.GetHeader("Content-Length"));
+         EXPECT_EQ(10, (int)body.size());
 
-     }).get();
-} ENDCASE
+     });
 
-STARTCASE(TestSimpleBody2)
+     EXPECT_NO_THROW(f.get());
+}
+
+TEST(HttpReply, SimpleBody2)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -213,21 +217,23 @@ STARTCASE(TestSimpleBody2)
     buffer.push_back("1234567890");
 
      auto rest_client = RestClient::Create();
-     rest_client->ProcessWithPromise([&](Context& ctx) {
+     auto f = rest_client->ProcessWithPromise([&](Context& ctx) {
 
          ::restc_cpp::unittests::TestReply reply(ctx, *rest_client, buffer);
 
          reply.SimulateServerReply();
          auto body = reply.GetBodyAsString();
 
-         CHECK_EQUAL("Cowboy", *reply.GetHeader("Server"));
-         CHECK_EQUAL("10", *reply.GetHeader("Content-Length"));
-         CHECK_EQUAL(10, (int)body.size());
+         EXPECT_EQ("Cowboy", *reply.GetHeader("Server"));
+         EXPECT_EQ("10", *reply.GetHeader("Content-Length"));
+         EXPECT_EQ(10, (int)body.size());
 
-     }).get();
-} ENDCASE
+     });
 
-STARTCASE(TestSimpleBody3)
+     EXPECT_NO_THROW(f.get());
+}
+
+TEST(HttpReply, SimpleBody3)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -243,21 +249,23 @@ STARTCASE(TestSimpleBody3)
     buffer.push_back("890");
 
      auto rest_client = RestClient::Create();
-     rest_client->ProcessWithPromise([&](Context& ctx) {
+     auto f = rest_client->ProcessWithPromise([&](Context& ctx) {
 
          ::restc_cpp::unittests::TestReply reply(ctx, *rest_client, buffer);
 
          reply.SimulateServerReply();
          auto body = reply.GetBodyAsString();
 
-         CHECK_EQUAL("Cowboy", *reply.GetHeader("Server"));
-         CHECK_EQUAL("10", *reply.GetHeader("Content-Length"));
-         CHECK_EQUAL(10, (int)body.size());
+         EXPECT_EQ("Cowboy", *reply.GetHeader("Server"));
+         EXPECT_EQ("10", *reply.GetHeader("Content-Length"));
+         EXPECT_EQ(10, (int)body.size());
 
-     }).get();
-} ENDCASE
+     });
 
-STARTCASE(TestSimpleBody4)
+     EXPECT_NO_THROW(f.get());
+}
+
+TEST(HttpReply, SimpleBody4)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -273,21 +281,23 @@ STARTCASE(TestSimpleBody4)
     buffer.push_back("890");
 
      auto rest_client = RestClient::Create();
-     rest_client->ProcessWithPromise([&](Context& ctx) {
+     auto f = rest_client->ProcessWithPromise([&](Context& ctx) {
 
          ::restc_cpp::unittests::TestReply reply(ctx, *rest_client, buffer);
 
          reply.SimulateServerReply();
          auto body = reply.GetBodyAsString();
 
-         CHECK_EQUAL("Cowboy", *reply.GetHeader("Server"));
-         CHECK_EQUAL("10", *reply.GetHeader("Content-Length"));
-         CHECK_EQUAL(10, (int)body.size());
+         EXPECT_EQ("Cowboy", *reply.GetHeader("Server"));
+         EXPECT_EQ("10", *reply.GetHeader("Content-Length"));
+         EXPECT_EQ(10, (int)body.size());
 
-     }).get();
-} ENDCASE
+     });
 
-STARTCASE(TestChunkedBody)
+     EXPECT_NO_THROW(f.get());
+}
+
+TEST(HttpReply, ChunkedBody)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -303,21 +313,23 @@ STARTCASE(TestChunkedBody)
         "\r\n0\r\n\r\n");
 
      auto rest_client = RestClient::Create();
-     rest_client->ProcessWithPromise([&](Context& ctx) {
+     auto f = rest_client->ProcessWithPromise([&](Context& ctx) {
 
          ::restc_cpp::unittests::TestReply reply(ctx, *rest_client, buffer);
 
          reply.SimulateServerReply();
          auto body = reply.GetBodyAsString();
 
-         CHECK_EQUAL("Cowboy", *reply.GetHeader("Server"));
-         CHECK_EQUAL("chunked", *reply.GetHeader("Transfer-Encoding"));
-         CHECK_EQUAL((0x4 + 0x5 + 0xE), (int)body.size());
+         EXPECT_EQ("Cowboy", *reply.GetHeader("Server"));
+         EXPECT_EQ("chunked", *reply.GetHeader("Transfer-Encoding"));
+         EXPECT_EQ((0x4 + 0x5 + 0xE), (int)body.size());
 
-     }).get();
-} ENDCASE
+     });
 
-STARTCASE(TestChunkedBody2)
+     EXPECT_NO_THROW(f.get());
+}
+
+TEST(HttpReply, ChunkedBody2)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -335,21 +347,23 @@ STARTCASE(TestChunkedBody2)
     buffer.push_back("0\r\n\r\n");
 
      auto rest_client = RestClient::Create();
-     rest_client->ProcessWithPromise([&](Context& ctx) {
+     auto f = rest_client->ProcessWithPromise([&](Context& ctx) {
 
          ::restc_cpp::unittests::TestReply reply(ctx, *rest_client, buffer);
 
          reply.SimulateServerReply();
          auto body = reply.GetBodyAsString();
 
-         CHECK_EQUAL("Cowboy", *reply.GetHeader("Server"));
-         CHECK_EQUAL("chunked", *reply.GetHeader("Transfer-Encoding"));
-         CHECK_EQUAL((0x4 + 0x5 + 0xE), (int)body.size());
+         EXPECT_EQ("Cowboy", *reply.GetHeader("Server"));
+         EXPECT_EQ("chunked", *reply.GetHeader("Transfer-Encoding"));
+         EXPECT_EQ((0x4 + 0x5 + 0xE), (int)body.size());
 
-     }).get();
-} ENDCASE
+     });
 
-STARTCASE(TestChunkedBody4)
+     EXPECT_NO_THROW(f.get());
+}
+
+TEST(HttpReply, ChunkedBody4)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -372,23 +386,23 @@ STARTCASE(TestChunkedBody4)
     buffer.push_back("\n");
 
      auto rest_client = RestClient::Create();
-     rest_client->ProcessWithPromise([&](Context& ctx) {
+     auto f = rest_client->ProcessWithPromise([&](Context& ctx) {
 
          ::restc_cpp::unittests::TestReply reply(ctx, *rest_client, buffer);
 
          reply.SimulateServerReply();
          auto body = reply.GetBodyAsString();
 
-         CHECK_EQUAL("Cowboy", *reply.GetHeader("Server"));
-         CHECK_EQUAL("chunked", *reply.GetHeader("Transfer-Encoding"));
-         CHECK_EQUAL((0x4 + 0x5 + 0xE), (int)body.size());
+         EXPECT_EQ("Cowboy", *reply.GetHeader("Server"));
+         EXPECT_EQ("chunked", *reply.GetHeader("Transfer-Encoding"));
+         EXPECT_EQ((0x4 + 0x5 + 0xE), (int)body.size());
 
-     }).get();
-} ENDCASE
+     });
 
+     EXPECT_NO_THROW(f.get());
+}
 
-
-STARTCASE(TestChunkedTrailer)
+TEST(HttpReply, ChunkedTrailer)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -409,27 +423,29 @@ STARTCASE(TestChunkedTrailer)
     buffer.push_back("\r\n");
 
      auto rest_client = RestClient::Create();
-     rest_client->ProcessWithPromise([&](Context& ctx) {
+     auto f = rest_client->ProcessWithPromise([&](Context& ctx) {
 
          ::restc_cpp::unittests::TestReply reply(ctx, *rest_client, buffer);
 
          reply.SimulateServerReply();
 
-         CHECK_EQUAL("Cowboy", *reply.GetHeader("Server"));
-         CHECK_EQUAL("keep-alive", *reply.GetHeader("Connection"));
-         CHECK_EQUAL("chunked", *reply.GetHeader("Transfer-Encoding"));
+         EXPECT_EQ("Cowboy", *reply.GetHeader("Server"));
+         EXPECT_EQ("keep-alive", *reply.GetHeader("Connection"));
+         EXPECT_EQ("chunked", *reply.GetHeader("Transfer-Encoding"));
 
          auto body = reply.GetBodyAsString();
 
-         CHECK_EQUAL("Indian", *reply.GetHeader("Server"));
-         CHECK_EQUAL("close", *reply.GetHeader("Connection"));
-         CHECK_EQUAL("chunked", *reply.GetHeader("Transfer-Encoding"));
-         CHECK_EQUAL((0x4 + 0x5 + 0xE), (int)body.size());
+         EXPECT_EQ("Indian", *reply.GetHeader("Server"));
+         EXPECT_EQ("close", *reply.GetHeader("Connection"));
+         EXPECT_EQ("chunked", *reply.GetHeader("Transfer-Encoding"));
+         EXPECT_EQ((0x4 + 0x5 + 0xE), (int)body.size());
 
-     }).get();
-} ENDCASE
+     });
 
-STARTCASE(TestChunkedParameterAndTrailer)
+     EXPECT_NO_THROW(f.get());
+}
+
+TEST(HttpReply, ChunkedParameterAndTrailer)
 {
     ::restc_cpp::unittests::test_buffers_t buffer;
 
@@ -450,29 +466,31 @@ STARTCASE(TestChunkedParameterAndTrailer)
     buffer.push_back("\r\n");
 
      auto rest_client = RestClient::Create();
-     rest_client->ProcessWithPromise([&](Context& ctx) {
+     auto f = rest_client->ProcessWithPromise([&](Context& ctx) {
 
          ::restc_cpp::unittests::TestReply reply(ctx, *rest_client, buffer);
 
          reply.SimulateServerReply();
 
-         CHECK_EQUAL("Cowboy", *reply.GetHeader("Server"));
-         CHECK_EQUAL("keep-alive", *reply.GetHeader("Connection"));
-         CHECK_EQUAL("chunked", *reply.GetHeader("Transfer-Encoding"));
+         EXPECT_EQ("Cowboy", *reply.GetHeader("Server"));
+         EXPECT_EQ("keep-alive", *reply.GetHeader("Connection"));
+         EXPECT_EQ("chunked", *reply.GetHeader("Transfer-Encoding"));
 
          auto body = reply.GetBodyAsString();
 
-         CHECK_EQUAL("Indian", *reply.GetHeader("Server"));
-         CHECK_EQUAL("close", *reply.GetHeader("Connection"));
-         CHECK_EQUAL("chunked", *reply.GetHeader("Transfer-Encoding"));
-         CHECK_EQUAL((0x4 + 0x5 + 0xE), (int)body.size());
+         EXPECT_EQ("Indian", *reply.GetHeader("Server"));
+         EXPECT_EQ("close", *reply.GetHeader("Connection"));
+         EXPECT_EQ("chunked", *reply.GetHeader("Transfer-Encoding"));
+         EXPECT_EQ((0x4 + 0x5 + 0xE), (int)body.size());
 
-     }).get();
-} ENDCASE
-}; //lest
+     });
+
+     EXPECT_NO_THROW(f.get());
+}
 
 int main( int argc, char * argv[] )
 {
     RESTC_CPP_TEST_LOGGING_SETUP("debug");
-    return lest::run( specification, argc, argv );
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();;
 }

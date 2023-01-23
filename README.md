@@ -76,7 +76,7 @@ using boost::asio with JSON serialization/deserialization.
 Restc-cpp depends on C++14 with its standard libraries and:
   - boost
   - rapidjson (mature, ultra-fast, json sax, header-only library)
-  - lest (Unit test header only library) (If compiled with testing enabled)
+  - gtest (Cmake will download and install gtest for the project if it is not installed)
   - openssl or libressl (If compiled with TLS support)
   - zlib (If compiled with compression support)
 

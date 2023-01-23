@@ -681,7 +681,7 @@ private:
 
             RESTC_CPP_LOG_TRACE_("Trying endpoint " << endpoint);
 
-            for(size_t retries = 0;; ++retries) {
+            for(size_t retries = 0; retries < 8; ++retries) {
                 // Get a connection from the pool
                 auto connection = owner_.GetConnectionPool()->GetConnection(
                     endpoint, protocol_type);
@@ -759,19 +759,25 @@ private:
                     RESTC_CPP_LOG_TRACE_("RequestImpl::Connect: OK AsyncConnect --> " << endpoint);
                     return connection;
                 } catch (const boost::system::system_error& ex) {
-                    RESTC_CPP_LOG_TRACE_("RequestImpl::Connect:: Caught boost::system::system_error exception: " << ex.what()
-                                         << ". Will close connection " << *connection);
+                    RESTC_CPP_LOG_TRACE_("RequestImpl::Connect:: Caught boost::system::system_error exception: \"" << ex.what()
+                                         << "\". Will close connection " << *connection);
                     connection->GetSocket().GetSocket().close();
 
                     if (ex.code() == boost::system::errc::resource_unavailable_try_again) {
-                        if ( retries < 32) {
-                            RESTC_CPP_LOG_DEBUG_("RequestImpl::Connect:: Caught boost::system::system_error exception: " << ex.what()
-                                                 << ". I will continue the retry loop.");
+                        if ( retries < 8) {
+                            RESTC_CPP_LOG_DEBUG_(
+                                "RequestImpl::Connect:: Caught boost::system::system_error exception: \""
+                                    << ex.what()
+                                    << "\" while connecting to " << endpoint
+                                    << ". I will continue the retry loop.");
                             continue;
                         }
                     }
-                    RESTC_CPP_LOG_WARN_("RequestImpl::Connect:: Caught boost::system::system_error exception: " << ex.what());
-                    throw FailedToConnectException("Failed to connect");
+                    RESTC_CPP_LOG_DEBUG_(
+                        "RequestImpl::Connect:: Caught boost::system::system_error exception: \""
+                            << ex.what()
+                            << "\" while connecting to " << endpoint);
+                    break; // Go to the next endpoint
                 } catch(const exception& ex) {
                     RESTC_CPP_LOG_WARN_("Connect to "
                         << endpoint

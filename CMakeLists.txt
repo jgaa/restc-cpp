@@ -26,6 +26,12 @@ if (NOT DEFINED INSTALL_RAPIDJSON_HEADERS)
     option(INSTALL_RAPIDJSON_HEADERS "Install rapidjson headers when make install is executed" ON)
 endif()
 
+option(RESTC_CPP_WITH_UNIT_TESTS "Enable Unit Testing" ON)
+
+option(RESTC_CPP_AUTORUN_UNIT_TESTS "Run Unit Tests automatically after build" OFF)
+
+option(RESTC_CPP_WITH_FUNCTIONALT_TESTS "Enable Functional Testing" ON)
+
 include(cmake_scripts/external-projects.cmake)
 
 if (EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
@@ -41,12 +47,6 @@ endif()
 option(WITH_APIDOC "Generate Doxygen documentation")
 
 option(RESTC_CPP_WITH_EXAMPLES "Compile examples" ON)
-
-option(RESTC_CPP_WITH_UNIT_TESTS "Enable Unit Testing" ON)
-
-option(RESTC_CPP_AUTORUN_UNIT_TESTS "Run Unit Tests automatically after build" OFF)
-
-option(RESTC_CPP_WITH_FUNCTIONALT_TESTS "Enable Functional Testing" ON)
 
 option(RESTC_CPP_WITH_TLS "Enable TLS (Trough OpenSSL)" ON)
 
@@ -275,7 +275,6 @@ if (NOT EMBEDDED_RESTC_CPP)
             $<BUILD_INTERFACE:${ZLIB_INCLUDE_DIR}/build>
             $<BUILD_INTERFACE:${OPENSSL_INCLUDE_DIR}>
     )
-
 endif()
 
 include(cmake_scripts/install.cmake)

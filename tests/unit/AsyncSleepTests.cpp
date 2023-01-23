@@ -10,52 +10,50 @@
 #include "restc-cpp/error.h"
 #include "restc-cpp/RequestBuilder.h"
 
+#include "gtest/gtest.h"
 #include "restc-cpp/test_helper.h"
-#include "lest/lest.hpp"
-
 
 using namespace std;
 using namespace restc_cpp;
 
 using namespace std::literals::chrono_literals;
 
-const lest::test specification[] = {
-
-TEST(TestSleepMilliseconds)
+TEST(AsyncSleep, SleepMilliseconds)
 {
     auto rest_client = RestClient::Create();
-    rest_client->ProcessWithPromise([&](Context& ctx) {
+    auto f = rest_client->ProcessWithPromise([&](Context& ctx) {
 
         auto start = std::chrono::steady_clock::now();
         ctx.Sleep(200ms);
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>
                         (std::chrono::steady_clock::now() - start).count();
-        CHECK_CLOSE<int64_t>(200, duration, 50);
+        EXPECT_CLOSE(200, duration, 50);
 
-    }).get();
-},
+    });
 
-TEST(TestSleepSeconds)
+    EXPECT_NO_THROW(f.get());
+}
+
+TEST(AsyncSleep, TestSleepSeconds)
 {
     auto rest_client = RestClient::Create();
-    rest_client->ProcessWithPromise([&](Context& ctx) {
+    auto f = rest_client->ProcessWithPromise([&](Context& ctx) {
 
         auto start = std::chrono::steady_clock::now();
         ctx.Sleep(1s);
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>
                         (std::chrono::steady_clock::now() - start).count();
-        CHECK_CLOSE<int64_t>(1000, duration, 50);
+        EXPECT_CLOSE(1000, duration, 50);
 
-    }).get();
+    });
+
+    EXPECT_NO_THROW(f.get());
 }
-
-
-}; // lest
 
 
 int main( int argc, char * argv[] )
 {
     RESTC_CPP_TEST_LOGGING_SETUP("debug");
-
-    return lest::run( specification, argc, argv );
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();;
 }

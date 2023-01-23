@@ -6,8 +6,8 @@
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/RequestBuilder.h"
 
+#include "gtest/gtest.h"
 #include "restc-cpp/test_helper.h"
-#include "lest/lest.hpp"
 
 using namespace std;
 using namespace restc_cpp;
@@ -46,48 +46,31 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 string https_url = "https://lastviking.eu/files/api";
 
-const lest::test specification[] = {
-
-TEST(TestHTTPS)
-{
+TEST(Https, GetJson) {
     shared_ptr<boost::asio::ssl::context> tls_ctx = make_shared<boost::asio::ssl::context>(boost::asio::ssl::context{ boost::asio::ssl::context::tlsv12_client});
 
-    try {
-        tls_ctx->set_options(boost::asio::ssl::context::default_workarounds
-                        | boost::asio::ssl::context::no_sslv2
-                        | boost::asio::ssl::context::no_sslv3
+    EXPECT_NO_THROW(tls_ctx->set_options(boost::asio::ssl::context::default_workarounds
+                    | boost::asio::ssl::context::no_sslv2
+                    | boost::asio::ssl::context::no_sslv3
 //                        | boost::asio::ssl::context::no_tlsv1_1
-                        | boost::asio::ssl::context::single_dh_use);
-        } catch (const exception& ex) {
-           cout << " *** exception " << ex.what() << endl;
-           throw;
-        }
+                    | boost::asio::ssl::context::single_dh_use);
+    );
 
-        auto client = RestClient::Create(tls_ctx);
-        client->ProcessWithPromise([&](Context& ctx) {
+    auto client = RestClient::Create(tls_ctx);
+    auto f = client->ProcessWithPromise([&](Context& ctx) {
         Post post;
         auto reply = ctx.Get(https_url);
-
-        CHECK_EQUAL(200, reply->GetResponseCode());
-
+        EXPECT_HTTP_OK(reply->GetResponseCode());
         SerializeFromJson(post, *reply);
+        EXPECT_EQ(1, post.id);
+    });
 
-        cout << "Received post# " << post.id
-             << ", title: " << post.title;
-
-        CHECK_EQUAL(1, post.id);
-
-        cout << "Received post# " << post.id
-             << ", title: " << post.title;
-    }).get();
+    EXPECT_NO_THROW(f.get());
 }
-
-
-}; //lest
 
 int main(int argc, char * argv[])
 {
     RESTC_CPP_TEST_LOGGING_SETUP("debug");
-
-    return lest::run(specification, argc, argv);
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();;
 }
