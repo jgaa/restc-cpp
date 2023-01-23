@@ -45,27 +45,38 @@ include_directories(
      ${EXTERNAL_PROJECTS_PREFIX}/installed/include
     )
 
-if (NOT DEFINED GTEST_TAG)
-    set(GTEST_TAG "main")
+# If we compile the tests; download and install gtest if it's not found on the target
+# On ubuntu and debian, you can install `libgtest-dev` to avoid this step.
+if (RESTC_CPP_WITH_UNIT_TESTS OR RESTC_CPP_WITH_FUNCTIONALT_TESTS)
+    find_package(GTest)
+    if (GTest_FOUND)
+        message("Using installed googletest")
+    else()
+        message("Will download and install googletest as a cmake included project")
+        set(DEPENDS_GTEST googletests)
+        set(GTEST_LIBRARIES gtest)
+
+        if (NOT DEFINED GTEST_TAG)
+            set(GTEST_TAG "main")
+        endif()
+
+        message("GTEST_TAG: ${GTEST_TAG}")
+
+        if (WIN32)
+            set(GTEST_EXTRA_ARGS "-Dgtest_force_shared_crt=TRUE")
+        endif()
+
+        ExternalProject_Add(googletest
+            GIT_TAG "${GTEST_TAG}"
+            PREFIX "${EXTERNAL_PROJECTS_PREFIX}"
+            GIT_REPOSITORY https://github.com/google/googletest.git
+            CMAKE_ARGS
+                -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_INSTALL_PREFIX}
+                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                ${GTEST_EXTRA_ARGS}
+        )
+        set(GTEST_LIB_DIR ${RESTC_EXTERNAL_INSTALLED_LIB_DIR})
+    endif()
 endif()
-
-message("GTEST_TAG: ${GTEST_TAG}")
-
-if (WIN32)
-    set(GTEST_EXTRA_ARGS "-Dgtest_force_shared_crt=TRUE")
-endif()
-
-ExternalProject_Add(googletest
-    #GIT_TAG "main"
-    GIT_TAG "${GTEST_TAG}"
-    PREFIX "${EXTERNAL_PROJECTS_PREFIX}"
-    GIT_REPOSITORY https://github.com/google/googletest.git
-    CMAKE_ARGS
-        -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_INSTALL_PREFIX}
-        -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-        -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        ${GTEST_EXTRA_ARGS}
-)
-set(GTEST_LIB_DIR ${RESTC_EXTERNAL_INSTALLED_LIB_DIR})
-
