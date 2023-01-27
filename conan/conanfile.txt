@@ -1,8 +1,8 @@
 [requires]
-rapidjson/1.1.0@bincrafters/stable
-boost/1.67.0@conan/stable
-OpenSSL/1.1.0g@conan/stable
-zlib/1.2.11@conan/stable
+rapidjson/1.1.0
+boost/1.80.0
+openssl/1.1.1d
+zlib/1.2.12
 
 [generators]
 cmake
