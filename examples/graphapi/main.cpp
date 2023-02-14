@@ -23,8 +23,6 @@ using namespace std::string_literals;
 
 
 int main(int argc, char *argv[]) {
-    const string url = "https://api.ipify.org";
-
     RESTC_CPP_TEST_LOGGING_SETUP("info");
 
     // Prevent restc from throwing on HTTP errors
