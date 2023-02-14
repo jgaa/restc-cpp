@@ -287,6 +287,7 @@ endif()
 
 if (RESTC_CPP_WITH_EXAMPLES)
     add_subdirectory(examples/logip)
+    add_subdirectory(examples/graphapi)
 endif()
 
 
