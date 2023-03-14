@@ -478,7 +478,7 @@ private:
         request_buffer << Verb(request_type_) << ' ';
 
         if (properties_->proxy.type == Request::Proxy::Type::HTTP) {
-            request_buffer << parsed_url_.GetProtocolName() << parsed_url_.GetHost();
+            request_buffer << parsed_url_.GetProtocolName() << parsed_url_.GetHost() << ":" << parsed_url_.GetPort();
         }
 
         // Add arguments to the path as ?name=value&name=value...
