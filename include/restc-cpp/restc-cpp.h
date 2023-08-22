@@ -160,7 +160,7 @@ public:
     class Properties {
     public:
         using ptr_t = std::shared_ptr<Properties>;
-        using redirect_fn_t = std::function<void (int code, std::string& url, 
+        using redirect_fn_t = std::function<void (int code, std::string& url,
                                                   const Reply& reply)>;
         using general_callback_t = std::function<void()>;
 
@@ -417,7 +417,7 @@ public:
             done_handler.reset();
         });
 
-        return move(future);
+        return future;
     }
 
     /*! Process from within an existing coroutine */
