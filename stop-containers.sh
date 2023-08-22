@@ -1,5 +1,5 @@
 #!/bin/bash
 
 pushd ci/mock-backends
-docker-compose down
+docker compose down
 popd

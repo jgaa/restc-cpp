@@ -13,8 +13,8 @@ else
     exit -1
 fi
 
-docker-compose stop
-docker-compose build
-docker-compose up -d
+docker compose stop
+docker compose build
+docker compose up -d
 docker ps
 popd
