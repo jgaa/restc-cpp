@@ -49,6 +49,15 @@ TEST(Url, UrlWithPathAndSlash)
     EXPECT_EQ("/jgaa/"s, url.GetPath());
 }
 
+TEST(Url, UrlWithPathInclColon)
+{
+    Url url("http://github.com/jgaa:test");
+    EXPECT_EQ("github.com"s, url.GetHost());
+    EXPECT_EQ("80"s, url.GetPort());
+    EXPECT_EQ_ENUM(Url::Protocol::HTTP, url.GetProtocol());
+    EXPECT_EQ("/jgaa:test"s, url.GetPath());
+}
+
 TEST(Url, HttpWithPort)
 {
     Url url("http://github.com:56");
@@ -83,6 +92,15 @@ TEST(Url, HttpWithPortAndPath)
     EXPECT_EQ("12345"s, url.GetPort());
     EXPECT_EQ_ENUM(Url::Protocol::HTTP, url.GetProtocol());
     EXPECT_EQ("/jgaa"s, url.GetPath());
+}
+
+TEST(Url, HttpWithPortAndPathInclColon)
+{
+    Url url("http://github.com:12345/jgaa:test");
+    EXPECT_EQ("github.com"s, url.GetHost());
+    EXPECT_EQ("12345"s, url.GetPort());
+    EXPECT_EQ_ENUM(Url::Protocol::HTTP, url.GetProtocol());
+    EXPECT_EQ("/jgaa:test"s, url.GetPath());
 }
 
 TEST(Url, HttpWithPortAndPathPath)
