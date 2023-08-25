@@ -66,8 +66,6 @@ class RequestBody;
 class Connection;
 class ConnectionPool;
 class Socket;
-class Request;
-class Reply;
 class Context;
 class DataWriter;
 
@@ -136,7 +134,7 @@ public:
     };
 
     struct Proxy {
-        enum class Type { NONE, HTTP, SOCKS5 };
+        enum class Type { NONE, HTTP, HTTPS, SOCKS5 };
         Type type = Type::NONE;
         std::string address;
 

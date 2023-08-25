@@ -3,6 +3,7 @@
 #include <thread>
 #include <future>
 #include <array>
+#include <tuple>
 
 #include <boost/utility/string_ref.hpp>
 
@@ -15,6 +16,7 @@
 #include "restc-cpp/error.h"
 #include "restc-cpp/url_encode.h"
 #include "restc-cpp/RequestBody.h"
+#include "restc-cpp/DataReaderStream.h"
 #include "ReplyImpl.h"
 
 using namespace std;
@@ -66,8 +68,8 @@ boost::asio::ip::address make_address(const char* str,
 namespace restc_cpp {
 
 const std::string& Request::Proxy::GetName() {
-    static const array<string, 3> names = {
-      "NONE", "HTTP", "SOCKS5"
+    static const array<string, 4> names = {
+      "NONE", "HTTP", "HTTPS", "SOCKS5"
     };
 
     return names.at(static_cast<size_t>(type));
@@ -122,7 +124,7 @@ pair<string, uint16_t> ParseAddress(const std::string addr) {
 }
 
 /*! Parse the address and write the socks5 connect request */
-void ParseAddressIntoSocke5ConnectRequest(const std::string& addr,
+void ParseAddressIntoSocks5ConnectRequest(const std::string& addr,
                                           vector<uint8_t>& out) {
 
     out.push_back(SOCKS5_VERSION);
@@ -221,13 +223,13 @@ size_t ValidateCompleteSocks5ConnectReply(uint8_t *buf, size_t len) {
     return hdr_len;
 }
 
-void DoSocks5Handshake(Connection& connection,
+void DoSocks5Handshake(Connection::ptr_t connection,
                        const Url& url,
-                       const Request::Properties properties,
+                       const Request::Properties::ptr_t& properties,
                        Context& ctx) {
 
-    assert(properties.proxy.type == Request::Proxy::Type::SOCKS5);
-    auto& sck = connection.GetSocket();
+    assert(properties->proxy.type == Request::Proxy::Type::SOCKS5);
+    auto& sck = connection->GetSocket();
 
     // Send no-auth handshake
     {
@@ -255,7 +257,7 @@ void DoSocks5Handshake(Connection& connection,
 
         auto addr = url.GetHost().to_string() + ":" + to_string(url.GetPort());
 
-        ParseAddressIntoSocke5ConnectRequest(addr, params);
+        ParseAddressIntoSocks5ConnectRequest(addr, params);
         RESTC_CPP_LOG_TRACE_("DoSocks5Handshake - saying connect to " <<  url.GetHost().to_string() << ":" << url.GetPort());
         sck.AsyncWriteT(params, ctx.GetYield());
     }
@@ -283,6 +285,93 @@ void DoSocks5Handshake(Connection& connection,
     }
     RESTC_CPP_LOG_TRACE_("DoSocks5Handshake - done");
 }
+
+
+void DoProxyConnect(Connection::ptr_t connection,
+                    const Url& url,
+                    const Request::Properties::ptr_t& properties,
+                    Context& ctx) {
+
+    assert(properties->proxy.type == Request::Proxy::Type::HTTPS);
+    static const string crlf{"\r\n"};
+    auto& sck = connection->GetSocket();
+
+    {
+        const string host(url.GetHost().to_string() + ":" + to_string(url.GetPort()));
+        ostringstream request_buffer;
+        request_buffer << "CONNECT ";
+        request_buffer << host;
+        request_buffer << " HTTP/1.1" << crlf;
+        request_buffer << "Host: " << host << crlf << crlf;
+        RESTC_CPP_LOG_DEBUG_("DoProxyConnect - send CONNECT " << host << " HTTP/1.1");
+        sck.AsyncWriteT(request_buffer.str(), ctx.GetYield());
+    }
+    {
+        RESTC_CPP_LOG_TRACE_("DoProxyConnect: starting receiving from proxy");
+        //struct { http_version=HTTP_1_1; int status_code=0; string reason_phrase; }
+        Reply::HttpResponse proxy_response;
+
+        try {
+            DataReader::ReadConfig cfg; //one element struct
+            cfg.msReadTimeout = properties->recvTimeout;//1000*21
+
+            //make_unique<IoReaderImpl>(connection, ctx, cfg);
+            unique_ptr<DataReader> io_reader = DataReader::CreateIoReader(connection, ctx, cfg);
+
+            //get from reply->StartReceiveFromServer(io_reader);
+            auto timer = IoTimer::Create("ReceivingFromProxy"s,
+                                     properties->replyTimeoutMs,//1000*21
+                                     connection);
+
+            auto stream = make_unique<DataReaderStream>(move(io_reader));
+
+            //sets status_code, reason_phrase in response
+            stream->ReadServerResponse(proxy_response);
+
+            connection.reset();
+
+        } catch (const exception& ex) {
+            RESTC_CPP_LOG_DEBUG_("DoProxyConnect: exception from ReceivingFromProxy: " << ex.what());
+            throw;
+        }
+
+        int status_code = proxy_response.status_code;
+        RESTC_CPP_LOG_DEBUG_("DoProxyConnect: Returned from ReceivingFromProxy. code=" << status_code);
+
+        //check for response code 200
+        RESTC_CPP_LOG_TRACE_("DoProxyConnect: validating proxy reply");
+        constexpr auto magic_2 = 2;
+        constexpr auto magic_100 = 100;
+        constexpr auto http_401 = 401;
+        constexpr auto http_403 = 403;
+        constexpr auto http_404 = 404;
+        constexpr auto http_405 = 405;
+        constexpr auto http_406 = 406;
+        constexpr auto http_407 = 407;
+        constexpr auto http_408 = 408;
+
+        if ((status_code / magic_100) > magic_2) switch(status_code) {
+            case http_401:
+                throw HttpAuthenticationException(proxy_response);
+            case http_403:
+                throw HttpForbiddenException(proxy_response);
+            case http_404:
+                throw HttpNotFoundException(proxy_response);
+            case http_405:
+                throw HttpMethodNotAllowedException(proxy_response);
+            case http_406:
+                throw HttpNotAcceptableException(proxy_response);
+            case http_407:
+                throw HttpProxyAuthenticationRequiredException(proxy_response);
+            case http_408:
+                throw HttpRequestTimeOutException(proxy_response);
+            default:
+                throw RequestFailedWithErrorException(proxy_response);
+        }
+    }
+    RESTC_CPP_LOG_TRACE_("DoProxyConnect - done");
+}
+
 } // anonumous ns
 
 class RequestImpl : public Request {
@@ -407,13 +496,13 @@ public:
             try {
                 return DoExecute((ctx));
             } catch(const RedirectException& ex) {
-                
+
                 auto url = ex.GetUrl();
-                
+
                 if (properties_->redirectFn) {
                     properties_->redirectFn(ex.GetCode(), url, ex.GetRedirectReply());
                 }
-                
+
                 if ((properties_->maxRedirects >= 0)
                     && (++redirects > properties_->maxRedirects)) {
                     throw ConstraintException("Too many redirects.");
@@ -527,7 +616,8 @@ private:
         return request_buffer.str();
     }
 
-    boost::asio::ip::tcp::resolver::query GetRequestEndpoint() {
+    //returns {protocol_type, host, service} instead of deprecated ip::resolver::query
+    tuple<Connection::Type, string, string> GetRequestEndpoint() {
         const auto proxy_type = properties_->proxy.type;
 
         if (proxy_type == Request::Proxy::Type::SOCKS5) {
@@ -539,22 +629,36 @@ private:
                                  << " Proxy at: "
                                  << host << ':' << port);
 
-            return {host, to_string(port)};
+            // what connection type should we use for SOCKS tunnel?
+            return { (parsed_url_.GetProtocol() == Url::Protocol::HTTPS)
+                       ? Connection::Type::HTTPS
+                       : Connection::Type::HTTP,
+                      host, to_string(port) };
         }
 
-        if (proxy_type == Request::Proxy::Type::HTTP) {
+        if ( (proxy_type == Request::Proxy::Type::HTTP &&
+              parsed_url_.GetProtocol() == Url::Protocol::HTTP) ||
+             (proxy_type == Request::Proxy::Type::HTTPS &&
+              parsed_url_.GetProtocol() == Url::Protocol::HTTPS) ) {
             Url proxy {properties_->proxy.address.c_str()};
 
             RESTC_CPP_LOG_TRACE_("Using " << properties_->proxy.GetName()
+                                 << ((proxy_type == Request::Proxy::Type::HTTPS) ? "(CONNECT)":"")
                                  << " Proxy at: "
                                  << proxy.GetHost() << ':' << proxy.GetPort());
 
-            return { proxy.GetHost().to_string(),
-                proxy.GetPort().to_string()};
+            return { (proxy.GetProtocol() == Url::Protocol::HTTPS)
+                       ? Connection::Type::HTTPS
+                       : Connection::Type::HTTP,
+                     proxy.GetHost().to_string(),
+                     proxy.GetPort().to_string() };
         }
 
-        return { parsed_url_.GetHost().to_string(),
-            parsed_url_.GetPort().to_string()};
+        return { (parsed_url_.GetProtocol() == Url::Protocol::HTTPS)
+                   ? Connection::Type::HTTPS
+                   : Connection::Type::HTTP,
+                 parsed_url_.GetHost().to_string(),
+                 parsed_url_.GetPort().to_string() };
     }
 
     /* If we are redirected, we need to reset the body
@@ -604,10 +708,9 @@ private:
             return {protocol, static_cast<uint16_t>(port_num)};
         }
 
-        boost::asio::ip::tcp::resolver::query q{host, port};
         boost::asio::ip::tcp::resolver resolver(owner_.GetIoService());
 
-        auto ep = resolver.async_resolve(q, ctx.GetYield());
+        auto ep = resolver.async_resolve(host, port, ctx.GetYield());
         const decltype(ep) addr_end;
         for(; ep != addr_end; ++ep)
         if (ep != addr_end) {
@@ -655,19 +758,15 @@ private:
 
         auto prot_filter = GetBindProtocols(properties_->bindToLocalAddress, ctx);
 
-        const Connection::Type protocol_type =
-            (parsed_url_.GetProtocol() == Url::Protocol::HTTPS)
-            ? Connection::Type::HTTPS
-            : Connection::Type::HTTP;
-
         boost::asio::ip::tcp::resolver resolver(owner_.GetIoService());
         // Resolve the hostname
-        const auto query = GetRequestEndpoint();
+        const auto ep_tuple = GetRequestEndpoint(); //{protocol_type, host, service=port}
 
-        RESTC_CPP_LOG_TRACE_("Resolving " << query.host_name() << ":"
-            << query.service_name());
+        RESTC_CPP_LOG_TRACE_("Resolving " << get<1>(ep_tuple) << ":"
+            << get<2>(ep_tuple));
 
-        auto address_it = resolver.async_resolve(query,
+        auto address_it = resolver.async_resolve(/*host*/ get<1>(ep_tuple),
+                                                 /*port*/ get<2>(ep_tuple),
                                                  ctx.GetYield());
         const decltype(address_it) addr_end;
 
@@ -684,7 +783,7 @@ private:
             for(size_t retries = 0; retries < 8; ++retries) {
                 // Get a connection from the pool
                 auto connection = owner_.GetConnectionPool()->GetConnection(
-                    endpoint, protocol_type);
+                    endpoint, /*protocol_type*/ get<0>(ep_tuple));
 
                 // Connect if the connection is new.
                 if (connection->GetSocket().IsOpen()) {
@@ -746,9 +845,17 @@ private:
                         connection->GetSocket().SetAfterConnectCallback([&]() {
                             RESTC_CPP_LOG_TRACE_("RequestImpl::Connect: In Socks5 callback");
 
-                            DoSocks5Handshake(*connection, parsed_url_, *properties_, ctx);
+                            DoSocks5Handshake(connection, parsed_url_, properties_, ctx);
 
                             RESTC_CPP_LOG_TRACE_("RequestImpl::Connect: Leaving Socks5 callback");
+                        });
+                    } else if (properties_->proxy.type == Proxy::Type::HTTPS) {
+                        connection->GetSocket().SetAfterConnectCallback([&]() {
+                            RESTC_CPP_LOG_TRACE_("RequestImpl::Connect: In Https(connect)-proxy callback");
+
+                            DoProxyConnect(connection, parsed_url_, properties_, ctx);
+
+                            RESTC_CPP_LOG_TRACE_("RequestImpl::Connect: Leaving Https(connect)-proxy callback");
                         });
                     }
 
