@@ -223,7 +223,7 @@ size_t ValidateCompleteSocks5ConnectReply(uint8_t *buf, size_t len) {
     return hdr_len;
 }
 
-void DoSocks5Handshake(Connection::ptr_t connection,
+void DoSocks5Handshake(const Connection::ptr_t& connection,
                        const Url& url,
                        const Request::Properties::ptr_t& properties,
                        Context& ctx) {
@@ -287,7 +287,7 @@ void DoSocks5Handshake(Connection::ptr_t connection,
 }
 
 
-void DoProxyConnect(Connection::ptr_t connection,
+void DoProxyConnect(const Connection::ptr_t& connection,
                     const Url& url,
                     const Request::Properties::ptr_t& properties,
                     Context& ctx) {
@@ -327,8 +327,6 @@ void DoProxyConnect(Connection::ptr_t connection,
 
             //sets status_code, reason_phrase in response
             stream->ReadServerResponse(proxy_response);
-
-            connection.reset();
 
         } catch (const exception& ex) {
             RESTC_CPP_LOG_DEBUG_("DoProxyConnect: exception from ReceivingFromProxy: " << ex.what());
