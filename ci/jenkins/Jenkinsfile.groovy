@@ -90,139 +90,6 @@ pipeline {
 //                     }
 //                 }
                                 
-                stage('Ubuntu Bionic') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockefile.ubuntu-bionic'
-                            dir 'ci/jenkins'
-                            label 'docker'
-                        }
-                    }
-                    
-                    options {
-                        timeout(time: 30, unit: "MINUTES")
-                    }
-
-                    steps {
-                        echo "Building on ubuntu-bionic-AMD64 in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=OFF .. && make -j $(nproc)'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-                                
-                                unstable(message: "${STAGE_NAME} - Testing failed")
-                                
-                            }
-                        }
-                    }
-                }
-                
-                stage('Ubuntu Bionic MT CTX') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockefile.ubuntu-bionic'
-                            dir 'ci/jenkins'
-                            label 'docker'
-                        }
-                    }
-                    
-                    options {
-                        timeout(time: 30, unit: "MINUTES")
-                    }
-
-                    steps {
-                        echo "Building on ubuntu-bionic-AMD64 in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=OFF .. && make -j $(nproc)'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-                                
-                                unstable(message: "${STAGE_NAME} - Testing failed")
-                            }
-                        }
-                    }
-                }
-                
-                stage('Ubuntu Bionic C++17') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockefile.ubuntu-bionic'
-                            dir 'ci/jenkins'
-                            label 'docker'
-                        }
-                    }
-                    
-                    options {
-                        timeout(time: 30, unit: "MINUTES")
-                    }
-
-                    steps {
-                        echo "Building on ubuntu-bionic-AMD64 in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-                                
-                                unstable(message: "${STAGE_NAME} - Testing failed")
-                            }
-                        }
-                    }
-                }
-                
-                stage('Ubuntu Bionic C++17 MT CTX') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockefile.ubuntu-bionic'
-                            dir 'ci/jenkins'
-                            label 'docker'
-                        }
-                    }
-                    
-                    options {
-                        timeout(time: 30, unit: "MINUTES")
-                    }
-
-                    steps {
-                        echo "Building on ubuntu-bionic-AMD64 in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-                                
-                                unstable(message: "${STAGE_NAME} - Testing failed")
-                            }
-                        }
-                    }
-                }
-
                 stage('Ubuntu Xenial') {
                     agent {
                         dockerfile {
@@ -276,72 +143,6 @@ pipeline {
                         sh 'rm -rf build'
                         sh 'mkdir build'
                         sh 'cd build && cmake -DGTEST_TAG=release-1.10.0 -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=OFF .. && make -j $(nproc)'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest -E "HTTPS_FUNCTIONAL_TESTS|PROXY_TESTS" --no-compress-output -T Test'
-                            } catch (exc) {
-                                
-                                unstable(message: "${STAGE_NAME} - Testing failed")
-                            }
-                        }
-                    }
-                }
-
-                stage('Debian Stretch') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockerfile.debian-stretch'
-                            dir 'ci/jenkins'
-                            label 'docker'
-                        }
-                    }
-                    
-                    options {
-                        timeout(time: 30, unit: "MINUTES")
-                    }
-
-                    steps {
-                        echo "Building on debian-stretch-AMD64 in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=OFF .. && make -j $(nproc)'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest -E "HTTPS_FUNCTIONAL_TESTS|PROXY_TESTS" --no-compress-output -T Test'
-                            } catch (exc) {
-                                
-                                unstable(message: "${STAGE_NAME} - Testing failed")
-                            }
-                        }
-                    }
-                }
-                
-                stage('Debian Stretch MT CTX') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockerfile.debian-stretch'
-                            dir 'ci/jenkins'
-                            label 'docker'
-                        }
-                    }
-                    
-                    options {
-                        timeout(time: 30, unit: "MINUTES")
-                    }
-
-                    steps {
-                        echo "Building on debian-stretch-AMD64 in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=OFF .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
@@ -482,6 +283,72 @@ pipeline {
                                 sh 'cd build && ctest --no-compress-output -T Test'
                             } catch (exc) {
                                 
+                                unstable(message: "${STAGE_NAME} - Testing failed")
+                            }
+                        }
+                    }
+                }
+
+                stage('Debian Bookworm, C++17') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockefile.debian-bookworm'
+                            dir 'ci/jenkins'
+                            label 'docker'
+                        }
+                    }
+
+                    options {
+                        timeout(time: 30, unit: "MINUTES")
+                    }
+
+                    steps {
+                        echo "Building on debian-bookworm-AMD64 in ${WORKSPACE}"
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+
+                                unstable(message: "${STAGE_NAME} - Testing failed")
+                            }
+                        }
+                    }
+                }
+
+                 stage('Debian Bookworm MT CTX C++17') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockefile.debian-bookworm'
+                            dir 'ci/jenkins'
+                            label 'docker'
+                        }
+                    }
+
+                    options {
+                        timeout(time: 30, unit: "MINUTES")
+                    }
+
+                    steps {
+                        echo "Building on debian-bookworm-AMD64 in ${WORKSPACE}"
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+
                                 unstable(message: "${STAGE_NAME} - Testing failed")
                             }
                         }
