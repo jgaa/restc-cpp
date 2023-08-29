@@ -38,7 +38,7 @@ pipeline {
                     }
 
                     steps {
-                        echo "Building on ubuntu-jammy-AMD64 in ${WORKSPACE}"
+                        echo "Building on ubuntu-jammy-AMD64 in ${NODE_NAME} --> ${WORKSPACE}"
                         checkout scm
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
@@ -71,7 +71,7 @@ pipeline {
                     }
 
                     steps {
-                        echo "Building on ubuntu-jammy-AMD64 in ${WORKSPACE}"
+                        echo "Building on ubuntu-jammy-AMD64 in ${NODE_NAME} --> ${WORKSPACE}"
                         checkout scm
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
@@ -104,7 +104,7 @@ pipeline {
                     }
 
                     steps {
-                        echo "Building on ubuntu-xenial-AMD64 in ${WORKSPACE}"
+                        echo "Building on ubuntu-xenial-AMD64 in ${NODE_NAME} --> ${WORKSPACE}"
                         checkout scm
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
