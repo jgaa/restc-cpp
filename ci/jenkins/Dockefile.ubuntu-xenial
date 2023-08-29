@@ -8,10 +8,9 @@ MAINTAINER Jarle Aase <jgaa@jgaa.com>
 RUN apt-get -q update &&\
     apt-get -y -q --no-install-recommends upgrade &&\
     apt-get -y -q install openssh-server g++ git \
-    automake autoconf ruby ruby-dev rubygems build-essential \
+    automake autoconf build-essential \
     zlib1g-dev g++ cmake make libboost-all-dev libssl-dev \
     openjdk-8-jdk &&\
-    gem install --no-ri --no-rdoc fpm &&\
     apt-get -y -q autoremove &&\
     apt-get -y -q clean
 
