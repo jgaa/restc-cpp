@@ -255,12 +255,11 @@ The project has been in public BETA since April 11th 2017.
 These are the operating systems where my Continues Integration (Jenkins) servers currently compiles the project and run all the tests:
 
  - Debian Testing
+ - Debian Bookworm
  - Debian Bullseye (Stable)
  - Debian Buster
- - Debian Stretch
  - Windows 10 / Microsoft Visual Studio 2019, Community version using vcpkg for dependencies
  - Ubuntu Xenial (LTS)
- - Ubuntu Bionic (LTS)
 
 Support for MacOS has been removed after Apples announcement that their love for privacy was just 
 a marketing gimmick.
@@ -276,8 +275,11 @@ I currently use my own CI infrastructure running on my own hardware. I use Jenki
   - [restc-cpp tags on The Last Viking's Nest](https://lastviking.eu/_tags/restc-cpp.html)
 
 # Similar projects
-  - [Boost.Beast](https://github.com/boostorg/beast) by Vinnie Falco. When you like to write many lines of code...
   - [RESTinCurl](https://github.com/jgaa/RESTinCurl) by me. Aimed at mobile applications, IoT and projects that already link with libcurl.
+  - [Boost.Beast](https://github.com/boostorg/beast) by Vinnie Falco. When you like to write many lines of code...
+
+  **Json serialization only**
+  - [Boost.Json](https://www.boost.org/doc/libs/1_83_0/libs/json/doc/html/index.html)
   - [JSON for Modern C++](https://nlohmann.github.io/json/) by Niels Lohmann. My favorite json library, when I need to more than just static serialization.
   - [json11 - tiny JSON library for C++11, providing JSON parsing and serialization](https://github.com/dropbox/json11)
 
