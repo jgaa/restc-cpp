@@ -246,7 +246,7 @@ Please refer to the [tutorial](doc/Tutorial.md) for more examples.
   - Write directly to the outgoing DataWriter when data is required.
   - Just provide a C++ object and let the library serialize it directly to the wire.
 - HTTP Proxy support
-- SOCKS5 Proxy support (naive implementatin for now, no support for authentication).
+- HTTPS Proxy (using CONNECT method), SOCKS5 Proxy support (naive implementatin for now, no support for authentication).
 
 # Current Status
 The project has been in public BETA since April 11th 2017.
@@ -262,7 +262,7 @@ These are the operating systems where my Continues Integration (Jenkins) servers
  - Ubuntu Xenial (LTS)
  - Ubuntu Bionic (LTS)
 
-Support for MacOS has been removed after Apples announcement that their love for privacy was just 
+Support for MacOS has been removed after Apples announcement that their love for privacy was just
 a marketing gimmick.
  
 Fedora is currently disabled in my CI because of failures to start their Docker containers. (Work in progress). Ubuntu Jammy don't work in docker with my Jenkins  CI pipeline, so I have no reliable way to test it. Windows 11 cannot be run on my KVM /QEMU system, because it don't support "secure" boot, so I have no way to test it.
