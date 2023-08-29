@@ -3,7 +3,7 @@
 #ifndef RESTC_CPP_URL_H_
 #define RESTC_CPP_URL_H_
 
-#include <boost/utility/string_ref.hpp>
+#include <boost/utility/string_view.hpp>
 
 namespace restc_cpp {
 
@@ -20,19 +20,19 @@ namespace restc_cpp {
 
      Url& operator = (const char *url);
 
-     boost::string_ref GetProtocolName() const { return protocol_name_; }
-     boost::string_ref GetHost() const { return host_; }
-     boost::string_ref GetPort() const { return port_; }
-     boost::string_ref GetPath() const { return path_; }
-     boost::string_ref GetArgs() const { return args_; }
+     boost::string_view GetProtocolName() const { return protocol_name_; }
+     boost::string_view GetHost() const { return host_; }
+     boost::string_view GetPort() const { return port_; }
+     boost::string_view GetPath() const { return path_; }
+     boost::string_view GetArgs() const { return args_; }
      Protocol GetProtocol() const { return protocol_; }
 
  private:
-     boost::string_ref protocol_name_;
-     boost::string_ref host_;
-     boost::string_ref port_;
-     boost::string_ref path_ = "/";
-     boost::string_ref args_;
+     boost::string_view protocol_name_;
+     boost::string_view host_;
+     boost::string_view port_;
+     boost::string_view path_ = "/";
+     boost::string_view args_;
      Protocol protocol_ = Protocol::UNKNOWN;
  };
 

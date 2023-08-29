@@ -35,7 +35,7 @@ allchars_t get_normal_ch() {
 
 } // anonymous namespace
 
-std::string url_encode(const boost::string_ref& src) {
+std::string url_encode(const boost::string_view& src) {
     constexpr auto magic_4 = 4;
     constexpr auto magic_0x0f = 0x0f;
 
