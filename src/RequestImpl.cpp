@@ -327,6 +327,10 @@ void DoProxyConnect(const Connection::ptr_t& connection,
 
             //sets status_code, reason_phrase in response
             stream->ReadServerResponse(proxy_response);
+            stream->ReadHeaderLines(
+                [](std::string&& name, std::string&& value) {
+                    RESTC_CPP_LOG_TRACE_("Read proxy header: " << name);
+            });
 
         } catch (const exception& ex) {
             RESTC_CPP_LOG_DEBUG_("DoProxyConnect: exception from ReceivingFromProxy: " << ex.what());
@@ -614,8 +618,8 @@ private:
         return request_buffer.str();
     }
 
-    //returns {protocol_type, host, service} instead of deprecated ip::resolver::query
-    tuple<Connection::Type, string, string> GetRequestEndpoint() {
+    //returns {host, service} instead of deprecated ip::resolver::query
+    tuple<string, string> GetRequestEndpoint() {
         const auto proxy_type = properties_->proxy.type;
 
         if (proxy_type == Request::Proxy::Type::SOCKS5) {
@@ -627,11 +631,7 @@ private:
                                  << " Proxy at: "
                                  << host << ':' << port);
 
-            // what connection type should we use for SOCKS tunnel?
-            return { (parsed_url_.GetProtocol() == Url::Protocol::HTTPS)
-                       ? Connection::Type::HTTPS
-                       : Connection::Type::HTTP,
-                      host, to_string(port) };
+            return { host, to_string(port) };
         }
 
         if ( (proxy_type == Request::Proxy::Type::HTTP &&
@@ -645,17 +645,11 @@ private:
                                  << " Proxy at: "
                                  << proxy.GetHost() << ':' << proxy.GetPort());
 
-            return { (proxy.GetProtocol() == Url::Protocol::HTTPS)
-                       ? Connection::Type::HTTPS
-                       : Connection::Type::HTTP,
-                     proxy.GetHost().to_string(),
+            return { proxy.GetHost().to_string(),
                      proxy.GetPort().to_string() };
         }
 
-        return { (parsed_url_.GetProtocol() == Url::Protocol::HTTPS)
-                   ? Connection::Type::HTTPS
-                   : Connection::Type::HTTP,
-                 parsed_url_.GetHost().to_string(),
+        return { parsed_url_.GetHost().to_string(),
                  parsed_url_.GetPort().to_string() };
     }
 
@@ -756,15 +750,21 @@ private:
 
         auto prot_filter = GetBindProtocols(properties_->bindToLocalAddress, ctx);
 
+        const Connection::Type protocol_type =
+            (parsed_url_.GetProtocol() == Url::Protocol::HTTPS ||
+             properties_->proxy.type == Request::Proxy::Type::HTTPS)
+            ? Connection::Type::HTTPS
+            : Connection::Type::HTTP;
+
         boost::asio::ip::tcp::resolver resolver(owner_.GetIoService());
         // Resolve the hostname
-        const auto ep_tuple = GetRequestEndpoint(); //{protocol_type, host, service=port}
+        const auto ep_tuple = GetRequestEndpoint(); //{host, service=port}
 
-        RESTC_CPP_LOG_TRACE_("Resolving " << get<1>(ep_tuple) << ":"
-            << get<2>(ep_tuple));
+        RESTC_CPP_LOG_TRACE_("Resolving " << get<0>(ep_tuple) << ":"
+            << get<1>(ep_tuple));
 
-        auto address_it = resolver.async_resolve(/*host*/ get<1>(ep_tuple),
-                                                 /*port*/ get<2>(ep_tuple),
+        auto address_it = resolver.async_resolve(/*host*/ get<0>(ep_tuple),
+                                                 /*port*/ get<1>(ep_tuple),
                                                  ctx.GetYield());
         const decltype(address_it) addr_end;
 
@@ -781,7 +781,7 @@ private:
             for(size_t retries = 0; retries < 8; ++retries) {
                 // Get a connection from the pool
                 auto connection = owner_.GetConnectionPool()->GetConnection(
-                    endpoint, /*protocol_type*/ get<0>(ep_tuple));
+                    endpoint, protocol_type);
 
                 // Connect if the connection is new.
                 if (connection->GetSocket().IsOpen()) {

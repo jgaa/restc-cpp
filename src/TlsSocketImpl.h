@@ -24,9 +24,12 @@ public:
 
     using ssl_socket_t = boost::asio::ssl::stream<boost::asio::ip::tcp::socket>;
 
-    TlsSocketImpl(boost::asio::io_service& io_service, shared_ptr<boost::asio::ssl::context> ctx)
+    TlsSocketImpl(boost::asio::io_service& io_service,
+            shared_ptr<boost::asio::ssl::context> ctx,
+            bool can_send_over_unupgraded_socket = false)
     {
         ssl_socket_ = std::make_unique<ssl_socket_t>(io_service, *ctx);
+        can_send_over_unupgraded_socket_ = can_send_over_unupgraded_socket;
     }
 
     boost::asio::ip::tcp::socket& GetSocket() override {
@@ -42,6 +45,8 @@ public:
     std::size_t AsyncReadSome(boost::asio::mutable_buffers_1 buffers,
                               boost::asio::yield_context& yield) override {
         return WrapException<std::size_t>([&] {
+            if (can_send_over_unupgraded_socket_)
+                return ssl_socket_->next_layer().async_read_some(buffers, yield);
             return ssl_socket_->async_read_some(buffers, yield);
         });
     }
@@ -49,19 +54,27 @@ public:
     std::size_t AsyncRead(boost::asio::mutable_buffers_1 buffers,
                           boost::asio::yield_context& yield) override {
         return WrapException<std::size_t>([&] {
+            if (can_send_over_unupgraded_socket_)
+                return boost::asio::async_read(ssl_socket_->next_layer(), buffers, yield);
             return boost::asio::async_read(*ssl_socket_, buffers, yield);
         });
     }
 
     void AsyncWrite(const boost::asio::const_buffers_1& buffers,
                     boost::asio::yield_context& yield) override {
-        boost::asio::async_write(*ssl_socket_, buffers, yield);
+        if (can_send_over_unupgraded_socket_)
+            boost::asio::async_write(ssl_socket_->next_layer(), buffers, yield);
+        else
+            boost::asio::async_write(*ssl_socket_, buffers, yield);
     }
 
     void AsyncWrite(const write_buffers_t& buffers,
                     boost::asio::yield_context& yield) override {
         return WrapException<void>([&] {
-            boost::asio::async_write(*ssl_socket_, buffers, yield);
+            if (can_send_over_unupgraded_socket_)
+                boost::asio::async_write(ssl_socket_->next_layer(), buffers, yield);
+            else
+                boost::asio::async_write(*ssl_socket_, buffers, yield);
         });
     }
 
@@ -90,6 +103,7 @@ public:
             RESTC_CPP_LOG_TRACE_("AsyncConnect - Calling async_handshake");
             ssl_socket_->async_handshake(boost::asio::ssl::stream_base::client,
                                          yield);
+            can_send_over_unupgraded_socket_ = false;
 
             RESTC_CPP_LOG_TRACE_("AsyncConnect - Done");
         });
@@ -135,6 +149,7 @@ protected:
 
 private:
     std::unique_ptr<ssl_socket_t> ssl_socket_;
+    bool can_send_over_unupgraded_socket_;
 };
 
 } // restc_cpp
