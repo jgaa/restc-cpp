@@ -256,15 +256,16 @@ These are the operating systems where my Continues Integration (Jenkins) servers
 
  - Debian Testing
  - Debian Bookworm
- - Debian Bullseye (Stable)
+ - Debian Bullseye
  - Debian Buster
  - Windows 10 / Microsoft Visual Studio 2019, Community version using vcpkg for dependencies
  - Ubuntu Xenial (LTS)
+ - Ubuntu Jammy (LTS)
 
 Support for MacOS has been removed after Apples announcement that their love for privacy was just 
 a marketing gimmick.
  
-Fedora is currently disabled in my CI because of failures to start their Docker containers. (Work in progress). Ubuntu Jammy don't work in docker with my Jenkins  CI pipeline, so I have no reliable way to test it. Windows 11 cannot be run on my KVM /QEMU system, because it don't support "secure" boot, so I have no way to test it.
+Fedora is currently disabled in my CI because of failures to start their Docker containers. (Work in progress). 
 
 The Jenkins setup is [here](ci/jenkins).
 
