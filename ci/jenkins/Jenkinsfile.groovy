@@ -97,6 +97,7 @@ pipeline {
                             filename 'Dockefile.ubuntu-xenial'
                             dir 'ci/jenkins'
                             label 'docker'
+                            args '-u root'
                         }
                     }
                     
@@ -130,6 +131,7 @@ pipeline {
                             filename 'Dockefile.ubuntu-xenial'
                             dir 'ci/jenkins'
                             label 'docker'
+                            args '-u root'
                         }
                     }
 
@@ -163,6 +165,7 @@ pipeline {
                             filename 'Dockefile.debian-buster'
                             dir 'ci/jenkins'
                             label 'docker'
+                            args '-u root'
                         }
                     }
 
@@ -196,6 +199,7 @@ pipeline {
                             filename 'Dockefile.debian-buster'
                             dir 'ci/jenkins'
                             label 'docker'
+                            args '-u root'
                         }
                     }
 
@@ -229,6 +233,7 @@ pipeline {
                             filename 'Dockefile.debian-bullseye'
                             dir 'ci/jenkins'
                             label 'docker'
+                            args '-u root'
                         }
                     }
 
@@ -263,6 +268,7 @@ pipeline {
                             filename 'Dockefile.debian-bullseye'
                             dir 'ci/jenkins'
                             label 'docker'
+                            args '-u root'
                         }
                     }
 
@@ -296,6 +302,7 @@ pipeline {
                             filename 'Dockefile.debian-bookworm'
                             dir 'ci/jenkins'
                             label 'docker'
+                            args '-u root'
                         }
                     }
 
@@ -329,6 +336,7 @@ pipeline {
                             filename 'Dockefile.debian-bookworm'
                             dir 'ci/jenkins'
                             label 'docker'
+                            args '-u root'
                         }
                     }
 
@@ -362,6 +370,7 @@ pipeline {
                             filename 'Dockefile.debian-testing'
                             dir 'ci/jenkins'
                             label 'docker'
+                            args '-u root'
                         }
                     }
 
@@ -395,6 +404,7 @@ pipeline {
                             filename 'Dockefile.debian-testing'
                             dir 'ci/jenkins'
                             label 'docker'
+                            args '-u root'
                         }
                     }
 
