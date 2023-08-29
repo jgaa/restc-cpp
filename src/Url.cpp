@@ -46,8 +46,12 @@ Url& Url::operator = (const char *url) {
             remains.size() - (args_start + 1)};
         remains = {remains.begin(), args_start};
     }
+    auto path_start = remains.find('/');
     const auto port_start = remains.find(':');
-    if (port_start != string::npos) {
+    if (port_start != string::npos &&
+        ( path_start == string::npos ||
+          port_start < path_start )
+       ) {
         if (remains.length() <= static_cast<decltype(host_.length())>(port_start + 2)) {
             throw ParseException("Invalid host (no port after column)");
         }
@@ -56,8 +60,9 @@ Url& Url::operator = (const char *url) {
         host_ = {remains.begin(), port_start};
         remains = {remains.begin() + port_start + 1, remains.size() - (port_start + 1)};
 
-        const auto path_start = remains.find('/');
         if (path_start != string::npos) {
+            //path_start = remains.find('/');
+            path_start -= port_start + 1;
             path_ = {remains.begin() + path_start, remains.size() - path_start};// &port_[path_start];
             port_ = {remains.begin(), path_start};
             remains = {};
@@ -65,7 +70,6 @@ Url& Url::operator = (const char *url) {
             port_ = remains;
         }
     } else {
-        const auto path_start = remains.find('/');
         if (path_start != string::npos) {
             //path_ = &host_[path_start];
             //host_ = boost::string_ref(host_.data(), path_start);
