@@ -30,6 +30,7 @@ pipeline {
                             filename 'Dockefile.ubuntu-jammy'
                             dir 'ci/jenkins'
                             label 'docker'
+                            args "-u root"
                         }
                     }
 
