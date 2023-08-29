@@ -857,9 +857,13 @@ private:
                         });
                     }
 
+                    const string sni_host = (protocol_type == Connection::Type::HTTPS)
+                        ? parsed_url_.GetHost().to_string()
+                        : address_it->host_name();
+
                     RESTC_CPP_LOG_TRACE_("RequestImpl::Connect: calling AsyncConnect --> " << endpoint);
                     connection->GetSocket().AsyncConnect(
-                        endpoint, address_it->host_name(),
+                        endpoint, sni_host,
                         properties_->tcpNodelay, ctx.GetYield());
                     RESTC_CPP_LOG_TRACE_("RequestImpl::Connect: OK AsyncConnect --> " << endpoint);
                     return connection;
@@ -869,7 +873,7 @@ private:
                     connection->GetSocket().GetSocket().close();
 
                     if (ex.code() == boost::system::errc::resource_unavailable_try_again) {
-                        if ( retries < 8) {
+                        if ( retries < 8 ) {
                             RESTC_CPP_LOG_DEBUG_(
                                 "RequestImpl::Connect:: Caught boost::system::system_error exception: \""
                                     << ex.what()
