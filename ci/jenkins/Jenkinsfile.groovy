@@ -24,71 +24,71 @@ pipeline {
         stage('Build') {
            parallel {
 // Broken:  java.io.IOException: Failed to run image '692f7cce9b970633dba347a9aaf12846429c073f'. Error: docker: Error // response from daemon: OCI runtime create failed: container_linux.go:367: starting container process caused: chdir to cwd ("/home/jenkins/build/workspace/restc-staging") set in config.json failed: permission denied: unknown.        
-//                  stage('Ubuntu Jammy') {
-//                     agent {
-//                         dockerfile {
-//                             filename 'Dockefile.ubuntu-jammy'
-//                             dir 'ci/jenkins'
-//                             label 'docker'
-//                         }
-//                     }
-//                     
-//                     options {
-//                         timeout(time: 30, unit: "MINUTES")
-//                     }
-// 
-//                     steps {
-//                         echo "Building on ubuntu-jammy-AMD64 in ${WORKSPACE}"
-//                         checkout scm
-//                         sh 'pwd; ls -la'
-//                         sh 'rm -rf build'
-//                         sh 'mkdir build'
-//                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
-// 
-//                         echo 'Getting ready to run tests'
-//                         script {
-//                             try {
-//                                 sh 'cd build && ctest --no-compress-output -T Test'
-//                             } catch (exc) {
-//                                 
-//                                 unstable(message: "${STAGE_NAME} - Testing failed")
-//                             }
-//                         }
-//                     }
-//                 }
-//                 
-//                 stage('Ubuntu Jammy MT CTX') {
-//                     agent {
-//                         dockerfile {
-//                             filename 'Dockefile.ubuntu-jammy'
-//                             dir 'ci/jenkins'
-//                             label 'docker'
-//                         }
-//                     }
-//                     
-//                     options {
-//                         timeout(time: 30, unit: "MINUTES")
-//                     }
-// 
-//                     steps {
-//                         echo "Building on ubuntu-jammy-AMD64 in ${WORKSPACE}"
-//                         checkout scm
-//                         sh 'pwd; ls -la'
-//                         sh 'rm -rf build'
-//                         sh 'mkdir build'
-//                         sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
-// 
-//                         echo 'Getting ready to run tests'
-//                         script {
-//                             try {
-//                                 sh 'cd build && ctest --no-compress-output -T Test'
-//                             } catch (exc) {
-//                                 
-//                                 unstable(message: "${STAGE_NAME} - Testing failed")
-//                             }
-//                         }
-//                     }
-//                 }
+                 stage('Ubuntu Jammy') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockefile.ubuntu-jammy'
+                            dir 'ci/jenkins'
+                            label 'docker'
+                        }
+                    }
+
+                    options {
+                        timeout(time: 30, unit: "MINUTES")
+                    }
+
+                    steps {
+                        echo "Building on ubuntu-jammy-AMD64 in ${WORKSPACE}"
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+
+                                unstable(message: "${STAGE_NAME} - Testing failed")
+                            }
+                        }
+                    }
+                }
+
+                stage('Ubuntu Jammy MT CTX') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockefile.ubuntu-jammy'
+                            dir 'ci/jenkins'
+                            label 'docker'
+                        }
+                    }
+
+                    options {
+                        timeout(time: 30, unit: "MINUTES")
+                    }
+
+                    steps {
+                        echo "Building on ubuntu-jammy-AMD64 in ${WORKSPACE}"
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+
+                                unstable(message: "${STAGE_NAME} - Testing failed")
+                            }
+                        }
+                    }
+                }
                                 
                 stage('Ubuntu Xenial') {
                     agent {
