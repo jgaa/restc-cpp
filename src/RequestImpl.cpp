@@ -287,6 +287,39 @@ void DoSocks5Handshake(const Connection::ptr_t& connection,
 }
 
 
+void _throwHttpExceptionWhenNot200(const Reply::HttpResponse& response) {
+    // Silence the cursed clang tidy!
+    constexpr auto magic_2 = 2;
+    constexpr auto magic_100 = 100;
+    constexpr auto http_401 = 401;
+    constexpr auto http_403 = 403;
+    constexpr auto http_404 = 404;
+    constexpr auto http_405 = 405;
+    constexpr auto http_406 = 406;
+    constexpr auto http_407 = 407;
+    constexpr auto http_408 = 408;
+
+    if ((response.status_code / magic_100) > magic_2) switch(response.status_code) {
+        case http_401:
+            throw HttpAuthenticationException(response);
+        case http_403:
+            throw HttpForbiddenException(response);
+        case http_404:
+            throw HttpNotFoundException(response);
+        case http_405:
+            throw HttpMethodNotAllowedException(response);
+        case http_406:
+            throw HttpNotAcceptableException(response);
+        case http_407:
+            throw HttpProxyAuthenticationRequiredException(response);
+        case http_408:
+            throw HttpRequestTimeOutException(response);
+        default:
+            throw RequestFailedWithErrorException(response);
+    }
+}
+
+
 void DoProxyConnect(const Connection::ptr_t& connection,
                     const Url& url,
                     const Request::Properties::ptr_t& properties,
@@ -296,81 +329,51 @@ void DoProxyConnect(const Connection::ptr_t& connection,
     static const string crlf{"\r\n"};
     auto& sck = connection->GetSocket();
 
-    {
-        const string host(url.GetHost().to_string() + ":" + to_string(url.GetPort()));
-        ostringstream request_buffer;
-        request_buffer << "CONNECT ";
-        request_buffer << host;
-        request_buffer << " HTTP/1.1" << crlf;
-        request_buffer << "Host: " << host << crlf << crlf;
-        RESTC_CPP_LOG_DEBUG_("DoProxyConnect - send CONNECT " << host << " HTTP/1.1");
-        sck.AsyncWriteT(request_buffer.str(), ctx.GetYield());
+    const string host(url.GetHost().to_string() + ":" + to_string(url.GetPort()));
+    ostringstream request_buffer;
+    request_buffer << "CONNECT ";
+    request_buffer << host;
+    request_buffer << " HTTP/1.1" << crlf;
+    request_buffer << "Host: " << host << crlf << crlf;
+    RESTC_CPP_LOG_DEBUG_("DoProxyConnect - send CONNECT " << host << " HTTP/1.1");
+    sck.AsyncWriteT(request_buffer.str(), ctx.GetYield());
+
+    RESTC_CPP_LOG_TRACE_("DoProxyConnect: starting receiving from proxy");
+    //struct { http_version=HTTP_1_1; int status_code=0; string reason_phrase; }
+    Reply::HttpResponse proxy_response;
+
+    try {
+        DataReader::ReadConfig cfg; //one element struct
+        cfg.msReadTimeout = properties->recvTimeout;//1000*21
+
+        //make_unique<IoReaderImpl>(connection, ctx, cfg);
+        unique_ptr<DataReader> io_reader = DataReader::CreateIoReader(connection, ctx, cfg);
+
+        //get from reply->StartReceiveFromServer(io_reader);
+        auto timer = IoTimer::Create("ReceivingFromProxy"s,
+                                 properties->replyTimeoutMs,//1000*21
+                                 connection);
+
+        auto stream = make_unique<DataReaderStream>(move(io_reader));
+
+        //sets status_code, reason_phrase in response
+        stream->ReadServerResponse(proxy_response);
+        stream->ReadHeaderLines(
+            [](std::string&& name, std::string&& value) {
+                RESTC_CPP_LOG_TRACE_("Read proxy header: " << name);
+        });
+
+    } catch (const exception& ex) {
+        RESTC_CPP_LOG_DEBUG_("DoProxyConnect: exception from ReceivingFromProxy: " << ex.what());
+        throw;
     }
-    {
-        RESTC_CPP_LOG_TRACE_("DoProxyConnect: starting receiving from proxy");
-        //struct { http_version=HTTP_1_1; int status_code=0; string reason_phrase; }
-        Reply::HttpResponse proxy_response;
 
-        try {
-            DataReader::ReadConfig cfg; //one element struct
-            cfg.msReadTimeout = properties->recvTimeout;//1000*21
+    RESTC_CPP_LOG_DEBUG_("DoProxyConnect: Returned from ReceivingFromProxy. code=" << proxy_response.status_code);
 
-            //make_unique<IoReaderImpl>(connection, ctx, cfg);
-            unique_ptr<DataReader> io_reader = DataReader::CreateIoReader(connection, ctx, cfg);
+    //check for response code 200
+    RESTC_CPP_LOG_TRACE_("DoProxyConnect: validating proxy reply");
+    _throwHttpExceptionWhenNot200(proxy_response);
 
-            //get from reply->StartReceiveFromServer(io_reader);
-            auto timer = IoTimer::Create("ReceivingFromProxy"s,
-                                     properties->replyTimeoutMs,//1000*21
-                                     connection);
-
-            auto stream = make_unique<DataReaderStream>(move(io_reader));
-
-            //sets status_code, reason_phrase in response
-            stream->ReadServerResponse(proxy_response);
-            stream->ReadHeaderLines(
-                [](std::string&& name, std::string&& value) {
-                    RESTC_CPP_LOG_TRACE_("Read proxy header: " << name);
-            });
-
-        } catch (const exception& ex) {
-            RESTC_CPP_LOG_DEBUG_("DoProxyConnect: exception from ReceivingFromProxy: " << ex.what());
-            throw;
-        }
-
-        int status_code = proxy_response.status_code;
-        RESTC_CPP_LOG_DEBUG_("DoProxyConnect: Returned from ReceivingFromProxy. code=" << status_code);
-
-        //check for response code 200
-        RESTC_CPP_LOG_TRACE_("DoProxyConnect: validating proxy reply");
-        constexpr auto magic_2 = 2;
-        constexpr auto magic_100 = 100;
-        constexpr auto http_401 = 401;
-        constexpr auto http_403 = 403;
-        constexpr auto http_404 = 404;
-        constexpr auto http_405 = 405;
-        constexpr auto http_406 = 406;
-        constexpr auto http_407 = 407;
-        constexpr auto http_408 = 408;
-
-        if ((status_code / magic_100) > magic_2) switch(status_code) {
-            case http_401:
-                throw HttpAuthenticationException(proxy_response);
-            case http_403:
-                throw HttpForbiddenException(proxy_response);
-            case http_404:
-                throw HttpNotFoundException(proxy_response);
-            case http_405:
-                throw HttpMethodNotAllowedException(proxy_response);
-            case http_406:
-                throw HttpNotAcceptableException(proxy_response);
-            case http_407:
-                throw HttpProxyAuthenticationRequiredException(proxy_response);
-            case http_408:
-                throw HttpRequestTimeOutException(proxy_response);
-            default:
-                throw RequestFailedWithErrorException(proxy_response);
-        }
-    }
     RESTC_CPP_LOG_TRACE_("DoProxyConnect - done");
 }
 
@@ -526,36 +529,7 @@ public:
 
 private:
     void ValidateReply(const Reply& reply) {
-        // Silence the cursed clang tidy!
-        constexpr auto magic_2 = 2;
-        constexpr auto magic_100 = 100;
-        constexpr auto http_401 = 401;
-        constexpr auto http_403 = 403;
-        constexpr auto http_404 = 404;
-        constexpr auto http_405 = 405;
-        constexpr auto http_406 = 406;
-        constexpr auto http_407 = 407;
-        constexpr auto http_408 = 408;
-
-        const auto& response = reply.GetHttpResponse();
-        if ((response.status_code / magic_100) > magic_2) switch(response.status_code) {
-            case http_401:
-                throw HttpAuthenticationException(response);
-            case http_403:
-                throw HttpForbiddenException(response);
-            case http_404:
-                throw HttpNotFoundException(response);
-            case http_405:
-                throw HttpMethodNotAllowedException(response);
-            case http_406:
-                throw HttpNotAcceptableException(response);
-            case http_407:
-                throw HttpProxyAuthenticationRequiredException(response);
-            case http_408:
-                throw HttpRequestTimeOutException(response);
-            default:
-                throw RequestFailedWithErrorException(response);
-        }
+        _throwHttpExceptionWhenNot200(reply.GetHttpResponse());
     }
 
     std::string BuildOutgoingRequest() {
@@ -1086,7 +1060,7 @@ private:
     std::uint64_t bytes_sent_ = 0;
     bool dirty_ = false;
     bool add_url_args_ = true;
-};
+}; //class RequestImpl
 
 
 std::unique_ptr<Request>

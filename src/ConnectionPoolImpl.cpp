@@ -240,7 +240,7 @@ private:
                     idle_.erase(current);
                 } else {
                     RESTC_CPP_LOG_TRACE_("Keeping << " << *current->second->GetConnection()
-                        << " expieres in "
+                        << " expires in "
                         << std::chrono::duration_cast<std::chrono::seconds>(expires - now).count()
                         << " seconds ");
                 }
