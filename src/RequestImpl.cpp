@@ -596,6 +596,10 @@ private:
     tuple<string, string> GetRequestEndpoint() {
         const auto proxy_type = properties_->proxy.type;
 
+        //https connections via http proxy is not possible
+        assert(!(proxy_type == Request::Proxy::Type::HTTP
+              && parsed_url_.GetProtocol() == Url::Protocol::HTTPS));
+
         if (proxy_type == Request::Proxy::Type::SOCKS5) {
             string host;
             uint16_t port = 0;
@@ -608,10 +612,9 @@ private:
             return { host, to_string(port) };
         }
 
-        if ( (proxy_type == Request::Proxy::Type::HTTP &&
-              parsed_url_.GetProtocol() == Url::Protocol::HTTP) ||
-             (proxy_type == Request::Proxy::Type::HTTPS &&
-              parsed_url_.GetProtocol() == Url::Protocol::HTTPS) ) {
+        if ( (proxy_type == Request::Proxy::Type::HTTP
+              && parsed_url_.GetProtocol() == Url::Protocol::HTTP)
+              || proxy_type == Request::Proxy::Type::HTTPS ) {
             Url proxy {properties_->proxy.address.c_str()};
 
             RESTC_CPP_LOG_TRACE_("Using " << properties_->proxy.GetName()
@@ -726,7 +729,8 @@ private:
 
         const Connection::Type protocol_type =
             (parsed_url_.GetProtocol() == Url::Protocol::HTTPS ||
-             properties_->proxy.type == Request::Proxy::Type::HTTPS)
+             (properties_->proxy.type == Request::Proxy::Type::HTTPS
+              && parsed_url_.GetProtocol() == Url::Protocol::HTTPS))
             ? Connection::Type::HTTPS
             : Connection::Type::HTTP;
 
@@ -860,6 +864,15 @@ private:
                         "RequestImpl::Connect:: Caught boost::system::system_error exception: \""
                             << ex.what()
                             << "\" while connecting to " << endpoint);
+                    break; // Go to the next endpoint
+                } catch(const RequestFailedWithErrorException& ex) {
+                    RESTC_CPP_LOG_WARN_("Connect to "
+                        << endpoint
+                        << " failed with HTTP protocol exception type: "
+                        << typeid(ex).name()
+                        << ", message: " << ex.what());
+
+                    connection->GetSocket().GetSocket().close();
                     break; // Go to the next endpoint
                 } catch(const exception& ex) {
                     RESTC_CPP_LOG_WARN_("Connect to "
