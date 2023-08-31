@@ -26,10 +26,10 @@ public:
 
     TlsSocketImpl(boost::asio::io_service& io_service,
             shared_ptr<boost::asio::ssl::context> ctx,
-            bool can_send_over_unupgraded_socket = false)
+            bool allow_sending_over_unupgraded_socket = false)
     {
         ssl_socket_ = std::make_unique<ssl_socket_t>(io_service, *ctx);
-        can_send_over_unupgraded_socket_ = can_send_over_unupgraded_socket;
+        can_send_over_unupgraded_socket_ = allow_sending_over_unupgraded_socket;
     }
 
     boost::asio::ip::tcp::socket& GetSocket() override {
