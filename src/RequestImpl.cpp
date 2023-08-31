@@ -4,6 +4,8 @@
 #include <future>
 #include <array>
 #include <tuple>
+#include <cstdlib>
+#include <cstring>
 
 #include <boost/utility/string_ref.hpp>
 
@@ -73,6 +75,27 @@ const std::string& Request::Proxy::GetName() {
     };
 
     return names.at(static_cast<size_t>(type));
+}
+
+Request::Proxy::Type Request::Proxy::detect() {
+    char* p;
+
+    if ( (p = std::getenv("https_proxy"))
+         || (p = std::getenv("HTTPS_PROXY"))
+        && strlen(p) > 0 ) {
+      type = Request::Proxy::Type::HTTPS;
+      address = p;
+      return type;
+    }
+    if ( (p = std::getenv("http_proxy"))
+         || (p = std::getenv("HTTP_PROXY"))
+        && strlen(p) > 0 ) {
+      type = Request::Proxy::Type::HTTP;
+      address = p;
+      return type;
+    }
+    address.clear();
+    return Request::Proxy::Type::NONE;
 }
 
 namespace {
@@ -865,7 +888,8 @@ private:
                             << ex.what()
                             << "\" while connecting to " << endpoint);
                     break; // Go to the next endpoint
-                } catch(const RequestFailedWithErrorException& ex) {
+
+                } catch (const RequestFailedWithErrorException& ex) {
                     RESTC_CPP_LOG_WARN_("Connect to "
                         << endpoint
                         << " failed with HTTP protocol exception type: "
@@ -874,7 +898,8 @@ private:
 
                     connection->GetSocket().GetSocket().close();
                     break; // Go to the next endpoint
-                } catch(const exception& ex) {
+
+                } catch (const exception& ex) {
                     RESTC_CPP_LOG_WARN_("Connect to "
                         << endpoint
                         << " failed with exception type: "

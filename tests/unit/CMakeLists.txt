@@ -85,3 +85,15 @@ target_link_libraries(request_builder_tests
 add_dependencies(request_builder_tests restc-cpp ${DEPENDS_GTEST})
 ADD_AND_RUN_UNITTEST(REQUEST_BUILDER_TESTS request_builder_tests)
 
+
+# ======================================
+
+add_executable(proxy_detection_tests ProxyDetectionTests.cpp)
+target_link_libraries(proxy_detection_tests
+    ${GTEST_LIBRARIES}
+    restc-cpp
+    ${DEFAULT_LIBRARIES}
+)
+add_dependencies(proxy_detection_tests restc-cpp ${DEPENDS_GTEST})
+ADD_AND_RUN_UNITTEST(PROXY_DETECTION_TESTS proxy_detection_tests)
+

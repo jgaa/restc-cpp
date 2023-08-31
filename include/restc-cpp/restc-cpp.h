@@ -139,6 +139,7 @@ public:
         std::string address;
 
         const std::string& GetName();
+        Type detect();
     };
 
     using args_t = std::deque<Arg>;
