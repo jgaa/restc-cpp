@@ -3,7 +3,6 @@
 #include <thread>
 #include <future>
 #include <array>
-#include <tuple>
 #include <cstdlib>
 #include <cstring>
 
@@ -615,8 +614,9 @@ private:
         return request_buffer.str();
     }
 
-    //returns {host, service} instead of deprecated ip::resolver::query
-    tuple<string, string> GetRequestEndpoint() {
+    //boost1.83: returns {host, service} instead of deprecated ip::resolver::query
+    //boost1.83: tuple<string, string> GetRequestEndpoint() {
+    boost::asio::ip::tcp::resolver::query GetRequestEndpoint() {
         const auto proxy_type = properties_->proxy.type;
 
         //https connections via http proxy is not possible
@@ -700,9 +700,10 @@ private:
             return {protocol, static_cast<uint16_t>(port_num)};
         }
 
+        boost::asio::ip::tcp::resolver::query q{host, port};
         boost::asio::ip::tcp::resolver resolver(owner_.GetIoService());
 
-        auto ep = resolver.async_resolve(host, port, ctx.GetYield());
+        auto ep = resolver.async_resolve(q, ctx.GetYield());
         const decltype(ep) addr_end;
         for(; ep != addr_end; ++ep)
         if (ep != addr_end) {
@@ -759,13 +760,14 @@ private:
 
         boost::asio::ip::tcp::resolver resolver(owner_.GetIoService());
         // Resolve the hostname
-        const auto ep_tuple = GetRequestEndpoint(); //{host, service=port}
+        const auto query = GetRequestEndpoint(); //{host, service=port}
 
-        RESTC_CPP_LOG_TRACE_("Resolving " << get<0>(ep_tuple) << ":"
-            << get<1>(ep_tuple));
+        RESTC_CPP_LOG_TRACE_("Resolving " << query.host_name() << ":"
+            << query.service_name());
 
-        auto address_it = resolver.async_resolve(/*host*/ get<0>(ep_tuple),
-                                                 /*port*/ get<1>(ep_tuple),
+        auto address_it = resolver.async_resolve(query,
+                                                 /*boost1.83: host get<0>(ep_tuple),*/
+                                                 /*boost1.83: port get<1>(ep_tuple),*/
                                                  ctx.GetYield());
         const decltype(address_it) addr_end;
 
