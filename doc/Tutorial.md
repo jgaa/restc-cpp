@@ -288,10 +288,12 @@ use the *RequestBuilder*'s *Argument()* method for this.
 
 ```
 
-## Send a request going trough a HTTP Proxy
+## Send a request going trough a HTTP or HTTPS Proxy
 ```C++
     // Add the proxy information to the properties used by the client
     Request::Properties properties;
+    // Use proxy type Request::Proxy::Type::HTTP for simple HTTP proxing,
+    //   Request::Proxy::Type::HTTPS for HTTPS proxing over CONNECT method
     properties.proxy.type = Request::Proxy::Type::HTTP;
     properties.proxy.address = "http://127.0.0.1:3003";
 
@@ -313,7 +315,7 @@ use the *RequestBuilder*'s *Argument()* method for this.
     }).get();
 ```
 
-## Use an existing thread in stead of a new worker thread
+## Use an existing thread instead of a new worker thread
 
 This example is slightly more advanced. Here we take
 responsibility to run the io-service used internally by

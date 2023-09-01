@@ -66,8 +66,6 @@ class RequestBody;
 class Connection;
 class ConnectionPool;
 class Socket;
-class Request;
-class Reply;
 class Context;
 class DataWriter;
 
@@ -136,11 +134,12 @@ public:
     };
 
     struct Proxy {
-        enum class Type { NONE, HTTP, SOCKS5 };
+        enum class Type { NONE, HTTP, HTTPS, SOCKS5 };
         Type type = Type::NONE;
         std::string address;
 
         const std::string& GetName();
+        Type detect();
     };
 
     using args_t = std::deque<Arg>;
@@ -160,7 +159,7 @@ public:
     class Properties {
     public:
         using ptr_t = std::shared_ptr<Properties>;
-        using redirect_fn_t = std::function<void (int code, std::string& url, 
+        using redirect_fn_t = std::function<void (int code, std::string& url,
                                                   const Reply& reply)>;
         using general_callback_t = std::function<void()>;
 
@@ -417,7 +416,7 @@ public:
             done_handler.reset();
         });
 
-        return move(future);
+        return future;
     }
 
     /*! Process from within an existing coroutine */

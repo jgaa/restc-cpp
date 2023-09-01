@@ -1,0 +1,62 @@
+server {
+    listen       443 ssl;
+    server_name  localhost;
+    gzip on;
+    gzip_proxied any;
+    ssl_certificate /etc/nginx/ssl/test.pem;
+    ssl_certificate_key /etc/nginx/ssl/test-key.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+
+    location ~ ^/cookies(/?)(.*)$ {
+        add_header Content-Type "application/json; charset=utf-8";
+        add_header Set-Cookie test1=yes;
+        add_header Set-Cookie test2=maybe;
+        add_header Set-Cookie test3=no;
+        return 200 '{}';
+    }
+
+    location ~ ^/normal(/?)(.*)$ {
+        proxy_pass http://json/$2$is_args$args;
+    }
+
+    location  ~ ^/close(/?)(.*)$ {
+        proxy_pass http://json/$2$is_args$args;
+        keepalive_timeout 0;
+    }
+
+    # Force nginx to resolve 'json'
+    location /dns_workaround {
+        proxy_pass http://json;
+    }
+
+    location ~ ^/loop(/?)(.*)$ {
+        return 301 $scheme://$host:3001/loop/$2$is_args$args;
+    }
+
+    location ~ ^/redirect(/?)(.*)$ {
+        return 301 $scheme://$host:3001/normal/$2$is_args$args;
+    }
+
+    location ~ ^/reredirect(/?)(.*)$ {
+        return 301 $scheme://$host:3001/redirect/$2$is_args$args;
+    }
+
+    location ~ ^/restricted(/?)(.*)$ {
+        auth_basic           "Restricted Area";
+        auth_basic_user_file /etc/nginx/htpasswd;
+        proxy_pass http://json/$2$is_args$args;
+    }
+
+    location ~ ^/upload_raw(/?)(.*)$ {
+        limit_except POST          { deny all; }
+        return 200 "OK";
+    }
+
+
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+}
+

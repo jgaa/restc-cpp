@@ -56,7 +56,7 @@ public:
     }
 
     void AsyncConnect(const boost::asio::ip::tcp::endpoint& ep,
-					const std::string &host,
+                    const std::string &host,
                     bool tcpNodelay,
                     boost::asio::yield_context& yield) override {
         return WrapException<void>([&] {

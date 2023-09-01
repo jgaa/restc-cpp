@@ -71,6 +71,7 @@ DataReaderStream::GetData(size_t maxBytes) {
 
 void DataReaderStream::ReadServerResponse(Reply::HttpResponse& response)
 {
+    static const string http_1_0{"HTTP/1.0"}; //some proxies use HTTP/1.0
     static const string http_1_1{"HTTP/1.1"};
     constexpr size_t max_version_len = 16;
     constexpr size_t max_phrase_len = 256;
@@ -91,7 +92,8 @@ void DataReaderStream::ReadServerResponse(Reply::HttpResponse& response)
     if (value.empty()) {
         throw ProtocolException("ReadHeaders(): No HTTP version");
     }
-    if (ciEqLibC()(value, http_1_1)) {
+    if (ciEqLibC()(value, http_1_1) ||
+        ciEqLibC()(value, http_1_0)) {
         ; // Do nothing HTTP 1.1 is the default value
     } else {
         throw ProtocolException(

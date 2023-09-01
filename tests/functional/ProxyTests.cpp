@@ -13,11 +13,12 @@ using namespace std;
 using namespace restc_cpp;
 
 
-static const string defunct_proxy_address = GetDockerUrl("http://localhost:0");
+static const string defunct_proxy_address = GetDockerUrl("http://localhost:3777");
 static const string http_proxy_address = GetDockerUrl("http://localhost:3003");
+static const string https_proxy_address = GetDockerUrl("http://localhost:3003");
 static const string socks5_proxy_address = GetDockerUrl("localhost:3004");
 
-TEST(Proxy, FailToConnect)
+TEST(Proxy, FailToConnect_HTTP_Proxy)
 {
     Request::Properties properties;
     properties.proxy.type = Request::Proxy::Type::HTTP;
@@ -33,10 +34,11 @@ TEST(Proxy, FailToConnect)
             .Execute();
     });
 
-    EXPECT_ANY_THROW(f.get());
+    //EXPECT_ANY_THROW(f.get());
+    EXPECT_THROW(f.get(), FailedToConnectException);
 }
 
-TEST(Proxy, WithHttpProxy)
+TEST(Proxy, With_HTTP_Proxy)
 {
     Request::Properties properties;
     properties.proxy.type = Request::Proxy::Type::HTTP;
@@ -50,14 +52,98 @@ TEST(Proxy, WithHttpProxy)
             .Get("http://api.example.com/normal/posts/1")
             .Execute();
 
-            EXPECT_HTTP_OK(reply->GetResponseCode());
-            cout << "Got: " << reply->GetBodyAsString() << endl;
+        EXPECT_HTTP_OK(reply->GetResponseCode());
+        cout << "Got: " << reply->GetBodyAsString() << endl;
     });
 
     EXPECT_NO_THROW(f.get());
 }
 
-TEST(Proxy, WithSocks5Proxy)
+
+TEST(Proxy, FailToConnect_HTTPSCONNECT_Proxy)
+{
+    Request::Properties properties;
+    properties.proxy.type = Request::Proxy::Type::HTTPS;
+    properties.proxy.address = defunct_proxy_address;
+
+    // Create the client with our configuration
+    auto rest_client = RestClient::Create(properties);
+
+
+    auto f = rest_client->ProcessWithPromise([&](Context& ctx) {
+        auto reply = RequestBuilder(ctx)
+            .Get("https://api.example.com/normal/posts/1")
+            .Execute();
+    });
+
+    EXPECT_THROW(f.get(), FailedToConnectException);
+}
+
+TEST(Proxy, With_HTTPSCONNECT_ProxyToHttps)
+{
+    Request::Properties properties;
+    properties.proxy.type = Request::Proxy::Type::HTTPS;
+    properties.proxy.address = https_proxy_address;
+
+    // Create the client with our configuration
+    auto rest_client = RestClient::Create(properties);
+
+    auto f = rest_client->ProcessWithPromise([&](Context& ctx) {
+        auto reply = RequestBuilder(ctx)
+            .Get("https://api.example.com/normal/posts/1")
+            .Execute();
+
+        EXPECT_HTTP_OK(reply->GetResponseCode());
+        cout << "Got: " << reply->GetBodyAsString() << endl;
+    });
+
+    EXPECT_NO_THROW(f.get());
+}
+
+// WARNING: passing plain http over a CONNECT tunnel is denied by default in squid
+// we enabled it in squid.conf for the sake of our test
+TEST(Proxy, With_HTTPSCONNECT_ProxyToHttp)
+{
+    Request::Properties properties;
+    properties.proxy.type = Request::Proxy::Type::HTTPS;
+    properties.proxy.address = https_proxy_address;
+
+    // Create the client with our configuration
+    auto rest_client = RestClient::Create(properties);
+
+    auto f = rest_client->ProcessWithPromise([&](Context& ctx) {
+        auto reply = RequestBuilder(ctx)
+            .Get("http://api.example.com/normal/posts/1")
+            .Execute();
+
+        EXPECT_HTTP_OK(reply->GetResponseCode());
+        cout << "Got: " << reply->GetBodyAsString() << endl;
+    });
+
+    EXPECT_NO_THROW(f.get());
+}
+
+// we denied CONNECT method to port 444 in our squid.conf
+TEST(Proxy, With_HTTPSCONNECT_ProxyToDeniedPort)
+{
+    Request::Properties properties;
+    properties.proxy.type = Request::Proxy::Type::HTTPS;
+    properties.proxy.address = https_proxy_address;
+
+    // Create the client with our configuration
+    auto rest_client = RestClient::Create(properties);
+
+    auto f = rest_client->ProcessWithPromise([&](Context& ctx) {
+        auto reply = RequestBuilder(ctx)
+            .Get("https://api.example.com:444/normal/posts/1")
+            .Execute();
+    });
+
+    EXPECT_THROW(f.get(), FailedToConnectException);
+}
+
+
+TEST(Proxy, With_SOCKS5_Proxy)
 {
     Request::Properties properties;
     properties.proxy.type = Request::Proxy::Type::SOCKS5;
@@ -71,8 +157,8 @@ TEST(Proxy, WithSocks5Proxy)
             .Get("http://api.example.com/normal/posts/1")
             .Execute();
 
-            EXPECT_HTTP_OK(reply->GetResponseCode());
-            cout << "Got: " << reply->GetBodyAsString() << endl;
+        EXPECT_HTTP_OK(reply->GetResponseCode());
+        cout << "Got: " << reply->GetBodyAsString() << endl;
     });
 
     EXPECT_NO_THROW(f.get());

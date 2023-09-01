@@ -240,7 +240,7 @@ private:
                     idle_.erase(current);
                 } else {
                     RESTC_CPP_LOG_TRACE_("Keeping << " << *current->second->GetConnection()
-                        << " expieres in "
+                        << " expires in "
                         << std::chrono::duration_cast<std::chrono::seconds>(expires - now).count()
                         << " seconds ");
                 }
@@ -365,7 +365,9 @@ private:
         }
         else {
 #ifdef RESTC_CPP_WITH_TLS
-            socket = make_unique<TlsSocketImpl>(owner_.GetIoService(), owner_.GetTLSContext());
+            socket = make_unique<TlsSocketImpl>(owner_.GetIoService(), owner_.GetTLSContext(),
+                /*allow_sending_over_unupgraded_socket to send plain data over tls socket before handshake*/
+                properties_->proxy.type == Request::Proxy::Type::HTTPS);
 #else
             throw NotImplementedException(
                 "restc_cpp is compiled without TLS support");
