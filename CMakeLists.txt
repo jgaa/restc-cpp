@@ -32,6 +32,9 @@ option(RESTC_CPP_AUTORUN_UNIT_TESTS "Run Unit Tests automatically after build" O
 
 option(RESTC_CPP_WITH_FUNCTIONALT_TESTS "Enable Functional Testing" ON)
 
+set(GTEST_TAG "main" CACHE STRING "Gtest branch to use. Required on older Linux versions because newer gtest requure newer cmake!")
+set(LOGFAULT_TAG "master" CACHE STRING "Logfault branch to use. Required on older Linux versions because newer gtest requure newer cmake!")
+
 include(cmake_scripts/external-projects.cmake)
 
 if (EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)

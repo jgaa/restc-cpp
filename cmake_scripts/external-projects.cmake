@@ -29,7 +29,7 @@ set(EXTERNAL_RAPIDJSON_INCLUDE_DIR ${EXTERNAL_PROJECTS_PREFIX}/src/externalRapid
 ExternalProject_Add(externalLogfault
     PREFIX "${EXTERNAL_PROJECTS_PREFIX}"
     GIT_REPOSITORY "https://github.com/jgaa/logfault.git"
-    GIT_TAG "master"
+    GIT_TAG "${LOGFAULT_TAG}"
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_INSTALL_PREFIX}
     )
 
@@ -55,11 +55,6 @@ if (RESTC_CPP_WITH_UNIT_TESTS OR RESTC_CPP_WITH_FUNCTIONALT_TESTS)
         message("Will download and install googletest as a cmake included project")
         set(DEPENDS_GTEST googletest)
         set(GTEST_LIBRARIES gtest)
-
-        if (NOT DEFINED GTEST_TAG)
-            set(GTEST_TAG "main")
-        endif()
-
         message("GTEST_TAG: ${GTEST_TAG}")
 
         if (WIN32)

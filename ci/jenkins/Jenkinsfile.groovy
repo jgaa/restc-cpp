@@ -111,7 +111,7 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DGTEST_TAG=release-1.10.0 -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=OFF .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DLOGFAULT_TAG=v0.5.0 -DGTEST_TAG=release-1.10.0 -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=OFF .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
@@ -145,7 +145,7 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DGTEST_TAG=release-1.10.0 -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=OFF .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DLOGFAULT_TAG=v0.5.0 -DGTEST_TAG=release-1.10.0 -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=OFF .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
@@ -179,7 +179,7 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DLOGFAULT_TAG=v0.5.0 -DGTEST_TAG=release-1.12.0 -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
@@ -213,7 +213,7 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DLOGFAULT_TAG=v0.5.0 -DGTEST_TAG=release-1.12.0 -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
