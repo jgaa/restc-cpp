@@ -15,7 +15,7 @@ pipeline {
 
     stages {
         stage('Prepare') {
-            agent { label 'master' }
+            agent { label 'main' }
             steps {
                 sh 'docker-compose -f ./ci/mock-backends/docker-compose.yml up --build  -d'
             }
