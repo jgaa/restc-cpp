@@ -19,14 +19,14 @@ using namespace restc_cpp;
 const string http_url = "http://localhost:3000/posts";
 
 struct Post {
-    int id = 0;
+    string id;
     string username;
     string motto;
 };
 
 BOOST_FUSION_ADAPT_STRUCT(
     Post,
-    (int, id)
+    (string, id)
     (string, username)
     (string, motto)
 )
@@ -40,7 +40,7 @@ TEST(CRUD, Crud) {
     post.username = "catch22";
     post.motto = "Carpe Diem!";
 
-    EXPECT_EQ(0, post.id);
+    EXPECT_EQ("", post.id);
 
     auto reply = RequestBuilder(ctx)
         .Post(GetDockerUrl(http_url)) // URL
@@ -54,32 +54,32 @@ TEST(CRUD, Crud) {
 
     EXPECT_EQ(post.username, svr_post.username);
     EXPECT_EQ(post.motto, svr_post.motto);
-    EXPECT_TRUE(svr_post.id > 0);
+    EXPECT_FALSE(svr_post.id.empty());
 
     // Change the data
     post = svr_post;
     post.motto = "Change!";
     reply = RequestBuilder(ctx)
-        .Put(GetDockerUrl(http_url) + "/" + to_string(post.id)) // URL
+        .Put(GetDockerUrl(http_url) + "/" + post.id) // URL
         .Data(post)                                 // Data object to update
         .Execute();
 
     // Fetch again
     reply = RequestBuilder(ctx)
-        .Get(GetDockerUrl(http_url) + "/" + to_string(post.id)) // URL
+        .Get(GetDockerUrl(http_url) + "/" + post.id) // URL
         .Execute();
     SerializeFromJson(svr_post, *reply);
     EXPECT_EQ(post.motto, svr_post.motto);
 
     // Delete
     reply = RequestBuilder(ctx)
-        .Delete(GetDockerUrl(http_url) + "/" + to_string(post.id)) // URL
+        .Delete(GetDockerUrl(http_url) + "/" + post.id) // URL
         .Execute();
 
     // Verify that it's gone
     EXPECT_THROW(
         RequestBuilder(ctx)
-            .Get(GetDockerUrl(http_url) + "/" + to_string(post.id)) // URL
+            .Get(GetDockerUrl(http_url) + "/" + post.id) // URL
             .Execute(), HttpNotFoundException);
 
 
