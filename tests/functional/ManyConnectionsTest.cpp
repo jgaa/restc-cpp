@@ -53,6 +53,29 @@ BOOST_FUSION_ADAPT_STRUCT(
     (string, motto)
 )
 
+struct Locker {
+    Locker(mutex& m) : m_{m} {}
+    ~Locker() {
+        if (locked_) {
+            m_.unlock();
+        }
+    }
+
+    bool try_lock() {
+        assert(!locked_);
+        locked_ = m_.try_lock();
+        return locked_;
+    }
+
+    void unlock() {
+        assert(locked_);
+        m_.unlock();
+        locked_ = false;
+    }
+
+    mutex& m_;
+    bool locked_{};
+};
 
 TEST(ManyConnections, CRUD) {
     mutex mutex;
@@ -75,35 +98,40 @@ TEST(ManyConnections, CRUD) {
         futures.push_back(promises.back().get_future());
 
         rest_client->Process([i, &promises, &rest_client, &mutex](Context& ctx) {
+            Locker locker(mutex);
+            try {
+                auto reply = RequestBuilder(ctx)
+                    .Get(GetDockerUrl(http_url))
+                    .Execute();
 
-            auto reply = RequestBuilder(ctx)
-                .Get(GetDockerUrl(http_url))
-                .Execute();
+                // Use an iterator to make it simple to fetch some data and
+                // then wait on the mutex before we finish.
+                IteratorFromJsonSerializer<Post> results(*reply);
 
-            // Use an iterator to make it simple to fetch some data and
-            // then wait on the mutex before we finish.
-            IteratorFromJsonSerializer<Post> results(*reply);
+                auto it = results.begin();
+                RESTC_CPP_LOG_DEBUG_("Iteration #" << i
+                    << " Read item # " << it->id);
 
-            auto it = results.begin();
-            RESTC_CPP_LOG_DEBUG_("Iteration #" << i
-                << " Read item # " << it->id);
+                promises[i].set_value(i);
+                // Wait for all connections to be ready
 
-            promises[i].set_value(i);
-            // Wait for all connections to be ready
+                // We can't just wait on the lock since we are in a co-routine.
+                // So we use the async_wait() to poll in stead.
+                while(!locker.try_lock()) {
+                    boost::asio::deadline_timer timer(rest_client->GetIoService(),
+                        boost::posix_time::milliseconds(1));
+                    timer.async_wait(ctx.GetYield());
+                }
+                locker.unlock();
 
-            // We can't just wait on the lock since we are in a co-routine.
-            // So we use the async_wait() to poll in stead.
-            while(!mutex.try_lock()) {
-                boost::asio::deadline_timer timer(rest_client->GetIoService(),
-                    boost::posix_time::milliseconds(1));
-                timer.async_wait(ctx.GetYield());
+                // Fetch the rest
+                for(; it != results.end(); ++it)
+                    ;
+
+            } catch (const std::exception& ex) {
+                RESTC_CPP_LOG_ERROR_("Failed to fetch data: " << ex.what());
+                promises[i].set_exception(std::current_exception());
             }
-            mutex.unlock();
-
-            // Fetch the rest
-            for(; it != results.end(); ++it)
-                ;
-
         });
     }
 
@@ -131,7 +159,7 @@ TEST(ManyConnections, CRUD) {
 
 int main( int argc, char * argv[] )
 {
-    RESTC_CPP_TEST_LOGGING_SETUP("debug");
+    RESTC_CPP_TEST_LOGGING_SETUP("trace");
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();;
 }
