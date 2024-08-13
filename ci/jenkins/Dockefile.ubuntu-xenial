@@ -9,7 +9,7 @@ RUN apt-get -q update &&\
     apt-get -y -q --no-install-recommends upgrade &&\
     apt-get -y -q install openssh-server g++ git \
     automake autoconf build-essential \
-    zlib1g-dev g++ cmake make libboost-all-dev libssl-dev \
+    zlib1g-dev g++ cmake make libboost-all-dev libssl-dev libgtest-dev \
     openjdk-8-jdk &&\
     apt-get -y -q autoremove &&\
     apt-get -y -q clean
