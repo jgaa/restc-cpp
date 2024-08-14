@@ -205,6 +205,15 @@ string ReplyImpl::GetBodyAsString(const size_t maxSize) {
     return buffer;
 }
 
+void ReplyImpl::fetchAndIgnore()
+{
+    while(!IsEof()) {
+        reader_->ReadSome();
+    }
+
+    ReleaseConnection();
+}
+
 void ReplyImpl::CheckIfWeAreDone() {
     if (reader_ && reader_->IsEof()) {
         reader_->Finish();

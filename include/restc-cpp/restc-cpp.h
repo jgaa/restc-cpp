@@ -258,6 +258,12 @@ public:
     virtual std::string GetBodyAsString(size_t maxSize
         = RESTC_CPP_SANE_DATA_LIMIT) = 0;
 
+    /*! Get the complete data from the server, but discard it.
+     *
+     * Use this to wait for a request to complete before moving on.
+     */
+    virtual void fetchAndIgnore() = 0;
+
     /*! Get some data from the server.
      *
      * This is the lowest level to fetch data. Buffers will be

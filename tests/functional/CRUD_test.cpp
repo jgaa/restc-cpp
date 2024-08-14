@@ -64,6 +64,9 @@ TEST(CRUD, Crud) {
         .Data(post)                                 // Data object to update
         .Execute();
 
+    // Get the reply before we validate the operation. Else it may run in parallel
+    reply->fetchAndIgnore();
+
     // Fetch again
     reply = RequestBuilder(ctx)
         .Get(GetDockerUrl(http_url) + "/" + post.id) // URL
@@ -72,17 +75,17 @@ TEST(CRUD, Crud) {
     EXPECT_EQ(post.motto, svr_post.motto);
 
     // Delete
-    reply = RequestBuilder(ctx)
+    RequestBuilder(ctx)
         .Delete(GetDockerUrl(http_url) + "/" + post.id) // URL
-        .Execute();
+        .Execute()->fetchAndIgnore();
 
     // Verify that it's gone
     EXPECT_THROW(
         RequestBuilder(ctx)
             .Get(GetDockerUrl(http_url) + "/" + post.id) // URL
-            .Execute(), HttpNotFoundException);
-
-
+            .Execute(),
+        HttpNotFoundException
+    );
 
     }).get();
 }
