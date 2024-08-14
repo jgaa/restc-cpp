@@ -509,7 +509,7 @@ pipeline {
                             rmdir /S /Q build
                             mkdir build
                             cd build
-                            cmake -DRESTC_CPP_USE_CPP17=ON -DCMAKE_PREFIX_PATH=C:\\src\\vcpkg\\installed\\x64-windows\\lib;C:\\src\\vcpkg\\installed\\x64-windows\\include ..
+                            cmake -DRESTC_CPP_USE_CPP17=ON -DCMAKE_TOOLCHAIN_FILE=C:\\src\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake ..
                             if %errorlevel% neq 0 exit /b %errorlevel%
                             cmake --build . --config Release
                             if %errorlevel% neq 0 exit /b %errorlevel%
@@ -552,7 +552,7 @@ pipeline {
                             rmdir /S /Q build
                             mkdir build
                             cd build
-                            cmake -DRESTC_CPP_THREADED_CTX=ON -DRESTC_CPP_USE_CPP17=ON -DCMAKE_PREFIX_PATH=C:\\src\\vcpkg\\installed\\x64-windows\\lib;C:\\src\\vcpkg\\installed\\x64-windows\\include ..
+                            cmake -DRESTC_CPP_THREADED_CTX=ON -DRESTC_CPP_USE_CPP17=ON -DCMAKE_TOOLCHAIN_FILE=C:\\src\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake ..
                             if %errorlevel% neq 0 exit /b %errorlevel%
                             cmake --build . --config Release
                             if %errorlevel% neq 0 exit /b %errorlevel%
