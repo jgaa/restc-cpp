@@ -513,10 +513,9 @@ pipeline {
                     steps {
                         echo "Building on Fedora in ${WORKSPACE}"
                         checkout scm
-                        sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && cmake --build . -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
