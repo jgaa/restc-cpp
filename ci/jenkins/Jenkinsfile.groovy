@@ -515,19 +515,21 @@ pipeline {
                         echo "Building on Fedora in ${WORKSPACE}"
                         checkout scm
                         sh 'set -x'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && cmake --build . -j $(nproc)'
+                        sh 'rm -rf build-fedora'
+                        sh 'mkdir build-fedora'
+                        sh 'cd build-fedora && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && cmake --build . -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
                             try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
+                                sh 'cd build-fedora && ctest --no-compress-output -T Test'
                             } catch (exc) {
 
                                 unstable(message: "${STAGE_NAME} - Testing failed")
                             }
                         }
+
+                        sh 'rm -rf build-fedora'
                     }
                 }
 //

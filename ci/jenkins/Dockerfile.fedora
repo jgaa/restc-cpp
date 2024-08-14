@@ -13,7 +13,8 @@ RUN dnf -q update -y &&\
     ssh-keygen -A
 
 # Set user jenkins to the image
-RUN useradd --uid 1001 -m -d /home/jenkins -s /bin/bash jenkins &&\
+RUN useradd -m -d /home/jenkins -s /bin/bash jenkins &&\
+    chmod 0777 /home/jenkins &&\
     echo "jenkins:jenkins" | chpasswd &&\
     mkdir -p /run/sshd
 
