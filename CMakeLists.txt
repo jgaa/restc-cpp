@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.0)
 
-if (UNIX)
-    # Ninja creates too many problems while maintaining
-    # compatibility with old and new versions of Linux/Cmake
-    set (CMAKE_GENERATOR "Unix Makefiles" CACHE INTERNAL "" FORCE)
-endif()
+# if (UNIX)
+#     # Ninja creates too many problems while maintaining
+#     # compatibility with old and new versions of Linux/Cmake
+#     set (CMAKE_GENERATOR "Unix Makefiles" CACHE INTERNAL "" FORCE)
+# endif()
 
 if (DEFINED ENV{RESTC_CPP_VERSION})
     set(RESTC_CPP_VERSION $ENV{RESTC_CPP_VERSION})
@@ -216,7 +216,7 @@ add_dependencies(${PROJECT_NAME} externalRapidJson ${RESTC_CPP_EXTERNAL_DEPS})
 
 if (NOT EMBEDDED_RESTC_CPP)
     #set(Boost_USE_MULTITHREADED ON)
-    find_package(Boost ${RESTC_BOOST_VERSION} REQUIRED COMPONENTS
+    find_package(Boost ${RESTC_BOOST_VERSION} REQUIRED CONFIG COMPONENTS
         system
         program_options
         filesystem
