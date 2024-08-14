@@ -35,6 +35,25 @@ option(RESTC_CPP_WITH_FUNCTIONALT_TESTS "Enable Functional Testing" ON)
 set(GTEST_TAG "main" CACHE STRING "Gtest branch to use. Required on older Linux versions because newer gtest requure newer cmake!")
 set(LOGFAULT_TAG "master" CACHE STRING "Logfault branch to use. Required on older Linux versions because newer gtest requure newer cmake!")
 
+find_package(Rapidjson QUIET)
+
+if (NOT RAPIDJSON_FOUND AND INSTALL_RAPIDJSON_HEADERS)
+    message(STATUS "Rapidjson not found. Adding it as an external project.")
+    set(RESTC_CPP_EXTERNAL_DEPS ${RESTC_CPP_EXTERNAL_DEPS} externalRapidJson)
+    set(restc_cpp_add_rapidjson ON)
+endif()
+
+if (RESTC_CPP_LOG_WITH_LOGFAULT)
+    find_path(LOGFAULT logfault/logfault.h)
+    if (LOGFAULT)
+        message ("Using existing logfault")
+    else()
+        message ("Embedding logfault header only library")
+        set(RESTC_CPP_EXTERNAL_DEPS ${RESTC_CPP_EXTERNAL_DEPS} externalLogfault)
+        set(restc_cpp_add_logfault ON)
+    endif()
+endif()
+
 include(cmake_scripts/external-projects.cmake)
 
 if (EXISTS ${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
@@ -202,17 +221,7 @@ target_include_directories(${PROJECT_NAME}
 
 SET_CPP_STANDARD(${PROJECT_NAME})
 
-if (RESTC_CPP_LOG_WITH_LOGFAULT)
-    find_path(LOGFAULT logfault/logfault.h)
-    if (LOGFAULT)
-        message ("Using existing logfault")
-    else()
-        message ("Embedding logfault header only library")
-        set(RESTC_CPP_EXTERNAL_DEPS ${RESTC_CPP_EXTERNAL_DEPS} externalLogfault)
-    endif()
-endif()
-
-add_dependencies(${PROJECT_NAME} externalRapidJson ${RESTC_CPP_EXTERNAL_DEPS})
+add_dependencies(${PROJECT_NAME} ${RESTC_CPP_EXTERNAL_DEPS})
 
 if (NOT EMBEDDED_RESTC_CPP)
 

@@ -12,42 +12,42 @@ set(EXTERNAL_PROJECTS_INSTALL_PREFIX ${EXTERNAL_PROJECTS_PREFIX}/installed)
 set(RESTC_EXTERNAL_INSTALLED_LIB_DIR ${EXTERNAL_PROJECTS_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
 link_directories(${RESTC_EXTERNAL_INSTALLED_LIB_DIR})
 
-ExternalProject_Add(
-    externalRapidJson
-    PREFIX "${EXTERNAL_PROJECTS_PREFIX}"
-    GIT_REPOSITORY "https://github.com/Tencent/rapidjson.git"
-    GIT_TAG "master"
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    LOG_DOWNLOAD ON
-    LOG_INSTALL ON
-    )
+if (restc_cpp_add_rapidjson)
+    ExternalProject_Add(
+        externalRapidJson
+        PREFIX "${EXTERNAL_PROJECTS_PREFIX}"
+        GIT_REPOSITORY "https://github.com/Tencent/rapidjson.git"
+        GIT_TAG "master"
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND ""
+        LOG_DOWNLOAD ON
+        LOG_INSTALL ON
+        )
 
-set(EXTERNAL_RAPIDJSON_INCLUDE_DIR ${EXTERNAL_PROJECTS_PREFIX}/src/externalRapidJson/include/rapidjson)
+    set(EXTERNAL_RAPIDJSON_INCLUDE_DIR ${EXTERNAL_PROJECTS_PREFIX}/src/externalRapidJson/include/rapidjson)
 
+    message(STATUS "EXTERNAL_RAPIDJSON_INCLUDE_DIR: ${EXTERNAL_RAPIDJSON_INCLUDE_DIR}")
+
+    include_directories(${EXTERNAL_PROJECTS_PREFIX}/src/externalRapidJson/include)
+
+    if (INSTALL_RAPIDJSON_HEADERS )
+        install(DIRECTORY ${EXTERNAL_RAPIDJSON_INCLUDE_DIR} DESTINATION include)
+    endif()
+endif()
+
+if (restc_cpp_add_logfault)
 ExternalProject_Add(externalLogfault
     PREFIX "${EXTERNAL_PROJECTS_PREFIX}"
     GIT_REPOSITORY "https://github.com/jgaa/logfault.git"
     GIT_TAG "${LOGFAULT_TAG}"
-    # INSTALL_COMMAND "cmake --install ."
-    # BUILD_COMMAND "cmake --build ."
     CMAKE_ARGS
         -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_INSTALL_PREFIX}
         -DCMAKE_GENERATOR=${CMAKE_GENERATOR}
     )
-
-message(STATUS "EXTERNAL_RAPIDJSON_INCLUDE_DIR: ${EXTERNAL_RAPIDJSON_INCLUDE_DIR}")
-
-if (INSTALL_RAPIDJSON_HEADERS)
-    install(DIRECTORY ${EXTERNAL_RAPIDJSON_INCLUDE_DIR} DESTINATION include)
 endif()
 
-include_directories(
-     ${EXTERNAL_PROJECTS_PREFIX}/src/externalRapidJson/include
-     ${EXTERNAL_PROJECTS_PREFIX}/src/externalLest/include
-     ${EXTERNAL_PROJECTS_PREFIX}/installed/include
-    )
+include_directories(${EXTERNAL_PROJECTS_PREFIX}/installed/include)
 
 # If we compile the tests; download and install gtest if it's not found on the target
 # On ubuntu and debian, you can install `libgtest-dev` to avoid this step.
