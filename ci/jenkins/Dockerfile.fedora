@@ -15,7 +15,6 @@ RUN dnf -q update -y &&\
 # Set user jenkins to the image
 RUN useradd -m -d /home/jenkins -s /bin/sh jenkins &&\
     echo "jenkins:jenkins" | chpasswd &&\
-    mkdir -p /home/jenkins/build/workspace/restc-staging &&\
     mkdir -p /run/sshd
 
 # Standard SSH port
