@@ -216,7 +216,7 @@ add_dependencies(${PROJECT_NAME} externalRapidJson ${RESTC_CPP_EXTERNAL_DEPS})
 
 if (NOT EMBEDDED_RESTC_CPP)
 
-    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.29")
+    if(CMAKE_VERSION VERSION_GREATER "3.28")
         set(restc_cpp_boost_find_config CONFIG)
     endif()
 

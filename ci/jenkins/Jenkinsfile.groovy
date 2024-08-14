@@ -503,13 +503,13 @@ pipeline {
                         checkout scm
 
                         bat script: '''
-                            PATH=%PATH%;C:\\Program Files\\CMake\\bin;C:\\devel\\vcpkg
+                            PATH=%PATH%;C:\\Program Files\\CMake\\bin;C:\\src\\vcpkg
                             vcpkg install zlib openssl boost-fusion boost-filesystem boost-log boost-program-options boost-asio boost-date-time boost-chrono boost-coroutine boost-uuid boost-scope-exit --triplet x64-windows
                             if %errorlevel% neq 0 exit /b %errorlevel%
                             rmdir /S /Q build
                             mkdir build
                             cd build
-                            cmake -DRESTC_CPP_USE_CPP17=ON -DCMAKE_PREFIX_PATH=C:\\devel\\vcpkg\\installed\\x64-windows\\lib;C:\\devel\\vcpkg\\installed\\x64-windows\\include ..
+                            cmake -DRESTC_CPP_USE_CPP17=ON -DCMAKE_PREFIX_PATH=C:\\src\\vcpkg\\installed\\x64-windows\\lib;C:\\src\\vcpkg\\installed\\x64-windows\\include ..
                             if %errorlevel% neq 0 exit /b %errorlevel%
                             cmake --build . --config Release
                             if %errorlevel% neq 0 exit /b %errorlevel%
@@ -520,7 +520,7 @@ pipeline {
                         script {
                             try {
                                 bat script: '''
-                                    PATH=%PATH%;C:\\devel\\vcpkg\\installed\\x64-windows\\bin;C:\\Program Files\\CMake\\bin
+                                    PATH=%PATH%;C:\\src\\vcpkg\\installed\\x64-windows\\bin;C:\\Program Files\\CMake\\bin
                                     cd build
                                     ctest -C Release
                                     if %errorlevel% neq 0 exit /b %errorlevel%
@@ -546,13 +546,13 @@ pipeline {
                         checkout scm
 
                         bat script: '''
-                            PATH=%PATH%;C:\\Program Files\\CMake\\bin;C:\\devel\\vcpkg
+                            PATH=%PATH%;C:\\Program Files\\CMake\\bin;C:\\src\\vcpkg
                             vcpkg install zlib openssl boost-fusion boost-filesystem boost-log boost-program-options boost-asio boost-date-time boost-chrono boost-coroutine boost-uuid boost-scope-exit --triplet x64-windows
                             if %errorlevel% neq 0 exit /b %errorlevel%
                             rmdir /S /Q build
                             mkdir build
                             cd build
-                            cmake -DRESTC_CPP_THREADED_CTX=ON -DRESTC_CPP_USE_CPP17=ON -DCMAKE_PREFIX_PATH=C:\\devel\\vcpkg\\installed\\x64-windows\\lib;C:\\devel\\vcpkg\\installed\\x64-windows\\include ..
+                            cmake -DRESTC_CPP_THREADED_CTX=ON -DRESTC_CPP_USE_CPP17=ON -DCMAKE_PREFIX_PATH=C:\\src\\vcpkg\\installed\\x64-windows\\lib;C:\\src\\vcpkg\\installed\\x64-windows\\include ..
                             if %errorlevel% neq 0 exit /b %errorlevel%
                             cmake --build . --config Release
                             if %errorlevel% neq 0 exit /b %errorlevel%
@@ -563,7 +563,7 @@ pipeline {
                         script {
                             try {
                                 bat script: '''
-                                    PATH=%PATH%;C:\\devel\\vcpkg\\installed\\x64-windows\\bin;C:\\Program Files\\CMake\\bin
+                                    PATH=%PATH%;C:\\src\\vcpkg\\installed\\x64-windows\\bin;C:\\Program Files\\CMake\\bin
                                     cd build
                                     ctest -C Release
                                     if %errorlevel% neq 0 exit /b %errorlevel%
