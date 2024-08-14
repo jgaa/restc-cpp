@@ -500,7 +500,7 @@ pipeline {
                     }
                 }
 
-                stage('Fedora') {
+                stage('Fedora CTX C++17') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.fedora'
@@ -515,7 +515,7 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make'
+                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
