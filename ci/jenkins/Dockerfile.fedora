@@ -1,17 +1,24 @@
-FROM fedora:33
+FROM fedora:latest
 
 MAINTAINER Jarle Aase <jgaa@jgaa.com>
 
-RUN echo "root:password" | chpasswd
-RUN useradd jenkins
-RUN echo "jenkins:jenkins" | chpasswd
+RUN dnf -q update -y &&\
+    dnf -q upgrade -y &&\
+    dnf -q install -y openssh-server gcc-c++ git gnupg2 \
+    automake autoconf make \
+    zlib-devel gcc-c++ cmake boost-devel openssl-devel \
+    java-11-openjdk-devel &&\
+    dnf -q autoremove -y &&\
+    dnf clean all
 
-RUN dnf -y update &&\
-    dnf -y install @development-tools git jre-openjdk zlib-devel openssl-devel boost-devel cmake gcc-c++ openssh-server
+# Set user jenkins to the image
+RUN useradd -m -d /home/jenkins -s /bin/sh jenkins &&\
+    echo "jenkins:jenkins" | chpasswd &&\
+    mkdir -p /home/jenkins/build/workspace/restc-staging &&\
+    mkdir -p /run/sshd
 
-# expose the ssh port
+# Standard SSH port
 EXPOSE 22
 
-# entrypoint by starting sshd
+# Default command
 CMD ["/usr/sbin/sshd", "-D"]
-

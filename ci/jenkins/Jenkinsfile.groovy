@@ -23,6 +23,74 @@ pipeline {
 
         stage('Build') {
            parallel {
+                stage('Ubuntu Noble') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.ubuntu-noble'
+                            dir 'ci/jenkins'
+                            label 'docker'
+                            args '-u root'
+                        }
+                    }
+
+                    options {
+                        timeout(time: 30, unit: "MINUTES")
+                    }
+
+                    steps {
+                        echo "Building on ubuntu-noble-AMD64 in ${NODE_NAME} --> ${WORKSPACE}"
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+
+                                unstable(message: "${STAGE_NAME} - Testing failed")
+                            }
+                        }
+                    }
+                }
+
+                stage('Ubuntu Noble MT CTX') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.ubuntu-noble'
+                            dir 'ci/jenkins'
+                            label 'docker'
+                            args '-u root'
+                        }
+                    }
+
+                    options {
+                        timeout(time: 30, unit: "MINUTES")
+                    }
+
+                    steps {
+                        echo "Building on ubuntu-noble-AMD64 in ${NODE_NAME} --> ${WORKSPACE}"
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+
+                                unstable(message: "${STAGE_NAME} - Testing failed")
+                            }
+                        }
+                    }
+                }
+
                  stage('Ubuntu Jammy') {
                     agent {
                         dockerfile {
@@ -432,34 +500,34 @@ pipeline {
                     }
                 }
 
-//                 stage('Fedora') {
-//                     agent {
-//                         dockerfile {
-//                             filename 'Dockerfile.fedora'
-//                             dir 'ci/jenkins'
-//                             label 'docker'
-//                         }
-//                     }
-//
-//                     steps {
-//                         echo "Building on Fedora in ${WORKSPACE}"
-//                         checkout scm
-//                         sh 'pwd; ls -la'
-//                         sh 'rm -rf build'
-//                         sh 'mkdir build'
-//                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make'
-//
-//                         echo 'Getting ready to run tests'
-//                         script {
-//                             try {
-//                                 sh 'cd build && ctest --no-compress-output -T Test'
-//                             } catch (exc) {
-//
-//                                 unstable(message: "${STAGE_NAME} - Testing failed")
-//                             }
-//                         }
-//                     }
-//                 }
+                stage('Fedora') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.fedora'
+                            dir 'ci/jenkins'
+                            label 'docker'
+                        }
+                    }
+
+                    steps {
+                        echo "Building on Fedora in ${WORKSPACE}"
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+
+                                unstable(message: "${STAGE_NAME} - Testing failed")
+                            }
+                        }
+                    }
+                }
 //
 //                 stage('Centos7') {
 //                     agent {

@@ -227,6 +227,7 @@ if (NOT EMBEDDED_RESTC_CPP)
 
     if(CMAKE_VERSION VERSION_GREATER "3.28")
         set(restc_cpp_boost_find_config CONFIG)
+        message("Using new Boost find config")
     endif()
 
     #set(Boost_USE_MULTITHREADED ON)
