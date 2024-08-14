@@ -159,7 +159,7 @@ TEST(ManyConnections, CRUD) {
 
 int main( int argc, char * argv[] )
 {
-    RESTC_CPP_TEST_LOGGING_SETUP("trace");
+    RESTC_CPP_TEST_LOGGING_SETUP("info");
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();;
 }
