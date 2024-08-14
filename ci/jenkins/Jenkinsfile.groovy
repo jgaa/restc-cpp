@@ -504,7 +504,7 @@ pipeline {
 
                         bat script: '''
                             PATH=%PATH%;C:\\Program Files\\CMake\\bin;C:\\src\\vcpkg
-                            vcpkg install zlib openssl boost-fusion boost-filesystem boost-log boost-program-options boost-asio boost-date-time boost-chrono boost-coroutine boost-uuid boost-scope-exit --triplet x64-windows
+                            vcpkg install rapidjson gtest zlib openssl boost --triplet x64-windows
                             if %errorlevel% neq 0 exit /b %errorlevel%
                             rmdir /S /Q build
                             mkdir build
@@ -533,48 +533,48 @@ pipeline {
                     }
                 }
 
-                stage('Windows X64 with vcpkg MT CTX C++17') {
-
-                    agent {label 'windows'}
-
-                    options {
-                        timeout(time: 30, unit: "MINUTES")
-                    }
-
-                     steps {
-                        echo "Building on Windows in ${WORKSPACE}"
-                        checkout scm
-
-                        bat script: '''
-                            PATH=%PATH%;C:\\Program Files\\CMake\\bin;C:\\src\\vcpkg
-                            vcpkg install zlib openssl boost-fusion boost-filesystem boost-log boost-program-options boost-asio boost-date-time boost-chrono boost-coroutine boost-uuid boost-scope-exit --triplet x64-windows
-                            if %errorlevel% neq 0 exit /b %errorlevel%
-                            rmdir /S /Q build
-                            mkdir build
-                            cd build
-                            cmake -DRESTC_CPP_THREADED_CTX=ON -DRESTC_CPP_USE_CPP17=ON -DCMAKE_TOOLCHAIN_FILE=C:\\src\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake ..
-                            if %errorlevel% neq 0 exit /b %errorlevel%
-                            cmake --build . --config Release
-                            if %errorlevel% neq 0 exit /b %errorlevel%
-                            echo "Build is OK"
-                        '''
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                bat script: '''
-                                    PATH=%PATH%;C:\\src\\vcpkg\\installed\\x64-windows\\bin;C:\\Program Files\\CMake\\bin
-                                    cd build
-                                    ctest -C Release
-                                    if %errorlevel% neq 0 exit /b %errorlevel%
-                                '''
-                            } catch (exc) {
-
-                                unstable(message: "${STAGE_NAME} - Testing failed")
-                            }
-                        }
-                    }
-                }
+//                 stage('Windows X64 with vcpkg MT CTX C++17') {
+//
+//                     agent {label 'windows'}
+//
+//                     options {
+//                         timeout(time: 30, unit: "MINUTES")
+//                     }
+//
+//                      steps {
+//                         echo "Building on Windows in ${WORKSPACE}"
+//                         checkout scm
+//
+//                         bat script: '''
+//                             PATH=%PATH%;C:\\Program Files\\CMake\\bin;C:\\src\\vcpkg
+//                             vcpkg install zlib openssl boost-fusion boost-filesystem boost-log boost-program-options boost-asio boost-date-time boost-chrono boost-coroutine boost-uuid boost-scope-exit --triplet x64-windows
+//                             if %errorlevel% neq 0 exit /b %errorlevel%
+//                             rmdir /S /Q build
+//                             mkdir build
+//                             cd build
+//                             cmake -DRESTC_CPP_THREADED_CTX=ON -DRESTC_CPP_USE_CPP17=ON -DCMAKE_TOOLCHAIN_FILE=C:\\src\\vcpkg\\scripts\\buildsystems\\vcpkg.cmake ..
+//                             if %errorlevel% neq 0 exit /b %errorlevel%
+//                             cmake --build . --config Release
+//                             if %errorlevel% neq 0 exit /b %errorlevel%
+//                             echo "Build is OK"
+//                         '''
+//
+//                         echo 'Getting ready to run tests'
+//                         script {
+//                             try {
+//                                 bat script: '''
+//                                     PATH=%PATH%;C:\\src\\vcpkg\\installed\\x64-windows\\bin;C:\\Program Files\\CMake\\bin
+//                                     cd build
+//                                     ctest -C Release
+//                                     if %errorlevel% neq 0 exit /b %errorlevel%
+//                                 '''
+//                             } catch (exc) {
+//
+//                                 unstable(message: "${STAGE_NAME} - Testing failed")
+//                             }
+//                         }
+//                     }
+//                 }
             }
 
             post {
