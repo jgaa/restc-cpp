@@ -9,7 +9,8 @@ RUN dnf -q update -y &&\
     zlib-devel gcc-c++ cmake boost-devel openssl-devel \
     java-11-openjdk-devel &&\
     dnf -q autoremove -y &&\
-    dnf clean all
+    dnf clean all &&\
+    ssh-keygen -A
 
 # Set user jenkins to the image
 RUN useradd -m -d /home/jenkins -s /bin/sh jenkins &&\
