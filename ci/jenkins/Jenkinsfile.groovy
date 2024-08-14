@@ -572,6 +572,7 @@ pipeline {
 
                         bat script: '''
                             PATH=%PATH%;C:\\Program Files\\CMake\\bin;C:\\src\\vcpkg
+                            vcpkg integrate install
                             vcpkg install rapidjson gtest zlib openssl boost --triplet x64-windows
                             if %errorlevel% neq 0 exit /b %errorlevel%
                             rmdir /S /Q build
