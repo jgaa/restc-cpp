@@ -11,6 +11,7 @@
 
 
 #include <ctime>
+#include <thread>
 #include "restc-cpp/logging.h"
 
 #ifdef RESTC_CPP_LOG_WITH_BOOST_LOG
