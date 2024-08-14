@@ -35,9 +35,9 @@ option(RESTC_CPP_WITH_FUNCTIONALT_TESTS "Enable Functional Testing" ON)
 set(GTEST_TAG "main" CACHE STRING "Gtest branch to use. Required on older Linux versions because newer gtest requure newer cmake!")
 set(LOGFAULT_TAG "master" CACHE STRING "Logfault branch to use. Required on older Linux versions because newer gtest requure newer cmake!")
 
-find_package(Rapidjson QUIET)
+find_package(RapidJSON QUIET)
 
-if (NOT RAPIDJSON_FOUND AND INSTALL_RAPIDJSON_HEADERS)
+if (NOT RapidJSON_FOUND AND INSTALL_RAPIDJSON_HEADERS)
     message(STATUS "Rapidjson not found. Adding it as an external project.")
     set(RESTC_CPP_EXTERNAL_DEPS ${RESTC_CPP_EXTERNAL_DEPS} externalRapidJson)
     set(restc_cpp_add_rapidjson ON)
@@ -221,7 +221,9 @@ target_include_directories(${PROJECT_NAME}
 
 SET_CPP_STANDARD(${PROJECT_NAME})
 
-add_dependencies(${PROJECT_NAME} ${RESTC_CPP_EXTERNAL_DEPS})
+if(NOT "${RESTC_CPP_EXTERNAL_DEPS}" STREQUAL "")
+    add_dependencies(${PROJECT_NAME} ${RESTC_CPP_EXTERNAL_DEPS})
+endif()
 
 if (NOT EMBEDDED_RESTC_CPP)
 
