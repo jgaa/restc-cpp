@@ -24,39 +24,39 @@ pipeline {
         stage('Build') {
            parallel {
 
-//                 stage('Ubuntu Noble') {
-//                     agent {
-//                         dockerfile {
-//                             filename 'Dockerfile.ubuntu-noble'
-//                             dir 'ci/jenkins'
-//                             label 'docker'
-//                             args '-u root'
-//                         }
-//                     }
-//
-//                     options {
-//                         timeout(time: 30, unit: "MINUTES")
-//                     }
-//
-//                     steps {
-//                         echo "Building on ubuntu-noble-AMD64 in ${NODE_NAME} --> ${WORKSPACE}"
-//                         checkout scm
-//                         sh 'pwd; ls -la'
-//                         sh 'rm -rf build'
-//                         sh 'mkdir build'
-//                         sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
-//
-//                         echo 'Getting ready to run tests'
-//                         script {
-//                             try {
-//                                 sh 'cd build && ctest --no-compress-output -T Test'
-//                             } catch (exc) {
-//
-//                                 unstable(message: "${STAGE_NAME} - Testing failed")
-//                             }
-//                         }
-//                     }
-//                 }
+                stage('Ubuntu Noble') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.ubuntu-noble'
+                            dir 'ci/jenkins'
+                            label 'docker'
+                            args '-u root'
+                        }
+                    }
+
+                    options {
+                        timeout(time: 30, unit: "MINUTES")
+                    }
+
+                    steps {
+                        echo "Building on ubuntu-noble-AMD64 in ${NODE_NAME} --> ${WORKSPACE}"
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+
+                                unstable(message: "${STAGE_NAME} - Testing failed")
+                            }
+                        }
+                    }
+                }
 //
 //                 stage('Ubuntu Noble MT CTX') {
 //                     agent {
@@ -501,34 +501,34 @@ pipeline {
 //                     }
 //                 }
 //
-//                 stage('Fedora CTX C++17') {
-//                     agent {
-//                         dockerfile {
-//                             filename 'Dockerfile.fedora'
-//                             dir 'ci/jenkins'
-//                             label 'docker'
-//                         }
-//                     }
-//
-//                     steps {
-//                         echo "Building on Fedora in ${WORKSPACE}"
-//                         checkout scm
-//                         sh 'pwd; ls -la'
-//                         sh 'rm -rf build'
-//                         sh 'mkdir build'
-//                         sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
-//
-//                         echo 'Getting ready to run tests'
-//                         script {
-//                             try {
-//                                 sh 'cd build && ctest --no-compress-output -T Test'
-//                             } catch (exc) {
-//
-//                                 unstable(message: "${STAGE_NAME} - Testing failed")
-//                             }
-//                         }
-//                     }
-//                 }
+                stage('Fedora CTX C++17') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.fedora'
+                            dir 'ci/jenkins'
+                            label 'docker'
+                        }
+                    }
+
+                    steps {
+                        echo "Building on Fedora in ${WORKSPACE}"
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+
+                                unstable(message: "${STAGE_NAME} - Testing failed")
+                            }
+                        }
+                    }
+                }
 // //
 // //                 stage('Centos7') {
 // //                     agent {
@@ -572,7 +572,7 @@ pipeline {
                         checkout scm
 
                         bat script: '''
-                            PATH=%PATH%;C:\\Program Files\\CMake\\bin;C:\\src\\vcpkg
+                            PATH=%PATH%;C:\\Program Files\\CMake\\bin;C:\\src\\vcpkg;C:\\Program Files\\Git\\bin
                             vcpkg integrate install
                             vcpkg install rapidjson gtest zlib openssl boost --triplet x64-windows
                             if %errorlevel% neq 0 exit /b %errorlevel%
@@ -580,6 +580,50 @@ pipeline {
                             mkdir build
                             cd build
                             cmake -DRESTC_CPP_USE_CPP17=ON -DCMAKE_TOOLCHAIN_FILE=C:/Users/jgaa/vcpkg/scripts/buildsystems/vcpkg.cmake ..
+                            if %errorlevel% neq 0 exit /b %errorlevel%
+                            cmake --build . --config Release
+                            if %errorlevel% neq 0 exit /b %errorlevel%
+                            echo "Build is OK"
+                        '''
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                bat script: '''
+                                    PATH=%PATH%;C:\\src\\vcpkg\\installed\\x64-windows\\bin;C:\\Program Files\\CMake\\bin
+                                    cd build
+                                    ctest -C Release
+                                    if %errorlevel% neq 0 exit /b %errorlevel%
+                                '''
+                            } catch (exc) {
+
+                                unstable(message: "${STAGE_NAME} - Testing failed")
+                            }
+                        }
+                    }
+                }
+
+                stage('Windows X64 with vcpkg CTX C++17') {
+
+                    agent {label 'windows'}
+
+                    options {
+                        timeout(time: 30, unit: "MINUTES")
+                    }
+
+                     steps {
+                        echo "Building on Windows in ${WORKSPACE}"
+                        checkout scm
+
+                        bat script: '''
+                            PATH=%PATH%;C:\\Program Files\\CMake\\bin;C:\\src\\vcpkg;C:\\Program Files\\Git\\bin
+                            vcpkg integrate install
+                            vcpkg install rapidjson gtest zlib openssl boost --triplet x64-windows
+                            if %errorlevel% neq 0 exit /b %errorlevel%
+                            rmdir /S /Q build
+                            mkdir build
+                            cd build
+                            cmake -DRESTC_CPP_THREADED_CTX=ON -DRESTC_CPP_USE_CPP17=ON -DCMAKE_TOOLCHAIN_FILE=C:/Users/jgaa/vcpkg/scripts/buildsystems/vcpkg.cmake ..
                             if %errorlevel% neq 0 exit /b %errorlevel%
                             cmake --build . --config Release
                             if %errorlevel% neq 0 exit /b %errorlevel%
