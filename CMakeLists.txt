@@ -215,8 +215,13 @@ endif()
 add_dependencies(${PROJECT_NAME} externalRapidJson ${RESTC_CPP_EXTERNAL_DEPS})
 
 if (NOT EMBEDDED_RESTC_CPP)
+
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.29")
+        set(restc_cpp_boost_find_config CONFIG)
+    endif()
+
     #set(Boost_USE_MULTITHREADED ON)
-    find_package(Boost ${RESTC_BOOST_VERSION} REQUIRED CONFIG COMPONENTS
+    find_package(Boost ${RESTC_BOOST_VERSION} REQUIRED ${restc_cpp_boost_find_config} COMPONENTS
         system
         program_options
         filesystem
