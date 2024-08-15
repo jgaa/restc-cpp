@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.10)
 
 # if (UNIX)
 #     # Ninja creates too many problems while maintaining
@@ -232,7 +232,6 @@ if (NOT EMBEDDED_RESTC_CPP)
         message("Using new Boost find config")
     endif()
 
-    #set(Boost_USE_MULTITHREADED ON)
     find_package(Boost ${RESTC_BOOST_VERSION} REQUIRED ${restc_cpp_boost_find_config} COMPONENTS
         system
         program_options
