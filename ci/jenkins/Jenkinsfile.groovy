@@ -180,7 +180,7 @@ pipeline {
                         checkout scm
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DGTEST_TAG=release-1.12.0 -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
