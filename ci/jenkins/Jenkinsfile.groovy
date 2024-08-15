@@ -44,7 +44,7 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release  .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
@@ -78,7 +78,7 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
@@ -91,41 +91,6 @@ pipeline {
                         }
                     }
                 }
-
-                stage('Ubuntu Noble MT CTX C++20') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockerfile.ubuntu-noble'
-                            dir 'ci/jenkins'
-                            label 'docker'
-                            args '-u root'
-                        }
-                    }
-
-                    options {
-                        timeout(time: 30, unit: "MINUTES")
-                    }
-
-                    steps {
-                        echo "Building on ubuntu-noble-AMD64 in ${NODE_NAME} --> ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP20=ON .. && make -j $(nproc)'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-
-                                unstable(message: "${STAGE_NAME} - Testing failed")
-                            }
-                        }
-                    }
-                }
-
 
                  stage('Ubuntu Jammy') {
                     agent {
@@ -147,7 +112,7 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
@@ -181,7 +146,7 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release  .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
@@ -214,7 +179,7 @@ pipeline {
                         checkout scm
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DGTEST_TAG=release-1.12.0 -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DGTEST_TAG=release-1.12.0 -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
@@ -248,7 +213,7 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DGTEST_TAG=release-1.12.0 -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DGTEST_TAG=release-1.12.0 -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
@@ -282,7 +247,7 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DGTEST_TAG=release-1.12.0 -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DGTEST_TAG=release-1.12.0 -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
@@ -351,7 +316,7 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
@@ -385,7 +350,7 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON  -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON  -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
@@ -419,7 +384,7 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
@@ -453,7 +418,7 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
@@ -487,7 +452,7 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
@@ -521,7 +486,7 @@ pipeline {
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
                         sh 'mkdir build'
-                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && make -j $(nproc)'
+                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
@@ -550,7 +515,7 @@ pipeline {
                         sh 'set -x'
                         sh 'rm -rf build-fedora'
                         sh 'mkdir build-fedora'
-                        sh 'cd build-fedora && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=ON .. && cmake --build . -j $(nproc)'
+                        sh 'cd build-fedora && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release .. && cmake --build . -j $(nproc)'
 
                         echo 'Getting ready to run tests'
                         script {
