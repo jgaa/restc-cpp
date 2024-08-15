@@ -41,14 +41,14 @@ const string http_url = "http://localhost:3000/manyposts";
 #define CONNECTIONS 100
 
 struct Post {
-    int id = 0;
+    string id;
     string username;
     string motto;
 };
 
 BOOST_FUSION_ADAPT_STRUCT(
     Post,
-    (int, id)
+    (string, id)
     (string, username)
     (string, motto)
 )

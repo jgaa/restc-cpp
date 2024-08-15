@@ -19,14 +19,14 @@ using namespace restc_cpp;
 //#define CONNECTIONS 1
 
 struct Post {
-    int id = 0;
+    string id;
     string username;
     string motto;
 };
 
 BOOST_FUSION_ADAPT_STRUCT(
     Post,
-    (int, id)
+    (string, id)
     (string, username)
     (string, motto)
 )
