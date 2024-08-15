@@ -242,6 +242,9 @@ if (NOT EMBEDDED_RESTC_CPP)
         chrono
         ${BOOST_LOG_DEP}
         )
+
+    message(STATUS "Boost version found: ${Boost_VERSION}")
+
     target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${Boost_LIBRARIES})
     target_compile_definitions(${PROJECT_NAME} PUBLIC -DBOOST_COROUTINE_NO_DEPRECATION_WARNING=1)
