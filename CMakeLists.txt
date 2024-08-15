@@ -22,6 +22,12 @@ project (restc-cpp VERSION ${RESTC_CPP_VERSION})
 
 message(STATUS "Building restc-cpp version ${PROJECT_VERSION}")
 
+include(CheckCXXCompilerFlag)
+
+check_cxx_compiler_flag("-std=c++20" COMPILER_SUPPORTS_CXX20)
+check_cxx_compiler_flag("-std=c++17" COMPILER_SUPPORTS_CXX17)
+
+
 if (NOT DEFINED INSTALL_RAPIDJSON_HEADERS)
     option(INSTALL_RAPIDJSON_HEADERS "Install rapidjson headers when make install is executed" ON)
 endif()
@@ -90,7 +96,21 @@ option(RESTC_CPP_LOG_JSON_SERIALIZATION "Enable trace logging for json serializa
 
 option(RESTC_CPP_WITH_ZLIB "Use zlib" ON)
 
-option(RESTC_CPP_USE_CPP17 "Use the C++17 standard" ON)
+option(RESTC_CPP_USE_CPP14 "Use the C++14 standard" OFF)
+
+option(RESTC_CPP_USE_CPP17 "Use the C++17 standard" OFF)
+
+option(RESTC_CPP_USE_CPP20 "Use the C++20 standard" OFF)
+
+if (NOT RESTC_CPP_USE_CPP14 AND NOT RESTC_CPP_USE_CPP17 AND NOT RESTC_CPP_USE_CPP20)
+    if (COMPILER_SUPPORTS_CXX20)
+        set(RESTC_CPP_USE_CPP20 ON)
+    elseif (COMPILER_SUPPORTS_CXX17)
+        set(RESTC_CPP_USE_CPP17 ON)
+    else ()
+        set(RESTC_CPP_USE_CPP14 ON)
+    endif()
+endif()
 
 option(RESTC_CPP_THREADED_CTX "Allow asio contextx with multiple therads. Enables thread-safe internal access." OFF)
 
@@ -161,7 +181,10 @@ endif()
 message(STATUS "Using ${CMAKE_CXX_COMPILER}")
 
 macro(SET_CPP_STANDARD target)
-    if (RESTC_CPP_USE_CPP17)
+    if (RESTC_CPP_USE_CPP20)
+        message(STATUS "Using C++ 20 for ${target}")
+        set_property(TARGET ${target} PROPERTY CXX_STANDARD 20)
+    elseif (RESTC_CPP_USE_CPP17)
         message(STATUS "Using C++ 17 for ${target}")
         set_property(TARGET ${target} PROPERTY CXX_STANDARD 17)
     else()

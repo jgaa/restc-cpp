@@ -92,6 +92,40 @@ pipeline {
                     }
                 }
 
+                stage('Ubuntu Noble MT CTX C++20') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.ubuntu-noble'
+                            dir 'ci/jenkins'
+                            label 'docker'
+                            args '-u root'
+                        }
+                    }
+
+                    options {
+                        timeout(time: 30, unit: "MINUTES")
+                    }
+
+                    steps {
+                        echo "Building on ubuntu-noble-AMD64 in ${NODE_NAME} --> ${WORKSPACE}"
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP20=ON .. && make -j $(nproc)'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+
+                                unstable(message: "${STAGE_NAME} - Testing failed")
+                            }
+                        }
+                    }
+                }
+
 
                  stage('Ubuntu Jammy') {
                     agent {
@@ -194,7 +228,41 @@ pipeline {
                     }
                 }
 
-                stage('Debian Buster C++17') {
+                stage('Debian Buster C++14 ') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockefile.debian-buster'
+                            dir 'ci/jenkins'
+                            label 'docker'
+                            args '-u root'
+                        }
+                    }
+
+                    options {
+                        timeout(time: 30, unit: "MINUTES")
+                    }
+
+                    steps {
+                        echo "Building on debian-buster-AMD64 in ${WORKSPACE}"
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DGTEST_TAG=release-1.12.0 -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP17=OFF .. && make -j $(nproc)'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+
+                                unstable(message: "${STAGE_NAME} - Testing failed")
+                            }
+                        }
+                    }
+                }
+
+                stage('Debian Buster ') {
                     agent {
                         dockerfile {
                             filename 'Dockefile.debian-buster'
@@ -228,7 +296,7 @@ pipeline {
                     }
                 }
 
-                stage('Debian Buster C++17 MT CTX') {
+                stage('Debian Buster MT CTX') {
                     agent {
                         dockerfile {
                             filename 'Dockefile.debian-buster'
@@ -262,7 +330,41 @@ pipeline {
                     }
                 }
 
-                stage('Debian Bullseye C++17') {
+                stage('Debian Buster MT CTX C++14') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockefile.debian-buster'
+                            dir 'ci/jenkins'
+                            label 'docker'
+                            args '-u root'
+                        }
+                    }
+
+                    options {
+                        timeout(time: 30, unit: "MINUTES")
+                    }
+
+                    steps {
+                        echo "Building on debian-buster-AMD64 in ${WORKSPACE}"
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DGTEST_TAG=release-1.12.0 -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP14=ON .. && make -j $(nproc)'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+
+                                unstable(message: "${STAGE_NAME} - Testing failed")
+                            }
+                        }
+                    }
+                }
+
+                stage('Debian Bullseye') {
                     agent {
                         dockerfile {
                             filename 'Dockefile.debian-bullseye'
@@ -297,7 +399,7 @@ pipeline {
                     }
                 }
 
-                 stage('Debian Bullseye C++17 MT CTX') {
+                 stage('Debian Bullseye MT CTX') {
                     agent {
                         dockerfile {
                             filename 'Dockefile.debian-bullseye'
@@ -331,7 +433,7 @@ pipeline {
                     }
                 }
 
-                stage('Debian Bookworm, C++17') {
+                stage('Debian Bookworm') {
                     agent {
                         dockerfile {
                             filename 'Dockefile.debian-bookworm'
@@ -365,7 +467,7 @@ pipeline {
                     }
                 }
 
-                 stage('Debian Bookworm MT CTX C++17') {
+                 stage('Debian Bookworm MT CTX') {
                     agent {
                         dockerfile {
                             filename 'Dockefile.debian-bookworm'
@@ -399,7 +501,7 @@ pipeline {
                     }
                 }
 
-                stage('Debian Testing C++17') {
+                stage('Debian Testing') {
                     agent {
                         dockerfile {
                             filename 'Dockefile.debian-testing'
@@ -433,7 +535,7 @@ pipeline {
                     }
                 }
 
-                stage('Debian Testing MT CTX C++17') {
+                stage('Debian Testing MT CTX') {
                     agent {
                         dockerfile {
                             filename 'Dockefile.debian-testing'
@@ -467,7 +569,7 @@ pipeline {
                     }
                 }
 
-                stage('Fedora CTX C++17') {
+                stage('Fedora CTX') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.fedora'
@@ -527,7 +629,7 @@ pipeline {
 //                     }
 //                 }
 
-                stage('Windows X64 with vcpkg C++17') {
+                stage('Windows X64 with vcpkg') {
 
                     agent {label 'windows'}
 
@@ -573,7 +675,7 @@ pipeline {
                     }
                 }
 
-                stage('Windows X64 with vcpkg C++17 MT CTX') {
+                stage('Windows X64 with vcpkg MT CTX') {
 
                     agent {label 'windows'}
 
