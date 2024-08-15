@@ -532,7 +532,9 @@ pipeline {
                     agent {label 'windows'}
 
                     options {
-                        timeout(time: 30, unit: "MINUTES")
+                        // vcpkg now installs and cmpiles pretty much everything that exists on github if you ask it to prepare boost and openssl.
+                        // It's becoming as bad as js and npm.
+                        timeout(time: 60, unit: "MINUTES")
                     }
 
                      steps {
@@ -576,7 +578,9 @@ pipeline {
                     agent {label 'windows'}
 
                     options {
-                        timeout(time: 30, unit: "MINUTES")
+                        // vcpkg now installs and cmpiles pretty much everything that exists on github if you ask it to prepare boost and openssl.
+                        // It's becoming as bad as js and npm.
+                        timeout(time: 60, unit: "MINUTES")
                     }
 
                      steps {
