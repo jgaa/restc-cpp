@@ -532,7 +532,7 @@ pipeline {
                     agent {label 'windows'}
 
                     options {
-                        // vcpkg now installs and cmpiles pretty much everything that exists on github if you ask it to prepare boost and openssl.
+                        // vcpkg now installs and compiles pretty much everything that exists on github if you ask it to prepare boost and openssl.
                         // It's becoming as bad as js and npm.
                         timeout(time: 60, unit: "MINUTES")
                     }
@@ -549,7 +549,7 @@ pipeline {
                             rmdir /S /Q build
                             mkdir build
                             cd build
-                            cmake -DRESTC_CPP_USE_CPP17=ON -DCMAKE_TOOLCHAIN_FILE=C:/Users/jgaa/vcpkg/scripts/buildsystems/vcpkg.cmake ..
+                            cmake -DRESTC_CPP_USE_CPP17=ON -DCMAKE_TOOLCHAIN_FILE=C:/src/vcpkg/scripts/buildsystems/vcpkg.cmake ..
                             if %errorlevel% neq 0 exit /b %errorlevel%
                             cmake --build . --config Release
                             if %errorlevel% neq 0 exit /b %errorlevel%
@@ -578,7 +578,7 @@ pipeline {
                     agent {label 'windows'}
 
                     options {
-                        // vcpkg now installs and cmpiles pretty much everything that exists on github if you ask it to prepare boost and openssl.
+                        // vcpkg now installs and compiles pretty much everything that exists on github if you ask it to prepare boost and openssl.
                         // It's becoming as bad as js and npm.
                         timeout(time: 60, unit: "MINUTES")
                     }
@@ -595,7 +595,7 @@ pipeline {
                             rmdir /S /Q build
                             mkdir build
                             cd build
-                            cmake -DRESTC_CPP_THREADED_CTX=ON -DRESTC_CPP_USE_CPP17=ON -DCMAKE_TOOLCHAIN_FILE=C:/Users/jgaa/vcpkg/scripts/buildsystems/vcpkg.cmake ..
+                            cmake -DRESTC_CPP_THREADED_CTX=ON -DRESTC_CPP_USE_CPP17=ON -DCMAKE_TOOLCHAIN_FILE=C:/src/vcpkg/scripts/buildsystems/vcpkg.cmake ..
                             if %errorlevel% neq 0 exit /b %errorlevel%
                             cmake --build . --config Release
                             if %errorlevel% neq 0 exit /b %errorlevel%
