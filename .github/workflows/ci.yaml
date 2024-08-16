@@ -78,24 +78,26 @@ jobs:
 
       - name: Build project
         run: |
-          cd ~
+          pushd ~
           if [ -d build ]; then
             echo "Build dir exists"
             ls -la build
           else
             mkdir -v build
           fi
-          pushd build
+          cd build
+          pwd
           # echo "ls ~/vcpkg/scripts/buildsystems/vcpkg.cmake"
           # ls ~/vcpkg/scripts/buildsystems/vcpkg.cmake
           # echo "cat ~/vcpkg/scripts/buildsystems/vcpkg.cmake"
           # cat ~/vcpkg/scripts/buildsystems/vcpkg.cmake
-          cmake ${GITHUB_WORKSPACE} -DVCPKG_VERBOSE=ON -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -G "Ninja" -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
+          set -x
+          cmake -DVCPKG_VERBOSE=ON -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -G "Ninja" -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake ${GITHUB_WORKSPACE}
           cmake --build .
           popd
 
       - name: Run Unit Tests
         run: |
-          pushd build
+          pushd ~/build
           ctest -R UNITTESTS . -C Release
           popd
