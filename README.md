@@ -1,3 +1,5 @@
+[![CI](https://github.com/jgaa/restc-cpp/actions/workflows/ci.yaml/badge.svg)](https://github.com/jgaa/restc-cpp/actions/workflows/ci.yaml)
+
 # Introduction to the restc-cpp C++ library
 <i>The magic that takes the pain out of accessing JSON API's from C++ </i>
 
