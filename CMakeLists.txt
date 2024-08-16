@@ -24,8 +24,15 @@ message(STATUS "Building restc-cpp version ${PROJECT_VERSION}")
 
 include(CheckCXXCompilerFlag)
 
-check_cxx_compiler_flag("-std=c++20" COMPILER_SUPPORTS_CXX20)
-check_cxx_compiler_flag("-std=c++17" COMPILER_SUPPORTS_CXX17)
+if (MSVC)
+    # Thank you Microsoft. Its so nice of you to give us all these meaningful reasons to stay up all night.
+    check_cxx_compiler_flag("/std:c++20" COMPILER_SUPPORTS_CXX20)
+    check_cxx_compiler_flag("/std:c++17" COMPILER_SUPPORTS_CXX17)
+else()
+    check_cxx_compiler_flag("-std=c++20" COMPILER_SUPPORTS_CXX20)
+    check_cxx_compiler_flag("-std=c++17" COMPILER_SUPPORTS_CXX17)
+endif()
+
 
 
 if (NOT DEFINED INSTALL_RAPIDJSON_HEADERS)
