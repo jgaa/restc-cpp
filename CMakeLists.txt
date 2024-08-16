@@ -103,7 +103,12 @@ option(RESTC_CPP_USE_CPP17 "Use the C++17 standard" OFF)
 option(RESTC_CPP_USE_CPP20 "Use the C++20 standard" OFF)
 
 if (NOT RESTC_CPP_USE_CPP14 AND NOT RESTC_CPP_USE_CPP17 AND NOT RESTC_CPP_USE_CPP20)
-    if (COMPILER_SUPPORTS_CXX20)
+    # Check if GCC 12 is being used and default it to C++17
+    # https://www.mail-archive.com/debian-bugs-dist@lists.debian.org/msg1887728.html
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13.0 AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 12.0)
+        message(STATUS "GCC 12 detected, defaulting to C++17")
+        set(RESTC_CPP_USE_CPP17 ON)
+    elseif (COMPILER_SUPPORTS_CXX20)
         set(RESTC_CPP_USE_CPP20 ON)
     elseif (COMPILER_SUPPORTS_CXX17)
         set(RESTC_CPP_USE_CPP17 ON)
