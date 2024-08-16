@@ -266,8 +266,6 @@ These are the operating systems where my Continues Integration (Jenkins) servers
 
 Support for MacOS has been removed after Apples announcement that their love for privacy was just 
 a marketing gimmick.
- 
-Fedora is currently disabled in my CI because of failures to start their Docker containers. (Work in progress). 
 
 The Jenkins setup is [here](ci/jenkins).
 
