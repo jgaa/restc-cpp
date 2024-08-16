@@ -1,0 +1,95 @@
+name: CI
+
+on: 
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 0 1 * *' # This line schedules the workflow to run at 00:00 on the first day of every month
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            compiler: gcc
+          - os: ubuntu-latest
+            compiler: clang
+          - os: windows-latest
+            compiler: msvc
+          - os: macos-latest
+            compiler:
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/vcpkg
+            ./build/vcpkg_installed
+            ${{ env.HOME }}/.cache/vcpkg/archives
+            ${{ env.XDG_CACHE_HOME }}/vcpkg/archives
+            ${{ env.LOCALAPPDATA }}\vcpkg\archives
+            ${{ env.APPDATA }}\vcpkg\archives
+          key: ${{ runner.os }}-${{ matrix.compiler }}-${{ env.BUILD_TYPE }}-${{ hashFiles('**/CMakeLists.txt') }}-${{ hashFiles('./vcpkg.json')}}
+          restore-keys: |
+            ${{ runner.os }}-${{ env.BUILD_TYPE }}-
+
+      - name: Setup Cpp
+        uses: aminya/setup-cpp@v1
+        with:
+          compiler: ${{ matrix.compiler }}
+          vcvarsall: ${{ contains(matrix.os, 'windows') }}
+          cmake: true
+          ninja: true
+          vcpkg: true
+          cppcheck: false
+
+      - name: Install compiler for Macos
+        if: startsWith(matrix.os, 'macos')
+        run: |
+          brew install llvm
+
+      - name: Prepare the PATH
+        run: |
+            if [[ "${{ runner.os }}" == "Windows" ]]; then
+                echo "$env:USERPROFILE\vcpkg" >> $GITHUB_PATH
+                echo "$env:USERPROFILE\ninja" >> $GITHUB_PATH
+            else
+                echo "$HOME/vcpkg" >> $GITHUB_PATH
+                echo "$HOME/ninja" >> $GITHUB_PATH
+            fi
+
+      - name: Install dependencies
+        run: |
+            cd ci/vcpkg
+            vcpkg install
+
+      - name: Build project
+        run: |
+          if [ -d build ]; then
+            echo "Build dir exists"
+            ls -la build
+          else
+            mkdir build
+          fi
+          pushd build
+          cmake .. -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -G "Ninja" -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
+          cmake --build .
+          popd
+
+      - name: Run Unit Tests
+        run: |
+          pushd build
+          ctest -R UNITTESTS . -C Release
+          popd
