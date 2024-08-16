@@ -2,7 +2,7 @@
   "name": "restc-cpp",
   "license": "MIT",
   "dependencies": [
-    "boost-headers"
+    "boost-headers",
     "boost-system",
     "boost-context",
     "boost-coroutine",
