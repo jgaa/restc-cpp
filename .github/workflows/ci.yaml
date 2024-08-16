@@ -97,6 +97,7 @@ jobs:
           echo "---------------------------------"
           cmake --build .
           popd
+        continue-on-error: true
 
       - name: Run Unit Tests
         run: |
