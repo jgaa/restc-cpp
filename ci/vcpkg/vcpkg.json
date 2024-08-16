@@ -16,6 +16,6 @@
     "zlib",
     "openssl",
     "gtest",
-    "rapidjson",
+    "rapidjson"
   ]
 }
