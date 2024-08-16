@@ -258,9 +258,11 @@ These are the operating systems where my Continues Integration (Jenkins) servers
  - Debian Bookworm
  - Debian Bullseye
  - Debian Buster
- - Windows 10 / Microsoft Visual Studio 2019, Community version using vcpkg for dependencies
- - Ubuntu Xenial (LTS)
+ - Windows 10 / Microsoft Visual Studio 2022, Community version using vcpkg for dependencies
+ - Ubuntu Noble (LTS)
  - Ubuntu Jammy (LTS)
+ - Ubuntu Bionic (LTS)
+ - Fedora (latest)
 
 Support for MacOS has been removed after Apples announcement that their love for privacy was just 
 a marketing gimmick.
@@ -269,7 +271,7 @@ Fedora is currently disabled in my CI because of failures to start their Docker 
 
 The Jenkins setup is [here](ci/jenkins).
 
-I currently use my own CI infrastructure running on my own hardware. I use Jenkins on a VM with Debian Bullseye, and three slaves for Docker on Linux VM's, one slave running on a VM with Microsoft Windows 10 Pro. Using Docker to build with different Linux distributions gives me flexibility. It also immediately catches mistakes that break the build or test(s) on a specific Linux distribution or platform. Using my own infrastructure improves the security, as I don't share any credentials with 3rd party services or allow external access into my LAN.
+I currently use my own CI infrastructure running on my own hardware. I use Jenkins on a VM with Debian Bookworm, and three slaves for Docker on Linux VM's, one slave running on a VM with Microsoft Windows 10 Pro. Using Docker to build with different Linux distributions gives me flexibility. It also immediately catches mistakes that break the build or test(s) on a specific Linux distribution or platform. Using my own infrastructure improves the security, as I don't share any credentials with 3rd party services or allow external access into my LAN. Github Actions can not compile for various Linux variants (at least not on the free plan for Open Source projects), and it can not run multiple docker-containers (or even *any* containers for Windows or MacOS builds) to allow integration testing.
 
 # Blog-posts about the project:
   - [About version 0.90](https://lastviking.eu/restc_cpp_90.html)

@@ -50,6 +50,8 @@ public:
     string GetBodyAsString(size_t maxSize
         = RESTC_CPP_SANE_DATA_LIMIT) override;
 
+    void fetchAndIgnore() override;
+
     bool MoreDataToRead() override {
         return !IsEof();
     }
