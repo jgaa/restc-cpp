@@ -92,6 +92,9 @@ jobs:
           # cat ~/vcpkg/scripts/buildsystems/vcpkg.cmake
           set -x
           cmake -DVCPKG_INSTALLED_DIR=~/vcpkg_installed -DVCPKG_VERBOSE=ON -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -G "Ninja" -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake ${GITHUB_WORKSPACE}
+          echo "---------------------------------"
+          cat build.ninja
+          echo "---------------------------------"
           cmake --build .
           popd
 
