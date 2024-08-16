@@ -11,6 +11,7 @@
 #include <set>
 #include <deque>
 #include <map>
+#include <list>
 #include <type_traits>
 
 #include <boost/iterator/function_input_iterator.hpp>

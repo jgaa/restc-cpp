@@ -19,14 +19,14 @@ using namespace restc_cpp;
 
 // For entries received from http://jsonplaceholder.typicode.com/posts
 struct Post {
-    int id = 0;
+    string id;
     string username;
     string motto;
 };
 
 BOOST_FUSION_ADAPT_STRUCT(
     Post,
-    (int, id)
+    (string, id)
     (string, username)
     (string, motto)
 )
@@ -55,7 +55,7 @@ TEST(Future, GetData) {
             return post;
             }).get();
         ); // EXPECT_NO_THROW
-    EXPECT_EQ(my_post.id, 1);
+    EXPECT_EQ(my_post.id, "1");
     EXPECT_FALSE(my_post.username.empty());
     EXPECT_FALSE(my_post.motto.empty());
 }

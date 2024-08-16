@@ -33,7 +33,9 @@ target_link_libraries(json_serialize_tests
     restc-cpp
     ${DEFAULT_LIBRARIES}
 )
-add_dependencies(json_serialize_tests externalRapidJson ${DEPENDS_GTEST} ${RESTC_CPP_EXTERNAL_DEPS})
+
+add_dependencies(json_serialize_tests restc-cpp ${DEPENDS_GTEST})
+
 ADD_AND_RUN_UNITTEST(JSON_UNITTESTS json_serialize_tests)
 
 
@@ -45,7 +47,9 @@ target_link_libraries(json_iostream_tests
     restc-cpp
     ${DEFAULT_LIBRARIES}
 )
-add_dependencies(json_iostream_tests externalRapidJson ${DEPENDS_GTEST} ${RESTC_CPP_EXTERNAL_DEPS})
+
+add_dependencies(json_iostream_tests restc-cpp ${DEPENDS_GTEST})
+
 ADD_AND_RUN_UNITTEST(JSON_IOSTREAM_UNITTESTS json_iostream_tests)
 
 

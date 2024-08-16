@@ -1,17 +1,17 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.10)
 
-if (UNIX)
-    # Ninja creates too many problems while maintaining
-    # compatibility with old and new versions of Linux/Cmake
-    set (CMAKE_GENERATOR "Unix Makefiles" CACHE INTERNAL "" FORCE)
-endif()
+# if (UNIX)
+#     # Ninja creates too many problems while maintaining
+#     # compatibility with old and new versions of Linux/Cmake
+#     set (CMAKE_GENERATOR "Unix Makefiles" CACHE INTERNAL "" FORCE)
+# endif()
 
 if (DEFINED ENV{RESTC_CPP_VERSION})
     set(RESTC_CPP_VERSION $ENV{RESTC_CPP_VERSION})
 endif()
 
 if (NOT DEFINED RESTC_CPP_VERSION)
-    set(RESTC_CPP_VERSION 0.99.0)
+    set(RESTC_CPP_VERSION 0.100.0)
 endif()
 
 if(NOT DEFINED RESTC_BOOST_VERSION)
@@ -22,6 +22,12 @@ project (restc-cpp VERSION ${RESTC_CPP_VERSION})
 
 message(STATUS "Building restc-cpp version ${PROJECT_VERSION}")
 
+include(CheckCXXCompilerFlag)
+
+check_cxx_compiler_flag("-std=c++20" COMPILER_SUPPORTS_CXX20)
+check_cxx_compiler_flag("-std=c++17" COMPILER_SUPPORTS_CXX17)
+
+
 if (NOT DEFINED INSTALL_RAPIDJSON_HEADERS)
     option(INSTALL_RAPIDJSON_HEADERS "Install rapidjson headers when make install is executed" ON)
 endif()
@@ -31,6 +37,28 @@ option(RESTC_CPP_WITH_UNIT_TESTS "Enable Unit Testing" ON)
 option(RESTC_CPP_AUTORUN_UNIT_TESTS "Run Unit Tests automatically after build" OFF)
 
 option(RESTC_CPP_WITH_FUNCTIONALT_TESTS "Enable Functional Testing" ON)
+
+set(GTEST_TAG "main" CACHE STRING "Gtest branch to use. Required on older Linux versions because newer gtest requure newer cmake!")
+set(LOGFAULT_TAG "master" CACHE STRING "Logfault branch to use. Required on older Linux versions because newer gtest requure newer cmake!")
+
+find_package(RapidJSON QUIET)
+
+if (NOT RapidJSON_FOUND AND INSTALL_RAPIDJSON_HEADERS)
+    message(STATUS "Rapidjson not found. Adding it as an external project.")
+    set(RESTC_CPP_EXTERNAL_DEPS ${RESTC_CPP_EXTERNAL_DEPS} externalRapidJson)
+    set(restc_cpp_add_rapidjson ON)
+endif()
+
+if (RESTC_CPP_LOG_WITH_LOGFAULT)
+    find_path(LOGFAULT logfault/logfault.h)
+    if (LOGFAULT)
+        message ("Using existing logfault")
+    else()
+        message ("Embedding logfault header only library")
+        set(RESTC_CPP_EXTERNAL_DEPS ${RESTC_CPP_EXTERNAL_DEPS} externalLogfault)
+        set(restc_cpp_add_logfault ON)
+    endif()
+endif()
 
 include(cmake_scripts/external-projects.cmake)
 
@@ -68,7 +96,26 @@ option(RESTC_CPP_LOG_JSON_SERIALIZATION "Enable trace logging for json serializa
 
 option(RESTC_CPP_WITH_ZLIB "Use zlib" ON)
 
-option(RESTC_CPP_USE_CPP17 "Use the C++17 standard" ON)
+option(RESTC_CPP_USE_CPP14 "Use the C++14 standard" OFF)
+
+option(RESTC_CPP_USE_CPP17 "Use the C++17 standard" OFF)
+
+option(RESTC_CPP_USE_CPP20 "Use the C++20 standard" OFF)
+
+if (NOT RESTC_CPP_USE_CPP14 AND NOT RESTC_CPP_USE_CPP17 AND NOT RESTC_CPP_USE_CPP20)
+    # Check if GCC 12 is being used and default it to C++17
+    # https://www.mail-archive.com/debian-bugs-dist@lists.debian.org/msg1887728.html
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 13.0 AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 12.0)
+        message(STATUS "GCC 12 detected, defaulting to C++17")
+        set(RESTC_CPP_USE_CPP17 ON)
+    elseif (COMPILER_SUPPORTS_CXX20)
+        set(RESTC_CPP_USE_CPP20 ON)
+    elseif (COMPILER_SUPPORTS_CXX17)
+        set(RESTC_CPP_USE_CPP17 ON)
+    else ()
+        set(RESTC_CPP_USE_CPP14 ON)
+    endif()
+endif()
 
 option(RESTC_CPP_THREADED_CTX "Allow asio contextx with multiple therads. Enables thread-safe internal access." OFF)
 
@@ -139,7 +186,10 @@ endif()
 message(STATUS "Using ${CMAKE_CXX_COMPILER}")
 
 macro(SET_CPP_STANDARD target)
-    if (RESTC_CPP_USE_CPP17)
+    if (RESTC_CPP_USE_CPP20)
+        message(STATUS "Using C++ 20 for ${target}")
+        set_property(TARGET ${target} PROPERTY CXX_STANDARD 20)
+    elseif (RESTC_CPP_USE_CPP17)
         message(STATUS "Using C++ 17 for ${target}")
         set_property(TARGET ${target} PROPERTY CXX_STANDARD 17)
     else()
@@ -182,7 +232,6 @@ endif()
 if (WIN32)
     include(cmake_scripts/pch.cmake)
     ADD_MSVC_PRECOMPILED_HEADER(restc-cpp/restc-cpp.h src/pch.cpp ACTUAL_SOURCES)
-    add_definitions(-DWAR_PCH)
     set(SOURCES ${ACTUAL_SOURCES} src/pch.cpp ${HEADERS} ${RESFILES})
 else()
     set(SOURCES ${ACTUAL_SOURCES})
@@ -199,21 +248,18 @@ target_include_directories(${PROJECT_NAME}
 
 SET_CPP_STANDARD(${PROJECT_NAME})
 
-if (RESTC_CPP_LOG_WITH_LOGFAULT)
-    find_path(LOGFAULT logfault/logfault.h)
-    if (LOGFAULT)
-        message ("Using existing logfault")
-    else()
-        message ("Embedding logfault header only library")
-        set(RESTC_CPP_EXTERNAL_DEPS ${RESTC_CPP_EXTERNAL_DEPS} externalLogfault)
-    endif()
+if(NOT "${RESTC_CPP_EXTERNAL_DEPS}" STREQUAL "")
+    add_dependencies(${PROJECT_NAME} ${RESTC_CPP_EXTERNAL_DEPS})
 endif()
 
-add_dependencies(${PROJECT_NAME} externalRapidJson ${RESTC_CPP_EXTERNAL_DEPS})
-
 if (NOT EMBEDDED_RESTC_CPP)
-    #set(Boost_USE_MULTITHREADED ON)
-    find_package(Boost ${RESTC_BOOST_VERSION} REQUIRED COMPONENTS
+
+    if(CMAKE_VERSION VERSION_GREATER "3.28")
+        set(restc_cpp_boost_find_config CONFIG)
+        message("Using new Boost find config")
+    endif()
+
+    find_package(Boost ${RESTC_BOOST_VERSION} REQUIRED ${restc_cpp_boost_find_config} COMPONENTS
         system
         program_options
         filesystem
@@ -223,6 +269,9 @@ if (NOT EMBEDDED_RESTC_CPP)
         chrono
         ${BOOST_LOG_DEP}
         )
+
+    message(STATUS "Boost version found: ${Boost_VERSION}")
+
     target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${Boost_LIBRARIES})
     target_compile_definitions(${PROJECT_NAME} PUBLIC -DBOOST_COROUTINE_NO_DEPRECATION_WARNING=1)
@@ -264,7 +313,7 @@ if (NOT EMBEDDED_RESTC_CPP)
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
     endif()
 
-    set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib CACHE PATH "Destination location")
+    set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib CACHE PATH "Destination location")
     link_directories(${LIBRARY_OUTPUT_PATH})
 
     include(cmake_scripts/doxygen.cmake)

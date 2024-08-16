@@ -259,8 +259,10 @@ These are the operating systems where my Continues Integration (Jenkins) servers
  - Debian Bullseye
  - Debian Buster
  - Windows 10 / Microsoft Visual Studio 2019, Community version using vcpkg for dependencies
- - Ubuntu Xenial (LTS)
+ - Ubunti Noble
  - Ubuntu Jammy (LTS)
+ - Ubuntu Bionic (LTS)
+ - Fedora (latest)
 
 Support for MacOS has been removed after Apples announcement that their love for privacy was just 
 a marketing gimmick.
