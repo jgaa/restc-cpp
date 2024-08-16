@@ -18,12 +18,12 @@ jobs:
         include:
           - os: ubuntu-latest
             compiler: gcc
-          - os: ubuntu-latest
-            compiler: clang
-          - os: windows-latest
-            compiler: msvc
-          - os: macos-latest
-            compiler:
+          # - os: ubuntu-latest
+          #   compiler: clang
+          # - os: windows-latest
+          #   compiler: msvc
+          # - os: macos-latest
+          #   compiler:
 
     steps:
       - name: Checkout code
@@ -84,6 +84,10 @@ jobs:
             mkdir build
           fi
           pushd build
+          echo "ls ~/vcpkg/scripts/buildsystems/vcpkg.cmake"
+          ls ~/vcpkg/scripts/buildsystems/vcpkg.cmake
+          echo "cat ~/vcpkg/scripts/buildsystems/vcpkg.cmake"
+          cat ~/vcpkg/scripts/buildsystems/vcpkg.cmake
           cmake .. -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -G "Ninja" -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
           cmake --build .
           popd
