@@ -72,7 +72,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-            cd ci/vcpkg
+            cp -v ci/vcpkg/vcpkg.json .
+            vcpkg integrate install
             vcpkg install
 
       - name: Build project
@@ -84,11 +85,11 @@ jobs:
             mkdir build
           fi
           pushd build
-          echo "ls ~/vcpkg/scripts/buildsystems/vcpkg.cmake"
-          ls ~/vcpkg/scripts/buildsystems/vcpkg.cmake
-          echo "cat ~/vcpkg/scripts/buildsystems/vcpkg.cmake"
-          cat ~/vcpkg/scripts/buildsystems/vcpkg.cmake
-          cmake .. -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -G "Ninja" -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
+          # echo "ls ~/vcpkg/scripts/buildsystems/vcpkg.cmake"
+          # ls ~/vcpkg/scripts/buildsystems/vcpkg.cmake
+          # echo "cat ~/vcpkg/scripts/buildsystems/vcpkg.cmake"
+          # cat ~/vcpkg/scripts/buildsystems/vcpkg.cmake
+          cmake .. -DVCPKG_VERBOSE=ON -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -G "Ninja" -DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake
           cmake --build .
           popd
 
