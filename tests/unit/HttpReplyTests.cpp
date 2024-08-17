@@ -102,6 +102,8 @@ TEST(HttpReply, SimpleHeader)
          EXPECT_EQ("0", *reply.GetHeader("Content-Length"));
 
      });
+
+     EXPECT_NO_THROW(f.get());
 }
 
 TEST(HttpReply, SimpleSegmentedHeader)
