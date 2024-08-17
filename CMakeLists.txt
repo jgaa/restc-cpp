@@ -1,11 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
 
-# if (UNIX)
-#     # Ninja creates too many problems while maintaining
-#     # compatibility with old and new versions of Linux/Cmake
-#     set (CMAKE_GENERATOR "Unix Makefiles" CACHE INTERNAL "" FORCE)
-# endif()
-
 if (DEFINED ENV{RESTC_CPP_VERSION})
     set(RESTC_CPP_VERSION $ENV{RESTC_CPP_VERSION})
 endif()
@@ -302,10 +296,6 @@ if (NOT EMBEDDED_RESTC_CPP)
     if (WIN32)
         link_directories(${Boost_LIBRARY_DIRS})
     endif()
-
-    include(cmake_scripts/pch.cmake)
-
-    set_property(TARGET  PROPERTY CXX_STANDARD 17)
 
     if(WIN32)
         add_definitions(-D_WIN32_WINNT=0x0600)
