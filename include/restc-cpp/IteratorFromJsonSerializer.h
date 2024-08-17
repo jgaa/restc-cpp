@@ -18,12 +18,13 @@ class IteratorFromJsonSerializer
 public:
     using data_t = typename std::remove_const<typename std::remove_reference<objectT>::type>::type;
 
-    class Iterator : public std::iterator<
-        std::input_iterator_tag,
-        data_t,
-        std::ptrdiff_t,
-        const data_t *,
-        data_t&> {
+    class Iterator {
+    public:
+        using iterator_category = std::input_iterator_tag;
+        using value_type = data_t;
+        using difference_type = std::ptrdiff_t;
+        using pointer = value_type*;
+        using reference = value_type&;
 
     public:
         Iterator() {}
