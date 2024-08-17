@@ -22,6 +22,7 @@ if (MSVC)
     # Thank you Microsoft. Its so nice of you to give us all these meaningful reasons to stay up all night.
     check_cxx_compiler_flag("/std:c++20" COMPILER_SUPPORTS_CXX20)
     check_cxx_compiler_flag("/std:c++17" COMPILER_SUPPORTS_CXX17)
+    add_compile_options(/Zc:__cplusplus)
 else()
     check_cxx_compiler_flag("-std=c++20" COMPILER_SUPPORTS_CXX20)
     check_cxx_compiler_flag("-std=c++17" COMPILER_SUPPORTS_CXX17)

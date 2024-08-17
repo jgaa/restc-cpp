@@ -423,7 +423,7 @@ public:
             done_handler.reset();
         });
 
-        return move(future);
+        return future;
     }
 
     /*! Process from within an existing coroutine */
