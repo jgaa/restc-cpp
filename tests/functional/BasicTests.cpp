@@ -72,7 +72,7 @@ TEST(ExampleWorkflow, DISABLED_SequentialRequests) {
         EXPECT_GE(posts_list.size(), 1);
 
         // Asynchronously connect to server and POST data.
-        auto repl = ctx.Post(GetDockerUrl(http_url), "{\"test\":\"teste\"}");
+        auto repl = ctx.Post(GetDockerUrl(http_url), R"({"test":"teste"})");
 
         // Asynchronously fetch the entire data-set and return it as a string.
         auto json = repl->GetBodyAsString();
@@ -87,8 +87,8 @@ TEST(ExampleWorkflow, DISABLED_SequentialRequests) {
             .Header("Accept", "*/*")
             .Execute();
 
-        string body = repl->GetBodyAsString();
-        cout << "Got compressed list: " << body << endl;
+        string const body = repl->GetBodyAsString();
+        cout << "Got compressed list: " << body << '\n';
 
         EXPECT_HTTP_OK(repl->GetHttpResponse().status_code);
         EXPECT_FALSE(body.empty());
@@ -107,7 +107,7 @@ TEST(ExampleWorkflow, DISABLED_SequentialRequests) {
 
         EXPECT_HTTP_OK(repl->GetHttpResponse().status_code);
         EXPECT_FALSE(body.empty());
-        cout << "Got: " << repl->GetBodyAsString() << endl;
+        cout << "Got: " << repl->GetBodyAsString() << '\n';
         repl.reset();
 
         // Use RequestBuilder to fetch a record without compression
@@ -120,7 +120,7 @@ TEST(ExampleWorkflow, DISABLED_SequentialRequests) {
             .Argument("id", 2)
             .Execute();
 
-        cout << "Got: " << repl->GetBodyAsString() << endl;
+        cout << "Got: " << repl->GetBodyAsString() << '\n';
         repl.reset();
 
         // Use RequestBuilder to post a record

@@ -141,7 +141,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 )
 
 struct Quotes {
-    int id;
+    int id{};
     string origin;
     string quote;
 };
@@ -179,13 +179,13 @@ struct Group {
           std::list<Person> more_members_ = {},
           std::deque<Person> even_more_members_ = {})
     : name{std::move(name_)}, gid{gid_}, leader{std::move(leader_)}
-    , members{move(members_)}, more_members{move(more_members_)}
-    , even_more_members{move(even_more_members_)}
+    , members{std::move(members_)}, more_members{std::move(more_members_)}
+    , even_more_members{std::move(even_more_members_)}
     {}
 
     Group() = default;
     Group(const Group&) = default;
-    Group(Group&&) = default;
+    Group(Group &&) noexcept = default;
 
     std::string name;
     int gid = 0;
@@ -207,7 +207,7 @@ BOOST_FUSION_ADAPT_STRUCT(
 )
 
 TEST(JsonSerialize, SerializeSimpleObject) {
-    Person person = { 100, "John Doe"s, 123.45 };
+    Person const person = {100, "John Doe"s, 123.45};
 
     StringBuffer s;
     Writer<StringBuffer> writer(s);
@@ -223,7 +223,7 @@ TEST(JsonSerialize, SerializeSimpleObject) {
 }
 
 TEST(JsonSerialize, SerializeNestedObject) {
-    Group group = Group(string("Group name"), 99, Person( 100, string("John Doe"), 123.45 ));
+    Group const group = Group(string("Group name"), 99, Person(100, string("John Doe"), 123.45));
 
     StringBuffer s;
     Writer<StringBuffer> writer(s);
@@ -241,7 +241,7 @@ TEST(JsonSerialize, SerializeNestedObject) {
 
 TEST(JsonSerialize, SerializeVector)
 {
-    std::vector<int> ints = {-1,2,3,4,5,6,7,8,9,-10};
+    std::vector<int> const ints = {-1, 2, 3, 4, 5, 6, 7, 8, 9, -10};
 
     StringBuffer s;
     Writer<StringBuffer> writer(s);
@@ -257,7 +257,7 @@ TEST(JsonSerialize, SerializeVector)
 }
 
 TEST(JsonSerialize, SerializeList) {
-    std::list<unsigned int> ints = {1,2,3,4,5,6,7,8,9,10};
+    std::list<unsigned int> const ints = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
     StringBuffer s;
     Writer<StringBuffer> writer(s);
@@ -274,7 +274,7 @@ TEST(JsonSerialize, SerializeList) {
 
 TEST(JsonSerialize, SerializeNestedVector)
 {
-    std::vector<std::vector<int>> nested_ints = {{-1,2,3},{4,5,-6}};
+    std::vector<std::vector<int>> const nested_ints = {{-1, 2, 3}, {4, 5, -6}};
 
     StringBuffer s;
     Writer<StringBuffer> writer(s);
@@ -291,7 +291,7 @@ TEST(JsonSerialize, SerializeNestedVector)
 
 TEST(JsonSerialize, DeserializeSimpleObject) {
     Person person;
-    std::string json = R"({ "id" : 100, "name" : "John Longdue Doe", "balance" : 123.45 })";
+    std::string const json = R"({ "id" : 100, "name" : "John Longdue Doe", "balance" : 123.45 })";
 
     RapidJsonDeserializer<Person> handler(person);
     Reader reader;
@@ -308,12 +308,12 @@ TEST(JsonSerialize, DeserializeNestedObject) {
     assert(boost::fusion::traits::is_sequence<Person>::value);
 
     Group group;
-    std::string json =
-        R"({"name" : "qzar", "gid" : 1, "leader" : { "id" : 100, "name" : "Dolly Doe", "balance" : 123.45 },)"
-        R"("members" : [{ "id" : 101, "name" : "m1", "balance" : 0.0}, { "id" : 102, "name" : "m2", "balance" : 1.0}],)"
-        R"("more_members" : [{ "id" : 103, "name" : "m3", "balance" : 0.1}, { "id" : 104, "name" : "m4", "balance" : 2.0}],)"
-        R"("even_more_members" : [{ "id" : 321, "name" : "m10", "balance" : 0.1}, { "id" : 322, "name" : "m11", "balance" : 22.0}])"
-        R"(})";
+    std::string const json
+        = R"({"name" : "qzar", "gid" : 1, "leader" : { "id" : 100, "name" : "Dolly Doe", "balance" : 123.45 },)"
+          R"("members" : [{ "id" : 101, "name" : "m1", "balance" : 0.0}, { "id" : 102, "name" : "m2", "balance" : 1.0}],)"
+          R"("more_members" : [{ "id" : 103, "name" : "m3", "balance" : 0.1}, { "id" : 104, "name" : "m4", "balance" : 2.0}],)"
+          R"("even_more_members" : [{ "id" : 321, "name" : "m10", "balance" : 0.1}, { "id" : 322, "name" : "m11", "balance" : 22.0}])"
+          R"(})";
 
     RapidJsonDeserializer<Group> handler(group);
     Reader reader;
@@ -348,7 +348,7 @@ TEST(JsonSerialize, DeserializeNestedObject) {
 }
 
 TEST(JsonSerialize, DeserializeIntVector) {
-    std::string json = R"([1,2,3,4,5,6,7,8,9,10])";
+    std::string const json = R"([1,2,3,4,5,6,7,8,9,10])";
 
     std::vector<int> ints;
     RapidJsonDeserializer<decltype(ints)> handler(ints);
@@ -365,7 +365,7 @@ TEST(JsonSerialize, DeserializeIntVector) {
 }
 
 TEST(JsonSerialize, DeserializeNestedArray) {
-    std::string json = R"([[1, 2, 3],[4, 5, 6]])";
+    std::string const json = R"([[1, 2, 3],[4, 5, 6]])";
 
     std::vector<std::vector<int>> nested_ints;
     RapidJsonDeserializer<decltype(nested_ints)> handler(nested_ints);
@@ -385,7 +385,7 @@ TEST(JsonSerialize, DeserializeNestedArray) {
 }
 
 TEST(JsonSerialize, DeserializeKeyValueMap) {
-    std::string json = R"({"key1":"value1", "key2":"value2"})";
+    std::string const json = R"({"key1":"value1", "key2":"value2"})";
 
     std::map<string, string> keyvalue;
     RapidJsonDeserializer<decltype(keyvalue)> handler(keyvalue);
@@ -399,7 +399,8 @@ TEST(JsonSerialize, DeserializeKeyValueMap) {
 }
 
 TEST(JsonSerialize, DeserializeKeyValueMapWithObject) {
-    string json = R"({"dog1":{ "id" : 1, "name" : "Ares", "balance" : 123.45}, "dog2":{ "id" : 2, "name" : "Nusse", "balance" : 234.56}})";
+    string const json
+        = R"({"dog1":{ "id" : 1, "name" : "Ares", "balance" : 123.45}, "dog2":{ "id" : 2, "name" : "Nusse", "balance" : 234.56}})";
 
     map<string, Person> keyvalue;
     RapidJsonDeserializer<decltype(keyvalue)> handler(keyvalue);
@@ -431,7 +432,7 @@ TEST(JsonSerialize, DeserializeMemoryLimit)
     RapidJsonSerializer<decltype(quotes), decltype(writer)> serializer(quotes, writer);
     serializer.Serialize();
 
-    std::string json = s.GetString();
+    std::string const json = s.GetString();
 
     quotes.clear();
 
@@ -499,7 +500,8 @@ TEST(JsonSerialize, MissingObjectName) {
 
 TEST(JsonSerialize, MissingPropertyName) {
     Person person;
-    std::string json = R"({ "id" : 100, "name" : "John Longdue Doe", "balance" : 123.45, "foofoo":"foo", "oofoof":"oof" })";
+    std::string const json
+        = R"({ "id" : 100, "name" : "John Longdue Doe", "balance" : 123.45, "foofoo":"foo", "oofoof":"oof" })";
 
     RapidJsonDeserializer<Person> handler(person);
     Reader reader;
@@ -532,7 +534,8 @@ TEST(JsonSerialize, SkipMissingObjectNameNotAllowed) {
 
 TEST(JsonSerialize, MissingPropertyNameNotAllowed) {
     Person person;
-    std::string json = R"({ "id" : 100, "name" : "John Longdue Doe", "balance" : 123.45, "foofoo":"foo", "oofoof":"oof" })";
+    std::string const json
+        = R"({ "id" : 100, "name" : "John Longdue Doe", "balance" : 123.45, "foofoo":"foo", "oofoof":"oof" })";
 
     serialize_properties_t sprop;
     sprop.ignore_unknown_properties = false;
@@ -545,7 +548,7 @@ TEST(JsonSerialize, MissingPropertyNameNotAllowed) {
 #if (__cplusplus >= 201703L)
 TEST(JsonSerialize, DesearializeOptionalBoolEmpty) {
     House house;
-    std::string json = R"({ "is_enabled": null })"; // No value
+    std::string const json = R"({ "is_enabled": null })"; // No value
 
     serialize_properties_t sprop;
     sprop.ignore_unknown_properties = false;
@@ -558,7 +561,7 @@ TEST(JsonSerialize, DesearializeOptionalBoolEmpty) {
 
 TEST(JsonSerialize, DesearializeOptionalBoolTrue) {
     House house;
-    std::string json = R"({ "is_enabled": true })"; // No value
+    std::string const json = R"({ "is_enabled": true })"; // No value
 
     serialize_properties_t sprop;
     sprop.ignore_unknown_properties = false;
@@ -572,7 +575,7 @@ TEST(JsonSerialize, DesearializeOptionalBoolTrue) {
 
 TEST(JsonSerialize, DesearializeOptionalBoolFalse) {
     House house;
-    std::string json = R"({ "is_enabled": false })"; // No value
+    std::string const json = R"({ "is_enabled": false })"; // No value
 
     serialize_properties_t sprop;
     sprop.ignore_unknown_properties = false;
@@ -587,7 +590,7 @@ TEST(JsonSerialize, DesearializeOptionalBoolFalse) {
 TEST(JsonSerialize, DesearializeOptionalObjctEmpty) {
     House house;
     house.person = Person{1, "foo", 0.0};
-    std::string json = R"({ "person": null })"; // No value
+    std::string const json = R"({ "person": null })"; // No value
 
     serialize_properties_t sprop;
     sprop.ignore_unknown_properties = false;
@@ -600,7 +603,8 @@ TEST(JsonSerialize, DesearializeOptionalObjctEmpty) {
 
 TEST(JsonSerialize, DesearializeOptionalObjctAssign) {
     House house;
-    std::string json = R"({ "person": { "id" : 100, "name" : "John Doe", "balance" : 123.45 }})";
+    std::string const json
+        = R"({ "person": { "id" : 100, "name" : "John Doe", "balance" : 123.45 }})";
 
     serialize_properties_t sprop;
     sprop.ignore_unknown_properties = false;
@@ -613,7 +617,7 @@ TEST(JsonSerialize, DesearializeOptionalObjctAssign) {
 }
 
 TEST(JsonSerialize, SerializeOptionalAllEmptyShowEmpty) {
-    House house;
+    House const house;
 
     StringBuffer s;
     Writer<StringBuffer> writer(s);
@@ -631,7 +635,7 @@ TEST(JsonSerialize, SerializeOptionalAllEmptyShowEmpty) {
 
 
 TEST(JsonSerialize, SerializeOptionalAllEmpty) {
-    House house;
+    House const house;
 
     StringBuffer s;
     Writer<StringBuffer> writer(s);
@@ -754,7 +758,7 @@ TEST(JsonSerialize, SerializeOptionalObjectWithRecursiveOptionalData) {
 }
 
 TEST(JsonSerialize, SerializeIgnoreEmptyString) {
-    Pet pet;
+    Pet const pet;
 
     StringBuffer s;
     Writer<StringBuffer> writer(s);
@@ -771,8 +775,7 @@ TEST(JsonSerialize, SerializeIgnoreEmptyString) {
 }
 
 TEST(JsonSerialize, SerializeEmptyOptionalWithZeroValue) {
-
-    Number data;
+    Number const data;
 
     StringBuffer s;
     Writer<StringBuffer> writer(s);
@@ -826,7 +829,7 @@ TEST(JsonSerialize, SerializeOptionalWithEmptyStringValue) {
 
 TEST(JsonSerialize, DeserializeBoolFromStringTrue) {
     Bool bval;
-    std::string json = R"({ "value" : "true" })";
+    std::string const json = R"({ "value" : "true" })";
 
     RapidJsonDeserializer<Bool> handler(bval);
     Reader reader;
@@ -838,7 +841,7 @@ TEST(JsonSerialize, DeserializeBoolFromStringTrue) {
 
 TEST(JsonSerialize, DeserializeBoolFromStringFalse) {
     Bool bval{true};
-    std::string json = R"({ "value" : "false" })";
+    std::string const json = R"({ "value" : "false" })";
 
     RapidJsonDeserializer<Bool> handler(bval);
     Reader reader;
@@ -851,7 +854,7 @@ TEST(JsonSerialize, DeserializeBoolFromStringFalse) {
 
 TEST(JsonSerialize, DeserializeBoolFromIntTrue) {
     Bool bval;
-    std::string json = R"({ "value" : 10 })";
+    std::string const json = R"({ "value" : 10 })";
 
     RapidJsonDeserializer<Bool> handler(bval);
     Reader reader;
@@ -863,7 +866,7 @@ TEST(JsonSerialize, DeserializeBoolFromIntTrue) {
 
 TEST(JsonSerialize, DeserializeBoolFromIntFalse) {
     Bool bval{true};
-    std::string json = R"({ "value" : 0 })";
+    std::string const json = R"({ "value" : 0 })";
 
     RapidJsonDeserializer<Bool> handler(bval);
     Reader reader;
@@ -875,7 +878,7 @@ TEST(JsonSerialize, DeserializeBoolFromIntFalse) {
 
 TEST(JsonSerialize, DeserializeIntFromString1) {
     Int ival;
-    std::string json = R"({ "value" : "1" })";
+    std::string const json = R"({ "value" : "1" })";
 
     RapidJsonDeserializer<Int> handler(ival);
     Reader reader;
@@ -887,7 +890,8 @@ TEST(JsonSerialize, DeserializeIntFromString1) {
 
 TEST(JsonSerialize, DeserializeNumbersFromStrings) {
     Numbers numbers;
-    std::string json = R"({ "intval" : "-123", "sizetval": "55", "uint32": "123456789", "int64val": "-9876543212345", "uint64val": "123451234512345" })";
+    std::string const json
+        = R"({ "intval" : "-123", "sizetval": "55", "uint32": "123456789", "int64val": "-9876543212345", "uint64val": "123451234512345" })";
 
     RapidJsonDeserializer<Numbers> handler(numbers);
     Reader reader;
@@ -902,8 +906,7 @@ TEST(JsonSerialize, DeserializeNumbersFromStrings) {
 }
 
 TEST(JsonSerialize, DeserializeWithStdToStringSpecialization) {
-
-    DataHolder obj;
+    DataHolder const obj;
 
     StringBuffer s;
     Writer<StringBuffer> writer(s);
@@ -919,8 +922,7 @@ TEST(JsonSerialize, DeserializeWithStdToStringSpecialization) {
 
 
 TEST(JsonSerialize, DeserializeWithoutStdToStringSpecialization) {
-
-    NoDataHolder obj;
+    NoDataHolder const obj;
 
     StringBuffer s;
     Writer<StringBuffer> writer(s);

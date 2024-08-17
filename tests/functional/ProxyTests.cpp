@@ -51,7 +51,7 @@ TEST(Proxy, WithHttpProxy)
             .Execute();
 
             EXPECT_HTTP_OK(reply->GetResponseCode());
-            cout << "Got: " << reply->GetBodyAsString() << endl;
+            cout << "Got: " << reply->GetBodyAsString() << '\n';
     });
 
     EXPECT_NO_THROW(f.get());
@@ -72,7 +72,7 @@ TEST(Proxy, WithSocks5Proxy)
             .Execute();
 
             EXPECT_HTTP_OK(reply->GetResponseCode());
-            cout << "Got: " << reply->GetBodyAsString() << endl;
+            cout << "Got: " << reply->GetBodyAsString() << '\n';
     });
 
     EXPECT_NO_THROW(f.get());

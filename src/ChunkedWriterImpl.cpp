@@ -16,7 +16,7 @@ namespace restc_cpp {
 class ChunkedWriterImpl : public DataWriter {
 public:
     ChunkedWriterImpl(add_header_fn_t fn, ptr_t&& source)
-    : next_{move(source)},  add_header_fn_{move(fn)}
+        : next_{std::move(source)},  add_header_fn_{std::move(fn)}
     {
     }
 
@@ -34,9 +34,7 @@ public:
     void Write(const write_buffers_t& buffers) override {
         const auto len = boost::asio::buffer_size(buffers);
         buffers_.resize(1);
-        for(auto &b : buffers) {
-            buffers_.push_back(b);
-        }
+        std::copy(buffers.begin(), buffers.end(), std::back_inserter(buffers_));
         DoWrite(len);
     }
 
@@ -101,7 +99,7 @@ private:
 
 DataWriter::ptr_t
 DataWriter::CreateChunkedWriter(add_header_fn_t fn, ptr_t&& source) {
-    return make_unique<ChunkedWriterImpl>(move(fn), move(source));
+    return make_unique<ChunkedWriterImpl>(std::move(fn), std::move(source));
 }
 
 } // namespace

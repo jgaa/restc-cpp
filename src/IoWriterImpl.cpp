@@ -59,9 +59,7 @@ public:
         ;
     }
 
-    void SetHeaders(Request::headers_t& ) override {
-        ;
-    }
+    void SetHeaders(Request::headers_t & /*headers*/) override { ; }
 
 private:
     Context& ctx_;

@@ -17,13 +17,11 @@ class ChunkedReaderImpl : public DataReader {
 public:
 
     ChunkedReaderImpl(add_header_fn_t&& fn, unique_ptr<DataReaderStream>&& source)
-    : stream_{move(source)}, add_header_(move(fn))
+    : stream_{std::move(source)}, add_header_(std::move(fn))
     {
     }
 
-    bool IsEof() const override {
-        return stream_->IsEof();
-    }
+    [[nodiscard]] bool IsEof() const override { return stream_->IsEof(); }
 
     void Finish() override {
         ReadSome();
@@ -36,15 +34,16 @@ public:
         }
     }
 
-    string ToPrintable(boost::string_ref buf) const {
+    [[nodiscard]] static string ToPrintable(boost::string_ref buf)
+    {
         ostringstream out;
-        locale loc;
+        locale const loc;
         auto pos = 0;
-        out << endl;
+        out << '\n';
 
         for(const auto ch : buf) {
-            if (!(++pos % line_length)) {
-                out << endl;
+            if ((++pos % line_length) == 0u) {
+                out << '\n';
             }
             if (std::isprint(ch, loc)) {
                 out << ch;
@@ -56,7 +55,8 @@ public:
         return out.str();
     }
 
-    void Log(const boost::asio::const_buffers_1 buffers, const char *tag) {
+    static void Log(const boost::asio::const_buffers_1 buffers, const char * /*tag*/)
+    {
         const auto buf_len = boost::asio::buffer_size(*buffers.begin());
 
         // At the time of the implementation, there are never multiple buffers.
@@ -103,12 +103,11 @@ private:
         if (eat_chunk_padding_) {
             eat_chunk_padding_ = false;
 
-            char ch = {};
-            if ((ch = stream_->Getc()) != '\r') {
+            if (stream_->Getc() != '\r') {
                 throw ParseException("Chunk: Missing padding CR!");
             }
 
-            if ((ch = stream_->Getc()) != '\n') {
+            if (stream_->Getc() != '\n') {
                 throw ParseException("Chunk: Missing padding LF!");
             }
         }
@@ -133,11 +132,11 @@ private:
         size_t chunk_len = 0;
         char ch = stream_->Getc();
 
-        if (!isxdigit(ch)) {
+        if (isxdigit(ch) == 0) {
             throw ParseException("Missing chunk-length in new chunk.");
         }
 
-        for(; isxdigit(ch); ch = stream_->Getc()) {
+        for (; isxdigit(ch) != 0; ch = stream_->Getc()) {
             chunk_len *= magic_16;
             if (ch >= 'a') {
                 chunk_len += magic_10 + (ch - 'a');
@@ -148,8 +147,9 @@ private:
             }
         }
 
-        for(; ch != '\r'; ch = stream_->Getc())
+        for (; ch != '\r'; ch = stream_->Getc()) {
             ;
+        }
 
         if (ch != '\r') {
             throw ParseException("Missing CR in first chunk line");
@@ -171,7 +171,7 @@ private:
 
 DataReader::ptr_t
 DataReader::CreateChunkedReader(add_header_fn_t fn, unique_ptr<DataReaderStream>&& source) {
-    return make_unique<ChunkedReaderImpl>(move(fn), move(source));
+    return make_unique<ChunkedReaderImpl>(std::move(fn), std::move(source));
 }
 
 

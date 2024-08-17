@@ -15,7 +15,7 @@
 using namespace std;
 using namespace restc_cpp;
 
-#define CONNECTIONS 20
+enum { CONNECTIONS = 20 };
 //#define CONNECTIONS 1
 
 struct Post {
@@ -82,8 +82,9 @@ TEST(OwnIoservice, All)
                 mutex.unlock();
 
                 // Fetch the rest
-                for(; it != results.end(); ++it)
+                for (; it != results.end(); ++it) {
                     ;
+                }
 
                 promises[i].set_value(i);
             } RESTC_CPP_IN_COROUTINE_CATCH_ALL {
@@ -95,9 +96,9 @@ TEST(OwnIoservice, All)
     }
 
     thread worker([&ioservice]() {
-        cout << "ioservice is running" << endl;
+        cout << "ioservice is running" << '\n';
         ioservice.run();
-        cout << "ioservice is done" << endl;
+        cout << "ioservice is done" << '\n';
     });
 
     mutex.unlock();

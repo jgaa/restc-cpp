@@ -10,9 +10,7 @@ class NoBodyReaderImpl : public DataReader {
 public:
     NoBodyReaderImpl() = default;
 
-    bool IsEof() const override {
-        return true;
-    }
+    [[nodiscard]] bool IsEof() const override { return true; }
 
     void Finish() override {
     }
