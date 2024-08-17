@@ -86,18 +86,18 @@ constexpr char SOCKS5_HOSTNAME_ADDR = 0x03;
  * ipv4:     1.2.3.4:123                     -> "1.2.3.4", 123
  * ipv6:     [fe80::4479:f6ff:fea3:aa23]:123 -> "fe80::4479:f6ff:fea3:aa23", 123
  */
-pair<string, uint16_t> ParseAddress(const std::string addr) {
+pair<string, uint16_t> ParseAddress(const std::string& addr) {
     auto pos = addr.find('['); // IPV6
     string host;
     string port;
     if (pos != string::npos) {
-        auto host = addr.substr(1); // strip '['
+        host = addr.substr(1); // strip '['
         pos = host.find(']');
         if (pos == string::npos) {
             throw ParseException{"IPv6 address must have a ']'"};
         }
         port = host.substr(pos);
-        host = host.substr(0, pos);
+        host.resize(pos);
 
         if (port.size() < 3 || (host.at(1) != ':')) {
             throw ParseException{"Need `]:<port>` in "s + addr};
@@ -179,7 +179,7 @@ void ParseAddressIntoSocke5ConnectRequest(const std::string& addr,
 }
 
 // Return 0 whene there is no more bytes to read
-size_t ValidateCompleteSocks5ConnectReply(uint8_t *buf, size_t len) {
+size_t ValidateCompleteSocks5ConnectReply(const uint8_t *buf, size_t len) {
     if (len < 5) {
         throw RestcCppException{"SOCKS5 server connect reply must start at minimum 5 bytes"s};
     }
@@ -223,7 +223,7 @@ size_t ValidateCompleteSocks5ConnectReply(uint8_t *buf, size_t len) {
 
 void DoSocks5Handshake(Connection& connection,
                        const Url& url,
-                       const Request::Properties properties,
+                       const Request::Properties& properties,
                        Context& ctx) {
 
     assert(properties.proxy.type == Request::Proxy::Type::SOCKS5);
@@ -482,8 +482,9 @@ private:
         }
 
         // Add arguments to the path as ?name=value&name=value...
-        bool first_arg = true;
+
         if (add_url_args_) {
+             bool first_arg = true;
             // Normal processing.
             request_buffer << url_encode(parsed_url_.GetPath());
             for(const auto& arg : properties_->args) {
@@ -609,9 +610,7 @@ private:
 
         auto ep = resolver.async_resolve(q, ctx.GetYield());
         const decltype(ep) addr_end;
-        for(; ep != addr_end; ++ep)
-        if (ep != addr_end) {
-
+        for(; ep != addr_end; ++ep) {
             RESTC_CPP_LOG_TRACE_("ep=" << ep->endpoint() << ", protocol=" << ep->endpoint().protocol().protocol());
 
             if (protocol == ep->endpoint().protocol()) {
@@ -955,7 +954,7 @@ private:
             * received.
             */
 
-        return move(reply);
+        return reply;
     }
 
 

@@ -75,7 +75,7 @@ ReplyImpl::~ReplyImpl() {
                 << "received data.");
             connection_->GetSocket().Close();
             connection_.reset();
-        } catch(std::exception& ex) {
+        } catch(const std::exception& ex) {
             RESTC_CPP_LOG_WARN_("~ReplyImpl(): Caught exception:" << ex.what());
         }
     }

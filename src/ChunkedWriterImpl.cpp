@@ -34,9 +34,8 @@ public:
     void Write(const write_buffers_t& buffers) override {
         const auto len = boost::asio::buffer_size(buffers);
         buffers_.resize(1);
-        for(auto &b : buffers) {
-            buffers_.push_back(b);
-        }
+
+        std::copy(buffers.begin(), buffers.end(), std::back_insert_iterator{buffers_});
         DoWrite(len);
     }
 

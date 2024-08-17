@@ -103,12 +103,11 @@ private:
         if (eat_chunk_padding_) {
             eat_chunk_padding_ = false;
 
-            char ch = {};
-            if ((ch = stream_->Getc()) != '\r') {
+            if (stream_->Getc() != '\r') {
                 throw ParseException("Chunk: Missing padding CR!");
             }
 
-            if ((ch = stream_->Getc()) != '\n') {
+            if (stream_->Getc() != '\n') {
                 throw ParseException("Chunk: Missing padding LF!");
             }
         }

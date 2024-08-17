@@ -15,8 +15,8 @@ namespace impl {
 class RequestBodyStringImpl : public RequestBody
 {
 public:
-    RequestBodyStringImpl(string body)
-    : body_{move(body)}
+    explicit RequestBodyStringImpl(string body)
+        : body_{std::move(body)}
     {
     }
 

@@ -22,8 +22,7 @@ using namespace std;
 
 namespace restc_cpp {
 
-
-class  RestClientImpl : public RestClient {
+class  RestClientImpl final : public RestClient  {
 public:
 
     /*! Proper shutdown handling

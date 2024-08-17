@@ -146,7 +146,7 @@ public:
     };
 
 
-    ConnectionPoolImpl(RestClient& owner)
+    explicit ConnectionPoolImpl(RestClient& owner)
     : owner_{owner}, properties_{owner.GetConnectionProperties()}
     , cache_cleanup_timer_{owner.GetIoService()}
     {
