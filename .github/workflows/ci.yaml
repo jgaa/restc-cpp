@@ -97,6 +97,7 @@ jobs:
         continue-on-error: true
 
       - name: Dump diagnostics
+        if: failure()
         run: |
           cd ~/build
           echo "---------------------------------"
