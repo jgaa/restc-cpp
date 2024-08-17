@@ -34,7 +34,7 @@ pipeline {
 
                     steps {
                         echo "Building on macos in ${WORKSPACE}"
-                        sh brew install openssl boost zlib rapidjson gtest cmake ninja
+                        sh 'brew install openssl boost zlib rapidjson gtest cmake ninja'
                         checkout scm
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
