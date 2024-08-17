@@ -75,7 +75,7 @@ that experience. So I spent a few weeks creating my own HTTP Client library
 using boost::asio with JSON serialization/deserialization.
 
 # Dependencies
-Restc-cpp depends on C++14 with its standard libraries and:
+Restc-cpp depends on C++14 (or newer) with its standard libraries and:
   - boost
   - rapidjson (CMake will download and install rapidjson for the project)
   - gtest (CMake will download and install gtest for the project if it is not installed)
@@ -253,6 +253,21 @@ Please refer to the [tutorial](doc/Tutorial.md) for more examples.
 # Current Status
 The project has been in public BETA since April 11th 2017.
 
+# Supported compilers
+These are the compilers that are being tested before anything is merged to the master branch.
+
+- g++ from 8 to 14
+- clang (current)
+- msvc (current)
+- Apple clang (current)
+
+# Supported C++ standards
+These are the C++ versions that are are being tested before anything is merged to the master branch.
+
+- C++14
+- C++17
+- C++20
+ 
 # Supported operating systems
 These are the operating systems where my Continues Integration (Jenkins) servers currently compiles the project and run all the tests:
 
