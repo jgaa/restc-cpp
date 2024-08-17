@@ -140,7 +140,7 @@ public:
         Type type = Type::NONE;
         std::string address;
 
-        const std::string& GetName();
+        const std::string &GetName() const;
     };
 
     using args_t = std::deque<Arg>;

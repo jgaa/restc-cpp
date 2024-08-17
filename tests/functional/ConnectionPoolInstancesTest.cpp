@@ -38,7 +38,7 @@ TEST(ConnectionPoolInstances, UseAfterDelete) {
         }).get();
 
         if ((i % 100) == 0) {
-            clog << '#' << (i +1) << endl;
+            clog << '#' << (i + 1) << '\n';
         }
     }
 }

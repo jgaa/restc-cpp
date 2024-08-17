@@ -29,9 +29,14 @@ boost::asio::ip::address_v6 make_address_v6(const char* str,
 {
   boost::asio::ip::address_v6::bytes_type bytes;
   unsigned long scope_id = 0;
-  if (boost::asio::detail::socket_ops::inet_pton(
-        BOOST_ASIO_OS_DEF(AF_INET6), str, &bytes[0], &scope_id, ec) <= 0)
-    return boost::asio::ip::address_v6();
+  if (boost::asio::detail::socket_ops::inet_pton(BOOST_ASIO_OS_DEF(AF_INET6),
+                                                 str,
+                                                 bytes.data(),
+                                                 &scope_id,
+                                                 ec)
+      <= 0) {
+      return {};
+  }
   return boost::asio::ip::address_v6(bytes, scope_id);
 }
 
@@ -39,24 +44,25 @@ boost::asio::ip::address_v4 make_address_v4(const char* str,
     boost::system::error_code& ec)
 {
   boost::asio::ip::address_v4::bytes_type bytes;
-  if (boost::asio::detail::socket_ops::inet_pton(
-        BOOST_ASIO_OS_DEF(AF_INET), str, &bytes, 0, ec) <= 0)
-    return boost::asio::ip::address_v4();
+  if (boost::asio::detail::socket_ops::inet_pton(BOOST_ASIO_OS_DEF(AF_INET), str, &bytes, nullptr, ec)
+      <= 0) {
+      return {};
+  }
   return boost::asio::ip::address_v4(bytes);
 }
 
 boost::asio::ip::address make_address(const char* str,
     boost::system::error_code& ec)
 {
-  boost::asio::ip::address_v6 ipv6_address =
-    make_address_v6(str, ec);
-  if (!ec)
-    return boost::asio::ip::address{ipv6_address};
+    boost::asio::ip::address_v6 const ipv6_address = make_address_v6(str, ec);
+    if (!ec) {
+        return boost::asio::ip::address{ipv6_address};
+    }
 
-  boost::asio::ip::address_v4 ipv4_address =
-    make_address_v4(str, ec);
-  if (!ec)
-    return boost::asio::ip::address{ipv4_address};
+    boost::asio::ip::address_v4 const ipv4_address = make_address_v4(str, ec);
+    if (!ec) {
+        return boost::asio::ip::address{ipv4_address};
+    }
 
   return boost::asio::ip::address{};
 }
@@ -65,7 +71,8 @@ boost::asio::ip::address make_address(const char* str,
 
 namespace restc_cpp {
 
-const std::string& Request::Proxy::GetName() {
+const std::string &Request::Proxy::GetName() const
+{
     static const array<string, 3> names = {
       "NONE", "HTTP", "SOCKS5"
     };
@@ -144,7 +151,7 @@ void ParseAddressIntoSocke5ConnectRequest(const std::string& addr,
         if (host.size() > SOCKS5_MAX_HOSTNAME_LEN) {
             throw ParseException{"SOCKS5 address must be <= 255 bytes"};
         }
-        if (host.size() < 1) {
+        if (host.empty()) {
             throw ParseException{"SOCKS5 address must be > 1 byte"};
         }
 
@@ -172,8 +179,8 @@ void ParseAddressIntoSocke5ConnectRequest(const std::string& addr,
     }
 
     // Add 2 byte port number in network byte order
-    assert(sizeof(final_port) >= 2);
-    const unsigned char *p = reinterpret_cast<const unsigned char *>(&final_port);
+    static_assert(sizeof(final_port) >= 2);
+    const auto *p = reinterpret_cast<const unsigned char *>(&final_port);
     out.push_back(*p);
     out.push_back(*(p +1));
 }
@@ -205,7 +212,7 @@ size_t ValidateCompleteSocks5ConnectReply(const uint8_t *buf, size_t len) {
         break;
     case SOCKS5_HOSTNAME_ADDR:
         if (len < 4) {
-            return false; // We need the length field...
+            return 0u; // We need the length field...
         }
         hdr_len += buf[3] + 1 + 1;
     break;
@@ -231,7 +238,7 @@ void DoSocks5Handshake(Connection& connection,
 
     // Send no-auth handshake
     {
-        array<uint8_t, 3> hello = {SOCKS5_VERSION, 1, 0};
+        array<uint8_t, 3> const hello = {SOCKS5_VERSION, 1, 0};
         RESTC_CPP_LOG_TRACE_("DoSocks5Handshake - saying hello");
         sck.AsyncWriteT(hello, ctx.GetYield());
     }
@@ -261,7 +268,7 @@ void DoSocks5Handshake(Connection& connection,
     }
 
     {
-        array<uint8_t, 255 + 6> reply;
+        array<uint8_t, 255 + 6> reply{};
         size_t remaining = 5; // Minimum length
         uint8_t *next = reply.data();
 
@@ -294,7 +301,7 @@ public:
         RedirectException(RedirectException &&) = default;
 
         RedirectException(int redirCode, string redirUrl, std::unique_ptr<Reply> reply)
-        : code{redirCode}, url{move(redirUrl)}, redirectReply{move(reply)}
+            : code{redirCode}, url{std::move(redirUrl)}, redirectReply{std::move(reply)}
         {}
 
         RedirectException() = delete;
@@ -302,9 +309,9 @@ public:
         RedirectException& operator = (const RedirectException&) = delete;
         RedirectException& operator = (RedirectException&&) = delete;
 
-        int GetCode() const noexcept { return code; };
-        const std::string& GetUrl() const noexcept { return url; }
-        Reply& GetRedirectReply() const { return *redirectReply; }
+        [[nodiscard]] int GetCode() const noexcept { return code; };
+        [[nodiscard]] const std::string &GetUrl() const noexcept { return url; }
+        [[nodiscard]] Reply &GetRedirectReply() const { return *redirectReply; }
 
     private:
         const int code;
@@ -319,17 +326,16 @@ public:
                 const boost::optional<args_t>& args,
                 const boost::optional<headers_t>& headers,
                 const boost::optional<auth_t>& auth = {})
-    : url_{move(url)}, parsed_url_{url_.c_str()} , request_type_{requestType}
-    , body_{move(body)}, owner_{owner}
+        : url_{std::move(url)}, parsed_url_{url_.c_str()} , request_type_{requestType}
+    , body_{std::move(body)}, owner_{owner}
     {
        if (args || headers || auth) {
-            Properties::ptr_t props = owner_.GetConnectionProperties();
-            assert(props);
-            properties_ = make_shared<Properties>(*props);
+           Properties::ptr_t const props = owner_.GetConnectionProperties();
+           assert(props);
+           properties_ = make_shared<Properties>(*props);
 
-            if (args) {
-                properties_->args.insert(properties_->args.end(),
-                                         args->begin(), args->end());
+           if (args) {
+               properties_->args.insert(properties_->args.end(), args->begin(), args->end());
             }
 
             merge_map(headers, properties_->headers);
@@ -364,8 +370,12 @@ public:
                 valb-=magic_6;
             }
         }
-        if (valb>-magic_6) out.push_back(alphabeth[((val<<magic_8)>>(valb+magic_8))&magic_3f]);
-        while (out.size()%magic_4) out.push_back('=');
+        if (valb > -magic_6) {
+            out.push_back(alphabeth[((val << magic_8) >> (valb + magic_8)) & magic_3f]);
+        }
+        while ((out.size() % magic_4) != 0u) {
+            out.push_back('=');
+        }
         return out;
     }
 
@@ -376,19 +386,18 @@ public:
         std::string pre_base = auth.name + ':' + auth.passwd;
         properties_->headers[authorization]
             = basic_sp + Base64Encode(pre_base);
-        std::memset(&pre_base[0], 0, pre_base.capacity());
+        std::memset(pre_base.data(), 0, pre_base.capacity());
         pre_base.clear();
     }
 
-    const Properties& GetProperties() const override {
-        return *properties_;
-    }
+    [[nodiscard]] const Properties &GetProperties() const override { return *properties_; }
 
     void SetProperties(Properties::ptr_t propreties) override {
-        properties_ = move(propreties);
+        properties_ = std::move(propreties);
     }
 
-    const std::string& Verb(const Type requestType) {
+    static const std::string &Verb(const Type requestType)
+    {
         static const std::array<std::string, 7> names =
             {{ "GET", "POST", "PUT", "DELETE", "OPTIONS",
                 "HEAD", "PATCH"
@@ -397,7 +406,8 @@ public:
         return names.at(static_cast<size_t>(requestType));
     }
 
-    uint64_t GetContentBytesSent() const noexcept {
+    [[nodiscard]] uint64_t GetContentBytesSent() const noexcept
+    {
         return bytes_sent_ - header_size_;
     }
 
@@ -425,7 +435,7 @@ public:
                     << "' --> '"
                     << url
                     << "') ");
-                url_ = move(url);
+                url_ = std::move(url);
                 parsed_url_ = url_.c_str();
                 add_url_args_ = false; // Use whatever arguments we got in the redirect
             }
@@ -434,7 +444,8 @@ public:
 
 
 private:
-    void ValidateReply(const Reply& reply) {
+    static void ValidateReply(const Reply &reply)
+    {
         // Silence the cursed clang tidy!
         constexpr auto magic_2 = 2;
         constexpr auto magic_100 = 100;
@@ -447,7 +458,8 @@ private:
         constexpr auto http_408 = 408;
 
         const auto& response = reply.GetHttpResponse();
-        if ((response.status_code / magic_100) > magic_2) switch(response.status_code) {
+        if ((response.status_code / magic_100) > magic_2) {
+            switch (response.status_code) {
             case http_401:
                 throw HttpAuthenticationException(response);
             case http_403:
@@ -464,6 +476,7 @@ private:
                 throw HttpRequestTimeOutException(response);
             default:
                 throw RequestFailedWithErrorException(response);
+            }
         }
     }
 
@@ -544,7 +557,7 @@ private:
         }
 
         if (proxy_type == Request::Proxy::Type::HTTP) {
-            Url proxy {properties_->proxy.address.c_str()};
+            Url const proxy{properties_->proxy.address.c_str()};
 
             RESTC_CPP_LOG_TRACE_("Using " << properties_->proxy.GetName()
                                  << " Proxy at: "
@@ -574,7 +587,8 @@ private:
     boost::asio::ip::tcp::endpoint ToEp(const std::string& endp,
                                         const protocolT& protocol,
                                         Context& ctx) const {
-        string host, port;
+        string host;
+        string port;
 
         auto endipv6 = endp.find(']');
         if (endipv6 == string::npos) {
@@ -605,7 +619,7 @@ private:
             return {protocol, static_cast<uint16_t>(port_num)};
         }
 
-        boost::asio::ip::tcp::resolver::query q{host, port};
+        boost::asio::ip::tcp::resolver::query const q{host, port};
         boost::asio::ip::tcp::resolver resolver(owner_.GetIoService());
 
         auto ep = resolver.async_resolve(q, ctx.GetYield());
@@ -735,7 +749,7 @@ private:
                     properties_->connectTimeoutMs, connection);
 
                 try {
-                    if (retries) {
+                    if (retries != 0u) {
                         RESTC_CPP_LOG_DEBUG_("RequestImpl::Connect: taking a nap");
                         ctx.Sleep(retries * 20ms);
                         RESTC_CPP_LOG_DEBUG_("RequestImpl::Connect: Waking up. Will try to read from the socket now.");
@@ -803,8 +817,7 @@ private:
             properties_->beforeWriteFn();
         }
 
-        while(boost::asio::buffer_size(write_buffer))
-        {
+        while (boost::asio::buffer_size(write_buffer) != 0u) {
             auto timer = IoTimer::Create(timer_name,
                 properties_->sendTimeoutMs, connection_);
 
@@ -868,25 +881,25 @@ private:
         if (body_) {
             if (body_->GetType() == RequestBody::Type::FIXED_SIZE) {
                 writer_ = DataWriter::CreatePlainWriter(
-                    body_->GetFixedSize(), move(writer_));
+                    body_->GetFixedSize(), std::move(writer_));
             } else {
-                writer_ = DataWriter::CreateChunkedWriter(nullptr, move(writer_));
+                writer_ = DataWriter::CreateChunkedWriter(nullptr, std::move(writer_));
             }
         } else {
             static const string transfer_encoding{"Transfer-Encoding"};
             static const string chunked{"chunked"};
             auto h = properties_->headers.find(transfer_encoding);
             if ((h != properties_->headers.end()) && ciEqLibC()(h->second, chunked)) {
-                writer_ = DataWriter::CreateChunkedWriter(nullptr, move(writer_));
+                writer_ = DataWriter::CreateChunkedWriter(nullptr, std::move(writer_));
             } else {
-                writer_ = DataWriter::CreatePlainWriter(0, move(writer_));
+                writer_ = DataWriter::CreatePlainWriter(0, std::move(writer_));
             }
         }
 
         // TODO: Add compression
 
         write_buffers_t write_buffer;
-        ToBuffer headers(BuildOutgoingRequest());
+        ToBuffer const headers(BuildOutgoingRequest());
         write_buffer.push_back(headers);
         header_size_ = boost::asio::buffer_size(write_buffer);
 
@@ -940,7 +953,7 @@ private:
                     "No Location header in redirect reply");
             }
             RESTC_CPP_LOG_TRACE_("GetReply: RedirectException. location=" << *redirect_location);
-            throw RedirectException(http_code, *redirect_location, move(reply));
+            throw RedirectException(http_code, *redirect_location, std::move(reply));
         }
 
         if (properties_->throwOnHttpError) {
@@ -988,7 +1001,7 @@ Request::Create(const std::string& url,
                 const boost::optional<headers_t>& headers,
                 const boost::optional<auth_t>& auth) {
 
-    return make_unique<RequestImpl>(url, requestType, owner, move(body), args, headers, auth);
+    return make_unique<RequestImpl>(url, requestType, owner, std::move(body), args, headers, auth);
 }
 
 } // restc_cpp

@@ -126,11 +126,13 @@ public:
             return entry_->GetConnection()->GetSocket();
         }
 
-        const Socket& GetSocket() const override {
-             return entry_->GetConnection()->GetSocket();
+        [[nodiscard]] const Socket &GetSocket() const override
+        {
+            return entry_->GetConnection()->GetSocket();
         }
 
-        boost::uuids::uuid GetId() const override {
+        [[nodiscard]] boost::uuids::uuid GetId() const override
+        {
             return entry_->GetConnection()->GetId();
         }
 
@@ -207,11 +209,13 @@ private:
         LOCK_ALWAYS_;
         cache_cleanup_timer_.expires_from_now(
             boost::posix_time::seconds(properties_->cacheCleanupIntervalSeconds));
-        cache_cleanup_timer_.async_wait(std::bind(&ConnectionPoolImpl::OnCacheCleanup,
-                                                  shared_from_this(), std::placeholders::_1));
+        cache_cleanup_timer_.async_wait([capture0 = shared_from_this()](auto &&PH1) {
+            capture0->OnCacheCleanup(std::forward<decltype(PH1)>(PH1));
+        });
     }
 
-    void OnCacheCleanup(const boost::system::error_code& error) {
+    void OnCacheCleanup(const boost::system::error_code &error)
+    {
         RESTC_CPP_LOG_TRACE_("OnCacheCleanup: enter");
         if (closed_) {
             RESTC_CPP_LOG_TRACE_("OnCacheCleanup: closed");
@@ -252,7 +256,8 @@ private:
         RESTC_CPP_LOG_TRACE_("OnCacheCleanup: leave");
     }
 
-    void OnRelease(const Entry::ptr_t entry) {
+    void OnRelease(const Entry::ptr_t &entry)
+    {
         {
             LOCK_ALWAYS_;
             in_use_.erase(entry->GetKey());

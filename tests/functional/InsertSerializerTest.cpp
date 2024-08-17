@@ -1,5 +1,7 @@
 
 // Include before boost::log headers
+#include <utility>
+
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/logging.h"
 #include "restc-cpp/RequestBuilder.h"
@@ -14,7 +16,9 @@ using namespace restc_cpp;
 struct Post {
     Post() = default;
     Post(string u, string m)
-    : username{u}, motto{m} {}
+        : username{std::move(u)}
+        , motto{std::move(m)}
+    {}
 
     int id = 0;
     string username;

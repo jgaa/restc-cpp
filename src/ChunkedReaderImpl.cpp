@@ -21,9 +21,7 @@ public:
     {
     }
 
-    bool IsEof() const override {
-        return stream_->IsEof();
-    }
+    [[nodiscard]] bool IsEof() const override { return stream_->IsEof(); }
 
     void Finish() override {
         ReadSome();
@@ -36,15 +34,16 @@ public:
         }
     }
 
-    string ToPrintable(boost::string_ref buf) const {
+    [[nodiscard]] static string ToPrintable(boost::string_ref buf)
+    {
         ostringstream out;
-        locale loc;
+        locale const loc;
         auto pos = 0;
-        out << endl;
+        out << '\n';
 
         for(const auto ch : buf) {
-            if (!(++pos % line_length)) {
-                out << endl;
+            if ((++pos % line_length) == 0u) {
+                out << '\n';
             }
             if (std::isprint(ch, loc)) {
                 out << ch;
@@ -56,7 +55,8 @@ public:
         return out.str();
     }
 
-    void Log(const boost::asio::const_buffers_1 buffers, const char *tag) {
+    static void Log(const boost::asio::const_buffers_1 buffers, const char * /*tag*/)
+    {
         const auto buf_len = boost::asio::buffer_size(*buffers.begin());
 
         // At the time of the implementation, there are never multiple buffers.
@@ -132,11 +132,11 @@ private:
         size_t chunk_len = 0;
         char ch = stream_->Getc();
 
-        if (!isxdigit(ch)) {
+        if (isxdigit(ch) == 0) {
             throw ParseException("Missing chunk-length in new chunk.");
         }
 
-        for(; isxdigit(ch); ch = stream_->Getc()) {
+        for (; isxdigit(ch) != 0; ch = stream_->Getc()) {
             chunk_len *= magic_16;
             if (ch >= 'a') {
                 chunk_len += magic_10 + (ch - 'a');
@@ -147,8 +147,9 @@ private:
             }
         }
 
-        for(; ch != '\r'; ch = stream_->Getc())
+        for (; ch != '\r'; ch = stream_->Getc()) {
             ;
+        }
 
         if (ch != '\r') {
             throw ParseException("Missing CR in first chunk line");

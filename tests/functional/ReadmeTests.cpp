@@ -2,8 +2,9 @@
 
 #define RESTC_CPP_ENABLE_URL_TEST_MAPPING 1
 
-#include <boost/lexical_cast.hpp>
 #include <boost/fusion/adapted.hpp>
+#include <boost/lexical_cast.hpp>
+#include <utility>
 
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/IteratorFromJsonSerializer.h"
@@ -44,7 +45,7 @@ void first() {
     auto rest_client = RestClient::Create();
 
     // Create and instantiate a Post from data received from the server.
-    Post my_post = rest_client->ProcessWithPromiseT<Post>([&](Context& ctx) {
+    Post const my_post = rest_client->ProcessWithPromiseT<Post>([&](Context& ctx) {
         // This is a co-routine, running in a worker-thread
 
         // Instantiate a Post structure.
@@ -88,7 +89,7 @@ void DoSomethingInteresting(Context& ctx) {
     auto json = reply->GetBodyAsString();
 
     // Just dump the data.
-    cout << "Received data: " << json << endl;
+    cout << "Received data: " << json << '\n';
 }
 
 void second() {
@@ -179,7 +180,7 @@ void fifth() {
 
         // Iterate over the data, fetch data asyncrounesly as we go.
         for(const auto& post : data) {
-            cout << "Item #" << post.id << " Title: " << post.title << endl;
+            cout << "Item #" << post.id << " Title: " << post.title << '\n';
         }
     });
 }
@@ -210,7 +211,7 @@ void sixth() {
     // Start the io-service, using this thread.
     rest_client->GetIoService().run();
 
-    cout << "Done. Exiting normally." << endl;
+    cout << "Done. Exiting normally." << '\n';
 }
 
 // Use our own RequestBody implementation to supply
@@ -222,7 +223,7 @@ void seventh() {
     public:
         MyBody() = default;
 
-        Type GetType() const noexcept override {
+        [[nodiscard]] Type GetType() const noexcept override {
 
             // This mode causes the request to use chunked data,
             // allowing us to send data without knowing the exact
@@ -230,7 +231,7 @@ void seventh() {
             return Type::CHUNKED_LAZY_PULL;
         }
 
-        std::uint64_t GetFixedSize() const override {
+        [[nodiscard]] std::uint64_t GetFixedSize() const override {
             throw runtime_error("Not implemented");
         }
 
@@ -291,7 +292,9 @@ void seventh() {
 struct DataItem {
     DataItem() = default;
     DataItem(string u, string m)
-    : username{u}, motto{m} {}
+        : username{std::move(u)}
+        , motto{std::move(m)}
+    {}
 
     int id = 0;
     string username;
@@ -417,13 +420,13 @@ void tenth() {
     boost::asio::io_service ioservice;
 
     // Give it some work so it don't end prematurely
-    boost::asio::io_service::work work(ioservice);
+    boost::asio::io_service::work const work(ioservice);
 
     // Start it in a worker-thread
     thread worker([&ioservice]() {
-        cout << "ioservice is running" << endl;
+        cout << "ioservice is running" << '\n';
         ioservice.run();
-        cout << "ioservice is done" << endl;
+        cout << "ioservice is done" << '\n';
     });
 
     // Now we have our own io-service running in a worker thread.
@@ -443,7 +446,7 @@ void tenth() {
         auto json = reply->GetBodyAsString();
 
         // Just dump the data.
-        cout << "Received data: " << json << endl;
+        cout << "Received data: " << json << '\n';
     })
     // Wait for the co-routine to end
     .get();
@@ -457,7 +460,7 @@ void tenth() {
     // Wait for the worker thread to end
     worker.join();
 
-    cout << "Done." << endl;
+    cout << "Done." << '\n';
 }
 
 void eleventh() {
@@ -470,7 +473,7 @@ void eleventh() {
         data.title = "Hi there";
         data.body = "This is the body.";
 
-        excluded_names_t exclusions{"id", "userId"};
+        excluded_names_t const exclusions{"id", "userId"};
 
         auto reply = RequestBuilder(ctx)
             .Post("http://localhost:3000/posts")
@@ -563,46 +566,46 @@ void fourteenth() {
 }
 
 TEST(ReadmeTests, All) {
-    cout << "First: " << endl;
+    cout << "First: " << '\n';
     EXPECT_NO_THROW(first());
 
-    cout << "Second: " << endl;
+    cout << "Second: " << '\n';
     EXPECT_NO_THROW(second());
 
-    cout << "Third: " << endl;
+    cout << "Third: " << '\n';
     EXPECT_NO_THROW(third());
 
-    cout << "Forth: " << endl;
+    cout << "Forth: " << '\n';
     EXPECT_NO_THROW(forth());
 
-    cout << "Fifth: " << endl;
+    cout << "Fifth: " << '\n';
     EXPECT_NO_THROW(fifth());
 
-    cout << "Sixth: " << endl;
+    cout << "Sixth: " << '\n';
     EXPECT_NO_THROW(sixth());
 
-    cout << "Seventh: " << endl;
+    cout << "Seventh: " << '\n';
     EXPECT_NO_THROW(seventh());
 
-    cout << "Eight: " << endl;
+    cout << "Eight: " << '\n';
     EXPECT_NO_THROW(eight());
 
-    cout << "Ninth: " << endl;
+    cout << "Ninth: " << '\n';
     EXPECT_NO_THROW(ninth());
 
-    cout << "Tenth: " << endl;
+    cout << "Tenth: " << '\n';
     EXPECT_NO_THROW(tenth());
 
-    cout << "Eleventh: " << endl;
+    cout << "Eleventh: " << '\n';
     EXPECT_NO_THROW(eleventh());
 
-    cout << "Twelfth: " << endl;
+    cout << "Twelfth: " << '\n';
     EXPECT_NO_THROW(twelfth());
 
-    cout << "Thirtheenth: " << endl;
+    cout << "Thirtheenth: " << '\n';
     EXPECT_NO_THROW(thirtheenth());
 
-    cout << "Fourteenth: " << endl;
+    cout << "Fourteenth: " << '\n';
     EXPECT_NO_THROW(fourteenth());
 }
 

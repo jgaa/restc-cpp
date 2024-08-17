@@ -25,13 +25,9 @@ public:
         file_ = make_unique<ifstream>(path_.string(), ios::binary);
     }
 
-    Type GetType() const noexcept override {
-        return Type::FIXED_SIZE;
-    }
+    [[nodiscard]] Type GetType() const noexcept override { return Type::FIXED_SIZE; }
 
-    uint64_t GetFixedSize() const override {
-        return size_;
-    }
+    [[nodiscard]] uint64_t GetFixedSize() const override { return size_; }
 
     bool GetData(write_buffers_t & buffers) override {
         const auto bytes_left = size_ - bytes_read_;
@@ -54,7 +50,7 @@ public:
         }
 
         bytes_read_ += read_this_time;
-        buffers.push_back({buffer_.data(), read_this_time});
+        buffers.emplace_back(buffer_.data(), read_this_time);
         return true;
     }
 

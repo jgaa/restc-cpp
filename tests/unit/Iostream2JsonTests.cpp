@@ -36,9 +36,9 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 // ---------------------- # 58
 
-typedef vector<unsigned char> LOCAL;
-typedef vector<unsigned char> GLOBAL;
-typedef vector<unsigned char> ADDRESS;
+using LOCAL = vector<unsigned char>;
+using GLOBAL = vector<unsigned char>;
+using ADDRESS = vector<unsigned char>;
 struct 	MAC
 {
     ADDRESS address;
@@ -47,7 +47,7 @@ BOOST_FUSION_ADAPT_STRUCT(
     MAC,
     (ADDRESS, address)
 )
-typedef vector<MAC> MACLIST;
+using MACLIST = vector<MAC>;
 
 struct DeviceList{
     LOCAL local;
@@ -60,10 +60,10 @@ BOOST_FUSION_ADAPT_STRUCT(
     (GLOBAL, global)
     (MACLIST, maclst)
 )
-typedef vector<DeviceList> DeviceLst;
+using DeviceLst = vector<DeviceList>;
 struct Config2 {
     int nIdSchedule = {};
-    int nDCUNo;
+    int nDCUNo{};
     DeviceLst lst;
 };
 BOOST_FUSION_ADAPT_STRUCT(
@@ -83,11 +83,11 @@ TEST(IOstream2Json, ReadConfigurationFromFile) {
 
     {
         ofstream json_out(tmpname.native());
-        json_out << '{' << endl
-            << R"("max_something":100,)" << endl
-            << R"("name":"Test Data",)" << endl
-            << R"("url":"https://www.example.com")" << endl
-            << '}';
+        json_out << '{' << '\n'
+                 << R"("max_something":100,)" << '\n'
+                 << R"("name":"Test Data",)" << '\n'
+                 << R"("url":"https://www.example.com")" << '\n'
+                 << '}';
     }
 
     ifstream ifs(tmpname.native());
@@ -130,15 +130,14 @@ TEST(IOstream2Json, issue58) {
     {
         // Read the ;config file into the config object.
         SerializeFromJson(config, ifs);
-        cout<<"done"<<endl;
+        cout << "done" << '\n';
     }
     ofstream ofs(tmpname.c_str());
     config.lst[0].maclst[0].address[2] = 11;
     config.lst[0].maclst[0].address[3] = 11;
     config.lst[0].maclst[0].address[4] = 11;
     SerializeToJson(config, ofs);
-    cout<<"done"<<endl;
-
+    cout << "done" << '\n';
 }
 
 int main( int argc, char * argv[] )

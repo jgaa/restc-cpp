@@ -47,7 +47,8 @@ BOOST_FUSION_ADAPT_STRUCT(
 string https_url = "https://lastviking.eu/files/api";
 
 TEST(Https, GetJson) {
-    shared_ptr<boost::asio::ssl::context> tls_ctx = make_shared<boost::asio::ssl::context>(boost::asio::ssl::context{ boost::asio::ssl::context::tlsv12_client});
+    shared_ptr<boost::asio::ssl::context> const tls_ctx = make_shared<boost::asio::ssl::context>(
+        boost::asio::ssl::context{boost::asio::ssl::context::tlsv12_client});
 
     EXPECT_NO_THROW(tls_ctx->set_options(boost::asio::ssl::context::default_workarounds
                     | boost::asio::ssl::context::no_sslv2

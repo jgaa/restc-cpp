@@ -38,7 +38,7 @@ const string http_url = "http://localhost:3000/manyposts";
  * works as expected with many co-routines in parallel.
  */
 
-#define CONNECTIONS 100
+enum { CONNECTIONS = 100 };
 
 struct Post {
     string id;
@@ -125,8 +125,9 @@ TEST(ManyConnections, CRUD) {
                 locker.unlock();
 
                 // Fetch the rest
-                for(; it != results.end(); ++it)
+                for (; it != results.end(); ++it) {
                     ;
+                }
 
             } catch (const std::exception& ex) {
                 RESTC_CPP_LOG_ERROR_("Failed to fetch data: " << ex.what());

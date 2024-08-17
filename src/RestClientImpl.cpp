@@ -22,7 +22,8 @@ using namespace std;
 
 namespace restc_cpp {
 
-class  RestClientImpl final : public RestClient  {
+
+class  RestClientImpl final : public RestClient {
 public:
 
     /*! Proper shutdown handling
@@ -75,13 +76,13 @@ public:
 
         unique_ptr< Reply > Post(string url, string body) override {
             auto req = Request::Create(url, restc_cpp::Request::Type::POST, rc_,
-                                       {RequestBody::CreateStringBody(move(body))});
+                                       {RequestBody::CreateStringBody(std::move(body))});
             return Request(*req);
         }
 
         unique_ptr< Reply > Put(string url, string body) override {
             auto req = Request::Create(url, restc_cpp::Request::Type::PUT, rc_,
-                                       {RequestBody::CreateStringBody(move(body))});
+                                       {RequestBody::CreateStringBody(std::move(body))});
             return Request(*req);
         }
 
@@ -127,9 +128,9 @@ public:
     : ioservice_instance_{make_unique<boost::asio::io_service>()}
     {
 #ifdef RESTC_CPP_WITH_TLS
-		setDefaultSSLContext();
+        setDefaultSSLContext();
 #endif
-		io_service_ = ioservice_instance_.get();
+        io_service_ = ioservice_instance_.get();
         Init(properties, useMainThread);
     }
 
@@ -138,7 +139,7 @@ public:
         bool useMainThread, shared_ptr<boost::asio::ssl::context> ctx)
         : ioservice_instance_{ make_unique<boost::asio::io_service>() }
     {
-        tls_context_ = move(ctx);
+        tls_context_ = std::move(ctx);
         io_service_ = ioservice_instance_.get();
         Init(properties, useMainThread);
     }
@@ -148,7 +149,7 @@ public:
         boost::asio::io_service& ioservice)
         : io_service_{ &ioservice }
     {
-        tls_context_ = move(ctx);
+        tls_context_ = std::move(ctx);
         io_service_ = ioservice_instance_.get();
         Init(properties, useMainThread);
     }
@@ -440,20 +441,20 @@ unique_ptr<RestClient> RestClient::Create() {
 #ifdef RESTC_CPP_WITH_TLS
 unique_ptr<RestClient> RestClient::Create(std::shared_ptr<boost::asio::ssl::context> ctx) {
     boost::optional<Request::Properties> properties;
-    return make_unique<RestClientImpl>(properties, false, move(ctx));
+    return make_unique<RestClientImpl>(properties, false, std::move(ctx));
 }
 
 std::unique_ptr<RestClient> RestClient::Create(std::shared_ptr<boost::asio::ssl::context> ctx,
                                                const boost::optional<Request::Properties> &properties)
 {
-    return make_unique<RestClientImpl>(properties, false, move(ctx));
+    return make_unique<RestClientImpl>(properties, false, std::move(ctx));
 }
 
 std::unique_ptr<RestClient> RestClient::Create(std::shared_ptr<boost::asio::ssl::context> ctx,
                                                const boost::optional<Request::Properties> &properties,
                                                boost::asio::io_service &ioservice)
 {
-    return make_unique<RestClientImpl>(properties, false, move(ctx), ioservice);
+    return make_unique<RestClientImpl>(properties, false, std::move(ctx), ioservice);
 }
 
 #endif

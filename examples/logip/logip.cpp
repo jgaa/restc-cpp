@@ -39,12 +39,13 @@ BOOST_FUSION_ADAPT_STRUCT(
 
 string now() {
     char date[32] = {};
-    auto now = time(NULL);
+    auto now = time(nullptr);
     strftime(date, sizeof(date), "%Y-%m-%d %H:%M", localtime(&now));
     return date;
 }
 
-int main(int argc, char *argv[]) {
+int main(int /*argc*/, char * /*argv*/[])
+{
 #ifdef RESTC_CPP_LOG_WITH_BOOST_LOG
     namespace logging = boost::log;
     logging::core::get()->set_filter
@@ -71,22 +72,14 @@ int main(int argc, char *argv[]) {
                     .Execute());
                 valid = true;
             } catch (const boost::exception& ex) {
-                clog << now()
-                    << "Caught boost exception: "
-                    << boost::diagnostic_information(ex)
-                    << endl;
+                clog << now() << "Caught boost exception: " << boost::diagnostic_information(ex)
+                     << '\n';
             } catch (const exception& ex) {
-                clog << now()
-                    << "Caught exception: "
-                    << ex.what()
-                    << endl;
+                clog << now() << "Caught exception: " << ex.what() << '\n';
             }
 
             if (valid && (current_ip != data.ip)) {
-                clog << now()
-                    << ' '
-                    << data.ip
-                    << endl;
+                clog << now() << ' ' << data.ip << '\n';
                 current_ip = data.ip;
             }
 

@@ -150,7 +150,7 @@ void DataReaderStream::ReadHeaderLines(const add_header_fn_t& addHeader) {
     constexpr size_t max_headers = 256;
 
     while(true) {
-        char ch;
+        char ch = 0;
         string name;
         string value;
         for(ch = Getc(); ch != '\r'; ch = Getc()) {
@@ -199,11 +199,12 @@ void DataReaderStream::ReadHeaderLines(const add_header_fn_t& addHeader) {
 std::string DataReaderStream::GetHeaderValue() {
     constexpr size_t max_header_value_len = 1024 * 4;
     std::string value;
-    char ch;
+    char ch = 0;
 
     while(true) {
-        for (ch = Getc(); ch == ' ' || ch == '\t'; ch = Getc())
+        for (ch = Getc(); ch == ' ' || ch == '\t'; ch = Getc()) {
             ; // skip space
+        }
 
         for (; ch != '\r'; ch = Getc()) {
             value += ch;

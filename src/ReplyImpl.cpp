@@ -154,7 +154,7 @@ void ReplyImpl::HandleDecompression() {
         return;
     }
 
-    boost::tokenizer<> tok(*te_hdr);
+    boost::tokenizer<> const tok(*te_hdr);
     for(auto it = tok.begin(); it != tok.end(); ++it) {
 #ifdef RESTC_CPP_WITH_ZLIB
         if (ciEqLibC()(gzip, *it)) {

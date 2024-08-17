@@ -20,20 +20,16 @@ public:
     {
     }
 
-    Type GetType() const noexcept override {
-        return Type::FIXED_SIZE;
-    }
+    [[nodiscard]] Type GetType() const noexcept override { return Type::FIXED_SIZE; }
 
-    std::uint64_t GetFixedSize() const override {
-        return body_.size();
-    }
+    [[nodiscard]] std::uint64_t GetFixedSize() const override { return body_.size(); }
 
     bool GetData(write_buffers_t & buffers) override {
         if (eof_) {
             return false;
         }
 
-        buffers.push_back({body_.c_str(), body_.size()});
+        buffers.emplace_back(body_.c_str(), body_.size());
         eof_ = true;
         return true;
     }
@@ -42,10 +38,7 @@ public:
         eof_ = false;
     }
 
-    std::string  GetCopyOfData() const override {
-        return body_;
-    }
-
+    [[nodiscard]] std::string GetCopyOfData() const override { return body_; }
 
 private:
     string body_;

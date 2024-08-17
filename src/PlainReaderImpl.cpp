@@ -15,13 +15,12 @@ public:
     : remaining_{contentLength},
       source_{move(source)} {}
 
-    bool IsEof() const override {
-        return remaining_ == 0;
-    }
+    [[nodiscard]] bool IsEof() const override { return remaining_ == 0; }
 
     void Finish() override {
-        if (source_)
+        if (source_) {
             source_->Finish();
+        }
     }
 
     boost::asio::const_buffers_1 ReadSome() override {

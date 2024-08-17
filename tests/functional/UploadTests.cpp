@@ -41,7 +41,7 @@ int main( int argc, char * argv[] )
     {
         ofstream file(temp_path.string());
         for(int i = 0; i < 1000; i++) {
-            file << "This is line #" << i << endl;
+            file << "This is line #" << i << '\n';
         }
     }
 

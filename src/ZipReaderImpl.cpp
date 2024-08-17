@@ -34,18 +34,15 @@ public:
         inflateEnd(&strm_);
     }
 
-    bool IsEof() const override {
-        return done_;
-    }
+    [[nodiscard]] bool IsEof() const override { return done_; }
 
     void Finish() override {
-        if (source_)
+        if (source_) {
             source_->Finish();
+        }
     }
 
-    bool HaveMoreBufferedInput() const noexcept {
-        return strm_.avail_in > 0;
-    }
+    [[nodiscard]] bool HaveMoreBufferedInput() const noexcept { return strm_.avail_in > 0; }
 
     boost::asio::const_buffers_1 ReadSome() override {
 
