@@ -98,9 +98,10 @@ jobs:
 
       - name: Dump diagnostics
         run: |
-        echo "---------------------------------"
-        cat build.ninja
-        echo "---------------------------------"
+          cd ~/build
+          echo "---------------------------------"
+          cat build.ninja
+          echo "---------------------------------"
 
       - name: Run Unit Tests
         run: |
