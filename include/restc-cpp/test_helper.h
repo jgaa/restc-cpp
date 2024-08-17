@@ -14,18 +14,17 @@ namespace restc_cpp {
 // Substitute localhost with whatever is in the environment-variable
 // RESTC_CPP_TEST_DOCKER_ADDRESS
 inline std::string GetDockerUrl(std::string url) {
-    const char* docker_addr = nullptr;
-
 #ifdef _WIN32
     // On Windows, use _dupenv_s to safely retrieve the environment variable
     size_t len = 0;
+    char* docker_addr = nullptr;
     errno_t err = _dupenv_s(&docker_addr, &len, "RESTC_CPP_TEST_DOCKER_ADDRESS");
     if (err != 0 || docker_addr == nullptr) {
         docker_addr = nullptr;  // Ensure docker_addr is nullptr if the variable isn't set
     }
 #else
     // On Linux/macOS, use std::getenv
-    docker_addr = std::getenv("RESTC_CPP_TEST_DOCKER_ADDRESS");
+    auto docker_addr = std::getenv("RESTC_CPP_TEST_DOCKER_ADDRESS");
 #endif
 
     if (docker_addr) {
