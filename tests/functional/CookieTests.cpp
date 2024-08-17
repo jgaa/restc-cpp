@@ -29,7 +29,7 @@ TEST(Cookies, HaveCookies)
 
         set<string> allowed = {"test1=yes", "test2=maybe", "test3=no"};
 
-        for(const auto c : cookies) {
+        for (const auto &c : cookies) {
             EXPECT_EQ(true, allowed.find(c) != allowed.end());
             allowed.erase(c);
         }

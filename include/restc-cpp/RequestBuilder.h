@@ -187,7 +187,7 @@ public:
             args_ = Request::args_t();
         }
 
-        args_->push_back({move(name), move(value)});
+        args_->push_back({std::move(name), std::move(value)});
         return *this;
     }
 
@@ -202,14 +202,14 @@ public:
      * \param value Value of the argument
      */
     RequestBuilder& Argument(std::string name, int64_t value) {
-        return Argument(move(name), std::to_string(value));
+        return Argument(std::move(name), std::to_string(value));
     } 
 
     /*! Supply your own RequestBody to the request
      */
     RequestBuilder& Body(std::unique_ptr<RequestBody> body) {
         assert(!body_);
-        body_ = move(body);
+        body_ = std::move(body);
         return *this;
     }
 
@@ -252,7 +252,7 @@ public:
      */
     RequestBuilder& Data(std::string&& body) {
         assert(!body_);
-        body_ = RequestBody::CreateStringBody(move(body));
+        body_ = RequestBody::CreateStringBody(std::move(body));
         return *this;
     }
 
@@ -368,7 +368,7 @@ public:
         }
 #endif
         auto req = Request::Create(
-            url_, type_, ctx_->GetClient(), move(body_), args_, headers_, auth_);
+            url_, type_, ctx_->GetClient(), std::move(body_), args_, headers_, auth_);
 
         auto orig = req->GetProperties();
 

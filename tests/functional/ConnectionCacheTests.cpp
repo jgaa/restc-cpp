@@ -73,8 +73,7 @@ TEST(ConnectionCache, MaxConnectionsToEndpoint) {
     auto config = rest_client->GetConnectionProperties();
 
     std::vector<Connection::ptr_t> connections;
-    boost::asio::ip::tcp::endpoint ep{
-        boost::asio::ip::address::from_string("127.0.0.1"), 80};
+    boost::asio::ip::tcp::endpoint const ep{boost::asio::ip::address::from_string("127.0.0.1"), 80};
     for(size_t i = 0; i < config->cacheMaxConnectionsPerEndpoint; ++i) {
         connections.push_back(pool->GetConnection(ep, restc_cpp::Connection::Type::HTTP));
     }
@@ -153,8 +152,7 @@ TEST(ConnectionCache, OverrideMaxConnectionsToEndpoint) {
     auto config = rest_client->GetConnectionProperties();
 
     std::vector<Connection::ptr_t> connections;
-    boost::asio::ip::tcp::endpoint ep{
-        boost::asio::ip::address::from_string("127.0.0.1"), 80};
+    boost::asio::ip::tcp::endpoint const ep{boost::asio::ip::address::from_string("127.0.0.1"), 80};
     for(size_t i = 0; i < config->cacheMaxConnectionsPerEndpoint; ++i) {
         connections.push_back(pool->GetConnection(ep, restc_cpp::Connection::Type::HTTP));
     }

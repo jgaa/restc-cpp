@@ -19,19 +19,15 @@ class RequestBodyFileImpl : public RequestBody
 {
 public:
     RequestBodyFileImpl(boost::filesystem::path path)
-    : path_{move(path)}
+    : path_{std::move(path)}
     , size_{boost::filesystem::file_size(path_)}
     {
         file_ = make_unique<ifstream>(path_.string(), ios::binary);
     }
 
-    Type GetType() const noexcept override {
-        return Type::FIXED_SIZE;
-    }
+    [[nodiscard]] Type GetType() const noexcept override { return Type::FIXED_SIZE; }
 
-    uint64_t GetFixedSize() const override {
-        return size_;
-    }
+    [[nodiscard]] uint64_t GetFixedSize() const override { return size_; }
 
     bool GetData(write_buffers_t & buffers) override {
         const auto bytes_left = size_ - bytes_read_;
@@ -50,11 +46,11 @@ public:
         if (read_this_time == 0) {
             const auto err = errno;
             throw IoException(string{"file read failed: "}
-                + to_string(err) + " " + strerror(err));
+                + to_string(err) + " " + std::system_category().message(err));
         }
 
         bytes_read_ += read_this_time;
-        buffers.push_back({buffer_.data(), read_this_time});
+        buffers.emplace_back(buffer_.data(), read_this_time);
         return true;
     }
 
@@ -81,7 +77,7 @@ private:
 unique_ptr<RequestBody> RequestBody::CreateFileBody(
     boost::filesystem::path path) {
 
-    return make_unique<impl::RequestBodyFileImpl>(move(path));
+    return make_unique<impl::RequestBodyFileImpl>(std::move(path));
 }
 
 } // restc_cpp

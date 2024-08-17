@@ -4,7 +4,7 @@ pipeline {
     agent { label 'main' }
 
     environment {
-        RESTC_CPP_VERSION = "0.100.0"
+        RESTC_CPP_VERSION = "0.101.0"
 
         // It is not possible to get the current IP number when running in the sandbox, and
         // Jenkinsfiles always runs in the sandbox.
@@ -23,6 +23,35 @@ pipeline {
 
         stage('Build') {
            parallel {
+
+                stage('macOS') {
+                    agent {label 'macos'}
+
+                    // environment {
+                    //     CPPFLAGS = "-I/usr/local/opt/openssl/include -I/usr/local/opt/zlib/include -I/usr/local/opt/boost/include/"
+                    //     LDFLAGS = "-L/usr/local/opt/openssl/lib -L/usr/local/opt/zlib/lib -L/usr/local/opt/boost/lib/"
+                    // }
+
+                    steps {
+                        echo "Building on macos in ${WORKSPACE}"
+                        sh 'brew install openssl boost zlib rapidjson googletest cmake ninja'
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j4'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+                                echo 'Testing failed'
+                                currentBuild.result = 'UNSTABLE'
+                            }
+                        }
+                    }
+                }
 
                 stage('Ubuntu Noble') {
                     agent {
@@ -530,36 +559,7 @@ pipeline {
                         sh 'rm -rf build-fedora'
                     }
                 }
-//
-//                 stage('Centos7') {
-//                     agent {
-//                         dockerfile {
-//                             filename 'Dockerfile.centos7'
-//                             dir 'ci/jenkins'
-//                             label 'docker'
-//                         }
-//                     }
-//
-//                     steps {
-//                         echo "Building on Centos7 in ${WORKSPACE}"
-//                         checkout scm
-//                         sh 'pwd; ls -la'
-//                         sh 'rm -rf build'
-//                         sh 'mkdir build'
-//                         sh 'cd build && source scl_source enable devtoolset-7 && cmake -DCMAKE_BUILD_TYPE=Release -DBOOST_ROOT=/opt/boost .. && make'
-//
-//                         echo 'Getting ready to run tests'
-//                         script {
-//                             try {
-//                                 sh 'cd build && ctest --no-compress-output -T Test'
-//                             } catch (exc) {
-//
-//                                 unstable(message: "${STAGE_NAME} - Testing failed")
-//                             }
-//                         }
-//                     }
-//                 }
-
+                
                 stage('Windows X64 with vcpkg') {
 
                     agent {label 'windows'}

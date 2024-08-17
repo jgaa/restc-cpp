@@ -1,17 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
 
-# if (UNIX)
-#     # Ninja creates too many problems while maintaining
-#     # compatibility with old and new versions of Linux/Cmake
-#     set (CMAKE_GENERATOR "Unix Makefiles" CACHE INTERNAL "" FORCE)
-# endif()
-
 if (DEFINED ENV{RESTC_CPP_VERSION})
     set(RESTC_CPP_VERSION $ENV{RESTC_CPP_VERSION})
 endif()
 
 if (NOT DEFINED RESTC_CPP_VERSION)
-    set(RESTC_CPP_VERSION 0.100.0)
+    set(RESTC_CPP_VERSION 0.101.0)
 endif()
 
 if(NOT DEFINED RESTC_BOOST_VERSION)
@@ -24,9 +18,15 @@ message(STATUS "Building restc-cpp version ${PROJECT_VERSION}")
 
 include(CheckCXXCompilerFlag)
 
-check_cxx_compiler_flag("-std=c++20" COMPILER_SUPPORTS_CXX20)
-check_cxx_compiler_flag("-std=c++17" COMPILER_SUPPORTS_CXX17)
-
+if (MSVC)
+    # Thank you Microsoft. Its so nice of you to give us all these meaningful reasons to stay up all night.
+    check_cxx_compiler_flag("/std:c++20" COMPILER_SUPPORTS_CXX20)
+    check_cxx_compiler_flag("/std:c++17" COMPILER_SUPPORTS_CXX17)
+    add_compile_options(/Zc:__cplusplus)
+else()
+    check_cxx_compiler_flag("-std=c++20" COMPILER_SUPPORTS_CXX20)
+    check_cxx_compiler_flag("-std=c++17" COMPILER_SUPPORTS_CXX17)
+endif()
 
 if (NOT DEFINED INSTALL_RAPIDJSON_HEADERS)
     option(INSTALL_RAPIDJSON_HEADERS "Install rapidjson headers when make install is executed" ON)
@@ -229,13 +229,7 @@ if (RESTC_CPP_WITH_ZLIB)
     set(ACTUAL_SOURCES ${ACTUAL_SOURCES} src/ZipReaderImpl.cpp)
 endif()
 
-if (WIN32)
-    include(cmake_scripts/pch.cmake)
-    ADD_MSVC_PRECOMPILED_HEADER(restc-cpp/restc-cpp.h src/pch.cpp ACTUAL_SOURCES)
-    set(SOURCES ${ACTUAL_SOURCES} src/pch.cpp ${HEADERS} ${RESFILES})
-else()
-    set(SOURCES ${ACTUAL_SOURCES})
-endif()
+set(SOURCES ${ACTUAL_SOURCES})
 
 add_library(${PROJECT_NAME} ${SOURCES})
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_OUTPUT_NAME restc-cppD)
@@ -303,10 +297,6 @@ if (NOT EMBEDDED_RESTC_CPP)
     if (WIN32)
         link_directories(${Boost_LIBRARY_DIRS})
     endif()
-
-    include(cmake_scripts/pch.cmake)
-
-    set_property(TARGET  PROPERTY CXX_STANDARD 17)
 
     if(WIN32)
         add_definitions(-D_WIN32_WINNT=0x0600)

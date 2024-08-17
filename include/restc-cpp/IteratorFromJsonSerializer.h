@@ -18,12 +18,13 @@ class IteratorFromJsonSerializer
 public:
     using data_t = typename std::remove_const<typename std::remove_reference<objectT>::type>::type;
 
-    class Iterator : public std::iterator<
-        std::input_iterator_tag,
-        data_t,
-        std::ptrdiff_t,
-        const data_t *,
-        data_t&> {
+    class Iterator {
+    public:
+        using iterator_category = std::input_iterator_tag;
+        using value_type = data_t;
+        using difference_type = std::ptrdiff_t;
+        using pointer = value_type*;
+        using reference = value_type&;
 
     public:
         Iterator() {}
@@ -42,7 +43,7 @@ public:
         }
 
         Iterator(Iterator&& it)
-        : owner_{it.owner_}, data_{move(it.data_)} {}
+            : owner_{it.owner_}, data_{std::move(it.data_)} {}
 
         Iterator(IteratorFromJsonSerializer *owner)
         : owner_{owner} {}
@@ -70,7 +71,7 @@ public:
 
         Iterator& operator = (Iterator&& it) {
             owner_ = it.owner_;
-            it.data_ = move(it.data_);
+            it.data_ = std::move(it.data_);
         }
 
         bool operator == (const Iterator& other) const {
@@ -170,7 +171,7 @@ private:
                     RapidJsonDeserializer<objectT> handler(
                         *data, *properties_);
                     json_reader_.Parse(reply_stream_, handler);
-                    return move(data);
+                    return std::move(data);
                 } else if (ch == ']') {
                     reply_stream_.Take();
                     state_ = State::DONE;

@@ -14,7 +14,7 @@ public:
 
     ZipReaderImpl(std::unique_ptr<DataReader>&& source,
                 const Format format)
-    : source_{move(source)}
+    : source_{std::move(source)}
     {
         const auto wsize = (format == Format::GZIP) ? (MAX_WBITS | 16) : MAX_WBITS;
 
@@ -34,18 +34,15 @@ public:
         inflateEnd(&strm_);
     }
 
-    bool IsEof() const override {
-        return done_;
-    }
+    [[nodiscard]] bool IsEof() const override { return done_; }
 
     void Finish() override {
-        if (source_)
+        if (source_) {
             source_->Finish();
+        }
     }
 
-    bool HaveMoreBufferedInput() const noexcept {
-        return strm_.avail_in > 0;
-    }
+    [[nodiscard]] bool HaveMoreBufferedInput() const noexcept { return strm_.avail_in > 0; }
 
     boost::asio::const_buffers_1 ReadSome() override {
 
@@ -148,13 +145,13 @@ private:
 
 std::unique_ptr<DataReader>
 DataReader::CreateZipReader(std::unique_ptr<DataReader>&& source) {
-    return make_unique<ZipReaderImpl>(move(source),
+    return make_unique<ZipReaderImpl>(std::move(source),
                                       ZipReaderImpl::Format::DEFLATE);
 }
 
 std::unique_ptr<DataReader>
 DataReader::CreateGzipReader(std::unique_ptr<DataReader>&& source) {
-    return make_unique<ZipReaderImpl>(move(source),
+    return make_unique<ZipReaderImpl>(std::move(source),
                                       ZipReaderImpl::Format::GZIP);
 }
 

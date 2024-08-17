@@ -22,6 +22,7 @@
 #include <thread>
 #include <iomanip>
 #include <array>
+#include <ctime>
 
 namespace restc_cpp  {
 
@@ -108,6 +109,17 @@ private:
 
 }
 
+
+inline std::tm *restc_cpp_localtime(const time_t now, std::tm& timeInfo) {
+#ifdef _WIN32
+    localtime_s(&timeInfo, &now); // Windows-specific
+#else
+    localtime_r(&now, &timeInfo); // POSIX-specific
+#endif
+
+    return &timeInfo;
+}
+
 //#define RESTC_CPP_TEST_LOGGING_SETUP(level) RestcCppTestStartLogger(level)
 #define RESTC_CPP_TEST_LOGGING_SETUP(level) RestcCppTestStartLogger("trace")
 
@@ -130,9 +142,9 @@ inline void RestcCppTestStartLogger(const std::string& level = "info") {
                                              const std::string& msg) {
         static const std::array<std::string, 6> levels = {"NONE", "ERROR", "WARN", "INFO", "DEBUG", "TRACE"};
 
-        const auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+        std::tm timeInfo = {};
 
-        std::clog << std::put_time(std::localtime(&now), "%c") << ' '
+        std::clog << std::put_time(restc_cpp_localtime(time({}), timeInfo), "%c") << ' '
                   << levels.at(static_cast<size_t>(level))
                   << ' ' << std::this_thread::get_id() << ' '
                   << msg << std::endl;

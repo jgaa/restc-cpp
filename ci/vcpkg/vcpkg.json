@@ -1,0 +1,22 @@
+{
+  "name": "restc-cpp",
+  "license": "MIT",
+  "dependencies": [
+    "boost-scope-exit",
+    "boost-system",
+    "boost-context",
+    "boost-coroutine",
+    "boost-filesystem",
+    "boost-asio",
+    "boost-chrono",
+    "boost-date-time",
+    "boost-log",
+    "boost-uuid",
+    "boost-program-options",
+    "boost-functional",
+    "zlib",
+    "openssl",
+    "gtest",
+    "rapidjson"
+  ]
+}

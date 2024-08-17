@@ -33,7 +33,7 @@ public:
             for(size_t retries = 0;; ++retries) {
                 size_t bytes = 0;
                 try {
-                    if (retries) {
+                    if (retries != 0u) {
                         RESTC_CPP_LOG_DEBUG_("IoReaderImpl::ReadSome: taking a nap");
                         ctx_.Sleep(retries * 20ms);
                         RESTC_CPP_LOG_DEBUG_("IoReaderImpl::ReadSome: Waking up. Will try to read from the socket now.");
@@ -68,7 +68,8 @@ public:
         throw ObjectExpiredException("Connection expired");
     }
 
-    bool IsEof() const override {
+    [[nodiscard]] bool IsEof() const override
+    {
         if (auto conn = connection_.lock()) {
             return !conn->GetSocket().IsOpen();
         }

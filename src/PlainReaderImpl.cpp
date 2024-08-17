@@ -13,15 +13,14 @@ public:
 
     PlainReaderImpl(size_t contentLength, ptr_t&& source)
     : remaining_{contentLength},
-      source_{move(source)} {}
+      source_{std::move(source)} {}
 
-    bool IsEof() const override {
-        return remaining_ == 0;
-    }
+    [[nodiscard]] bool IsEof() const override { return remaining_ == 0; }
 
     void Finish() override {
-        if (source_)
+        if (source_) {
             source_->Finish();
+        }
     }
 
     boost::asio::const_buffers_1 ReadSome() override {
@@ -48,7 +47,7 @@ private:
 
 DataReader::ptr_t
 DataReader::CreatePlainReader(size_t contentLength, ptr_t&& source) {
-    return make_unique<PlainReaderImpl>(contentLength, move(source));
+    return make_unique<PlainReaderImpl>(contentLength, std::move(source));
 }
 
 
