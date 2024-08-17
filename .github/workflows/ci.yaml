@@ -1,7 +1,7 @@
 name: CI
 
 on: 
-  # push:
+  push:
   pull_request:
   schedule:
     - cron: '0 0 1 * *' # This line schedules the workflow to run at 00:00 on the first day of every month
@@ -22,8 +22,8 @@ jobs:
             compiler: clang
           - os: windows-latest
             compiler: msvc
-          # - os: macos-latest
-          #   compiler:
+          - os: macos-latest
+            compiler:
 
     steps:
       - name: Checkout code
