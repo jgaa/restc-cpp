@@ -46,7 +46,7 @@ public:
         if (read_this_time == 0) {
             const auto err = errno;
             throw IoException(string{"file read failed: "}
-                + to_string(err) + " " + strerror(err));
+                + to_string(err) + " " + std::system_category().message(err));
         }
 
         bytes_read_ += read_this_time;
