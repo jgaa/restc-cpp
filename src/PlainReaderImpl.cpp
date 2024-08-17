@@ -13,7 +13,7 @@ public:
 
     PlainReaderImpl(size_t contentLength, ptr_t&& source)
     : remaining_{contentLength},
-      source_{move(source)} {}
+      source_{std::move(source)} {}
 
     [[nodiscard]] bool IsEof() const override { return remaining_ == 0; }
 
@@ -47,7 +47,7 @@ private:
 
 DataReader::ptr_t
 DataReader::CreatePlainReader(size_t contentLength, ptr_t&& source) {
-    return make_unique<PlainReaderImpl>(contentLength, move(source));
+    return make_unique<PlainReaderImpl>(contentLength, std::move(source));
 }
 
 

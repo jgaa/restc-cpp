@@ -386,7 +386,13 @@ public:
         std::string pre_base = auth.name + ':' + auth.passwd;
         properties_->headers[authorization]
             = basic_sp + Base64Encode(pre_base);
+#if __cplusplus >= 201703L  // C++17 or later
         std::memset(pre_base.data(), 0, pre_base.capacity());
+#else  // C++14 or earlier
+        if (!pre_base.empty()) {
+            std::memset(&pre_base[0], 0, pre_base.capacity());
+        }
+#endif
         pre_base.clear();
     }
 

@@ -33,7 +33,7 @@ public:
     struct Key {
         Key(boost::asio::ip::tcp::endpoint ep,
             const Connection::Type connectionType)
-        : endpoint{move(ep)}, type{connectionType} {}
+        : endpoint{std::move(ep)}, type{connectionType} {}
 
         Key(const Key&) = default;
         Key(Key&&) = default;
@@ -70,7 +70,7 @@ public:
               const Connection::Type connectionType,
               Connection::ptr_t conn,
               const Request::Properties& prop)
-        : key{move(ep), connectionType}, connection{move(conn)}, ttl{prop.cacheTtlSeconds}
+        : key{std::move(ep), connectionType}, connection{std::move(conn)}, ttl{prop.cacheTtlSeconds}
         , created{time(nullptr)} {}
 
         friend ostream& operator << (ostream& o, const Entry& e) {
@@ -112,7 +112,7 @@ public:
         using release_callback_t = std::function<void (const Entry::ptr_t&)>;
         ConnectionWrapper(Entry::ptr_t entry,
                         release_callback_t on_release)
-        : on_release_{move(on_release)}, entry_{move(entry)}
+        : on_release_{std::move(on_release)}, entry_{std::move(entry)}
         {
         }
 
@@ -378,7 +378,7 @@ private:
         }
 
         auto entry = make_shared<Entry>(ep, connectionType,
-                                        make_shared<ConnectionImpl>(move(socket)),
+                                        make_shared<ConnectionImpl>(std::move(socket)),
                                         *properties_);
 
         RESTC_CPP_LOG_TRACE_("Created new connection " << *entry);

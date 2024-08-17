@@ -44,7 +44,7 @@ ReplyImpl::ReplyImpl(Connection::ptr_t connection,
                      RestClient& owner,
                      Request::Properties::ptr_t& properties,
                      Request::Type type)
-: connection_{move(connection)}, ctx_{ctx}
+: connection_{std::move(connection)}, ctx_{ctx}
 , properties_{properties}
 , owner_{owner}
 , connection_id_(connection_ ? connection_->GetId()
@@ -57,7 +57,7 @@ ReplyImpl::ReplyImpl(Connection::ptr_t connection,
                      Context& ctx,
                      RestClient& owner,
                      Request::Type type)
-: connection_{move(connection)}, ctx_{ctx}
+: connection_{std::move(connection)}, ctx_{ctx}
 , properties_{owner.GetConnectionProperties()}
 , owner_{owner}
 , connection_id_(connection_ ? connection_->GetId()
@@ -93,14 +93,14 @@ void ReplyImpl::StartReceiveFromServer(DataReader::ptr_t&& reader) {
                                      connection_);
 
     assert(reader);
-    auto stream = make_unique<DataReaderStream>(move(reader));
+    auto stream = make_unique<DataReaderStream>(std::move(reader));
     stream->ReadServerResponse(response_);
     stream->ReadHeaderLines(
         [this](std::string&& name, std::string&& value) {
-            headers_.insert({move(name), move(value)});
+            headers_.insert({std::move(name), std::move(value)});
     });
 
-    HandleContentType(move(stream));
+    HandleContentType(std::move(stream));
     HandleConnectionLifetime();
     HandleDecompression();
     CheckIfWeAreDone();
@@ -115,13 +115,13 @@ void ReplyImpl::HandleContentType(unique_ptr<DataReaderStream>&& stream) {
         reader_ = DataReader::CreateNoBodyReader();
     } else if (const auto cl = GetHeader(content_len_name)) {
         content_length_ = stoi(*cl);
-        reader_ = DataReader::CreatePlainReader(*content_length_, move(stream));
+        reader_ = DataReader::CreatePlainReader(*content_length_, std::move(stream));
     } else {
         auto te = GetHeader(transfer_encoding_name);
         if (te && ciEqLibC()(*te, chunked_name)) {
             reader_ = DataReader::CreateChunkedReader([this](string&& name, string&& value) {
-                headers_[name] = move(value);
-            },  move(stream));
+                headers_[name] = std::move(value);
+            },  std::move(stream));
         } else {
             reader_ = DataReader::CreateNoBodyReader();
         }
@@ -159,10 +159,10 @@ void ReplyImpl::HandleDecompression() {
 #ifdef RESTC_CPP_WITH_ZLIB
         if (ciEqLibC()(gzip, *it)) {
             RESTC_CPP_LOG_TRACE_("Adding gzip reader to " << *connection_);
-            reader_ = DataReader::CreateGzipReader(move(reader_));
+            reader_ = DataReader::CreateGzipReader(std::move(reader_));
         } else if (ciEqLibC()(deflate, *it)) {
             RESTC_CPP_LOG_TRACE_("Adding deflate reader to " << *connection_);
-            reader_ = DataReader::CreateZipReader(move(reader_));
+            reader_ = DataReader::CreateZipReader(std::move(reader_));
         } else
 #endif // RESTC_CPP_WITH_ZLIB
         {
@@ -244,7 +244,7 @@ ReplyImpl::Create(Connection::ptr_t connection,
        Request::Properties::ptr_t& properties,
        Request::Type type) {
 
-    return make_unique<ReplyImpl>(move(connection), ctx, owner, properties, type);
+    return make_unique<ReplyImpl>(std::move(connection), ctx, owner, properties, type);
 }
 
 } // restc_cpp

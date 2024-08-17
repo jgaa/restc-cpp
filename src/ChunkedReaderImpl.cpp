@@ -17,7 +17,7 @@ class ChunkedReaderImpl : public DataReader {
 public:
 
     ChunkedReaderImpl(add_header_fn_t&& fn, unique_ptr<DataReaderStream>&& source)
-    : stream_{move(source)}, add_header_(move(fn))
+    : stream_{std::move(source)}, add_header_(std::move(fn))
     {
     }
 
@@ -171,7 +171,7 @@ private:
 
 DataReader::ptr_t
 DataReader::CreateChunkedReader(add_header_fn_t fn, unique_ptr<DataReaderStream>&& source) {
-    return make_unique<ChunkedReaderImpl>(move(fn), move(source));
+    return make_unique<ChunkedReaderImpl>(std::move(fn), std::move(source));
 }
 
 

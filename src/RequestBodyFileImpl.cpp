@@ -19,7 +19,7 @@ class RequestBodyFileImpl : public RequestBody
 {
 public:
     RequestBodyFileImpl(boost::filesystem::path path)
-    : path_{move(path)}
+    : path_{std::move(path)}
     , size_{boost::filesystem::file_size(path_)}
     {
         file_ = make_unique<ifstream>(path_.string(), ios::binary);
@@ -77,7 +77,7 @@ private:
 unique_ptr<RequestBody> RequestBody::CreateFileBody(
     boost::filesystem::path path) {
 
-    return make_unique<impl::RequestBodyFileImpl>(move(path));
+    return make_unique<impl::RequestBodyFileImpl>(std::move(path));
 }
 
 } // restc_cpp

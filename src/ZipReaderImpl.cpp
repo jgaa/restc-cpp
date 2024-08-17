@@ -14,7 +14,7 @@ public:
 
     ZipReaderImpl(std::unique_ptr<DataReader>&& source,
                 const Format format)
-    : source_{move(source)}
+    : source_{std::move(source)}
     {
         const auto wsize = (format == Format::GZIP) ? (MAX_WBITS | 16) : MAX_WBITS;
 
@@ -145,13 +145,13 @@ private:
 
 std::unique_ptr<DataReader>
 DataReader::CreateZipReader(std::unique_ptr<DataReader>&& source) {
-    return make_unique<ZipReaderImpl>(move(source),
+    return make_unique<ZipReaderImpl>(std::move(source),
                                       ZipReaderImpl::Format::DEFLATE);
 }
 
 std::unique_ptr<DataReader>
 DataReader::CreateGzipReader(std::unique_ptr<DataReader>&& source) {
-    return make_unique<ZipReaderImpl>(move(source),
+    return make_unique<ZipReaderImpl>(std::move(source),
                                       ZipReaderImpl::Format::GZIP);
 }
 

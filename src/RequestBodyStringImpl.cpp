@@ -51,7 +51,7 @@ private:
 std::unique_ptr<RequestBody> RequestBody::CreateStringBody(
     std::string body) {
 
-    return make_unique<impl::RequestBodyStringImpl>(move(body));
+    return make_unique<impl::RequestBodyStringImpl>(std::move(body));
 }
 
 } // restc_cpp

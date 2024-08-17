@@ -179,8 +179,8 @@ struct Group {
           std::list<Person> more_members_ = {},
           std::deque<Person> even_more_members_ = {})
     : name{std::move(name_)}, gid{gid_}, leader{std::move(leader_)}
-    , members{move(members_)}, more_members{move(more_members_)}
-    , even_more_members{move(even_more_members_)}
+    , members{std::move(members_)}, more_members{std::move(more_members_)}
+    , even_more_members{std::move(even_more_members_)}
     {}
 
     Group() = default;

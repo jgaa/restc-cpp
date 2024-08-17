@@ -10,7 +10,7 @@ using namespace std;
 namespace restc_cpp {
 
 DataReaderStream::DataReaderStream(std::unique_ptr<DataReader>&& source)
-: source_{move(source)} {
+: source_{std::move(source)} {
     RESTC_CPP_LOG_TRACE_("DataReaderStream: Chained to "
         << RESTC_CPP_TYPENAME(decltype(*source_)));
 }
@@ -135,7 +135,7 @@ void DataReaderStream::ReadServerResponse(Reply::HttpResponse& response)
         throw ProtocolException("ReadHeaders(): No CR/LF after HTTP response phrase!");
     }
 
-    response.reason_phrase = move(value);
+    response.reason_phrase = std::move(value);
     RESTC_CPP_LOG_TRACE_("ReadServerResponse: getc_bytes is " <<  getc_bytes_);
 
     RESTC_CPP_LOG_TRACE_("HTTP Response: "
@@ -190,7 +190,7 @@ void DataReaderStream::ReadHeaderLines(const add_header_fn_t& addHeader) {
         }
 
         RESTC_CPP_LOG_TRACE_(name << ": " << value);
-        addHeader(move(name), move(value));
+        addHeader(std::move(name), std::move(value));
         name.clear();
         value.clear();
     }

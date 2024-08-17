@@ -13,7 +13,7 @@ namespace restc_cpp {
 class PlainWriterImpl : public DataWriter {
 public:
     PlainWriterImpl(size_t contentLength, ptr_t&& source)
-    : next_{move(source)},  content_length_{contentLength}
+    : next_{std::move(source)},  content_length_{contentLength}
     {
     }
 
@@ -47,7 +47,7 @@ private:
 
 DataWriter::ptr_t
 DataWriter::CreatePlainWriter(size_t contentLength, ptr_t&& source) {
-    return make_unique<PlainWriterImpl>(contentLength, move(source));
+    return make_unique<PlainWriterImpl>(contentLength, std::move(source));
 }
 
 } // namespace
