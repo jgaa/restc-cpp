@@ -57,6 +57,14 @@
        throw; /* required for Boost Coroutine! */ \
     } catch (...)
 
+#if BOOST_VERSION >= 108100
+// They changed the function signature. In boost 1.86 it broke the build.
+#define RESTC_CPP_SPAWN_TRAILER \
+    , boost::asio::detached
+#else
+#define RESTC_CPP_SPAWN_TRAILER
+#endif
+
 namespace restc_cpp {
 
 class RestClient;
@@ -421,7 +429,7 @@ public:
                 prom->set_exception(std::current_exception());
             }
             done_handler.reset();
-        }, boost::asio::detached);
+        } RESTC_CPP_SPAWN_TRAILER);
 
         return future;
     }
