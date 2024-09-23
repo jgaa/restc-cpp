@@ -421,7 +421,7 @@ public:
                 prom->set_exception(std::current_exception());
             }
             done_handler.reset();
-        });
+        }, boost::asio::detached);
 
         return future;
     }

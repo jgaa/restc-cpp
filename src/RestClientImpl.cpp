@@ -342,7 +342,7 @@ public:
     void Process(const prc_fn_t& fn) override {
         boost::asio::spawn(*io_service_,
                            bind(&RestClientImpl::ProcessInWorker, this,
-                                placeholders::_1, fn, nullptr));
+                                placeholders::_1, fn, nullptr), boost::asio::detached);
     }
 
     future< void > ProcessWithPromise(const prc_fn_t& fn) override {
@@ -351,7 +351,7 @@ public:
 
         boost::asio::spawn(*io_service_,
                            bind(&RestClientImpl::ProcessInWorker, this,
-                                placeholders::_1, fn, promise));
+                                placeholders::_1, fn, promise), boost::asio::detached);
 
         return future;
     }
