@@ -101,7 +101,11 @@ void boost_dispatch(IOService& io_service, Handler&& handler) {
             );
     }
 #else
-    io_service.dispatch(std::forward<Handler>(handler));
+    if constexpr (std::is_pointer_v<IOService>) {
+        io_service->dispatch(std::forward<Handler>(handler));
+    } else {
+        io_service.dispatch(std::forward<Handler>(handler));
+    }
 #endif
 }
 
