@@ -38,6 +38,8 @@ option(RESTC_CPP_AUTORUN_UNIT_TESTS "Run Unit Tests automatically after build" O
 
 option(RESTC_CPP_WITH_FUNCTIONALT_TESTS "Enable Functional Testing" ON)
 
+option(RESTC_USE_LEGACY_BOOST_FIND "Use the old Boost find module" OFF)
+
 set(GTEST_TAG "main" CACHE STRING "Gtest branch to use. Required on older Linux versions because newer gtest requure newer cmake!")
 set(LOGFAULT_TAG "master" CACHE STRING "Logfault branch to use. Required on older Linux versions because newer gtest requure newer cmake!")
 
@@ -249,7 +251,10 @@ endif()
 
 if (NOT EMBEDDED_RESTC_CPP)
 
-    if(CMAKE_VERSION VERSION_GREATER "3.28")
+    if (RESTC_USE_LEGACY_BOOST_FIND)
+        unset(restc_cpp_boost_find_config)
+        message("Using legacy Boost find config")
+    elseif(CMAKE_VERSION VERSION_GREATER "3.28")
         set(restc_cpp_boost_find_config CONFIG)
         message("Using new Boost find config")
     endif()

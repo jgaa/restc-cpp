@@ -631,17 +631,9 @@ private:
             return {protocol, static_cast<uint16_t>(port_num)};
         }
 
-        //boost::asio::ip::tcp::resolver::query const q{host, port};
         boost::asio::ip::tcp::resolver resolver(owner_.GetIoService());
+        auto results = boost_resolve(resolver, host, port, ctx.GetYield());
 
-#if BOOST_VERSION >= 107000
-        // For Boost 1.70.0 and later
-        auto results = resolver.async_resolve(host, port, ctx.GetYield());
-#else
-        // For Boost versions earlier than 1.70.0
-        boost::asio::ip::tcp::resolver::query query(host, port);
-        auto results = resolver.async_resolve(query, ctx.GetYield());
-#endif
         for (auto it = results.begin(); it != results.end(); ++it) {
             const auto endpoint = it->endpoint();
             RESTC_CPP_LOG_TRACE_("ep=" << endpoint << ", protocol=" << endpoint.protocol().protocol());
@@ -697,15 +689,7 @@ private:
         const auto [host, service] = GetRequestEndpoint();
 
         RESTC_CPP_LOG_TRACE_("Resolving " << host << ":" << service);
-
-#if BOOST_VERSION >= 107000
-        // For Boost 1.70.0 and later
-        auto results = resolver.async_resolve(host, service, ctx.GetYield());
-#else
-        // For Boost versions earlier than 1.70.0
-        boost::asio::ip::tcp::resolver::query query(host, service);
-        auto results = resolver.async_resolve(query, yield);
-#endif
+        auto results = boost_resolve(resolver, host, service, ctx.GetYield());
 
         for (auto it = results.begin(); it != results.end(); ++it) {
             const auto endpoint = it->endpoint();
