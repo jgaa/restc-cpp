@@ -28,13 +28,13 @@ catch (boost::coroutines::detail::forced_unwind const&) { \
         throw; /* required for Boost Coroutine! */ \
 } catch (...)
 #elif BOOST_VERSION >= 106000
-#include <boost/coroutine/detail/forced_unwind.hpp>
+#include <boost/coroutine2/detail/forced_unwind.hpp>
 #define RESTC_CPP_IN_COROUTINE_CATCH_ALL \
 catch (boost::coroutines::detail::forced_unwind const&) { \
         throw; /* required for Boost Coroutine! */ \
 } catch (...)
 #else
-#define RESTC_CPP_IN_COROUTINE_CATCH_ALL \
+static_assert(false, "Unsupported boost version");
 catch (...)
 #endif
 
