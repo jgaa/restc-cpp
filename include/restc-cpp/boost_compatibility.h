@@ -15,7 +15,7 @@
  * Here I try to handle the differences between the different versions of boost::asio
  * in order to make it easier to maintain support for older versions of boost.
  *
- * So if restc-spp is the only library that you are using that requires broken parts
+ * So if restc-cpp is the only library that you are using that requires broken parts
  * of boost, then you should be fine.
  *
  * I take full credits for whatever works well here. All blame goes to ChatGPT! ;)
