@@ -44,7 +44,7 @@ public:
     virtual ~DataReader() = default;
 
     virtual bool IsEof() const = 0;
-    virtual boost::asio::const_buffers_1 ReadSome() = 0;
+    virtual boost_const_buffer ReadSome() = 0;
     virtual void Finish() = 0; // Make sure there are no pending data for the current request
 
     static ptr_t CreateIoReader(const Connection::ptr_t& conn,

@@ -34,10 +34,10 @@ public:
     }
 
     /*! Read whatever we have buffered or can get downstream */
-    boost::asio::const_buffers_1 ReadSome() override;
+    boost_const_buffer ReadSome() override;
 
     /*! Read up to maxBytes from whatever we have buffered or can get downstream.*/
-    boost::asio::const_buffers_1 GetData(size_t maxBytes);
+    boost_const_buffer GetData(size_t maxBytes);
 
     /*! Get one char
      *

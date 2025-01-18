@@ -17,11 +17,11 @@ public:
     {
     }
 
-    void WriteDirect(boost::asio::const_buffers_1 buffers) override {
+    void WriteDirect(::restc_cpp::boost_const_buffer buffers) override {
         next_->WriteDirect(buffers);
     }
 
-    void Write(boost::asio::const_buffers_1 buffers) override {
+    void Write(::restc_cpp::boost_const_buffer buffers) override {
         next_->Write(buffers);
     }
 

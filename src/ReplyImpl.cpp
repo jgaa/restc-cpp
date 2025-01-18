@@ -174,10 +174,10 @@ void ReplyImpl::HandleDecompression() {
     }
 }
 
-boost::asio::const_buffers_1 ReplyImpl::GetSomeData()  {
+::restc_cpp::boost_const_buffer ReplyImpl::GetSomeData()  {
     auto rval = reader_
         ? reader_->ReadSome()
-        : boost::asio::const_buffers_1{nullptr, 0};
+        : ::restc_cpp::boost_const_buffer{nullptr, 0};
     CheckIfWeAreDone();
     return rval;
 }
@@ -197,7 +197,7 @@ string ReplyImpl::GetBodyAsString(const size_t maxSize) {
                 "Too much data for the curent buffer limit.");
         }
 
-        buffer.append(boost::asio::buffer_cast<const char*>(data),
+        buffer.append(boost_buffer_cast(data),
                       buffer_size);
     }
 

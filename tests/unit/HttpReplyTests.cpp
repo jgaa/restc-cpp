@@ -27,7 +27,7 @@ public:
 
     [[nodiscard]] bool IsEof() const override { return next_buffer_ == test_buffers_.end(); }
 
-    boost::asio::const_buffers_1 ReadSome() override {
+    ::restc_cpp::boost_const_buffer ReadSome() override {
         if (IsEof()) {
             return {nullptr, 0};
         }

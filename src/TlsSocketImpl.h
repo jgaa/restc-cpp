@@ -24,7 +24,7 @@ public:
 
     using ssl_socket_t = boost::asio::ssl::stream<boost::asio::ip::tcp::socket>;
 
-    TlsSocketImpl(boost::asio::io_service& io_service, shared_ptr<boost::asio::ssl::context> ctx)
+    TlsSocketImpl(boost_io_service& io_service, shared_ptr<boost::asio::ssl::context> ctx)
     {
         ssl_socket_ = std::make_unique<ssl_socket_t>(io_service, *ctx);
     }
@@ -39,21 +39,21 @@ public:
             ssl_socket_->lowest_layer());
     }
 
-    std::size_t AsyncReadSome(boost::asio::mutable_buffers_1 buffers,
+    std::size_t AsyncReadSome(boost_mutable_buffer buffers,
                               boost::asio::yield_context& yield) override {
         return WrapException<std::size_t>([&] {
             return ssl_socket_->async_read_some(buffers, yield);
         });
     }
 
-    std::size_t AsyncRead(boost::asio::mutable_buffers_1 buffers,
+    std::size_t AsyncRead(boost_mutable_buffer buffers,
                           boost::asio::yield_context& yield) override {
         return WrapException<std::size_t>([&] {
             return boost::asio::async_read(*ssl_socket_, buffers, yield);
         });
     }
 
-    void AsyncWrite(const boost::asio::const_buffers_1& buffers,
+    void AsyncWrite(const boost_const_buffer& buffers,
                     boost::asio::yield_context& yield) override {
         boost::asio::async_write(*ssl_socket_, buffers, yield);
     }
@@ -66,7 +66,7 @@ public:
     }
 
     void AsyncConnect(const boost::asio::ip::tcp::endpoint& ep,
-                    const string &host,
+                    const std::string &host,
                     bool tcpNodelay,
                     boost::asio::yield_context& yield) override {
         return WrapException<void>([&] {

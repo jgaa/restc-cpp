@@ -417,10 +417,10 @@ void ninth() {
 
 void tenth() {
     // Construct our own ioservice.
-    boost::asio::io_service ioservice;
+    boost_io_service ioservice;
 
     // Give it some work so it don't end prematurely
-    boost::asio::io_service::work const work(ioservice);
+    auto work = boost_make_work(ioservice);
 
     // Start it in a worker-thread
     thread worker([&ioservice]() {

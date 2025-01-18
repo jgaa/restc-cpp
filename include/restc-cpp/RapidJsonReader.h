@@ -6,6 +6,7 @@
 
 #include <assert.h>
 
+#include "restc-cpp/boost_compatibility.h"
 #include "rapidjson/reader.h"
 #include "restc-cpp/restc-cpp.h"
 
@@ -96,7 +97,7 @@ private:
         const auto len = boost::asio::buffer_size(buffer);
 
         if (len) {
-            ch_ = boost::asio::buffer_cast<const char*>(buffer);
+            ch_ = boost_buffer_cast(buffer);
             end_ = ch_ + len;
         } else {
             ch_ = end_ = nullptr;

@@ -6,7 +6,7 @@
 
 #include <boost/utility/string_ref.hpp>
 
-#include "restc-cpp/restc-cpp.h"
+#include "restc-cpp/boost_compatibility.h"
 #include "restc-cpp/Socket.h"
 #include "restc-cpp/logging.h"
 
@@ -15,7 +15,7 @@ namespace restc_cpp {
 class SocketImpl : public Socket, protected ExceptionWrapper {
 public:
 
-    SocketImpl(boost::asio::io_service& io_service)
+    SocketImpl(boost_io_service& io_service)
     : socket_{io_service}
     {
     }
@@ -28,21 +28,21 @@ public:
         return socket_;
     }
 
-    std::size_t AsyncReadSome(boost::asio::mutable_buffers_1 buffers,
+    std::size_t AsyncReadSome(boost_mutable_buffer buffers,
                             boost::asio::yield_context& yield) override {
         return WrapException<std::size_t>([&] {
             return socket_.async_read_some(buffers, yield);
         });
     }
 
-    std::size_t AsyncRead(boost::asio::mutable_buffers_1 buffers,
+    std::size_t AsyncRead(boost_mutable_buffer buffers,
                         boost::asio::yield_context& yield) override {
         return WrapException<std::size_t>([&] {
             return boost::asio::async_read(socket_, buffers, yield);
         });
     }
 
-    void AsyncWrite(const boost::asio::const_buffers_1& buffers,
+    void AsyncWrite(const boost_const_buffer& buffers,
                     boost::asio::yield_context& yield) override {
         boost::asio::async_write(socket_, buffers, yield);
     }

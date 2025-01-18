@@ -55,9 +55,9 @@ public:
         return out.str();
     }
 
-    static void Log(const boost::asio::const_buffers_1 buffers, const char * /*tag*/)
+    static void Log(const ::restc_cpp::boost_const_buffer buffers, const char * /*tag*/)
     {
-        const auto buf_len = boost::asio::buffer_size(*buffers.begin());
+        const auto buf_len = boost_buffer_size(buffers);
 
         // At the time of the implementation, there are never multiple buffers.
         RESTC_CPP_LOG_TRACE_(tag << ' ' << "# " << buf_len
@@ -67,7 +67,7 @@ public:
                            buf_len}));
     }
 
-    boost::asio::const_buffers_1 ReadSome() override {
+    ::restc_cpp::boost_const_buffer ReadSome() override {
 
         EatPadding();
 
@@ -113,7 +113,7 @@ private:
         }
     }
 
-    boost::asio::const_buffers_1 GetData() {
+    ::restc_cpp::boost_const_buffer GetData() {
 
         auto rval = stream_->GetData(chunk_len_);
         const auto seg_len = boost::asio::buffer_size(rval);

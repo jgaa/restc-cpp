@@ -7,6 +7,9 @@
 #include <thread>
 #include <future>
 
+#include <boost/exception/all.hpp>
+#include <boost/exception/diagnostic_information.hpp>
+
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/logging.h"
 #include "restc-cpp/ConnectionPool.h"
@@ -125,7 +128,7 @@ public:
 
     RestClientImpl(const boost::optional<Request::Properties>& properties,
                    bool useMainThread)
-    : ioservice_instance_{make_unique<boost::asio::io_service>()}
+    : ioservice_instance_{make_unique<boost_io_service>()}
     {
 #ifdef RESTC_CPP_WITH_TLS
         setDefaultSSLContext();
@@ -137,7 +140,7 @@ public:
 #ifdef RESTC_CPP_WITH_TLS
     RestClientImpl(const boost::optional<Request::Properties>& properties,
         bool useMainThread, shared_ptr<boost::asio::ssl::context> ctx)
-        : ioservice_instance_{ make_unique<boost::asio::io_service>() }
+        : ioservice_instance_{ make_unique<boost_io_service>() }
     {
         tls_context_ = std::move(ctx);
         io_service_ = ioservice_instance_.get();
@@ -146,7 +149,7 @@ public:
 
     RestClientImpl(const boost::optional<Request::Properties>& properties,
         bool useMainThread, shared_ptr<boost::asio::ssl::context> ctx,
-        boost::asio::io_service& ioservice)
+        boost_io_service& ioservice)
         : io_service_{ &ioservice }
     {
         tls_context_ = std::move(ctx);
@@ -156,7 +159,7 @@ public:
 #endif
 
     RestClientImpl(const boost::optional<Request::Properties>& properties,
-                   boost::asio::io_service& ioservice)
+                   boost_io_service& ioservice)
     : io_service_{&ioservice}
     {
 #ifdef RESTC_CPP_WITH_TLS
@@ -219,7 +222,11 @@ public:
             done_mutexes_.push_back(make_unique<recursive_mutex>());
         }
 
-        work_ = make_unique<boost::asio::io_service::work>(*io_service_);
+#if BOOST_VERSION >= 106600
+        work_ = std::make_unique<boost_work>(boost::asio::make_work_guard(io_service_->get_executor()));
+#else
+        work_ = std::make_unique<boost_work>(*io_service_);
+#endif
 
         RESTC_CPP_LOG_TRACE_("Starting " <<default_connection_properties_->threads << " worker thread(s)");
         for(size_t i = 0; i < default_connection_properties_->threads; ++i) {
@@ -256,7 +263,7 @@ public:
     void CloseWhenReady(bool wait) override {
         ClearWork();
         if (!io_service_->stopped()) {
-            io_service_->dispatch([this](){
+            boost_dispatch(io_service_, [this](){
                 if (current_tasks_ == 0) {
                     OnNoMoreWork();
                 }
@@ -284,7 +291,7 @@ public:
             call_once(close_once_, [&] {
                 auto promise = make_shared<std::promise<void>>();
 
-                io_service_->dispatch([this, promise]() {
+                boost_dispatch(io_service_, [this, promise]() {
                     LOCK_;
                     if (work_) {
                         work_.reset();
@@ -308,8 +315,6 @@ public:
         DoneHandlerImpl handler(*this);
         try {
             fn(ctx);
-        } catch (boost::coroutines::detail::forced_unwind const&) {
-           throw; // required for Boost Coroutine!
         } catch(const exception& ex) {
             RESTC_CPP_LOG_ERROR_("ProcessInWorker: Caught exception: " << ex.what());
             if (promise) {
@@ -321,7 +326,7 @@ public:
             RESTC_CPP_LOG_ERROR_("ProcessInWorker: Caught boost exception: "
                 << boost::diagnostic_information(ex));
             terminate();
-        } catch(...) {
+        } RESTC_CPP_IN_COROUTINE_CATCH_ALL {
             ostringstream estr;
 #ifdef __unix__
             estr << " of type : " << __cxxabiv1::__cxa_current_exception_type()->name();
@@ -361,7 +366,7 @@ public:
         return pool_;
     }
 
-    boost::asio::io_service& GetIoService() override { return *io_service_; }
+    boost_io_service& GetIoService() override { return *io_service_; }
 
 #ifdef RESTC_CPP_WITH_TLS
     shared_ptr<boost::asio::ssl::context> GetTLSContext() override { return tls_context_; }
@@ -400,10 +405,10 @@ protected:
 
 private:
     Request::Properties::ptr_t default_connection_properties_ = make_shared<Request::Properties>();
-    unique_ptr<boost::asio::io_service> ioservice_instance_;
-    boost::asio::io_service *io_service_ = nullptr;
+    unique_ptr<boost_io_service> ioservice_instance_;
+    boost_io_service *io_service_ = nullptr;
     ConnectionPool::ptr_t pool_;
-    unique_ptr<boost::asio::io_service::work> work_;
+    std::unique_ptr<boost_work> work_;
 #ifdef RESTC_CPP_THREADED_CTX
     atomic_size_t current_tasks_{0};
 #else
@@ -452,7 +457,7 @@ std::unique_ptr<RestClient> RestClient::Create(std::shared_ptr<boost::asio::ssl:
 
 std::unique_ptr<RestClient> RestClient::Create(std::shared_ptr<boost::asio::ssl::context> ctx,
                                                const boost::optional<Request::Properties> &properties,
-                                               boost::asio::io_service &ioservice)
+                                               boost_io_service &ioservice)
 {
     return make_unique<RestClientImpl>(properties, false, std::move(ctx), ioservice);
 }
@@ -475,12 +480,12 @@ unique_ptr<RestClient> RestClient::CreateUseOwnThread() {
 
 std::unique_ptr<RestClient>
 RestClient::Create(const boost::optional<Request::Properties>& properties,
-       boost::asio::io_service& ioservice) {
+       boost_io_service& ioservice) {
     return make_unique<RestClientImpl>(properties, ioservice);
 }
 
 std::unique_ptr<RestClient>
-RestClient::Create(boost::asio::io_service& ioservice) {
+RestClient::Create(boost_io_service& ioservice) {
     return make_unique<RestClientImpl>(boost::optional<Request::Properties>{},
                                        ioservice);
 }

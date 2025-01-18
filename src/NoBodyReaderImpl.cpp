@@ -15,7 +15,7 @@ public:
     void Finish() override {
     }
 
-    boost::asio::const_buffers_1 ReadSome() override {
+    ::restc_cpp::boost_const_buffer ReadSome() override {
         return {nullptr, 0};
     }
 };

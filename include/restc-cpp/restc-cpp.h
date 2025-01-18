@@ -25,6 +25,7 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
+#include "restc-cpp/boost_compatibility.h"
 #include "restc-cpp/helper.h"
 #include "restc-cpp/Connection.h"
 
@@ -50,19 +51,6 @@
 /*! Size of fixed size (per connection) IO buffers */
 #ifndef RESTC_CPP_IO_BUFFER_SIZE
 #   define RESTC_CPP_IO_BUFFER_SIZE (1024 * 16)
-#endif
-
-#define RESTC_CPP_IN_COROUTINE_CATCH_ALL \
-    catch (boost::coroutines::detail::forced_unwind const&) { \
-       throw; /* required for Boost Coroutine! */ \
-    } catch (...)
-
-#if BOOST_VERSION >= 108100
-// They changed the function signature. In boost 1.86 it broke the build.
-#define RESTC_CPP_SPAWN_TRAILER \
-    , boost::asio::detached
-#else
-#define RESTC_CPP_SPAWN_TRAILER
 #endif
 
 namespace restc_cpp {
@@ -285,7 +273,7 @@ public:
      * be fetched from the server. The data is safe to use until
      * the method is called again.
      */
-    virtual boost::asio::const_buffers_1 GetSomeData() = 0;
+    virtual boost_const_buffer GetSomeData() = 0;
 
     /*! Returns true as long as you have not yet pulled all
      * the data from the response.
@@ -350,15 +338,15 @@ public:
         const auto microseconds =
             std::chrono::duration_cast<std::chrono::microseconds>(
                 duration).count();
-        boost::posix_time::microseconds ms(microseconds);
+        ::boost::posix_time::microseconds ms(microseconds);
         Sleep(ms);
     }
 
     /*! Asynchronously sleep for a period */
-    virtual void Sleep(const boost::posix_time::microseconds& ms) = 0;
+    virtual void Sleep(const ::boost::posix_time::microseconds& ms) = 0;
 
     static std::unique_ptr<Context>
-        Create(boost::asio::yield_context& yield,
+        Create(::boost::asio::yield_context& yield,
                RestClient& rc);
 };
 
@@ -442,7 +430,7 @@ public:
     }
 
     virtual std::shared_ptr<ConnectionPool> GetConnectionPool() = 0;
-    virtual boost::asio::io_service& GetIoService() = 0;
+    virtual boost_io_service& GetIoService() = 0;
 
 #ifdef RESTC_CPP_WITH_TLS
     virtual std::shared_ptr<boost::asio::ssl::context> GetTLSContext() = 0;
@@ -476,30 +464,30 @@ public:
 
 #ifdef RESTC_CPP_WITH_TLS
     static std::unique_ptr<RestClient> Create(
-            std::shared_ptr<boost::asio::ssl::context> ctx);
+            std::shared_ptr<::boost::asio::ssl::context> ctx);
     static std::unique_ptr<RestClient> Create(
-            std::shared_ptr<boost::asio::ssl::context> ctx,
-            const boost::optional<Request::Properties>& properties);
+            std::shared_ptr<::boost::asio::ssl::context> ctx,
+            const ::boost::optional<Request::Properties>& properties);
     static std::unique_ptr<RestClient> Create(
-            std::shared_ptr<boost::asio::ssl::context> ctx,
-            const boost::optional<Request::Properties>& properties,
-            boost::asio::io_service& ioservice);
+            std::shared_ptr<::boost::asio::ssl::context> ctx,
+            const ::boost::optional<Request::Properties>& properties,
+            boost_io_service& ioservice);
 #endif
 
     static std::unique_ptr<RestClient>
-        Create(const boost::optional<Request::Properties>& properties);
+        Create(const ::boost::optional<Request::Properties>& properties);
 
     static std::unique_ptr<RestClient> CreateUseOwnThread();
 
     static std::unique_ptr<RestClient>
-        CreateUseOwnThread(const boost::optional<Request::Properties>& properties);
+        CreateUseOwnThread(const ::boost::optional<Request::Properties>& properties);
 
     static std::unique_ptr<RestClient>
-        Create(const boost::optional<Request::Properties>& properties,
-               boost::asio::io_service& ioservice);
+        Create(const ::boost::optional<Request::Properties>& properties,
+               boost_io_service& ioservice);
 
     static std::unique_ptr<RestClient>
-        Create(boost::asio::io_service& ioservice);
+        Create(boost_io_service& ioservice);
 
 
     protected:

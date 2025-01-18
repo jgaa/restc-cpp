@@ -218,6 +218,7 @@ set(ACTUAL_SOURCES
     src/RequestBodyStringImpl.cpp
     src/RequestBodyFileImpl.cpp
     src/url_encode.cpp
+    src/boost_compitability.cpp
     ${LOGGING_SRC}
     )
 
