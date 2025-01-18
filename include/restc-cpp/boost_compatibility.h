@@ -54,7 +54,7 @@ using boost_const_buffer = boost::asio::const_buffer;
 using boost_mutable_buffer = boost::asio::mutable_buffer;
 #else
 using boost_const_buffer = boost::asio::const_buffers_1;
-sing boost_mutable_buffer = boost::asio::mutable_buffers_1;
+using boost_mutable_buffer = boost::asio::mutable_buffers_1;
 #endif
 
 
