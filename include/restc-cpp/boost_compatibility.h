@@ -109,25 +109,14 @@ namespace restc_cpp {
  * @param handler The handler to dispatch.
  */
     template <typename IOService, typename Handler>
-    void boost_dispatch(IOService& io_service, Handler&& handler) {
+    void boost_dispatch(IOService *io_service, Handler&& handler) {
 #if BOOST_VERSION >= 106600
-        if constexpr (std::is_pointer_v<IOService>) {
-            io_service->get_executor().dispatch(
-                std::forward<Handler>(handler),
-                std::allocator<void>() // Default allocator
-                );
-        } else {
-            io_service.get_executor().dispatch(
-                std::forward<Handler>(handler),
-                std::allocator<void>() // Default allocator
-                );
-        }
+        io_service->get_executor().dispatch(
+            std::forward<Handler>(handler),
+            std::allocator<void>() // Default allocator
+            );
 #else
-        if constexpr (std::is_pointer_v<IOService>) {
-            io_service->dispatch(std::forward<Handler>(handler));
-        } else {
-            io_service.dispatch(std::forward<Handler>(handler));
-        }
+        io_service->dispatch(std::forward<Handler>(handler));
 #endif
     }
 
