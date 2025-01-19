@@ -20,6 +20,9 @@
 #include <boost/log/expressions.hpp>
 #endif
 
+#include <boost/exception/all.hpp>
+#include <boost/exception/diagnostic_information.hpp>
+
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/RequestBuilder.h"
 #include "restc-cpp/SerializeJson.h"

@@ -11,6 +11,7 @@
 
 #include <boost/system/error_code.hpp>
 
+#include "restc-cpp/boost_compatibility.h"
 #include "restc-cpp/typename.h"
 #include "restc-cpp/logging.h"
 
@@ -34,13 +35,13 @@ public:
 
     virtual const boost::asio::ip::tcp::socket& GetSocket() const = 0;
 
-    virtual std::size_t AsyncReadSome(boost::asio::mutable_buffers_1 buffers,
+    virtual std::size_t AsyncReadSome(boost_mutable_buffer buffers,
                                         boost::asio::yield_context& yield) = 0;
 
-    virtual std::size_t AsyncRead(boost::asio::mutable_buffers_1 buffers,
+    virtual std::size_t AsyncRead(boost_mutable_buffer buffers,
                                     boost::asio::yield_context& yield) = 0;
 
-    virtual void AsyncWrite(const boost::asio::const_buffers_1& buffers,
+    virtual void AsyncWrite(const boost_const_buffer& buffers,
         boost::asio::yield_context& yield) = 0;
 
     virtual void AsyncWrite(const write_buffers_t& buffers,
@@ -48,7 +49,7 @@ public:
 
     template <typename T>
     void AsyncWriteT(const T& buffer, boost::asio::yield_context& yield) {
-        boost::asio::const_buffers_1 b{buffer.data(), buffer.size()};
+        boost_const_buffer b{buffer.data(), buffer.size()};
         AsyncWrite(b, yield);
     }
 

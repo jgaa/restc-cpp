@@ -44,10 +44,10 @@ public:
     virtual ~DataWriter() = default;
 
     /*! Write some data */
-    virtual void Write(boost::asio::const_buffers_1 buffers) = 0;
+    virtual void Write(boost_const_buffer buffers) = 0;
 
     /*! Write without altering the data (headers) */
-    virtual void WriteDirect(boost::asio::const_buffers_1 buffers) = 0;
+    virtual void WriteDirect(boost_const_buffer buffers) = 0;
 
     /*! Write some data */
     virtual void Write(const write_buffers_t& buffers) = 0;

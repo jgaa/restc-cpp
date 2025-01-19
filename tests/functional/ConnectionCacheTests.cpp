@@ -3,6 +3,7 @@
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/logging.h"
 #include "restc-cpp/ConnectionPool.h"
+#include "restc-cpp/boost_compatibility.h"
 
 #include "../src/ReplyImpl.h"
 
@@ -73,7 +74,7 @@ TEST(ConnectionCache, MaxConnectionsToEndpoint) {
     auto config = rest_client->GetConnectionProperties();
 
     std::vector<Connection::ptr_t> connections;
-    boost::asio::ip::tcp::endpoint const ep{boost::asio::ip::address::from_string("127.0.0.1"), 80};
+    const auto ep = boost_create_endpoint("127.0.0.1", 80);
     for(size_t i = 0; i < config->cacheMaxConnectionsPerEndpoint; ++i) {
         connections.push_back(pool->GetConnection(ep, restc_cpp::Connection::Type::HTTP));
     }
@@ -87,7 +88,7 @@ TEST(ConnectionCache, MaxConnections) {
     auto pool = rest_client->GetConnectionPool();
     auto config = rest_client->GetConnectionProperties();
 
-    auto addr = boost::asio::ip::address_v4::from_string("127.0.0.1").to_ulong();
+    auto addr = boost_convert_ipv4_to_uint("127.0.0.1");
 
     std::vector<Connection::ptr_t> connections;
     decltype(addr) i = 0;
@@ -152,7 +153,7 @@ TEST(ConnectionCache, OverrideMaxConnectionsToEndpoint) {
     auto config = rest_client->GetConnectionProperties();
 
     std::vector<Connection::ptr_t> connections;
-    boost::asio::ip::tcp::endpoint const ep{boost::asio::ip::address::from_string("127.0.0.1"), 80};
+    auto const ep  = boost_create_endpoint("127.0.0.1", 80);
     for(size_t i = 0; i < config->cacheMaxConnectionsPerEndpoint; ++i) {
         connections.push_back(pool->GetConnection(ep, restc_cpp::Connection::Type::HTTP));
     }

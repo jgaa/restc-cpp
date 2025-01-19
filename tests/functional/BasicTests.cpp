@@ -5,6 +5,8 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/fusion/adapted.hpp>
+#include <boost/exception/all.hpp>
+#include <boost/exception/diagnostic_information.hpp>
 
 #include "restc-cpp/restc-cpp.h"
 #include "restc-cpp/RequestBuilder.h"

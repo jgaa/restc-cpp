@@ -45,7 +45,7 @@ public:
         return response_;
     }
 
-    boost::asio::const_buffers_1 GetSomeData() override;
+    boost_const_buffer GetSomeData() override;
 
     string GetBodyAsString(size_t maxSize
         = RESTC_CPP_SANE_DATA_LIMIT) override;
@@ -67,8 +67,8 @@ public:
            Request::Properties::ptr_t& properties,
            Request::Type type);
 
-    static boost::string_ref b2sr(boost::asio::const_buffers_1 buffer) {
-        return { boost::asio::buffer_cast<const char*>(buffer),
+    static boost::string_ref b2sr(boost_const_buffer buffer) {
+        return { boost_buffer_cast(buffer),
             boost::asio::buffer_size(buffer)};
     }
 

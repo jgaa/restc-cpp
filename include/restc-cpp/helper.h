@@ -59,9 +59,17 @@ public:
     {
     }
 
-    operator boost::asio::const_buffers_1 () const {
+#if BOOST_VERSION >= 107000
+    // For Boost 1.70 and newer
+    operator boost::asio::const_buffer() const {
+        return {buf_.data(), buf_.size()};
+    }
+#else
+    // For Boost versions older than 1.70
+    operator boost::asio::const_buffers_1() const {
         return {buf_.c_str(), buf_.size()};
     }
+#endif
 
     operator const boost::string_ref() const {
         return buf_;

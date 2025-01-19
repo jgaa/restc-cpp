@@ -5,7 +5,7 @@ if (DEFINED ENV{RESTC_CPP_VERSION})
 endif()
 
 if (NOT DEFINED RESTC_CPP_VERSION)
-    set(RESTC_CPP_VERSION 0.101.1)
+    set(RESTC_CPP_VERSION 0.102.0)
 endif()
 
 if(NOT DEFINED RESTC_BOOST_VERSION)
@@ -37,6 +37,8 @@ option(RESTC_CPP_WITH_UNIT_TESTS "Enable Unit Testing" ON)
 option(RESTC_CPP_AUTORUN_UNIT_TESTS "Run Unit Tests automatically after build" OFF)
 
 option(RESTC_CPP_WITH_FUNCTIONALT_TESTS "Enable Functional Testing" ON)
+
+option(RESTC_USE_LEGACY_BOOST_FIND "Use the old Boost find module" OFF)
 
 set(GTEST_TAG "main" CACHE STRING "Gtest branch to use. Required on older Linux versions because newer gtest requure newer cmake!")
 set(LOGFAULT_TAG "master" CACHE STRING "Logfault branch to use. Required on older Linux versions because newer gtest requure newer cmake!")
@@ -218,6 +220,7 @@ set(ACTUAL_SOURCES
     src/RequestBodyStringImpl.cpp
     src/RequestBodyFileImpl.cpp
     src/url_encode.cpp
+    src/boost_compitability.cpp
     ${LOGGING_SRC}
     )
 
@@ -248,7 +251,10 @@ endif()
 
 if (NOT EMBEDDED_RESTC_CPP)
 
-    if(CMAKE_VERSION VERSION_GREATER "3.28")
+    if (RESTC_USE_LEGACY_BOOST_FIND)
+        unset(restc_cpp_boost_find_config)
+        message("Using legacy Boost find config")
+    elseif(CMAKE_VERSION VERSION_GREATER "3.28")
         set(restc_cpp_boost_find_config CONFIG)
         message("Using new Boost find config")
     endif()

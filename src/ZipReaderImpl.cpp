@@ -44,7 +44,7 @@ public:
 
     [[nodiscard]] bool HaveMoreBufferedInput() const noexcept { return strm_.avail_in > 0; }
 
-    boost::asio::const_buffers_1 ReadSome() override {
+    ::restc_cpp::boost_const_buffer ReadSome() override {
 
         size_t data_len = 0;
 
@@ -55,7 +55,7 @@ public:
             } else {
                 const auto buffers = source_->ReadSome();
                 src = {
-                    boost::asio::buffer_cast<const char *>(buffers),
+                    boost_buffer_cast(buffers),
                     boost::asio::buffer_size(buffers)};
 
                 if (src.empty()) {

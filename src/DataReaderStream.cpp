@@ -28,16 +28,16 @@ void DataReaderStream::Fetch() {
             RESTC_CPP_LOG_TRACE_("DataReaderStream::Fetch: EOF");
             throw ProtocolException("Fetch(): EOF");
         }
-        curr_ = boost::asio::buffer_cast<const char *>(buf);
+        curr_ = boost_buffer_cast(buf);
         end_ = curr_ + boost::asio::buffer_size(buf);
     }
 }
 
-boost::asio::const_buffers_1
+::restc_cpp::boost_const_buffer
 DataReaderStream::ReadSome() {
     Fetch();
 
-    boost::asio::const_buffers_1 rval = {curr_,
+    ::restc_cpp::boost_const_buffer rval = {curr_,
         static_cast<size_t>(end_ - curr_)};
     curr_ = end_;
     RESTC_CPP_LOG_TRACE_("DataReaderStream::ReadSome: Returning buffer with "
@@ -50,14 +50,14 @@ DataReaderStream::ReadSome() {
     return rval;
 }
 
-boost::asio::const_buffers_1
+::restc_cpp::boost_const_buffer
 DataReaderStream::GetData(size_t maxBytes) {
     Fetch();
 
     const auto diff = end_ - curr_;
     assert(diff >= 0);
     const auto seg_len = std::min<size_t>(maxBytes, diff);
-    boost::asio::const_buffers_1 rval = {curr_, seg_len};
+    ::restc_cpp::boost_const_buffer rval = {curr_, seg_len};
     if (seg_len > 0) {
         curr_ += seg_len - 1;
     }

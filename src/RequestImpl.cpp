@@ -22,6 +22,10 @@ using namespace std::string_literals;
 
 namespace {
 
+string ref_to_string(boost::string_ref ref) {
+    return {ref.data(), ref.size()};
+}
+
 // We support versions of boost prior to the introduction of this convenience function
 
 boost::asio::ip::address_v6 make_address_v6(const char* str,
@@ -260,7 +264,7 @@ void DoSocks5Handshake(Connection& connection,
     {
         vector<uint8_t> params;
 
-        auto addr = url.GetHost().to_string() + ":" + to_string(url.GetPort());
+        auto addr = url.GetHost().to_string() + ":" + ref_to_string(url.GetPort());
 
         ParseAddressIntoSocke5ConnectRequest(addr, params);
         RESTC_CPP_LOG_TRACE_("DoSocks5Handshake - saying connect to " <<  url.GetHost().to_string() << ":" << url.GetPort());
@@ -547,7 +551,7 @@ private:
         return request_buffer.str();
     }
 
-    boost::asio::ip::tcp::resolver::query GetRequestEndpoint() {
+    std::pair<std::string, std::string> GetRequestEndpoint() {
         const auto proxy_type = properties_->proxy.type;
 
         if (proxy_type == Request::Proxy::Type::SOCKS5) {
@@ -576,6 +580,8 @@ private:
         return { parsed_url_.GetHost().to_string(),
             parsed_url_.GetPort().to_string()};
     }
+
+
 
     /* If we are redirected, we need to reset the body
      * Some body implementations may not support that and throw in Reset()
@@ -625,16 +631,15 @@ private:
             return {protocol, static_cast<uint16_t>(port_num)};
         }
 
-        boost::asio::ip::tcp::resolver::query const q{host, port};
         boost::asio::ip::tcp::resolver resolver(owner_.GetIoService());
+        auto results = boost_resolve(resolver, host, port, ctx.GetYield());
 
-        auto ep = resolver.async_resolve(q, ctx.GetYield());
-        const decltype(ep) addr_end;
-        for(; ep != addr_end; ++ep) {
-            RESTC_CPP_LOG_TRACE_("ep=" << ep->endpoint() << ", protocol=" << ep->endpoint().protocol().protocol());
+        for (auto it = results.begin(); it != results.end(); ++it) {
+            const auto endpoint = it->endpoint();
+            RESTC_CPP_LOG_TRACE_("ep=" << endpoint << ", protocol=" << endpoint.protocol().protocol());
 
-            if (protocol == ep->endpoint().protocol()) {
-                return ep->endpoint();
+            if (protocol == endpoint.protocol()) {
+                return endpoint;
             }
 
             RESTC_CPP_LOG_TRACE_("Incorrect protocol, looping for next alternative");
@@ -681,23 +686,13 @@ private:
 
         boost::asio::ip::tcp::resolver resolver(owner_.GetIoService());
         // Resolve the hostname
-        const auto query = GetRequestEndpoint();
+        const auto [host, service] = GetRequestEndpoint();
 
-        RESTC_CPP_LOG_TRACE_("Resolving " << query.host_name() << ":"
-            << query.service_name());
+        RESTC_CPP_LOG_TRACE_("Resolving " << host << ":" << service);
+        auto results = boost_resolve(resolver, host, service, ctx.GetYield());
 
-        auto address_it = resolver.async_resolve(query,
-                                                 ctx.GetYield());
-        const decltype(address_it) addr_end;
-
-        for(; address_it != addr_end; ++address_it) {
-//            if (owner_.IsClosing()) {
-//                RESTC_CPP_LOG_DEBUG_("RequestImpl::Connect: The rest client is closed (at first loop). Aborting.");
-//                throw FailedToConnectException("Failed to connect (closed)");
-//            }
-
-            const auto endpoint = address_it->endpoint();
-
+        for (auto it = results.begin(); it != results.end(); ++it) {
+            const auto endpoint = it->endpoint();
             RESTC_CPP_LOG_TRACE_("Trying endpoint " << endpoint);
 
             for(size_t retries = 0; retries < 8; ++retries) {
@@ -745,12 +740,6 @@ private:
                     }
                 }
 
-
-//                if (owner_.IsClosed()) {
-//                    RESTC_CPP_LOG_DEBUG_("RequestImpl::Connect: The rest client is closed. Aborting.");
-//                    throw FailedToConnectException("Failed to connect (closed)");
-//                }
-
                 auto timer = IoTimer::Create(timer_name,
                     properties_->connectTimeoutMs, connection);
 
@@ -772,8 +761,12 @@ private:
                     }
 
                     RESTC_CPP_LOG_TRACE_("RequestImpl::Connect: calling AsyncConnect --> " << endpoint);
+
+                    // 2025-01-18: [jgaa] Changing the hostname from the one digged up by the resolver in older versions of boost
+                    // to the one we actually want to connect to. This affects certificate validation for TLS.
+                    // I believe this is the correct way to do it.
                     connection->GetSocket().AsyncConnect(
-                        endpoint, address_it->host_name(),
+                        endpoint, host,
                         properties_->tcpNodelay, ctx.GetYield());
                     RESTC_CPP_LOG_TRACE_("RequestImpl::Connect: OK AsyncConnect --> " << endpoint);
                     return connection;
@@ -833,9 +826,7 @@ private:
 
                     auto b = write_buffer[0];
 
-                    writer_->WriteDirect(
-                        {boost::asio::buffer_cast<const char *>(b),
-                        boost::asio::buffer_size(b)});
+                    writer_->WriteDirect({boost_buffer_cast(b), boost_buffer_size(b)});
 
                     have_sent_headers = true;
 

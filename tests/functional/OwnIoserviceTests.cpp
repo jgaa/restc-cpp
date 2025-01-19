@@ -36,7 +36,7 @@ const string http_url = "http://localhost:3000/manyposts";
 
 TEST(OwnIoservice, All)
 {
-    boost::asio::io_service ioservice;
+    boost_io_service ioservice;
 
     mutex mutex;
     mutex.lock();
