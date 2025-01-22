@@ -23,6 +23,11 @@
 
 using namespace std;
 
+#if __cplusplus < 201703L
+#   include <boost/unordered_map.hpp>
+#endif
+
+
 namespace restc_cpp {
 
 class ConnectionPoolImpl
@@ -31,35 +36,73 @@ class ConnectionPoolImpl
 public:
 
     struct Key {
-        Key(boost::asio::ip::tcp::endpoint ep,
-            const Connection::Type connectionType)
-        : endpoint{std::move(ep)}, type{connectionType} {}
+        Key(boost::asio::ip::tcp::endpoint ep, Connection::Type connectionType)
+            : endpoint(std::move(ep)), type(connectionType) {}
 
         Key(const Key&) = default;
         Key(Key&&) = default;
         ~Key() = default;
-        Key& operator = (const Key&) = delete;
-        Key& operator = (Key&&) = delete;
+        Key& operator=(const Key&) = delete;
+        Key& operator=(Key&&) = delete;
 
-        bool operator < (const Key& key) const {
+        bool operator<(const Key& key) const {
             if (static_cast<int>(type) < static_cast<int>(key.type)) {
                 return true;
             }
-
+            if (static_cast<int>(type) > static_cast<int>(key.type)) {
+                return false;
+            }
             return endpoint < key.endpoint;
         }
 
-        friend std::ostream& operator << (std::ostream& o, const Key& v) {
-            return o << "{Key "
-                << (v.type == Connection::Type::HTTPS? "https" : "http")
-                << "://"
-                << v.endpoint
-                << "}";
+        bool operator==(const Key& key) const {
+            return type == key.type && endpoint == key.endpoint;
         }
 
+        friend std::ostream& operator<<(std::ostream& o, const Key& v) {
+            return o << "{Key "
+                     << (v.type == Connection::Type::HTTPS ? "https" : "http")
+                     << "://"
+                     << v.endpoint
+                     << "}";
+        }
+
+        // Custom hash function
+        struct KeyHash {
+            std::size_t operator()(const Key& key) const {
+                std::size_t h1 = 0;
+
+                // Hash the binary address data
+                if (key.endpoint.address().is_v4()) {
+                    // IPv4: 4 bytes
+                    const auto addr = key.endpoint.address().to_v4().to_bytes();
+                    h1 = std::hash<uint32_t>()(*reinterpret_cast<const uint32_t*>(addr.data()));
+                } else if (key.endpoint.address().is_v6()) {
+                    // IPv6: 16 bytes
+                    const auto addr = key.endpoint.address().to_v6().to_bytes();
+                    const uint64_t* parts = reinterpret_cast<const uint64_t*>(addr.data());
+                    h1 = std::hash<uint64_t>()(parts[0]) ^ std::hash<uint64_t>()(parts[1]);
+                }
+
+                // Hash the port and type
+                std::size_t h2 = std::hash<unsigned short>()(key.endpoint.port());
+                std::size_t h3 = std::hash<int>()(static_cast<int>(key.type));
+
+                // Combine the hashes
+                return h1 ^ (h2 << 1) ^ (h3 << 2);
+            }
+        };
+
+        // Equality comparison for hash table
+        struct KeyEqual {
+            bool operator()(const Key& lhs, const Key& rhs) const {
+                return lhs == rhs;
+            }
+        };
+
     private:
-        const boost::asio::ip::tcp::endpoint endpoint;
-        const Connection::Type type;
+        boost::asio::ip::tcp::endpoint endpoint;
+        Connection::Type type;
     };
 
     struct Entry {
@@ -400,9 +443,13 @@ private:
 #endif
     std::once_flag close_once_;
     RestClient& owner_;
-    multimap<Key, Entry::ptr_t> idle_;
-    multimap<Key, std::weak_ptr<Entry>> in_use_;
-    //std::queue<Entry> pending_;
+#if  __cplusplus < 201703L
+    boost::unordered_multimap<Key, Entry::ptr_t, Key::KeyHash, Key::KeyEqual> idle_;
+    boost::unordered_multimap<Key, std::weak_ptr<Entry>, Key::KeyHash, Key::KeyEqual> in_use_;
+#else
+    std::unordered_multimap<Key, Entry::ptr_t, Key::KeyHash, Key::KeyEqual> idle_;
+    std::unordered_multimap<Key, std::weak_ptr<Entry>, Key::KeyHash, Key::KeyEqual> in_use_;
+#endif
     const Request::Properties::ptr_t properties_;
     ConnectionWrapper::release_callback_t on_release_;
     boost::asio::deadline_timer cache_cleanup_timer_;
