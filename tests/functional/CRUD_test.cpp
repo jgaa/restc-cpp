@@ -14,7 +14,7 @@ using namespace restc_cpp;
 
 /* These url's points to a local Docker container with nginx, linked to
  * a jsonserver docker container with mock data.
- * The scripts to build and run these containers are in the ./tests directory.
+ * You can run /.create-and-run-containers.sh to start them.
  */
 const string http_url = "http://localhost:3000/posts";
 
