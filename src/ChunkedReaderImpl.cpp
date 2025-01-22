@@ -55,7 +55,7 @@ public:
         return out.str();
     }
 
-    static void Log(const ::restc_cpp::boost_const_buffer buffers, const char * /*tag*/)
+    static void Log(const ::restc_cpp::boost_const_buffer buffers, const char * tag)
     {
         const auto buf_len = boost_buffer_size(buffers);
 
@@ -63,8 +63,7 @@ public:
         RESTC_CPP_LOG_TRACE_(tag << ' ' << "# " << buf_len
             << " bytes: "
             << ToPrintable({
-                boost::asio::buffer_cast<const char *>(*buffers.begin()),
-                           buf_len}));
+               boost_buffer_cast(buffers), buf_len}));
     }
 
     ::restc_cpp::boost_const_buffer ReadSome() override {
