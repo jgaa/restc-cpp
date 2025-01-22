@@ -23,6 +23,11 @@
 
 using namespace std;
 
+#if __cplusplus < 201703L
+#   include <boost/unordered_map.hpp>
+#endif
+
+
 namespace restc_cpp {
 
 class ConnectionPoolImpl
@@ -438,9 +443,13 @@ private:
 #endif
     std::once_flag close_once_;
     RestClient& owner_;
-    unordered_multimap<Key, Entry::ptr_t, Key::KeyHash, Key::KeyEqual> idle_;
-    unordered_multimap<Key, std::weak_ptr<Entry>, Key::KeyHash, Key::KeyEqual> in_use_;
-    //std::queue<Entry> pending_;
+#if  __cplusplus < 201703L
+    boost::unordered_multimap<Key, Entry::ptr_t, Key::KeyHash, Key::KeyEqual> idle_;
+    boost::unordered_multimap<Key, std::weak_ptr<Entry>, Key::KeyHash, Key::KeyEqual> in_use_;
+#else
+    std::unordered_multimap<Key, Entry::ptr_t, Key::KeyHash, Key::KeyEqual> idle_;
+    std::unordered_multimap<Key, std::weak_ptr<Entry>, Key::KeyHash, Key::KeyEqual> in_use_;
+#endif
     const Request::Properties::ptr_t properties_;
     ConnectionWrapper::release_callback_t on_release_;
     boost::asio::deadline_timer cache_cleanup_timer_;
