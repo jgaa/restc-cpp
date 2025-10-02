@@ -250,8 +250,8 @@ public:
 private:
     void ScheduleNextCacheCleanup() {
         LOCK_ALWAYS_;
-        cache_cleanup_timer_.expires_from_now(
-            boost::posix_time::seconds(properties_->cacheCleanupIntervalSeconds));
+        cache_cleanup_timer_.expires_after(
+            std::chrono::seconds(properties_->cacheCleanupIntervalSeconds));
         cache_cleanup_timer_.async_wait([capture0 = shared_from_this()](auto &&PH1) {
             capture0->OnCacheCleanup(std::forward<decltype(PH1)>(PH1));
         });
@@ -452,7 +452,7 @@ private:
 #endif
     const Request::Properties::ptr_t properties_;
     ConnectionWrapper::release_callback_t on_release_;
-    boost::asio::deadline_timer cache_cleanup_timer_;
+    boost::asio::steady_timer cache_cleanup_timer_;
 
     mutable std::mutex mutex_;
 }; // ConnectionPoolImpl

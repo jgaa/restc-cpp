@@ -335,15 +335,14 @@ public:
     /*! Asynchronously sleep for a period */
     template<class Rep, class Period>
     void Sleep(const std::chrono::duration<Rep, Period>& duration) {
-        const auto microseconds =
+        const uint64_t microseconds =
             std::chrono::duration_cast<std::chrono::microseconds>(
                 duration).count();
-        ::boost::posix_time::microseconds ms(microseconds);
-        Sleep(ms);
+        Sleep(microseconds);
     }
 
     /*! Asynchronously sleep for a period */
-    virtual void Sleep(const ::boost::posix_time::microseconds& ms) = 0;
+    virtual void Sleep(const uint64_t microseconds) = 0;
 
     static std::unique_ptr<Context>
         Create(::boost::asio::yield_context& yield,

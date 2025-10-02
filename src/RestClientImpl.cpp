@@ -113,11 +113,10 @@ public:
             return req.Execute(*this);
         }
 
-        void Sleep(const boost::posix_time::microseconds& ms) override {
-            boost::asio::deadline_timer timer(
+        void Sleep(const uint64_t microseconds) override {
+            boost::asio::steady_timer timer(
                 GetClient().GetIoService(),
-                boost::posix_time::microseconds(ms));
-
+                boost::asio::chrono::microseconds(microseconds));
             timer.async_wait(GetYield());
         }
 

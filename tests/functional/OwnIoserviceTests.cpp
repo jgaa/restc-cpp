@@ -75,8 +75,7 @@ TEST(OwnIoservice, All)
                 // We can't just wait on the lock since we are in a co-routine.
                 // So we use the async_wait() to poll in stead.
                 while(!mutex.try_lock()) {
-                    boost::asio::deadline_timer timer(rest_client->GetIoService(),
-                        boost::posix_time::milliseconds(1));
+                    boost::asio::steady_timer timer(rest_client->GetIoService(), 1ms);
                     timer.async_wait(ctx.GetYield());
                 }
                 mutex.unlock();

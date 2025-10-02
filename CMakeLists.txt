@@ -260,7 +260,6 @@ if (NOT EMBEDDED_RESTC_CPP)
     endif()
 
     find_package(Boost ${RESTC_BOOST_VERSION} REQUIRED ${restc_cpp_boost_find_config} COMPONENTS
-        system
         program_options
         filesystem
         date_time

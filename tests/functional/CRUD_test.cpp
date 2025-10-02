@@ -67,6 +67,11 @@ TEST(CRUD, Crud) {
     // Get the reply before we validate the operation. Else it may run in parallel
     reply->fetchAndIgnore();
 
+    // This test fails randomly on fast machines.
+    // I believe the problem is a race condition in the test container.
+    // Adding sleeps is generally the worst possible way to "fix" such errors, but it may work in this case.
+    std::this_thread::sleep_for(1s);
+
     // Fetch again
     reply = RequestBuilder(ctx)
         .Get(GetDockerUrl(http_url) + "/" + post.id) // URL

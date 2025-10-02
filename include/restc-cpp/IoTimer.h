@@ -145,8 +145,7 @@ private:
 
     void Start(int millisecondsTimeOut)
     {
-        timer_.expires_from_now(
-            boost::posix_time::milliseconds(millisecondsTimeOut));
+        timer_.expires_after(std::chrono::milliseconds{millisecondsTimeOut});
         is_active_ = true;
         try {
             timer_.async_wait(std::bind(
@@ -162,7 +161,7 @@ private:
     bool is_active_ = false;
     bool is_expiered_ = false;
     close_t close_;
-    boost::asio::deadline_timer timer_;
+    boost::asio::steady_timer timer_;
     const std::string timer_name_;
 };
 
