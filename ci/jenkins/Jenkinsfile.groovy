@@ -542,8 +542,8 @@ pipeline {
 
                         bat script: '''
                             PATH=C:\\src\\vcpkg;%PATH%;C:\\Program Files\\CMake\\bin;C:\\Program Files\\Git\\bin
-                            git -C C:\src\vcpkg pull --rebase
-                            C:\src\vcpkg\bootstrap-vcpkg.bat -disableMetrics
+                            git -C C:\\src\\vcpkg pull --rebase
+                            C:\\src\\vcpkg\\bootstrap-vcpkg.bat -disableMetrics
                             vcpkg upgrade --no-dry-run
                             vcpkg remove --outdated
                             vcpkg integrate install
