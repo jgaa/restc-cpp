@@ -13,6 +13,7 @@
 #include "restc-cpp/logging.h"
 #include "restc-cpp/error.h"
 #include "restc-cpp/internals/helpers.h"
+#include "restc-cpp/boost_compatibility.h"
 
 #include "ConnectionImpl.h"
 #include "SocketImpl.h"
@@ -250,7 +251,7 @@ public:
 private:
     void ScheduleNextCacheCleanup() {
         LOCK_ALWAYS_;
-        cache_cleanup_timer_.expires_after(
+        cache_cleanup_timer_.RESTC_CPP_STEADY_TIMER_EXPIRES_AFTER(
             std::chrono::seconds(properties_->cacheCleanupIntervalSeconds));
         cache_cleanup_timer_.async_wait([capture0 = shared_from_this()](auto &&PH1) {
             capture0->OnCacheCleanup(std::forward<decltype(PH1)>(PH1));

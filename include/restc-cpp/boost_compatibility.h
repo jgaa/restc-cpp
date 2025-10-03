@@ -3,6 +3,7 @@
 #include <boost/asio.hpp>
 #include <boost/version.hpp>
 #include <boost/asio/ip/address_v4.hpp>
+#include <boost/asio/steady_timer.hpp>
 
 /**
  * @file
@@ -41,6 +42,12 @@ catch (...)
 #define RESTC_CPP_SPAWN_TRAILER
 #endif
 
+// This is insainity!
+#if BOOST_VERSION >= 106700
+#   define RESTC_CPP_STEADY_TIMER_EXPIRES_AFTER(ms) expires_after(ms)
+#else
+#   define RESTC_CPP_STEADY_TIMER_EXPIRES_AFTER(ms) expires_from_now(ms)
+#endif
 
 namespace restc_cpp {
 
