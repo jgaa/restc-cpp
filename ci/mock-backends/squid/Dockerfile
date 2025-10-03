@@ -10,4 +10,4 @@ EXPOSE 3128/tcp
 
 RUN cat /etc/hosts
 
-CMD squid3 -Nd 1 -f /etc/squid/squid.conf
+CMD squid -Nd 1 -f /etc/squid/squid.conf
