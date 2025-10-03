@@ -222,107 +222,6 @@ pipeline {
                     }
                 }
 
-                stage('Debian Buster ') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockefile.debian-buster'
-                            dir 'ci/jenkins'
-                            label 'docker'
-                            args '-u root'
-                        }
-                    }
-
-                    options {
-                        timeout(time: 30, unit: "MINUTES")
-                    }
-
-                    steps {
-                        echo "Building on debian-buster-AMD64 in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DGTEST_TAG=release-1.12.0 -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-
-                                unstable(message: "${STAGE_NAME} - Testing failed")
-                            }
-                        }
-                    }
-                }
-
-                stage('Debian Buster MT CTX') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockefile.debian-buster'
-                            dir 'ci/jenkins'
-                            label 'docker'
-                            args '-u root'
-                        }
-                    }
-
-                    options {
-                        timeout(time: 30, unit: "MINUTES")
-                    }
-
-                    steps {
-                        echo "Building on debian-buster-AMD64 in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DGTEST_TAG=release-1.12.0 -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-
-                                unstable(message: "${STAGE_NAME} - Testing failed")
-                            }
-                        }
-                    }
-                }
-
-                stage('Debian Buster MT CTX C++14') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockefile.debian-buster'
-                            dir 'ci/jenkins'
-                            label 'docker'
-                            args '-u root'
-                        }
-                    }
-
-                    options {
-                        timeout(time: 30, unit: "MINUTES")
-                    }
-
-                    steps {
-                        echo "Building on debian-buster-AMD64 in ${WORKSPACE}"
-                        checkout scm
-                        sh 'pwd; ls -la'
-                        sh 'rm -rf build'
-                        sh 'mkdir build'
-                        sh 'cd build && cmake -DGTEST_TAG=release-1.12.0 -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release -DRESTC_CPP_USE_CPP14=ON .. && make -j $(nproc)'
-
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                sh 'cd build && ctest --no-compress-output -T Test'
-                            } catch (exc) {
-
-                                unstable(message: "${STAGE_NAME} - Testing failed")
-                            }
-                        }
-                    }
-                }
 
                 stage('Debian Bullseye') {
                     agent {
@@ -333,7 +232,6 @@ pipeline {
                             args '-u root'
                         }
                     }
-
 
                     options {
                         timeout(time: 30, unit: "MINUTES")
@@ -443,6 +341,74 @@ pipeline {
 
                     steps {
                         echo "Building on debian-bookworm-AMD64 in ${WORKSPACE}"
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+
+                                unstable(message: "${STAGE_NAME} - Testing failed")
+                            }
+                        }
+                    }
+                }
+
+                stage('Debian Trixie') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockefile.debian-trixie'
+                            dir 'ci/jenkins'
+                            label 'docker'
+                            args '-u root'
+                        }
+                    }
+
+                    options {
+                        timeout(time: 30, unit: "MINUTES")
+                    }
+
+                    steps {
+                        echo "Building on debian-trixie-AMD64 in ${WORKSPACE}"
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+
+                                unstable(message: "${STAGE_NAME} - Testing failed")
+                            }
+                        }
+                    }
+                }
+
+                stage('Debian Trixie MT CTX') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockefile.debian-trixie'
+                            dir 'ci/jenkins'
+                            label 'docker'
+                            args '-u root'
+                        }
+                    }
+
+                    options {
+                        timeout(time: 30, unit: "MINUTES")
+                    }
+
+                    steps {
+                        echo "Building on debian-trixie-AMD64 in ${WORKSPACE}"
                         checkout scm
                         sh 'pwd; ls -la'
                         sh 'rm -rf build'
