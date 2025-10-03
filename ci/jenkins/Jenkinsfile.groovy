@@ -64,7 +64,7 @@ pipeline {
                     }
 
                     options {
-                        timeout(time: 30, unit: "MINUTES")
+                        timeout(time: 60, unit: "MINUTES")
                     }
 
                     steps {
@@ -98,7 +98,7 @@ pipeline {
                     }
 
                     options {
-                        timeout(time: 30, unit: "MINUTES")
+                        timeout(time: 60, unit: "MINUTES")
                     }
 
                     steps {
@@ -132,7 +132,7 @@ pipeline {
                     }
 
                     options {
-                        timeout(time: 30, unit: "MINUTES")
+                        timeout(time: 60, unit: "MINUTES")
                     }
 
                     steps {
@@ -166,7 +166,7 @@ pipeline {
                     }
 
                     options {
-                        timeout(time: 30, unit: "MINUTES")
+                        timeout(time: 60, unit: "MINUTES")
                     }
 
                     steps {
@@ -200,7 +200,7 @@ pipeline {
                     }
 
                     options {
-                        timeout(time: 30, unit: "MINUTES")
+                        timeout(time: 60, unit: "MINUTES")
                     }
 
                     steps {
@@ -234,7 +234,7 @@ pipeline {
                     }
 
                     options {
-                        timeout(time: 30, unit: "MINUTES")
+                        timeout(time: 60, unit: "MINUTES")
                     }
 
                     steps {
@@ -268,7 +268,7 @@ pipeline {
                     }
 
                     options {
-                        timeout(time: 30, unit: "MINUTES")
+                        timeout(time: 60, unit: "MINUTES")
                     }
 
                     steps {
@@ -302,7 +302,7 @@ pipeline {
                     }
 
                     options {
-                        timeout(time: 30, unit: "MINUTES")
+                        timeout(time: 60, unit: "MINUTES")
                     }
 
                     steps {
@@ -336,7 +336,7 @@ pipeline {
                     }
 
                     options {
-                        timeout(time: 30, unit: "MINUTES")
+                        timeout(time: 60, unit: "MINUTES")
                     }
 
                     steps {
@@ -370,7 +370,7 @@ pipeline {
                     }
 
                     options {
-                        timeout(time: 30, unit: "MINUTES")
+                        timeout(time: 60, unit: "MINUTES")
                     }
 
                     steps {
@@ -404,7 +404,7 @@ pipeline {
                     }
 
                     options {
-                        timeout(time: 30, unit: "MINUTES")
+                        timeout(time: 60, unit: "MINUTES")
                     }
 
                     steps {
@@ -438,7 +438,7 @@ pipeline {
                     }
 
                     options {
-                        timeout(time: 30, unit: "MINUTES")
+                        timeout(time: 60, unit: "MINUTES")
                     }
 
                     steps {
@@ -472,7 +472,7 @@ pipeline {
                     }
 
                     options {
-                        timeout(time: 30, unit: "MINUTES")
+                        timeout(time: 60, unit: "MINUTES")
                     }
 
                     steps {
@@ -506,7 +506,7 @@ pipeline {
                     }
 
                     options {
-                        timeout(time: 30, unit: "MINUTES")
+                        timeout(time: 60, unit: "MINUTES")
                     }
 
                     steps {
