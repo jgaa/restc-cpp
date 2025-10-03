@@ -543,15 +543,10 @@ pipeline {
                         bat script: '''
                             PATH=C:\\src\\vcpkg;%PATH%;C:\\Program Files\\CMake\\bin;C:\\Program Files\\Git\\bin
                             git -C C:\\src\\vcpkg pull --rebase
-                            C:\\src\\vcpkg\\bootstrap-vcpkg.bat -disableMetrics
                             vcpkg upgrade --no-dry-run
                             vcpkg remove --outdated
                             vcpkg integrate install
-                            vcpkg install rapidjson gtest zlib openssl ^
-                                boost-program-options boost-filesystem boost-date-time ^
-                                boost-coroutine boost-context boost-chrono ^
-                                boost-asio boost-system ^
-                                boost-log --triplet x64-windows
+                            vcpkg install rapidjson gtest zlib openssl boost-program-options boost-filesystem boost-date-time boost-coroutine boost-context boost-chrono boost-asio boost-system boost-log --triplet x64-windows
                             if %errorlevel% neq 0 exit /b %errorlevel%
                             rmdir /S /Q build
                             mkdir build
