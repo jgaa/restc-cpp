@@ -7,7 +7,7 @@ RUN dnf -q update -y &&\
     dnf -q install -y openssh-server gcc-c++ git gnupg2 \
     automake autoconf make \
     zlib-devel gcc-c++ cmake boost-devel openssl-devel \
-    java-11-openjdk-devel &&\
+    java-devel &&\
     dnf -q autoremove -y &&\
     dnf clean all &&\
     ssh-keygen -A
