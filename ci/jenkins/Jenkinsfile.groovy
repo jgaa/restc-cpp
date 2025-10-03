@@ -541,9 +541,17 @@ pipeline {
                         checkout scm
 
                         bat script: '''
-                            PATH=%PATH%;C:\\Program Files\\CMake\\bin;C:\\src\\vcpkg;C:\\Program Files\\Git\\bin
+                            PATH=C:\\src\\vcpkg;%PATH%;C:\\Program Files\\CMake\\bin;C:\\Program Files\\Git\\bin
+                            git -C C:\src\vcpkg pull --rebase
+                            C:\src\vcpkg\bootstrap-vcpkg.bat -disableMetrics
+                            vcpkg upgrade --no-dry-run
+                            vcpkg remove --outdated
                             vcpkg integrate install
-                            vcpkg install rapidjson gtest zlib openssl boost --triplet x64-windows
+                            vcpkg install rapidjson gtest zlib openssl ^
+                                boost-program-options boost-filesystem boost-date-time ^
+                                boost-coroutine boost-context boost-chrono ^
+                                boost-asio boost-system ^
+                                boost-log --triplet x64-windows
                             if %errorlevel% neq 0 exit /b %errorlevel%
                             rmdir /S /Q build
                             mkdir build
@@ -572,51 +580,51 @@ pipeline {
                     }
                 }
 
-                stage('Windows X64 with vcpkg MT CTX') {
+                // stage('Windows X64 with vcpkg MT CTX') {
 
-                    agent {label 'windows'}
+                //     agent {label 'windows'}
 
-                    options {
-                        // vcpkg now installs and compiles pretty much everything that exists on github if you ask it to prepare boost and openssl.
-                        // It's becoming as bad as js and npm.
-                        timeout(time: 60, unit: "MINUTES")
-                    }
+                //     options {
+                //         // vcpkg now installs and compiles pretty much everything that exists on github if you ask it to prepare boost and openssl.
+                //         // It's becoming as bad as js and npm.
+                //         timeout(time: 60, unit: "MINUTES")
+                //     }
 
-                     steps {
-                        echo "Building on Windows in ${WORKSPACE}"
-                        checkout scm
+                //      steps {
+                //         echo "Building on Windows in ${WORKSPACE}"
+                //         checkout scm
 
-                        bat script: '''
-                            PATH=%PATH%;C:\\Program Files\\CMake\\bin;C:\\src\\vcpkg;C:\\Program Files\\Git\\bin
-                            vcpkg integrate install
-                            vcpkg install rapidjson gtest zlib openssl boost --triplet x64-windows
-                            if %errorlevel% neq 0 exit /b %errorlevel%
-                            rmdir /S /Q build
-                            mkdir build
-                            cd build
-                            cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_TOOLCHAIN_FILE=C:/src/vcpkg/scripts/buildsystems/vcpkg.cmake ..
-                            if %errorlevel% neq 0 exit /b %errorlevel%
-                            cmake --build . --config Release
-                            if %errorlevel% neq 0 exit /b %errorlevel%
-                            echo "Build is OK"
-                        '''
+                //         bat script: '''
+                //             PATH=%PATH%;C:\\Program Files\\CMake\\bin;C:\\src\\vcpkg;C:\\Program Files\\Git\\bin
+                //             vcpkg integrate install
+                //             vcpkg install rapidjson gtest zlib openssl boost --triplet x64-windows
+                //             if %errorlevel% neq 0 exit /b %errorlevel%
+                //             rmdir /S /Q build
+                //             mkdir build
+                //             cd build
+                //             cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_TOOLCHAIN_FILE=C:/src/vcpkg/scripts/buildsystems/vcpkg.cmake ..
+                //             if %errorlevel% neq 0 exit /b %errorlevel%
+                //             cmake --build . --config Release
+                //             if %errorlevel% neq 0 exit /b %errorlevel%
+                //             echo "Build is OK"
+                //         '''
 
-                        echo 'Getting ready to run tests'
-                        script {
-                            try {
-                                bat script: '''
-                                    PATH=%PATH%;C:\\src\\vcpkg\\installed\\x64-windows\\bin;C:\\Program Files\\CMake\\bin
-                                    cd build
-                                    ctest -C Release
-                                    if %errorlevel% neq 0 exit /b %errorlevel%
-                                '''
-                            } catch (exc) {
+                //         echo 'Getting ready to run tests'
+                //         script {
+                //             try {
+                //                 bat script: '''
+                //                     PATH=%PATH%;C:\\src\\vcpkg\\installed\\x64-windows\\bin;C:\\Program Files\\CMake\\bin
+                //                     cd build
+                //                     ctest -C Release
+                //                     if %errorlevel% neq 0 exit /b %errorlevel%
+                //                 '''
+                //             } catch (exc) {
 
-                                unstable(message: "${STAGE_NAME} - Testing failed")
-                            }
-                        }
-                    }
-                }
+                //                 unstable(message: "${STAGE_NAME} - Testing failed")
+                //             }
+                //         }
+                //     }
+                // }
 
             } // parallel
 
