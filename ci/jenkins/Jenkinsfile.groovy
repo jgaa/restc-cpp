@@ -362,7 +362,7 @@ pipeline {
                 stage('Debian Trixie') {
                     agent {
                         dockerfile {
-                            filename 'Dockefile.debian-trixie'
+                            filename 'Dockerfile.debian-trixie'
                             dir 'ci/jenkins'
                             label 'docker'
                             args '-u root'
@@ -396,7 +396,7 @@ pipeline {
                 stage('Debian Trixie MT CTX') {
                     agent {
                         dockerfile {
-                            filename 'Dockefile.debian-trixie'
+                            filename 'Dockerfile.debian-trixie'
                             dir 'ci/jenkins'
                             label 'docker'
                             args '-u root'
