@@ -189,6 +189,74 @@ pipeline {
                     }
                 }
 
+                stage('Ubuntu Resolute') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.ubuntu-resolute'
+                            dir 'ci/jenkins'
+                            label 'docker'
+                            args '-u root'
+                        }
+                    }
+
+                    options {
+                        timeout(time: 60, unit: "MINUTES")
+                    }
+
+                    steps {
+                        echo "Building on ubuntu-resolute-AMD64 in ${NODE_NAME} --> ${WORKSPACE}"
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DCMAKE_BUILD_TYPE=Release  .. && make -j $(nproc)'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+
+                                unstable(message: "${STAGE_NAME} - Testing failed")
+                            }
+                        }
+                    }
+                }
+
+                stage('Ubuntu Resolute MT CTX') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.ubuntu-resolute'
+                            dir 'ci/jenkins'
+                            label 'docker'
+                            args '-u root'
+                        }
+                    }
+
+                    options {
+                        timeout(time: 60, unit: "MINUTES")
+                    }
+
+                    steps {
+                        echo "Building on ubuntu-resolute-AMD64 in ${NODE_NAME} --> ${WORKSPACE}"
+                        checkout scm
+                        sh 'pwd; ls -la'
+                        sh 'rm -rf build'
+                        sh 'mkdir build'
+                        sh 'cd build && cmake -DRESTC_CPP_THREADED_CTX=ON -DCMAKE_BUILD_TYPE=Release .. && make -j $(nproc)'
+
+                        echo 'Getting ready to run tests'
+                        script {
+                            try {
+                                sh 'cd build && ctest --no-compress-output -T Test'
+                            } catch (exc) {
+
+                                unstable(message: "${STAGE_NAME} - Testing failed")
+                            }
+                        }
+                    }
+                }
+
                 stage('Ubuntu Jammy') {
                     agent {
                         dockerfile {
@@ -671,4 +739,3 @@ pipeline {
         }
     }
 }
-

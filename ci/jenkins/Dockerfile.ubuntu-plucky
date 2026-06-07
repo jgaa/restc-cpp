@@ -1,6 +1,6 @@
 FROM ubuntu:25.04
 
-MAINTAINER Jarle Aase <jgaa@jgaa.com>
+LABEL maintainer="Jarle Aase <jgaa@jgaa.com>"
 
 RUN DEBIAN_FRONTEND="noninteractive" apt-get -q update &&\
     DEBIAN_FRONTEND="noninteractive" apt-get -y -q --no-install-recommends upgrade &&\

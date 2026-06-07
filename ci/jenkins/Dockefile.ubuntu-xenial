@@ -1,6 +1,6 @@
 FROM ubuntu:xenial
 
-MAINTAINER Jarle Aase <jgaa@jgaa.com>
+LABEL maintainer="Jarle Aase <jgaa@jgaa.com>"
 
 # In case you need proxy
 #RUN echo 'Acquire::http::Proxy "http://127.0.0.1:8080";' >> /etc/apt/apt.conf

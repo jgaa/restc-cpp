@@ -1,5 +1,5 @@
 FROM debian
-MAINTAINER jarle@jgaa.com
+LABEL maintainer="jarle@jgaa.com"
 
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends upgrade \

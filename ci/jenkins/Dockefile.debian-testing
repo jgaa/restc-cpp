@@ -1,6 +1,6 @@
 FROM debian:testing
 
-MAINTAINER Jarle Aase <jgaa@jgaa.com>
+LABEL maintainer="Jarle Aase <jgaa@jgaa.com>"
 
 # In case you need proxy
 RUN DEBIAN_FRONTEND="noninteractive" apt-get -q update &&\

@@ -1,7 +1,7 @@
 # Original from https://github.com/clue/docker-json-server
 
 FROM node:latest
-MAINTAINER Jarle Aase <jarle@jgaa.com>
+LABEL maintainer="Jarle Aase <jarle@jgaa.com>"
 
 RUN npm install -g json-server
 

@@ -1,6 +1,6 @@
 FROM fedora:latest
 
-MAINTAINER Jarle Aase <jgaa@jgaa.com>
+LABEL maintainer="Jarle Aase <jgaa@jgaa.com>"
 
 RUN dnf -q update -y &&\
     dnf -q upgrade -y &&\

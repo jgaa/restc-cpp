@@ -1,6 +1,6 @@
 FROM centos:7
 
-MAINTAINER Jarle Aase <jgaa@jgaa.com>
+LABEL maintainer="Jarle Aase <jgaa@jgaa.com>"
 
 RUN echo "root:password" | chpasswd
 
